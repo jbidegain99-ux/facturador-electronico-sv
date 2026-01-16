@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SignerService } from '../signer/signer.service';
-import { TransmitterService } from '../transmitter/transmitter.service';
+import { MhAuthService } from '../mh-auth/mh-auth.service';
+import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
+import { DTE_VERSIONS, TipoDte } from '@facturador/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 // Enum mirror - will be replaced by Prisma generated types after prisma generate
@@ -21,7 +23,7 @@ export class DteService {
   constructor(
     private prisma: PrismaService,
     private signerService: SignerService,
-    private transmitterService: TransmitterService,
+    private mhAuthService: MhAuthService,
   ) {}
 
   async createDte(tenantId: string, tipoDte: string, data: Record<string, unknown>) {
@@ -67,9 +69,12 @@ export class DteService {
       throw new Error('DTE no encontrado');
     }
 
-    const jsonFirmado = await this.signerService.signDocument(
-      dte.tenant.id,
-      JSON.stringify(dte.jsonOriginal),
+    if (!this.signerService.isCertificateLoaded()) {
+      throw new Error('No certificate loaded for signing');
+    }
+
+    const jsonFirmado = await this.signerService.signDTE(
+      dte.jsonOriginal as Record<string, unknown>,
     );
 
     const updated = await this.prisma.dTE.update({
@@ -85,7 +90,7 @@ export class DteService {
     return updated;
   }
 
-  async transmitDte(dteId: string) {
+  async transmitDte(dteId: string, nit: string, password: string) {
     const dte = await this.prisma.dTE.findUnique({
       where: { id: dteId },
       include: { tenant: true },
@@ -95,23 +100,58 @@ export class DteService {
       throw new Error('DTE no encontrado o no firmado');
     }
 
-    const result = await this.transmitterService.send(dte.tenant.id, dte.tipoDte, dte.jsonFirmado);
+    try {
+      // Get auth token
+      const env = (process.env.MH_API_ENV as 'test' | 'prod') || 'test';
+      const tokenInfo = await this.mhAuthService.getToken(nit, password, env);
 
-    const updated = await this.prisma.dTE.update({
-      where: { id: dteId },
-      data: {
-        estado: result.estado === 'PROCESADO' ? DTEStatus.PROCESADO : DTEStatus.RECHAZADO,
-        selloRecepcion: result.selloRecepcion,
-        fechaRecepcion: result.fechaRecepcion ? new Date(result.fechaRecepcion) : null,
-        codigoMh: result.codigoMh,
-        descripcionMh: result.descripcionMh,
-        intentosEnvio: { increment: 1 },
-      },
-    });
+      // Prepare request
+      const identificacion = dte.jsonOriginal as { identificacion?: { ambiente?: string } };
+      const ambiente = (identificacion?.identificacion?.ambiente || '00') as '00' | '01';
 
-    await this.logDteAction(dteId, 'TRANSMITTED', { response: result });
+      const request: SendDTERequest = {
+        ambiente,
+        idEnvio: Date.now(),
+        version: DTE_VERSIONS[dte.tipoDte as TipoDte],
+        tipoDte: dte.tipoDte as TipoDte,
+        documento: dte.jsonFirmado,
+        codigoGeneracion: dte.codigoGeneracion,
+      };
 
-    return updated;
+      // Send to MH
+      const response = await sendDTE(tokenInfo.token, request, { env });
+
+      const updated = await this.prisma.dTE.update({
+        where: { id: dteId },
+        data: {
+          estado: DTEStatus.PROCESADO,
+          selloRecepcion: response.selloRecibido || undefined,
+          fechaRecepcion: response.fhProcesamiento ? new Date(response.fhProcesamiento) : null,
+          descripcionMh: response.observaciones?.join(', '),
+          intentosEnvio: { increment: 1 },
+        },
+      });
+
+      await this.logDteAction(dteId, 'TRANSMITTED', { response });
+
+      return updated;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const observaciones = error instanceof MHReceptionError ? error.observaciones : undefined;
+
+      await this.prisma.dTE.update({
+        where: { id: dteId },
+        data: {
+          estado: DTEStatus.RECHAZADO,
+          descripcionMh: observaciones?.join(', ') || errorMessage,
+          intentosEnvio: { increment: 1 },
+        },
+      });
+
+      await this.logDteAction(dteId, 'TRANSMISSION_ERROR', { error: errorMessage, observaciones });
+
+      throw error;
+    }
   }
 
   async findByTenant(tenantId: string, page = 1, limit = 20) {

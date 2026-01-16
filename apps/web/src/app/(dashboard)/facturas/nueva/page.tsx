@@ -1,0 +1,447 @@
+'use client';
+
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ItemsTable } from '@/components/forms/items-table';
+import { useFacturaWizardStore } from '@/store';
+import { formatCurrency } from '@/lib/utils';
+import {
+  FileText,
+  User,
+  ShoppingCart,
+  Calculator,
+  Send,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Loader2,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const steps = [
+  { id: 1, name: 'Tipo DTE', icon: FileText },
+  { id: 2, name: 'Receptor', icon: User },
+  { id: 3, name: 'Items', icon: ShoppingCart },
+  { id: 4, name: 'Resumen', icon: Calculator },
+  { id: 5, name: 'Enviar', icon: Send },
+];
+
+export default function NuevaFacturaPage() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [result, setResult] = React.useState<{ success: boolean; sello?: string; error?: string } | null>(null);
+
+  const {
+    step,
+    tipoDte,
+    receptor,
+    items,
+    condicionOperacion,
+    setStep,
+    nextStep,
+    prevStep,
+    setTipoDte,
+    setReceptor,
+    addItem,
+    updateItem,
+    removeItem,
+    setCondicionOperacion,
+    getSubtotal,
+    getTotalIva,
+    getTotal,
+    reset,
+  } = useFacturaWizardStore();
+
+  const canProceed = () => {
+    switch (step) {
+      case 1:
+        return true;
+      case 2:
+        return tipoDte === '01' || (receptor?.nombre && receptor?.nit);
+      case 3:
+        return items.length > 0;
+      case 4:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setResult({
+      success: true,
+      sello: '2024011612345678901234567890123456789012',
+    });
+    setIsSubmitting(false);
+  };
+
+  const handleFinish = () => {
+    reset();
+    router.push('/facturas');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Nueva Factura</h1>
+        <p className="text-muted-foreground">
+          Sigue los pasos para crear y enviar tu documento tributario
+        </p>
+      </div>
+
+      {/* Steps */}
+      <nav className="flex items-center justify-center">
+        <ol className="flex items-center space-x-2 md:space-x-4">
+          {steps.map((s, index) => (
+            <li key={s.id} className="flex items-center">
+              <button
+                onClick={() => s.id < step && setStep(s.id)}
+                disabled={s.id > step}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  step === s.id && 'bg-primary text-primary-foreground',
+                  step > s.id && 'bg-primary/20 text-primary cursor-pointer',
+                  step < s.id && 'text-muted-foreground'
+                )}
+              >
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-full border-2',
+                    step === s.id && 'border-primary-foreground bg-primary-foreground/20',
+                    step > s.id && 'border-primary bg-primary text-primary-foreground',
+                    step < s.id && 'border-muted-foreground'
+                  )}
+                >
+                  {step > s.id ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <s.icon className="h-4 w-4" />
+                  )}
+                </div>
+                <span className="hidden md:inline">{s.name}</span>
+              </button>
+              {index < steps.length - 1 && (
+                <ChevronRight className="mx-2 h-4 w-4 text-muted-foreground" />
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      {/* Step Content */}
+      <Card className="mx-auto max-w-4xl">
+        <CardHeader>
+          <CardTitle>{steps[step - 1].name}</CardTitle>
+          <CardDescription>
+            {step === 1 && 'Selecciona el tipo de documento que deseas emitir'}
+            {step === 2 && 'Ingresa los datos del receptor del documento'}
+            {step === 3 && 'Agrega los productos o servicios a facturar'}
+            {step === 4 && 'Revisa el resumen y condiciones de pago'}
+            {step === 5 && 'Confirma y envia el documento al Ministerio de Hacienda'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Step 1: Tipo DTE */}
+          {step === 1 && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <button
+                onClick={() => setTipoDte('01')}
+                className={cn(
+                  'flex flex-col items-center gap-4 rounded-lg border-2 p-6 transition-colors',
+                  tipoDte === '01'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted hover:border-primary/50'
+                )}
+              >
+                <FileText className="h-12 w-12 text-primary" />
+                <div className="text-center">
+                  <h3 className="font-semibold">Factura (01)</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Para consumidor final
+                  </p>
+                </div>
+              </button>
+              <button
+                onClick={() => setTipoDte('03')}
+                className={cn(
+                  'flex flex-col items-center gap-4 rounded-lg border-2 p-6 transition-colors',
+                  tipoDte === '03'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted hover:border-primary/50'
+                )}
+              >
+                <FileText className="h-12 w-12 text-blue-500" />
+                <div className="text-center">
+                  <h3 className="font-semibold">Credito Fiscal (03)</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Para contribuyentes
+                  </p>
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* Step 2: Receptor */}
+          {step === 2 && (
+            <div className="space-y-4">
+              {tipoDte === '03' && (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">NIT *</label>
+                    <Input
+                      placeholder="0000-000000-000-0"
+                      value={receptor?.nit || ''}
+                      onChange={(e) =>
+                        setReceptor({ ...receptor, nit: e.target.value } as typeof receptor)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">NRC *</label>
+                    <Input
+                      placeholder="000000-0"
+                      value={receptor?.nrc || ''}
+                      onChange={(e) =>
+                        setReceptor({ ...receptor, nrc: e.target.value } as typeof receptor)
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+              {tipoDte === '01' && (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Tipo Documento</label>
+                    <Select
+                      value={receptor?.tipoDocumento || '13'}
+                      onValueChange={(val) =>
+                        setReceptor({ ...receptor, tipoDocumento: val } as typeof receptor)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="13">DUI</SelectItem>
+                        <SelectItem value="36">NIT</SelectItem>
+                        <SelectItem value="37">Otro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Numero Documento</label>
+                    <Input
+                      placeholder="00000000-0"
+                      value={receptor?.numDocumento || ''}
+                      onChange={(e) =>
+                        setReceptor({ ...receptor, numDocumento: e.target.value } as typeof receptor)
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Nombre / Razon Social {tipoDte === '03' ? '*' : ''}
+                </label>
+                <Input
+                  placeholder="Nombre del cliente"
+                  value={receptor?.nombre || ''}
+                  onChange={(e) =>
+                    setReceptor({ ...receptor, nombre: e.target.value } as typeof receptor)
+                  }
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Telefono</label>
+                  <Input
+                    placeholder="0000-0000"
+                    value={receptor?.telefono || ''}
+                    onChange={(e) =>
+                      setReceptor({ ...receptor, telefono: e.target.value } as typeof receptor)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Correo</label>
+                  <Input
+                    type="email"
+                    placeholder="correo@ejemplo.com"
+                    value={receptor?.correo || ''}
+                    onChange={(e) =>
+                      setReceptor({ ...receptor, correo: e.target.value } as typeof receptor)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Items */}
+          {step === 3 && (
+            <ItemsTable
+              items={items}
+              onAddItem={addItem}
+              onUpdateItem={updateItem}
+              onRemoveItem={removeItem}
+            />
+          )}
+
+          {/* Step 4: Resumen */}
+          {step === 4 && (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Condicion de la Operacion</label>
+                <Select
+                  value={condicionOperacion.toString()}
+                  onValueChange={(val) => setCondicionOperacion(parseInt(val) as 1 | 2 | 3)}
+                >
+                  <SelectTrigger className="w-full md:w-64">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Contado</SelectItem>
+                    <SelectItem value="2">Credito</SelectItem>
+                    <SelectItem value="3">Otro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="rounded-lg border p-4">
+                <h4 className="font-semibold mb-4">Resumen del Documento</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tipo:</span>
+                    <span>{tipoDte === '01' ? 'Factura' : 'Credito Fiscal'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Receptor:</span>
+                    <span>{receptor?.nombre || 'Consumidor Final'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Items:</span>
+                    <span>{items.length}</span>
+                  </div>
+                  <div className="border-t my-2 pt-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal:</span>
+                      <span>{formatCurrency(getSubtotal())}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">IVA (13%):</span>
+                      <span>{formatCurrency(getTotalIva())}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold mt-2">
+                      <span>Total:</span>
+                      <span>{formatCurrency(getTotal())}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: Enviar */}
+          {step === 5 && (
+            <div className="text-center space-y-6">
+              {!result && !isSubmitting && (
+                <>
+                  <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Send className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Listo para enviar</h3>
+                    <p className="text-muted-foreground">
+                      El documento sera firmado y enviado al Ministerio de Hacienda
+                    </p>
+                  </div>
+                  <Button size="lg" onClick={handleSubmit}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Firmar y Enviar
+                  </Button>
+                </>
+              )}
+
+              {isSubmitting && (
+                <>
+                  <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Procesando...</h3>
+                    <p className="text-muted-foreground">
+                      Firmando y enviando al Ministerio de Hacienda
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {result && result.success && (
+                <>
+                  <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                    <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-green-600 dark:text-green-400">
+                      Documento Procesado
+                    </h3>
+                    <p className="text-muted-foreground">
+                      El MH ha recibido y procesado tu documento exitosamente
+                    </p>
+                  </div>
+                  <div className="bg-muted rounded-lg p-4">
+                    <p className="text-sm text-muted-foreground">Sello de Recepcion:</p>
+                    <code className="text-xs break-all">{result.sello}</code>
+                  </div>
+                  <Button size="lg" onClick={handleFinish}>
+                    Finalizar
+                  </Button>
+                </>
+              )}
+
+              {result && !result.success && (
+                <>
+                  <div className="mx-auto w-16 h-16 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                    <FileText className="h-8 w-8 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">
+                      Error al Procesar
+                    </h3>
+                    <p className="text-muted-foreground">{result.error}</p>
+                  </div>
+                  <Button variant="outline" onClick={() => setResult(null)}>
+                    Reintentar
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Navigation */}
+      {step < 5 && (
+        <div className="flex justify-between mx-auto max-w-4xl">
+          <Button variant="outline" onClick={prevStep} disabled={step === 1}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Anterior
+          </Button>
+          <Button onClick={nextStep} disabled={!canProceed()}>
+            Siguiente
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}

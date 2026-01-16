@@ -3,8 +3,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY apps/web ./apps/web
 COPY packages ./packages
-RUN npm ci --workspace=apps/web
-RUN cd apps/web && npm run build
+RUN npm install
+WORKDIR /app/apps/web
+RUN npm run build
 
 FROM node:20-alpine
 WORKDIR /app

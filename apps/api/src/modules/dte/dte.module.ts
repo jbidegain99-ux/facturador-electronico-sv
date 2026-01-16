@@ -1,13 +1,9 @@
 import { Module } from '@nestjs/common';
-import { DteService } from './dte.service';
-import { DteController } from './dte.controller';
-import { SignerModule } from '../signer/signer.module';
-import { TransmitterModule } from '../transmitter/transmitter.module';
+import { DteBuilderService } from './services/dte-builder.service';
+import { DteValidatorService } from './services/dte-validator.service';
 
 @Module({
-  imports: [SignerModule, TransmitterModule],
-  controllers: [DteController],
-  providers: [DteService],
-  exports: [DteService],
+  providers: [DteBuilderService, DteValidatorService],
+  exports: [DteBuilderService, DteValidatorService],
 })
 export class DteModule {}

@@ -1,25 +1,22 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Providers } from './providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Facturador Electronico SV',
-  description: 'Sistema de facturacion electronica para El Salvador - MH',
+  description: 'Sistema de Facturacion Electronica para El Salvador',
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="es">
-      <body className={inter.className}>
-        <Providers>{children}</Providers>
-      </body>
+    <html lang="es" suppressHydrationWarning>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }

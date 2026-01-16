@@ -1,161 +1,179 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import * as React from 'react';
 import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
+import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
+import { Plus, Search, Filter, Download, Eye, Ban, MoreHorizontal } from 'lucide-react';
+import { DTEStatus, TipoDte } from '@/types';
 
-interface DTE {
-  id: string;
-  tipoDte: string;
-  numeroControl: string;
-  estado: string;
-  totalPagar: number;
-  createdAt: string;
-  cliente?: {
-    nombre: string;
-  };
-}
+// Mock data
+const mockDTEs = [
+  { id: '1', numeroControl: 'DTE-01-M001P001-000000000000001', codigoGeneracion: 'A1B2C3D4-E5F6-7890-ABCD-EF1234567890', receptorNombre: 'Cliente ABC S.A. de C.V.', receptorDocumento: '0614-180494-103-5', totalPagar: 1250.00, status: 'PROCESADO' as DTEStatus, selloRecibido: '2024011612345678901234567890123456789012', createdAt: '2024-01-16T10:30:00Z', tipoDte: '01' as TipoDte },
+  { id: '2', numeroControl: 'DTE-03-M001P001-000000000000002', codigoGeneracion: 'B2C3D4E5-F6A7-8901-BCDE-FA2345678901', receptorNombre: 'Empresa XYZ', receptorDocumento: '0614-180494-103-6', totalPagar: 3450.00, status: 'PROCESANDO' as DTEStatus, createdAt: '2024-01-16T09:15:00Z', tipoDte: '03' as TipoDte },
+  { id: '3', numeroControl: 'DTE-01-M001P001-000000000000003', codigoGeneracion: 'C3D4E5F6-A7B8-9012-CDEF-AB3456789012', receptorNombre: 'Comercial 123', receptorDocumento: '00000000-0', totalPagar: 890.50, status: 'RECHAZADO' as DTEStatus, createdAt: '2024-01-15T16:45:00Z', tipoDte: '01' as TipoDte },
+  { id: '4', numeroControl: 'DTE-01-M001P001-000000000000004', codigoGeneracion: 'D4E5F6A7-B8C9-0123-DEFA-BC4567890123', receptorNombre: 'Tienda Plus', receptorDocumento: '00000000-0', totalPagar: 2100.00, status: 'PROCESADO' as DTEStatus, selloRecibido: '2024011512345678901234567890123456789012', createdAt: '2024-01-15T14:20:00Z', tipoDte: '01' as TipoDte },
+  { id: '5', numeroControl: 'DTE-03-M001P001-000000000000005', codigoGeneracion: 'E5F6A7B8-C9D0-1234-EFAB-CD5678901234', receptorNombre: 'Distribuidora El Sol', receptorDocumento: '0614-180494-103-7', totalPagar: 5670.00, status: 'PROCESADO' as DTEStatus, selloRecibido: '2024011412345678901234567890123456789012', createdAt: '2024-01-15T11:00:00Z', tipoDte: '03' as TipoDte },
+  { id: '6', numeroControl: 'DTE-05-M001P001-000000000000006', codigoGeneracion: 'F6A7B8C9-D0E1-2345-FABC-DE6789012345', receptorNombre: 'Cliente ABC S.A. de C.V.', receptorDocumento: '0614-180494-103-5', totalPagar: 250.00, status: 'ANULADO' as DTEStatus, createdAt: '2024-01-14T09:00:00Z', tipoDte: '05' as TipoDte },
+];
 
 export default function FacturasPage() {
-  const [dtes, setDtes] = useState<DTE[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = React.useState('');
+  const [filterTipo, setFilterTipo] = React.useState<string>('all');
+  const [filterStatus, setFilterStatus] = React.useState<string>('all');
 
-  useEffect(() => {
-    const fetchDtes = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json();
-        setDtes(data.data || []);
-      } catch (error) {
-        console.error('Error fetching DTEs:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDtes();
-  }, []);
-
-  const getTipoDteLabel = (tipo: string) => {
-    const tipos: Record<string, string> = {
-      '01': 'Factura',
-      '03': 'CCF',
-      '05': 'Nota Credito',
-      '06': 'Nota Debito',
-    };
-    return tipos[tipo] || tipo;
-  };
-
-  const getEstadoBadge = (estado: string) => {
-    const colors: Record<string, string> = {
-      PENDIENTE: 'bg-yellow-100 text-yellow-800',
-      FIRMADO: 'bg-blue-100 text-blue-800',
-      ENVIADO: 'bg-purple-100 text-purple-800',
-      PROCESADO: 'bg-green-100 text-green-800',
-      RECHAZADO: 'bg-red-100 text-red-800',
-    };
-    return colors[estado] || 'bg-gray-100 text-gray-800';
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Cargando...</p>
-      </div>
-    );
-  }
+  const filteredDTEs = mockDTEs.filter((dte) => {
+    const matchesSearch =
+      dte.numeroControl.toLowerCase().includes(search.toLowerCase()) ||
+      dte.receptorNombre.toLowerCase().includes(search.toLowerCase()) ||
+      dte.codigoGeneracion.toLowerCase().includes(search.toLowerCase());
+    const matchesTipo = filterTipo === 'all' || dte.tipoDte === filterTipo;
+    const matchesStatus = filterStatus === 'all' || dte.status === filterStatus;
+    return matchesSearch && matchesTipo && matchesStatus;
+  });
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">Facturas</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Lista de todos los documentos tributarios electronicos
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Facturas</h1>
+          <p className="text-muted-foreground">
+            Gestiona tus documentos tributarios electronicos
           </p>
         </div>
-        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          <Link
-            href="/facturas/nueva"
-            className="block rounded-md bg-primary px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary/90"
-          >
+        <Link href="/facturas/nueva">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
             Nueva Factura
-          </Link>
-        </div>
+          </Button>
+        </Link>
       </div>
 
-      <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
-                      Numero Control
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Tipo
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Cliente
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Total
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Estado
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Fecha
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {dtes.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-10 text-center text-sm text-gray-500">
-                        No hay facturas registradas
-                      </td>
-                    </tr>
-                  ) : (
-                    dtes.map((dte) => (
-                      <tr key={dte.id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                          {dte.numeroControl}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {getTipoDteLabel(dte.tipoDte)}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {dte.cliente?.nombre || '-'}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          ${Number(dte.totalPagar).toFixed(2)}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm">
-                          <span
-                            className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getEstadoBadge(dte.estado)}`}
-                          >
-                            {dte.estado}
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {new Date(dte.createdAt).toLocaleDateString('es-SV')}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Filtros</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por numero, cliente o codigo..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
             </div>
+            <Select value={filterTipo} onValueChange={setFilterTipo}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Tipo DTE" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los tipos</SelectItem>
+                <SelectItem value="01">Factura</SelectItem>
+                <SelectItem value="03">Credito Fiscal</SelectItem>
+                <SelectItem value="05">Nota de Credito</SelectItem>
+                <SelectItem value="06">Nota de Debito</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="PENDIENTE">Pendiente</SelectItem>
+                <SelectItem value="PROCESANDO">Procesando</SelectItem>
+                <SelectItem value="PROCESADO">Procesado</SelectItem>
+                <SelectItem value="RECHAZADO">Rechazado</SelectItem>
+                <SelectItem value="ANULADO">Anulado</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Numero Control</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredDTEs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No se encontraron documentos
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredDTEs.map((dte) => (
+                  <TableRow key={dte.id}>
+                    <TableCell className="font-medium">
+                      {formatDate(dte.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                        {dte.numeroControl}
+                      </code>
+                    </TableCell>
+                    <TableCell>{getTipoDteName(dte.tipoDte)}</TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{dte.receptorNombre}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {dte.receptorDocumento}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {formatCurrency(dte.totalPagar)}
+                    </TableCell>
+                    <TableCell>
+                      <DTEStatusBadge status={dte.status} size="sm" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Link href={`/facturas/${dte.id}`}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        {dte.status === 'PROCESADO' && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                            <Ban className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

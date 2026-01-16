@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.local
+*.p12
+*.pfx
+certs/
+dist/
+.next/
+.turbo/

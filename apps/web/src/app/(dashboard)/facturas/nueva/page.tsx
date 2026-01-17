@@ -198,9 +198,9 @@ export default function NuevaFacturaPage() {
                     <label className="text-sm font-medium">NIT *</label>
                     <Input
                       placeholder="0000-000000-000-0"
-                      value={receptor?.nit || ''}
+                      value={receptor?.numDocumento || ''}
                       onChange={(e) =>
-                        setReceptor({ ...receptor, nit: e.target.value } as typeof receptor)
+                        setReceptor({ ...receptor, numDocumento: e.target.value } as typeof receptor)
                       }
                     />
                   </div>

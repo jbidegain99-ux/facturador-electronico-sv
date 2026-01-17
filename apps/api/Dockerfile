@@ -4,6 +4,8 @@ COPY package*.json ./
 COPY apps/api ./apps/api
 COPY packages ./packages
 RUN npm install
+WORKDIR /app/apps/api
+RUN npx prisma generate
 WORKDIR /app/packages/mh-client
 RUN npm run build || echo "mh-client build skipped"
 WORKDIR /app/packages/shared

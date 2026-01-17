@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Queue, Job } from 'bullmq';
+import { Queue } from 'bullmq';
 import {
   sendDTE,
   consultarDTE,
@@ -73,7 +73,7 @@ export class TransmitterService {
   private dteLogs: Map<string, DTELog[]> = new Map();
 
   constructor(
-    @InjectQueue('dte-transmission') private transmissionQueue: Queue,
+    @Optional() @InjectQueue('dte-transmission') private transmissionQueue: Queue | undefined,
     private mhAuthService: MhAuthService,
     private signerService: SignerService,
   ) {}
@@ -279,6 +279,17 @@ export class TransmitterService {
     password: string,
     env: MHEnvironment = 'test'
   ): Promise<{ jobId: string; message: string }> {
+    if (!this.transmissionQueue) {
+      this.logger.warn('Redis not configured, executing synchronously');
+      const result = await this.transmitSync(dteId, nit, password, env);
+      return {
+        jobId: 'sync',
+        message: result.success
+          ? `DTE transmitido síncronamente: ${result.selloRecibido}`
+          : `Error: ${result.error}`,
+      };
+    }
+
     const record = this.getDTE(dteId);
 
     if (!record) {
@@ -471,6 +482,10 @@ export class TransmitterService {
     attemptsMade: number;
     failedReason?: string;
   } | null> {
+    if (!this.transmissionQueue) {
+      return null;
+    }
+
     const job = await this.transmissionQueue.getJob(jobId);
 
     if (!job) {

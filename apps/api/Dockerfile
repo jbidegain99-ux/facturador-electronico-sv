@@ -11,6 +11,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api/package.json ./
 EXPOSE 3001
 ENV PORT=3001

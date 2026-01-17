@@ -4,6 +4,8 @@ COPY package*.json ./
 COPY apps/api ./apps/api
 COPY packages ./packages
 RUN npm install
+WORKDIR /app/packages/mh-client
+RUN npm run build || echo "mh-client build skipped"
 WORKDIR /app/packages/shared
 RUN npm run build || echo "shared build skipped"
 WORKDIR /app/apps/api

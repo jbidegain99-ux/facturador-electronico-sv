@@ -4,8 +4,6 @@ COPY package*.json ./
 COPY apps/api ./apps/api
 COPY packages ./packages
 RUN npm install
-WORKDIR /app/packages/types
-RUN npm run build || echo "types build skipped"
 WORKDIR /app/packages/shared
 RUN npm run build || echo "shared build skipped"
 WORKDIR /app/apps/api

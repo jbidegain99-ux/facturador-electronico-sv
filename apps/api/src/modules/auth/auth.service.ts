@@ -39,9 +39,10 @@ export class AuthService {
       rol: user.rol,
     };
 
-    const tenantInfo = user.tenant ? {
-      id: user.tenant.id,
-      nombre: user.tenant.nombre,
+    const tenant = user.tenant;
+    const tenantInfo = tenant ? {
+      id: tenant.id,
+      nombre: tenant.nombre,
     } : null;
 
     return {

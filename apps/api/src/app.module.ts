@@ -7,6 +7,7 @@ import { DteModule } from './modules/dte/dte.module';
 import { SignerModule } from './modules/signer/signer.module';
 import { TransmitterModule } from './modules/transmitter/transmitter.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
+import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 const imports: any[] = [
@@ -21,6 +22,7 @@ const imports: any[] = [
   SignerModule,
   TransmitterModule,
   CatalogModule,
+  SuperAdminModule,
 ];
 
 if (process.env.REDIS_URL) {

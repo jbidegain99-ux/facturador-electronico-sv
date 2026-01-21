@@ -94,7 +94,11 @@ export class AuthService {
           telefono: tenant.telefono,
           correo: tenant.correo,
           nombreComercial: tenant.nombreComercial || null,
-          direccion: tenant.direccion,
+          direccion: {
+            departamento: tenant.direccion.departamento,
+            municipio: tenant.direccion.municipio,
+            complemento: tenant.direccion.complemento,
+          },
         },
       });
 

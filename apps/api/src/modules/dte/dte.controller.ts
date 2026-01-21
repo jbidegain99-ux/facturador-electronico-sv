@@ -33,8 +33,11 @@ export class DteController {
 
   @Post(':id/transmit')
   @ApiOperation({ summary: 'Transmitir DTE al MH' })
-  transmit(@Param('id') id: string) {
-    return this.dteService.transmitDte(id);
+  transmit(
+    @Param('id') id: string,
+    @Body() credentials: { nit: string; password: string },
+  ) {
+    return this.dteService.transmitDte(id, credentials.nit, credentials.password);
   }
 
   @Get()

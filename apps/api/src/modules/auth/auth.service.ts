@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -55,5 +56,74 @@ export class AuthService {
 
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 10);
+  }
+
+  async register(registerDto: RegisterDto) {
+    const { tenant, user } = registerDto;
+
+    // Check if NIT already exists
+    const existingTenant = await this.prisma.tenant.findUnique({
+      where: { nit: tenant.nit },
+    });
+
+    if (existingTenant) {
+      throw new ConflictException('Ya existe una empresa con este NIT');
+    }
+
+    // Check if email already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: user.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Ya existe un usuario con este correo electronico');
+    }
+
+    // Hash password
+    const hashedPassword = await this.hashPassword(user.password);
+
+    // Create tenant and user in a transaction
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Create tenant
+      const newTenant = await tx.tenant.create({
+        data: {
+          nombre: tenant.nombre,
+          nit: tenant.nit,
+          nrc: tenant.nrc,
+          actividadEcon: tenant.actividadEcon,
+          telefono: tenant.telefono,
+          correo: tenant.correo,
+          nombreComercial: tenant.nombreComercial || null,
+          direccion: tenant.direccion,
+        },
+      });
+
+      // Create admin user
+      const newUser = await tx.user.create({
+        data: {
+          nombre: user.nombre,
+          email: user.email,
+          password: hashedPassword,
+          rol: 'ADMIN',
+          tenantId: newTenant.id,
+        },
+      });
+
+      return { tenant: newTenant, user: newUser };
+    });
+
+    return {
+      message: 'Empresa registrada exitosamente',
+      tenant: {
+        id: result.tenant.id,
+        nombre: result.tenant.nombre,
+        nit: result.tenant.nit,
+      },
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        nombre: result.user.nombre,
+      },
+    };
   }
 }

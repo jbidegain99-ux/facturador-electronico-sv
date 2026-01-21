@@ -27,7 +27,7 @@ const mockDTE = {
   numeroControl: 'DTE-01-M001P001-000000000000001',
   codigoGeneracion: 'A1B2C3D4-E5F6-7890-ABCD-EF1234567890',
   tipoDte: '01' as const,
-  ambiente: '00' as const,
+  ambiente: '00' as '00' | '01',
   status: 'PROCESADO' as const,
   selloRecibido: '2024011612345678901234567890123456789012',
   fhProcesamiento: '2024-01-16T10:30:45.123Z',

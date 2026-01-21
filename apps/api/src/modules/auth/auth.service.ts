@@ -39,6 +39,11 @@ export class AuthService {
       rol: user.rol,
     };
 
+    const tenantInfo = user.tenant ? {
+      id: user.tenant.id,
+      nombre: user.tenant.nombre,
+    } : null;
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -46,10 +51,7 @@ export class AuthService {
         email: user.email,
         nombre: user.nombre,
         rol: user.rol,
-        tenant: user.tenant ? {
-          id: user.tenant.id,
-          nombre: user.tenant.nombre,
-        } : null,
+        tenant: tenantInfo,
       },
     };
   }

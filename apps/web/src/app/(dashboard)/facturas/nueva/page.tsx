@@ -61,7 +61,7 @@ export default function NuevaFacturaPage() {
       case 1:
         return true;
       case 2:
-        return tipoDte === '01' || (receptor?.nombre && receptor?.nit);
+        return tipoDte === '01' || (receptor?.nombre && receptor?.numDocumento);
       case 3:
         return items.length > 0;
       case 4:

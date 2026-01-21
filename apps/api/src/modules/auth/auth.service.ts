@@ -46,10 +46,10 @@ export class AuthService {
         email: user.email,
         nombre: user.nombre,
         rol: user.rol,
-        tenant: {
+        tenant: user.tenant ? {
           id: user.tenant.id,
           nombre: user.tenant.nombre,
-        },
+        } : null,
       },
     };
   }

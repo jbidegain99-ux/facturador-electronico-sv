@@ -496,8 +496,8 @@ export default function RegisterPage() {
     return (
       <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="rounded-md bg-green-50 p-4">
-            <p className="text-center text-green-700">
+          <div className="rounded-md bg-green-500/20 border border-green-500/50 p-4">
+            <p className="text-center text-green-400">
               Registro exitoso! Redirigiendo al login...
             </p>
           </div>
@@ -509,28 +509,28 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
-        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-white">
           Registrar Empresa
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-gray-400">
           Complete los datos de su empresa para comenzar a facturar
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
-        <form className="space-y-6 bg-white p-8 shadow rounded-lg" onSubmit={handleSubmit}>
+        <form className="space-y-6 glass-card p-8 rounded-xl" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="rounded-md bg-red-500/20 border border-red-500/50 p-4">
+              <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
 
           {/* Datos de la Empresa */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Datos de la Empresa</h3>
+            <h3 className="text-lg font-medium text-white border-b border-border pb-2">Datos de la Empresa</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="nombre" className="block text-sm font-medium text-gray-300">
                   Razon Social *
                 </label>
                 <input
@@ -540,11 +540,11 @@ export default function RegisterPage() {
                   required
                   value={formData.nombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
               <div>
-                <label htmlFor="nombreComercial" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="nombreComercial" className="block text-sm font-medium text-gray-300">
                   Nombre Comercial
                 </label>
                 <input
@@ -553,11 +553,11 @@ export default function RegisterPage() {
                   id="nombreComercial"
                   value={formData.nombreComercial}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
               <div>
-                <label htmlFor="nit" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="nit" className="block text-sm font-medium text-gray-300">
                   NIT *
                 </label>
                 <input
@@ -568,11 +568,11 @@ export default function RegisterPage() {
                   placeholder="0000-000000-000-0"
                   value={formData.nit}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white placeholder:text-gray-500 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
               <div>
-                <label htmlFor="nrc" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="nrc" className="block text-sm font-medium text-gray-300">
                   NRC *
                 </label>
                 <input
@@ -583,11 +583,11 @@ export default function RegisterPage() {
                   placeholder="000000-0"
                   value={formData.nrc}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white placeholder:text-gray-500 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="actividadEcon" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="actividadEcon" className="block text-sm font-medium text-gray-300">
                   Actividad Economica *
                 </label>
                 <select
@@ -596,18 +596,18 @@ export default function RegisterPage() {
                   required
                   value={formData.actividadEcon}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 >
-                  <option value="">Seleccione una actividad</option>
+                  <option value="" className="bg-background">Seleccione una actividad</option>
                   {ACTIVIDADES_ECONOMICAS.map((act) => (
-                    <option key={act.codigo} value={act.codigo}>
+                    <option key={act.codigo} value={act.codigo} className="bg-background">
                       {act.codigo} - {act.descripcion}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="telefono" className="block text-sm font-medium text-gray-300">
                   Telefono *
                 </label>
                 <input
@@ -618,11 +618,11 @@ export default function RegisterPage() {
                   placeholder="0000-0000"
                   value={formData.telefono}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white placeholder:text-gray-500 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
               <div>
-                <label htmlFor="correo" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="correo" className="block text-sm font-medium text-gray-300">
                   Correo de la Empresa *
                 </label>
                 <input
@@ -632,7 +632,7 @@ export default function RegisterPage() {
                   required
                   value={formData.correo}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
             </div>
@@ -640,10 +640,10 @@ export default function RegisterPage() {
 
           {/* Direccion */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Direccion</h3>
+            <h3 className="text-lg font-medium text-white border-b border-border pb-2">Direccion</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="departamento" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="departamento" className="block text-sm font-medium text-gray-300">
                   Departamento *
                 </label>
                 <select
@@ -652,18 +652,18 @@ export default function RegisterPage() {
                   required
                   value={formData.departamento}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 >
-                  <option value="">Seleccione un departamento</option>
+                  <option value="" className="bg-background">Seleccione un departamento</option>
                   {DEPARTAMENTOS.map((dep) => (
-                    <option key={dep.codigo} value={dep.codigo}>
+                    <option key={dep.codigo} value={dep.codigo} className="bg-background">
                       {dep.nombre}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label htmlFor="municipio" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="municipio" className="block text-sm font-medium text-gray-300">
                   Municipio *
                 </label>
                 <select
@@ -673,20 +673,20 @@ export default function RegisterPage() {
                   value={formData.municipio}
                   onChange={handleChange}
                   disabled={!formData.departamento}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white disabled:bg-gray-100"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 disabled:opacity-50"
                 >
-                  <option value="">
+                  <option value="" className="bg-background">
                     {formData.departamento ? 'Seleccione un municipio' : 'Primero seleccione departamento'}
                   </option>
                   {municipiosDisponibles.map((mun) => (
-                    <option key={mun.codigo} value={mun.codigo}>
+                    <option key={mun.codigo} value={mun.codigo} className="bg-background">
                       {mun.nombre}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="complemento" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="complemento" className="block text-sm font-medium text-gray-300">
                   Direccion Completa *
                 </label>
                 <input
@@ -697,7 +697,7 @@ export default function RegisterPage() {
                   placeholder="Calle, numero, colonia, etc."
                   value={formData.complemento}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white placeholder:text-gray-500 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
             </div>
@@ -705,10 +705,10 @@ export default function RegisterPage() {
 
           {/* Usuario Administrador */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Usuario Administrador</h3>
+            <h3 className="text-lg font-medium text-white border-b border-border pb-2">Usuario Administrador</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="adminNombre" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="adminNombre" className="block text-sm font-medium text-gray-300">
                   Nombre Completo *
                 </label>
                 <input
@@ -718,11 +718,11 @@ export default function RegisterPage() {
                   required
                   value={formData.adminNombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
               <div>
-                <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-300">
                   Correo Electronico *
                 </label>
                 <input
@@ -732,11 +732,11 @@ export default function RegisterPage() {
                   required
                   value={formData.adminEmail}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
               <div>
-                <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-300">
                   Contrasena *
                 </label>
                 <input
@@ -747,11 +747,11 @@ export default function RegisterPage() {
                   minLength={8}
                   value={formData.adminPassword}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
               <div>
-                <label htmlFor="adminPasswordConfirm" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="adminPasswordConfirm" className="block text-sm font-medium text-gray-300">
                   Confirmar Contrasena *
                 </label>
                 <input
@@ -762,7 +762,7 @@ export default function RegisterPage() {
                   minLength={8}
                   value={formData.adminPasswordConfirm}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border border-border bg-background text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2"
                 />
               </div>
             </div>
@@ -772,14 +772,14 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+              className="flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 transition-colors"
             >
               {loading ? 'Registrando...' : 'Registrar Empresa'}
             </button>
           </div>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-gray-400">
           Ya tienes cuenta?{' '}
           <Link href="/login" className="font-semibold leading-6 text-primary hover:text-primary/80">
             Iniciar Sesion

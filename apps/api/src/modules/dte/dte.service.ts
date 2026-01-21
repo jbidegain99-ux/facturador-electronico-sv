@@ -206,7 +206,7 @@ export class DteService {
       data: {
         dteId,
         accion,
-        request: data,
+        request: JSON.parse(JSON.stringify(data)),
       },
     });
   }

@@ -61,7 +61,7 @@ export default function NuevaFacturaPage() {
       case 1:
         return true;
       case 2:
-        return tipoDte === '01' || (receptor?.nombre && receptor?.nit);
+        return tipoDte === '01' || (receptor?.nombre && receptor?.numDocumento);
       case 3:
         return items.length > 0;
       case 4:
@@ -198,9 +198,9 @@ export default function NuevaFacturaPage() {
                     <label className="text-sm font-medium">NIT *</label>
                     <Input
                       placeholder="0000-000000-000-0"
-                      value={receptor?.nit || ''}
+                      value={receptor?.numDocumento || ''}
                       onChange={(e) =>
-                        setReceptor({ ...receptor, nit: e.target.value } as typeof receptor)
+                        setReceptor({ ...receptor, numDocumento: e.target.value } as typeof receptor)
                       }
                     />
                   </div>

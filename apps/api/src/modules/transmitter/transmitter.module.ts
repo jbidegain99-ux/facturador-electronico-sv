@@ -7,26 +7,29 @@ import { MhAuthModule } from '../mh-auth/mh-auth.module';
 import { SignerModule } from '../signer/signer.module';
 import { DteModule } from '../dte/dte.module';
 
-@Module({
-  imports: [
-    BullModule.registerQueue({
-      name: 'dte-transmission',
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 1000,
+const bullImports = process.env.REDIS_URL
+  ? [
+      BullModule.registerQueue({
+        name: 'dte-transmission',
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
+          },
+          removeOnComplete: 100,
+          removeOnFail: 100,
         },
-        removeOnComplete: 100,
-        removeOnFail: 100,
-      },
-    }),
-    MhAuthModule,
-    SignerModule,
-    DteModule,
-  ],
+      }),
+    ]
+  : [];
+
+const bullProviders = process.env.REDIS_URL ? [TransmitterProcessor] : [];
+
+@Module({
+  imports: [...bullImports, MhAuthModule, SignerModule, DteModule],
   controllers: [TransmitterController],
-  providers: [TransmitterService, TransmitterProcessor],
+  providers: [TransmitterService, ...bullProviders],
   exports: [TransmitterService],
 })
 export class TransmitterModule {}

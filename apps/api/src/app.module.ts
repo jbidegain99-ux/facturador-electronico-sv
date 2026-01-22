@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { AuthModule } from './modules/auth/auth.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
+import { ClientesModule } from './modules/clientes/clientes.module';
 import { DteModule } from './modules/dte/dte.module';
 import { SignerModule } from './modules/signer/signer.module';
 import { TransmitterModule } from './modules/transmitter/transmitter.module';
@@ -18,6 +19,7 @@ const imports: any[] = [
   PrismaModule,
   AuthModule,
   TenantsModule,
+  ClientesModule,
   DteModule,
   SignerModule,
   TransmitterModule,

@@ -14,6 +14,29 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from './guards/super-admin.guard';
 import { SuperAdminService } from './super-admin.service';
 
+// Bootstrap controller - no authentication required
+@ApiTags('super-admin')
+@Controller('super-admin')
+export class SuperAdminBootstrapController {
+  constructor(private readonly superAdminService: SuperAdminService) {}
+
+  @Get('bootstrap/status')
+  @ApiOperation({ summary: 'Check if a Super Admin exists' })
+  async checkBootstrapStatus() {
+    const hasAdmin = await this.superAdminService.hasSuperAdmin();
+    return { hasAdmin, canBootstrap: !hasAdmin };
+  }
+
+  @Post('bootstrap')
+  @ApiOperation({ summary: 'Create the first Super Admin (only works if none exists)' })
+  async bootstrapSuperAdmin(
+    @Body() data: { email: string; password: string; nombre: string },
+  ) {
+    return this.superAdminService.bootstrapSuperAdmin(data);
+  }
+}
+
+// Main controller - requires SUPER_ADMIN authentication
 @ApiTags('super-admin')
 @ApiBearerAuth()
 @Controller('super-admin')

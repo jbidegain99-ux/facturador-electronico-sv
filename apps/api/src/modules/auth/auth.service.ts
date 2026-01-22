@@ -86,7 +86,7 @@ export class AuthService {
     const hashedPassword = await this.hashPassword(user.password);
 
     // Create tenant and user in a transaction
-    const result = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx: typeof this.prisma) => {
       // Create tenant
       const newTenant = await tx.tenant.create({
         data: {

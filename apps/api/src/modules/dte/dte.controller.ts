@@ -44,15 +44,22 @@ export class DteController {
   @ApiOperation({ summary: 'Listar DTEs del tenant' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'tipoDte', required: false, type: String })
+  @ApiQuery({ name: 'estado', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
   findAll(
     @Request() req: AuthRequest,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('tipoDte') tipoDte?: string,
+    @Query('estado') estado?: string,
+    @Query('search') search?: string,
   ) {
     return this.dteService.findByTenant(
       req.user.tenantId,
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
+      { tipoDte, estado, search },
     );
   }
 

@@ -154,18 +154,41 @@ export class DteService {
     }
   }
 
-  async findByTenant(tenantId: string, page = 1, limit = 20) {
+  async findByTenant(
+    tenantId: string,
+    page = 1,
+    limit = 20,
+    filters?: { tipoDte?: string; estado?: string; search?: string },
+  ) {
     const skip = (page - 1) * limit;
+
+    const where: any = { tenantId };
+
+    if (filters?.tipoDte) {
+      where.tipoDte = filters.tipoDte;
+    }
+
+    if (filters?.estado) {
+      where.estado = filters.estado;
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        { numeroControl: { contains: filters.search, mode: 'insensitive' } },
+        { codigoGeneracion: { contains: filters.search, mode: 'insensitive' } },
+        { cliente: { nombre: { contains: filters.search, mode: 'insensitive' } } },
+      ];
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.dTE.findMany({
-        where: { tenantId },
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: { cliente: true },
       }),
-      this.prisma.dTE.count({ where: { tenantId } }),
+      this.prisma.dTE.count({ where }),
     ]);
 
     return {

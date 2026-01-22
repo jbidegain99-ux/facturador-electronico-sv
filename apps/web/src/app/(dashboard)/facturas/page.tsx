@@ -2,40 +2,148 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
 import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
-import { Plus, Search, Filter, Download, Eye, Ban, MoreHorizontal } from 'lucide-react';
+import { Plus, Search, Download, Eye, Ban, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DTEStatus, TipoDte } from '@/types';
 
-// Mock data
-const mockDTEs = [
-  { id: '1', numeroControl: 'DTE-01-M001P001-000000000000001', codigoGeneracion: 'A1B2C3D4-E5F6-7890-ABCD-EF1234567890', receptorNombre: 'Cliente ABC S.A. de C.V.', receptorDocumento: '0614-180494-103-5', totalPagar: 1250.00, status: 'PROCESADO' as DTEStatus, selloRecibido: '2024011612345678901234567890123456789012', createdAt: '2024-01-16T10:30:00Z', tipoDte: '01' as TipoDte },
-  { id: '2', numeroControl: 'DTE-03-M001P001-000000000000002', codigoGeneracion: 'B2C3D4E5-F6A7-8901-BCDE-FA2345678901', receptorNombre: 'Empresa XYZ', receptorDocumento: '0614-180494-103-6', totalPagar: 3450.00, status: 'PROCESANDO' as DTEStatus, createdAt: '2024-01-16T09:15:00Z', tipoDte: '03' as TipoDte },
-  { id: '3', numeroControl: 'DTE-01-M001P001-000000000000003', codigoGeneracion: 'C3D4E5F6-A7B8-9012-CDEF-AB3456789012', receptorNombre: 'Comercial 123', receptorDocumento: '00000000-0', totalPagar: 890.50, status: 'RECHAZADO' as DTEStatus, createdAt: '2024-01-15T16:45:00Z', tipoDte: '01' as TipoDte },
-  { id: '4', numeroControl: 'DTE-01-M001P001-000000000000004', codigoGeneracion: 'D4E5F6A7-B8C9-0123-DEFA-BC4567890123', receptorNombre: 'Tienda Plus', receptorDocumento: '00000000-0', totalPagar: 2100.00, status: 'PROCESADO' as DTEStatus, selloRecibido: '2024011512345678901234567890123456789012', createdAt: '2024-01-15T14:20:00Z', tipoDte: '01' as TipoDte },
-  { id: '5', numeroControl: 'DTE-03-M001P001-000000000000005', codigoGeneracion: 'E5F6A7B8-C9D0-1234-EFAB-CD5678901234', receptorNombre: 'Distribuidora El Sol', receptorDocumento: '0614-180494-103-7', totalPagar: 5670.00, status: 'PROCESADO' as DTEStatus, selloRecibido: '2024011412345678901234567890123456789012', createdAt: '2024-01-15T11:00:00Z', tipoDte: '03' as TipoDte },
-  { id: '6', numeroControl: 'DTE-05-M001P001-000000000000006', codigoGeneracion: 'F6A7B8C9-D0E1-2345-FABC-DE6789012345', receptorNombre: 'Cliente ABC S.A. de C.V.', receptorDocumento: '0614-180494-103-5', totalPagar: 250.00, status: 'ANULADO' as DTEStatus, createdAt: '2024-01-14T09:00:00Z', tipoDte: '05' as TipoDte },
-];
+interface DTE {
+  id: string;
+  numeroControl: string;
+  codigoGeneracion: string;
+  tipoDte: TipoDte;
+  estado: DTEStatus;
+  totalPagar: number | { toNumber: () => number };
+  selloRecepcion?: string;
+  createdAt: string;
+  cliente?: {
+    nombre: string;
+    numDocumento: string;
+  };
+}
+
+interface DTEResponse {
+  data: DTE[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 export default function FacturasPage() {
   const [search, setSearch] = React.useState('');
   const [filterTipo, setFilterTipo] = React.useState<string>('all');
   const [filterStatus, setFilterStatus] = React.useState<string>('all');
+  const [page, setPage] = React.useState(1);
+  const [dtes, setDtes] = React.useState<DTE[]>([]);
+  const [totalPages, setTotalPages] = React.useState(1);
+  const [total, setTotal] = React.useState(0);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const filteredDTEs = mockDTEs.filter((dte) => {
-    const matchesSearch =
-      dte.numeroControl.toLowerCase().includes(search.toLowerCase()) ||
-      dte.receptorNombre.toLowerCase().includes(search.toLowerCase()) ||
-      dte.codigoGeneracion.toLowerCase().includes(search.toLowerCase());
-    const matchesTipo = filterTipo === 'all' || dte.tipoDte === filterTipo;
-    const matchesStatus = filterStatus === 'all' || dte.status === filterStatus;
-    return matchesSearch && matchesTipo && matchesStatus;
-  });
+  const fetchDTEs = React.useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('No hay sesion activa');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      params.set('page', page.toString());
+      params.set('limit', '20');
+
+      if (filterTipo !== 'all') params.set('tipoDte', filterTipo);
+      if (filterStatus !== 'all') params.set('estado', filterStatus);
+      if (search) params.set('search', search);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Error al cargar facturas');
+      }
+
+      const data: DTEResponse = await res.json();
+      setDtes(data.data);
+      setTotalPages(data.totalPages);
+      setTotal(data.total);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching DTEs:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar facturas');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, filterTipo, filterStatus, search]);
+
+  // Fetch on mount and when filters change
+  React.useEffect(() => {
+    fetchDTEs();
+  }, [fetchDTEs]);
+
+  // Debounced search
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1); // Reset to first page on search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setPage(1);
+  }, [filterTipo, filterStatus]);
+
+  const handleDownload = async (dteId: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dteId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error('Error al descargar');
+
+      const data = await res.json();
+      const jsonStr = JSON.stringify(data.jsonOriginal || data, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DTE-${data.codigoGeneracion}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading DTE:', err);
+      alert('Error al descargar el documento');
+    }
+  };
+
+  const getTotalPagar = (dte: DTE): number => {
+    if (typeof dte.totalPagar === 'number') return dte.totalPagar;
+    if (dte.totalPagar && typeof dte.totalPagar.toNumber === 'function') {
+      return dte.totalPagar.toNumber();
+    }
+    return 0;
+  };
 
   return (
     <div className="space-y-6">
@@ -54,6 +162,16 @@ export default function FacturasPage() {
           </Button>
         </Link>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
+          {error}
+          <Button variant="link" className="ml-2 text-red-700" onClick={fetchDTEs}>
+            Reintentar
+          </Button>
+        </div>
+      )}
 
       {/* Filters */}
       <Card>
@@ -92,7 +210,7 @@ export default function FacturasPage() {
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
                 <SelectItem value="PENDIENTE">Pendiente</SelectItem>
-                <SelectItem value="PROCESANDO">Procesando</SelectItem>
+                <SelectItem value="FIRMADO">Firmado</SelectItem>
                 <SelectItem value="PROCESADO">Procesado</SelectItem>
                 <SelectItem value="RECHAZADO">Rechazado</SelectItem>
                 <SelectItem value="ANULADO">Anulado</SelectItem>
@@ -105,73 +223,122 @@ export default function FacturasPage() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Numero Control</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredDTEs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No se encontraron documentos
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredDTEs.map((dte) => (
-                  <TableRow key={dte.id}>
-                    <TableCell className="font-medium">
-                      {formatDate(dte.createdAt)}
-                    </TableCell>
-                    <TableCell>
-                      <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                        {dte.numeroControl}
-                      </code>
-                    </TableCell>
-                    <TableCell>{getTipoDteName(dte.tipoDte)}</TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{dte.receptorNombre}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {dte.receptorDocumento}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {formatCurrency(dte.totalPagar)}
-                    </TableCell>
-                    <TableCell>
-                      <DTEStatusBadge status={dte.status} size="sm" />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Link href={`/facturas/${dte.id}`}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        {dte.status === 'PROCESADO' && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                            <Ban className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Numero Control</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
-                ))
+                </TableHeader>
+                <TableBody>
+                  {dtes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        {search || filterTipo !== 'all' || filterStatus !== 'all'
+                          ? 'No se encontraron documentos con esos filtros'
+                          : 'No hay documentos emitidos. Crea tu primera factura.'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    dtes.map((dte) => (
+                      <TableRow key={dte.id}>
+                        <TableCell className="font-medium">
+                          {formatDate(dte.createdAt)}
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                            {dte.numeroControl}
+                          </code>
+                        </TableCell>
+                        <TableCell>{getTipoDteName(dte.tipoDte)}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {dte.cliente?.nombre || 'Sin cliente'}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {dte.cliente?.numDocumento || '-'}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {formatCurrency(getTotalPagar(dte))}
+                        </TableCell>
+                        <TableCell>
+                          <DTEStatusBadge status={dte.estado} size="sm" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Link href={`/facturas/${dte.id}`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleDownload(dte.id)}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            {dte.estado === 'PROCESADO' && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                <Ban className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Mostrando {dtes.length} de {total} documentos
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Anterior
+                    </Button>
+                    <span className="text-sm">
+                      Pagina {page} de {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                    >
+                      Siguiente
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               )}
-            </TableBody>
-          </Table>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

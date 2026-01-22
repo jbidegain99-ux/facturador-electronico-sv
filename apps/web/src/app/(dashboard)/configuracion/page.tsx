@@ -6,16 +6,151 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
-import { Building2, Key, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+
+interface TenantData {
+  id: string;
+  nombre: string;
+  nit: string;
+  nrc: string;
+  actividadEcon: string;
+  direccion: {
+    departamento: string;
+    municipio: string;
+    complemento: string;
+  };
+  telefono: string;
+  correo: string;
+  nombreComercial?: string;
+}
 
 export default function ConfiguracionPage() {
   const { tenant, setTenant } = useAppStore();
   const [certificateStatus, setCertificateStatus] = React.useState<'loaded' | 'not_loaded'>('not_loaded');
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState<string | null>(null);
 
-  const handleSave = () => {
-    // Save configuration
-    alert('Configuracion guardada');
+  // Form state
+  const [formData, setFormData] = React.useState<Partial<TenantData>>({
+    nombre: '',
+    nit: '',
+    nrc: '',
+    correo: '',
+    telefono: '',
+    direccion: { departamento: '', municipio: '', complemento: '' },
+  });
+
+  // Load tenant data on mount
+  React.useEffect(() => {
+    const loadTenantData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('No hay sesion activa');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Error al cargar datos');
+        }
+
+        const data: TenantData = await res.json();
+        setFormData({
+          nombre: data.nombre || '',
+          nit: data.nit || '',
+          nrc: data.nrc || '',
+          correo: data.correo || '',
+          telefono: data.telefono || '',
+          direccion: data.direccion || { departamento: '', municipio: '', complemento: '' },
+        });
+        setTenant(data);
+      } catch (err) {
+        console.error('Error loading tenant:', err);
+        setError(err instanceof Error ? err.message : 'Error al cargar configuracion');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTenantData();
+  }, [setTenant]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setError(null);
+    setSuccess(null);
   };
+
+  const handleDireccionChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      direccion: { ...prev.direccion!, [field]: value },
+    }));
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleSave = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('No hay sesion activa');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nombre: formData.nombre,
+          nrc: formData.nrc,
+          correo: formData.correo,
+          telefono: formData.telefono,
+          direccion: formData.direccion,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Error al guardar');
+      }
+
+      const updatedTenant = await res.json();
+      setTenant(updatedTenant);
+      setSuccess('Configuracion guardada exitosamente');
+    } catch (err) {
+      console.error('Error saving tenant:', err);
+      setError(err instanceof Error ? err.message : 'Error al guardar configuracion');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -26,6 +161,18 @@ export default function ConfiguracionPage() {
           Configura los datos de tu empresa y credenciales del MH
         </p>
       </div>
+
+      {/* Error/Success Messages */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">
+          {success}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Datos Empresa */}
@@ -44,17 +191,28 @@ export default function ConfiguracionPage() {
               <label className="text-sm font-medium">Nombre / Razon Social</label>
               <Input
                 placeholder="Mi Empresa S.A. de C.V."
-                defaultValue={tenant?.nombre || ''}
+                value={formData.nombre || ''}
+                onChange={(e) => handleInputChange('nombre', e.target.value)}
               />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">NIT</label>
-                <Input placeholder="0000-000000-000-0" defaultValue={tenant?.nit || ''} />
+                <Input
+                  placeholder="0000-000000-000-0"
+                  value={formData.nit || ''}
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">El NIT no se puede modificar</p>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">NRC</label>
-                <Input placeholder="000000-0" defaultValue={tenant?.nrc || ''} />
+                <Input
+                  placeholder="000000-0"
+                  value={formData.nrc || ''}
+                  onChange={(e) => handleInputChange('nrc', e.target.value)}
+                />
               </div>
             </div>
             <div className="space-y-2">
@@ -62,16 +220,25 @@ export default function ConfiguracionPage() {
               <Input
                 type="email"
                 placeholder="facturacion@empresa.com"
-                defaultValue={tenant?.correo || ''}
+                value={formData.correo || ''}
+                onChange={(e) => handleInputChange('correo', e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Telefono</label>
-              <Input placeholder="0000-0000" />
+              <Input
+                placeholder="0000-0000"
+                value={formData.telefono || ''}
+                onChange={(e) => handleInputChange('telefono', e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Direccion</label>
-              <Input placeholder="Direccion completa del establecimiento" />
+              <Input
+                placeholder="Direccion completa del establecimiento"
+                value={formData.direccion?.complemento || ''}
+                onChange={(e) => handleDireccionChange('complemento', e.target.value)}
+              />
             </div>
           </CardContent>
         </Card>
@@ -184,8 +351,15 @@ export default function ConfiguracionPage() {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button size="lg" onClick={handleSave}>
-          Guardar Configuracion
+        <Button size="lg" onClick={handleSave} disabled={saving}>
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Guardando...
+            </>
+          ) : (
+            'Guardar Configuracion'
+          )}
         </Button>
       </div>
     </div>

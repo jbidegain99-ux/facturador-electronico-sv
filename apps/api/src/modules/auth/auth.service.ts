@@ -39,6 +39,12 @@ export class AuthService {
       rol: user.rol,
     };
 
+    const tenant = user.tenant;
+    const tenantInfo = tenant ? {
+      id: tenant.id,
+      nombre: tenant.nombre,
+    } : null;
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -46,10 +52,7 @@ export class AuthService {
         email: user.email,
         nombre: user.nombre,
         rol: user.rol,
-        tenant: {
-          id: user.tenant.id,
-          nombre: user.tenant.nombre,
-        },
+        tenant: tenantInfo,
       },
     };
   }
@@ -83,7 +86,7 @@ export class AuthService {
     const hashedPassword = await this.hashPassword(user.password);
 
     // Create tenant and user in a transaction
-    const result = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx: typeof this.prisma) => {
       // Create tenant
       const newTenant = await tx.tenant.create({
         data: {

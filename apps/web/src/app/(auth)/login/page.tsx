@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -29,7 +29,13 @@ export default function LoginPage() {
 
       const data = await res.json();
       localStorage.setItem('token', data.access_token);
-      router.push('/facturas');
+
+      // Redirect based on user role
+      if (data.user?.rol === 'SUPER_ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/facturas');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesion');
     } finally {

@@ -55,8 +55,8 @@ export class SuperAdminService {
       totalUsers,
       totalDtes,
       dtesThisMonth,
-      dtesByStatus: dtesByStatus.map(s => ({ status: s.estado, count: s._count.estado })),
-      tenantsByPlan: tenantsByPlan.map(p => ({ plan: p.plan, count: p._count.plan })),
+      dtesByStatus: dtesByStatus.map((s: { estado: string; _count: { estado: number } }) => ({ status: s.estado, count: s._count.estado })),
+      tenantsByPlan: tenantsByPlan.map((p: { plan: string; _count: { plan: number } }) => ({ plan: p.plan, count: p._count.plan })),
       last7Days,
     };
   }
@@ -192,7 +192,7 @@ export class SuperAdminService {
 
     return {
       ...tenant,
-      dteStats: dteStats.map(s => ({ status: s.estado, count: s._count.estado })),
+      dteStats: dteStats.map((s: { estado: string; _count: { estado: number } }) => ({ status: s.estado, count: s._count.estado })),
       dtesLast30Days,
     };
   }
@@ -338,5 +338,56 @@ export class SuperAdminService {
       recentDtes,
       recentTenants,
     };
+  }
+
+  // ============ BOOTSTRAP (First Super Admin) ============
+  async bootstrapSuperAdmin(data: { email: string; password: string; nombre: string }) {
+    // Check if any SUPER_ADMIN already exists
+    const existingAdmin = await this.prisma.user.findFirst({
+      where: { rol: 'SUPER_ADMIN' },
+    });
+
+    if (existingAdmin) {
+      throw new ConflictException('Ya existe un Super Administrador. Use el panel de admin para crear mas.');
+    }
+
+    const existing = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existing) {
+      throw new ConflictException('Ya existe un usuario con este correo');
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    const admin = await this.prisma.user.create({
+      data: {
+        email: data.email,
+        password: hashedPassword,
+        nombre: data.nombre,
+        rol: 'SUPER_ADMIN',
+        tenantId: null,
+      },
+      select: {
+        id: true,
+        email: true,
+        nombre: true,
+        rol: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      message: 'Super Administrador creado exitosamente',
+      admin,
+    };
+  }
+
+  async hasSuperAdmin(): Promise<boolean> {
+    const count = await this.prisma.user.count({
+      where: { rol: 'SUPER_ADMIN' },
+    });
+    return count > 0;
   }
 }

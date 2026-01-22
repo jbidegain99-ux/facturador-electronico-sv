@@ -5,8 +5,9 @@ import { MhAuthService } from '../mh-auth/mh-auth.service';
 import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
 import { DTE_VERSIONS, TipoDte } from '@facturador/shared';
 import { v4 as uuidv4 } from 'uuid';
+import { Prisma } from '@prisma/client';
 
-// Enum mirror - will be replaced by Prisma generated types after prisma generate
+// Enum values as strings for SQL Server compatibility
 const DTEStatus = {
   PENDIENTE: 'PENDIENTE',
   FIRMADO: 'FIRMADO',
@@ -27,6 +28,8 @@ export class DteService {
   ) {}
 
   async createDte(tenantId: string, tipoDte: string, data: Record<string, unknown>) {
+    this.logger.log(`Creating DTE for tenant ${tenantId}, type ${tipoDte}`);
+
     const codigoGeneracion = uuidv4().toUpperCase();
     const correlativo = await this.getNextCorrelativo(tenantId, tipoDte);
     const numeroControl = this.generateNumeroControl(tipoDte, correlativo);
@@ -40,23 +43,74 @@ export class DteService {
       },
     };
 
-    const dte = await this.prisma.dTE.create({
-      data: {
-        tenantId,
-        tipoDte,
-        codigoGeneracion,
-        numeroControl,
-        jsonOriginal,
-        totalGravada: 0,
-        totalIva: 0,
-        totalPagar: 0,
-        estado: DTEStatus.PENDIENTE,
-      },
-    });
+    // Extract totals from resumen
+    const resumen = data.resumen as Record<string, unknown> | undefined;
+    const totalGravada = Number(resumen?.totalGravada) || 0;
+    const totalIva = Number(resumen?.totalIva) || 0;
+    const totalPagar = Number(resumen?.totalPagar) || 0;
 
-    await this.logDteAction(dte.id, 'CREATED', { jsonOriginal });
+    // Try to find or create client based on receptor data
+    let clienteId: string | undefined;
+    const receptor = data.receptor as Record<string, unknown> | undefined;
+    if (receptor?.nombre) {
+      const existingCliente = await this.prisma.cliente.findFirst({
+        where: {
+          tenantId,
+          OR: [
+            { numDocumento: receptor.numDocumento as string },
+            { nombre: receptor.nombre as string },
+          ].filter(c => Object.values(c)[0]),
+        },
+      });
 
-    return dte;
+      if (existingCliente) {
+        clienteId = existingCliente.id;
+      } else {
+        // Create new client from receptor data
+        const newCliente = await this.prisma.cliente.create({
+          data: {
+            tenantId,
+            tipoDocumento: (receptor.tipoDocumento as string) || '13',
+            numDocumento: (receptor.numDocumento as string) || '',
+            nombre: receptor.nombre as string,
+            nrc: (receptor.nrc as string) || null,
+            telefono: (receptor.telefono as string) || null,
+            correo: (receptor.correo as string) || null,
+            direccion: JSON.stringify(receptor.direccion || {}),
+          },
+        });
+        clienteId = newCliente.id;
+      }
+    }
+
+    this.logger.log(`Creating DTE record: codigoGeneracion=${codigoGeneracion}, numeroControl=${numeroControl}`);
+    this.logger.log(`Totals: gravada=${totalGravada}, iva=${totalIva}, pagar=${totalPagar}`);
+
+    try {
+      const dte = await this.prisma.dTE.create({
+        data: {
+          tenantId,
+          tipoDte,
+          codigoGeneracion,
+          numeroControl,
+          jsonOriginal: JSON.stringify(jsonOriginal),
+          totalGravada: new Prisma.Decimal(totalGravada.toFixed(2)),
+          totalIva: new Prisma.Decimal(totalIva.toFixed(2)),
+          totalPagar: new Prisma.Decimal(totalPagar.toFixed(2)),
+          estado: DTEStatus.PENDIENTE,
+          ...(clienteId && { clienteId }),
+        },
+      });
+
+      this.logger.log(`DTE created successfully: id=${dte.id}`);
+
+      await this.logDteAction(dte.id, 'CREATED', { jsonOriginal });
+
+      return dte;
+    } catch (error) {
+      this.logger.error(`Failed to create DTE: ${error instanceof Error ? error.message : error}`);
+      throw error;
+    }
   }
 
   async signDte(dteId: string) {
@@ -73,9 +127,12 @@ export class DteService {
       throw new Error('No certificate loaded for signing');
     }
 
-    const jsonFirmado = await this.signerService.signDTE(
-      dte.jsonOriginal as Record<string, unknown>,
-    );
+    // Parse jsonOriginal from string
+    const jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
+      ? JSON.parse(dte.jsonOriginal)
+      : dte.jsonOriginal;
+
+    const jsonFirmado = await this.signerService.signDTE(jsonOriginalParsed);
 
     const updated = await this.prisma.dTE.update({
       where: { id: dteId },
@@ -105,9 +162,11 @@ export class DteService {
       const env = (process.env.MH_API_ENV as 'test' | 'prod') || 'test';
       const tokenInfo = await this.mhAuthService.getToken(nit, password, env);
 
-      // Prepare request
-      const identificacion = dte.jsonOriginal as { identificacion?: { ambiente?: string } };
-      const ambiente = (identificacion?.identificacion?.ambiente || '00') as '00' | '01';
+      // Parse jsonOriginal from string
+      const jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
+        ? JSON.parse(dte.jsonOriginal)
+        : dte.jsonOriginal;
+      const ambiente = (jsonOriginalParsed?.identificacion?.ambiente || '00') as '00' | '01';
 
       const request: SendDTERequest = {
         ambiente,
@@ -160,6 +219,9 @@ export class DteService {
     limit = 20,
     filters?: { tipoDte?: string; estado?: string; search?: string },
   ) {
+    this.logger.log(`Finding DTEs for tenant ${tenantId}, page ${page}, limit ${limit}`);
+    this.logger.log(`Filters: ${JSON.stringify(filters)}`);
+
     const skip = (page - 1) * limit;
 
     const where: any = { tenantId };
@@ -173,10 +235,11 @@ export class DteService {
     }
 
     if (filters?.search) {
+      // SQL Server uses collation for case sensitivity, remove 'mode: insensitive'
       where.OR = [
-        { numeroControl: { contains: filters.search, mode: 'insensitive' } },
-        { codigoGeneracion: { contains: filters.search, mode: 'insensitive' } },
-        { cliente: { nombre: { contains: filters.search, mode: 'insensitive' } } },
+        { numeroControl: { contains: filters.search } },
+        { codigoGeneracion: { contains: filters.search } },
+        { cliente: { nombre: { contains: filters.search } } },
       ];
     }
 
@@ -190,6 +253,8 @@ export class DteService {
       }),
       this.prisma.dTE.count({ where }),
     ]);
+
+    this.logger.log(`Found ${total} DTEs for tenant ${tenantId}, returning ${data.length} results`);
 
     return {
       data,
@@ -229,7 +294,7 @@ export class DteService {
       data: {
         dteId,
         accion,
-        request: JSON.parse(JSON.stringify(data)),
+        request: JSON.stringify(data),
       },
     });
   }

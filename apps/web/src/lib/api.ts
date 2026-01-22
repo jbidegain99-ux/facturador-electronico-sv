@@ -30,19 +30,19 @@ export async function authenticateMH(nit: string, password: string) {
 // DTEs
 export async function getDTEs(filters?: Record<string, string>) {
   const params = new URLSearchParams(filters);
-  return fetchAPI(`/transmitter/dtes?${params}`);
+  return fetchAPI(`/api/v1/dte?${params}`);
 }
 
 export async function getDTE(id: string) {
-  return fetchAPI(`/transmitter/dte/${id}`);
+  return fetchAPI(`/api/v1/dte/${id}`);
 }
 
 export async function getDTEJson(id: string) {
-  return fetchAPI(`/transmitter/dte/${id}/json`);
+  return fetchAPI(`/api/v1/dte/${id}/json`);
 }
 
 export async function getDTELogs(id: string) {
-  return fetchAPI(`/transmitter/dte/${id}/logs`);
+  return fetchAPI(`/api/v1/dte/${id}/logs`);
 }
 
 export async function createAndSendDTE(data: Record<string, unknown>) {

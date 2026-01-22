@@ -102,10 +102,11 @@ export class SuperAdminService {
     const where: any = {};
 
     if (search) {
+      // SQL Server uses collation for case sensitivity
       where.OR = [
-        { nombre: { contains: search, mode: 'insensitive' } },
-        { nit: { contains: search, mode: 'insensitive' } },
-        { correo: { contains: search, mode: 'insensitive' } },
+        { nombre: { contains: search } },
+        { nit: { contains: search } },
+        { correo: { contains: search } },
       ];
     }
 

@@ -7,7 +7,18 @@ export class TenantsService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateTenantDto) {
-    return this.prisma.tenant.create({ data });
+    return this.prisma.tenant.create({
+      data: {
+        nombre: data.nombre,
+        nit: data.nit,
+        nrc: data.nrc,
+        actividadEcon: data.actividadEcon,
+        telefono: data.telefono,
+        correo: data.correo,
+        nombreComercial: data.nombreComercial || null,
+        direccion: JSON.stringify(data.direccion),
+      },
+    });
   }
 
   async findAll() {
@@ -23,6 +34,10 @@ export class TenantsService {
   }
 
   async update(id: string, data: Partial<CreateTenantDto>) {
-    return this.prisma.tenant.update({ where: { id }, data });
+    const updateData: any = { ...data };
+    if (data.direccion) {
+      updateData.direccion = JSON.stringify(data.direccion);
+    }
+    return this.prisma.tenant.update({ where: { id }, data: updateData });
   }
 }

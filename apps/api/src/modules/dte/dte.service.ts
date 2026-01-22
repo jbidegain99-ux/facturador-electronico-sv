@@ -68,7 +68,7 @@ export class DteService {
           data: {
             tenantId,
             tipoDocumento: (receptor.tipoDocumento as string) || '13',
-            numDocumento: (receptor.numDocumento as string) || null,
+            numDocumento: (receptor.numDocumento as string) || '',
             nombre: receptor.nombre as string,
             nrc: (receptor.nrc as string) || null,
             telefono: (receptor.telefono as string) || null,

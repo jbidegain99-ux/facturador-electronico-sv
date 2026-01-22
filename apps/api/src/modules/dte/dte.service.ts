@@ -40,6 +40,47 @@ export class DteService {
       },
     };
 
+    // Extract totals from resumen
+    const resumen = data.resumen as Record<string, unknown> | undefined;
+    const totalGravada = Number(resumen?.totalGravada) || 0;
+    const totalIva = Number(resumen?.totalIva) || 0;
+    const totalPagar = Number(resumen?.totalPagar) || 0;
+
+    // Try to find or create client based on receptor data
+    let clienteId: string | undefined;
+    const receptor = data.receptor as Record<string, unknown> | undefined;
+    if (receptor?.nombre) {
+      const existingCliente = await this.prisma.cliente.findFirst({
+        where: {
+          tenantId,
+          OR: [
+            { numDocumento: receptor.numDocumento as string },
+            { nombre: receptor.nombre as string },
+          ].filter(c => Object.values(c)[0]),
+        },
+      });
+
+      if (existingCliente) {
+        clienteId = existingCliente.id;
+      } else {
+        // Create new client from receptor data
+        const newCliente = await this.prisma.cliente.create({
+          data: {
+            tenantId,
+            tipoDocumento: (receptor.tipoDocumento as string) || '13',
+            numDocumento: (receptor.numDocumento as string) || null,
+            nombre: receptor.nombre as string,
+            nrc: (receptor.nrc as string) || null,
+            telefono: (receptor.telefono as string) || null,
+            correo: (receptor.correo as string) || null,
+            codActividad: (receptor.codActividad as string) || null,
+            descActividad: (receptor.descActividad as string) || null,
+          },
+        });
+        clienteId = newCliente.id;
+      }
+    }
+
     const dte = await this.prisma.dTE.create({
       data: {
         tenantId,
@@ -47,10 +88,11 @@ export class DteService {
         codigoGeneracion,
         numeroControl,
         jsonOriginal,
-        totalGravada: 0,
-        totalIva: 0,
-        totalPagar: 0,
+        totalGravada,
+        totalIva,
+        totalPagar,
         estado: DTEStatus.PENDIENTE,
+        ...(clienteId && { clienteId }),
       },
     });
 

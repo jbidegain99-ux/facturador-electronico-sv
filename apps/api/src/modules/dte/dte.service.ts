@@ -5,6 +5,7 @@ import { MhAuthService } from '../mh-auth/mh-auth.service';
 import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
 import { DTE_VERSIONS, TipoDte } from '@facturador/shared';
 import { v4 as uuidv4 } from 'uuid';
+import { Prisma } from '@prisma/client';
 
 // Enum values as strings for SQL Server compatibility
 const DTEStatus = {
@@ -87,9 +88,9 @@ export class DteService {
         codigoGeneracion,
         numeroControl,
         jsonOriginal: JSON.stringify(jsonOriginal),
-        totalGravada,
-        totalIva,
-        totalPagar,
+        totalGravada: new Prisma.Decimal(totalGravada.toFixed(2)),
+        totalIva: new Prisma.Decimal(totalIva.toFixed(2)),
+        totalPagar: new Prisma.Decimal(totalPagar.toFixed(2)),
         estado: DTEStatus.PENDIENTE,
         ...(clienteId && { clienteId }),
       },

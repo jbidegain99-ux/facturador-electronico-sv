@@ -28,6 +28,8 @@ export class DteService {
   ) {}
 
   async createDte(tenantId: string, tipoDte: string, data: Record<string, unknown>) {
+    this.logger.log(`Creating DTE for tenant ${tenantId}, type ${tipoDte}`);
+
     const codigoGeneracion = uuidv4().toUpperCase();
     const correlativo = await this.getNextCorrelativo(tenantId, tipoDte);
     const numeroControl = this.generateNumeroControl(tipoDte, correlativo);
@@ -81,24 +83,34 @@ export class DteService {
       }
     }
 
-    const dte = await this.prisma.dTE.create({
-      data: {
-        tenantId,
-        tipoDte,
-        codigoGeneracion,
-        numeroControl,
-        jsonOriginal: JSON.stringify(jsonOriginal),
-        totalGravada: new Prisma.Decimal(totalGravada.toFixed(2)),
-        totalIva: new Prisma.Decimal(totalIva.toFixed(2)),
-        totalPagar: new Prisma.Decimal(totalPagar.toFixed(2)),
-        estado: DTEStatus.PENDIENTE,
-        ...(clienteId && { clienteId }),
-      },
-    });
+    this.logger.log(`Creating DTE record: codigoGeneracion=${codigoGeneracion}, numeroControl=${numeroControl}`);
+    this.logger.log(`Totals: gravada=${totalGravada}, iva=${totalIva}, pagar=${totalPagar}`);
 
-    await this.logDteAction(dte.id, 'CREATED', { jsonOriginal });
+    try {
+      const dte = await this.prisma.dTE.create({
+        data: {
+          tenantId,
+          tipoDte,
+          codigoGeneracion,
+          numeroControl,
+          jsonOriginal: JSON.stringify(jsonOriginal),
+          totalGravada: new Prisma.Decimal(totalGravada.toFixed(2)),
+          totalIva: new Prisma.Decimal(totalIva.toFixed(2)),
+          totalPagar: new Prisma.Decimal(totalPagar.toFixed(2)),
+          estado: DTEStatus.PENDIENTE,
+          ...(clienteId && { clienteId }),
+        },
+      });
 
-    return dte;
+      this.logger.log(`DTE created successfully: id=${dte.id}`);
+
+      await this.logDteAction(dte.id, 'CREATED', { jsonOriginal });
+
+      return dte;
+    } catch (error) {
+      this.logger.error(`Failed to create DTE: ${error instanceof Error ? error.message : error}`);
+      throw error;
+    }
   }
 
   async signDte(dteId: string) {
@@ -207,6 +219,9 @@ export class DteService {
     limit = 20,
     filters?: { tipoDte?: string; estado?: string; search?: string },
   ) {
+    this.logger.log(`Finding DTEs for tenant ${tenantId}, page ${page}, limit ${limit}`);
+    this.logger.log(`Filters: ${JSON.stringify(filters)}`);
+
     const skip = (page - 1) * limit;
 
     const where: any = { tenantId };
@@ -238,6 +253,8 @@ export class DteService {
       }),
       this.prisma.dTE.count({ where }),
     ]);
+
+    this.logger.log(`Found ${total} DTEs for tenant ${tenantId}, returning ${data.length} results`);
 
     return {
       data,

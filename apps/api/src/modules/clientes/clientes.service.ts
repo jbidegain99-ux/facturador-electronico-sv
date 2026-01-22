@@ -36,7 +36,7 @@ export class ClientesService {
         nrc: createClienteDto.nrc,
         correo: createClienteDto.correo,
         telefono: createClienteDto.telefono,
-        direccion: createClienteDto.direccion as any,
+        direccion: JSON.stringify(createClienteDto.direccion || {}),
       },
     });
 
@@ -50,10 +50,11 @@ export class ClientesService {
     const where: any = { tenantId };
 
     if (search) {
+      // SQL Server uses collation for case sensitivity, remove 'mode: insensitive'
       where.OR = [
-        { nombre: { contains: search, mode: 'insensitive' } },
+        { nombre: { contains: search } },
         { numDocumento: { contains: search } },
-        { correo: { contains: search, mode: 'insensitive' } },
+        { correo: { contains: search } },
       ];
     }
 
@@ -103,9 +104,14 @@ export class ClientesService {
       }
     }
 
+    const updateData: any = { ...updateClienteDto };
+    if (updateClienteDto.direccion) {
+      updateData.direccion = JSON.stringify(updateClienteDto.direccion);
+    }
+
     const cliente = await this.prisma.cliente.update({
       where: { id },
-      data: { ...updateClienteDto, direccion: updateClienteDto.direccion ? updateClienteDto.direccion as any : undefined },
+      data: updateData,
     });
 
     this.logger.log(`Cliente ${id} updated successfully`);

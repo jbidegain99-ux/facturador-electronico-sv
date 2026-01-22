@@ -97,11 +97,11 @@ export class AuthService {
           telefono: tenant.telefono,
           correo: tenant.correo,
           nombreComercial: tenant.nombreComercial || null,
-          direccion: {
+          direccion: JSON.stringify({
             departamento: tenant.direccion.departamento,
             municipio: tenant.direccion.municipio,
             complemento: tenant.direccion.complemento,
-          },
+          }),
         },
       });
 

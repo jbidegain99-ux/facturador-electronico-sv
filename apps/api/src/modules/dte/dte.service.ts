@@ -6,7 +6,7 @@ import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client
 import { DTE_VERSIONS, TipoDte } from '@facturador/shared';
 import { v4 as uuidv4 } from 'uuid';
 
-// Enum mirror - will be replaced by Prisma generated types after prisma generate
+// Enum values as strings for SQL Server compatibility
 const DTEStatus = {
   PENDIENTE: 'PENDIENTE',
   FIRMADO: 'FIRMADO',
@@ -73,7 +73,7 @@ export class DteService {
             nrc: (receptor.nrc as string) || null,
             telefono: (receptor.telefono as string) || null,
             correo: (receptor.correo as string) || null,
-            direccion: (receptor.direccion || {}) as any,
+            direccion: JSON.stringify(receptor.direccion || {}),
           },
         });
         clienteId = newCliente.id;
@@ -86,7 +86,7 @@ export class DteService {
         tipoDte,
         codigoGeneracion,
         numeroControl,
-        jsonOriginal,
+        jsonOriginal: JSON.stringify(jsonOriginal),
         totalGravada,
         totalIva,
         totalPagar,
@@ -114,9 +114,12 @@ export class DteService {
       throw new Error('No certificate loaded for signing');
     }
 
-    const jsonFirmado = await this.signerService.signDTE(
-      dte.jsonOriginal as Record<string, unknown>,
-    );
+    // Parse jsonOriginal from string
+    const jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
+      ? JSON.parse(dte.jsonOriginal)
+      : dte.jsonOriginal;
+
+    const jsonFirmado = await this.signerService.signDTE(jsonOriginalParsed);
 
     const updated = await this.prisma.dTE.update({
       where: { id: dteId },
@@ -146,9 +149,11 @@ export class DteService {
       const env = (process.env.MH_API_ENV as 'test' | 'prod') || 'test';
       const tokenInfo = await this.mhAuthService.getToken(nit, password, env);
 
-      // Prepare request
-      const identificacion = dte.jsonOriginal as { identificacion?: { ambiente?: string } };
-      const ambiente = (identificacion?.identificacion?.ambiente || '00') as '00' | '01';
+      // Parse jsonOriginal from string
+      const jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
+        ? JSON.parse(dte.jsonOriginal)
+        : dte.jsonOriginal;
+      const ambiente = (jsonOriginalParsed?.identificacion?.ambiente || '00') as '00' | '01';
 
       const request: SendDTERequest = {
         ambiente,
@@ -214,10 +219,11 @@ export class DteService {
     }
 
     if (filters?.search) {
+      // SQL Server uses collation for case sensitivity, remove 'mode: insensitive'
       where.OR = [
-        { numeroControl: { contains: filters.search, mode: 'insensitive' } },
-        { codigoGeneracion: { contains: filters.search, mode: 'insensitive' } },
-        { cliente: { nombre: { contains: filters.search, mode: 'insensitive' } } },
+        { numeroControl: { contains: filters.search } },
+        { codigoGeneracion: { contains: filters.search } },
+        { cliente: { nombre: { contains: filters.search } } },
       ];
     }
 
@@ -270,7 +276,7 @@ export class DteService {
       data: {
         dteId,
         accion,
-        request: JSON.parse(JSON.stringify(data)),
+        request: JSON.stringify(data),
       },
     });
   }

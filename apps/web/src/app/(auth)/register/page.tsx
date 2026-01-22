@@ -540,7 +540,7 @@ export default function RegisterPage() {
                   required
                   value={formData.nombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
               <div>
@@ -553,7 +553,7 @@ export default function RegisterPage() {
                   id="nombreComercial"
                   value={formData.nombreComercial}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
               <div>
@@ -568,7 +568,7 @@ export default function RegisterPage() {
                   placeholder="0000-000000-000-0"
                   value={formData.nit}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
               <div>
@@ -583,7 +583,7 @@ export default function RegisterPage() {
                   placeholder="000000-0"
                   value={formData.nrc}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -596,7 +596,7 @@ export default function RegisterPage() {
                   required
                   value={formData.actividadEcon}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 >
                   <option value="">Seleccione una actividad</option>
                   {ACTIVIDADES_ECONOMICAS.map((act) => (
@@ -618,7 +618,7 @@ export default function RegisterPage() {
                   placeholder="0000-0000"
                   value={formData.telefono}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
               <div>
@@ -632,7 +632,7 @@ export default function RegisterPage() {
                   required
                   value={formData.correo}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
             </div>
@@ -652,7 +652,7 @@ export default function RegisterPage() {
                   required
                   value={formData.departamento}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 >
                   <option value="">Seleccione un departamento</option>
                   {DEPARTAMENTOS.map((dep) => (
@@ -697,7 +697,7 @@ export default function RegisterPage() {
                   placeholder="Calle, numero, colonia, etc."
                   value={formData.complemento}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
             </div>
@@ -718,7 +718,7 @@ export default function RegisterPage() {
                   required
                   value={formData.adminNombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
               <div>
@@ -732,7 +732,7 @@ export default function RegisterPage() {
                   required
                   value={formData.adminEmail}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
               <div>
@@ -747,7 +747,7 @@ export default function RegisterPage() {
                   minLength={8}
                   value={formData.adminPassword}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
               <div>
@@ -762,7 +762,7 @@ export default function RegisterPage() {
                   minLength={8}
                   value={formData.adminPasswordConfirm}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
             </div>

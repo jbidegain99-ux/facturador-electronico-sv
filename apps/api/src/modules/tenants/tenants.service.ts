@@ -9,7 +9,13 @@ export class TenantsService {
   async create(data: CreateTenantDto) {
     return this.prisma.tenant.create({
       data: {
-        ...data,
+        nombre: data.nombre,
+        nit: data.nit,
+        nrc: data.nrc,
+        actividadEcon: data.actividadEcon,
+        telefono: data.telefono,
+        correo: data.correo,
+        nombreComercial: data.nombreComercial || null,
         direccion: JSON.stringify(data.direccion),
       },
     });

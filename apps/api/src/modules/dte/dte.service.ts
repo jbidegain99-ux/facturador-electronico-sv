@@ -73,7 +73,7 @@ export class DteService {
             nrc: (receptor.nrc as string) || null,
             telefono: (receptor.telefono as string) || null,
             correo: (receptor.correo as string) || null,
-            direccion: (receptor.direccion as Record<string, unknown>) || {},
+            direccion: (receptor.direccion || {}) as any,
           },
         });
         clienteId = newCliente.id;

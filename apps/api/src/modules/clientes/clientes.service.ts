@@ -36,7 +36,7 @@ export class ClientesService {
         nrc: createClienteDto.nrc,
         correo: createClienteDto.correo,
         telefono: createClienteDto.telefono,
-        direccion: createClienteDto.direccion,
+        direccion: createClienteDto.direccion as any,
       },
     });
 
@@ -105,7 +105,7 @@ export class ClientesService {
 
     const cliente = await this.prisma.cliente.update({
       where: { id },
-      data: updateClienteDto,
+      data: { ...updateClienteDto, direccion: updateClienteDto.direccion ? updateClienteDto.direccion as any : undefined },
     });
 
     this.logger.log(`Cliente ${id} updated successfully`);

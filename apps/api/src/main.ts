@@ -1,45 +1,33 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api/v1');
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
+  // Habilitar CORS
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: [
+      'https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net',
+      'http://localhost:3000',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
   });
 
+  app.setGlobalPrefix('api/v1');
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
   const config = new DocumentBuilder()
     .setTitle('Facturador Electronico SV API')
-    .setDescription('API para facturacion electronica de El Salvador - Ministerio de Hacienda')
+    .setDescription('API para facturacion electronica en El Salvador')
     .setVersion('1.0')
     .addBearerAuth()
-    .addTag('auth', 'Autenticacion de usuarios y MH')
-    .addTag('tenants', 'Gestion de empresas/tenants')
-    .addTag('dte', 'Documentos Tributarios Electronicos')
-    .addTag('catalog', 'Catalogos del MH')
     .build();
-
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('docs', app, document);
 
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
-
-  console.log(`API running on http://localhost:${port}`);
-  console.log(`Swagger docs on http://localhost:${port}/api/docs`);
+  await app.listen(process.env.PORT || 3000);
 }
-
 bootstrap();

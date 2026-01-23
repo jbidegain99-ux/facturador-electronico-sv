@@ -12,12 +12,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Receipt,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Facturas', href: '/facturas', icon: FileText },
+  { name: 'Reportes', href: '/reportes', icon: BarChart3 },
   { name: 'Clientes', href: '/clientes', icon: Users },
   { name: 'Configuracion', href: '/configuracion', icon: Settings },
 ];

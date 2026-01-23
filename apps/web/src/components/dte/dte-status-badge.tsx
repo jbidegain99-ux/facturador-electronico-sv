@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { DTEStatus } from '@/types';
-import { CheckCircle, Clock, XCircle, Loader2, Ban, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Loader2, Ban, AlertTriangle, FileSignature, Send } from 'lucide-react';
 
 interface DTEStatusBadgeProps {
   status: DTEStatus;
@@ -15,6 +15,8 @@ const statusConfig: Record<
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'info'; icon: typeof CheckCircle }
 > = {
   PENDIENTE: { label: 'Pendiente', variant: 'warning', icon: Clock },
+  FIRMADO: { label: 'Firmado', variant: 'info', icon: FileSignature },
+  ENVIADO: { label: 'Enviado', variant: 'info', icon: Send },
   PROCESANDO: { label: 'Procesando', variant: 'info', icon: Loader2 },
   PROCESADO: { label: 'Procesado', variant: 'success', icon: CheckCircle },
   RECHAZADO: { label: 'Rechazado', variant: 'destructive', icon: XCircle },

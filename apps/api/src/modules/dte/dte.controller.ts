@@ -63,6 +63,85 @@ export class DteController {
     );
   }
 
+  @Get('stats/summary')
+  @ApiOperation({ summary: 'Obtener resumen de estadisticas del tenant' })
+  getSummaryStats(@Request() req: AuthRequest) {
+    return this.dteService.getSummaryStats(req.user.tenantId);
+  }
+
+  @Get('stats/by-date')
+  @ApiOperation({ summary: 'Obtener estadisticas por rango de fechas' })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiQuery({ name: 'groupBy', required: false, enum: ['day', 'week', 'month'] })
+  getStatsByDate(
+    @Request() req: AuthRequest,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('groupBy') groupBy?: 'day' | 'week' | 'month',
+  ) {
+    return this.dteService.getStatsByDate(
+      req.user.tenantId,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+      groupBy || 'day',
+    );
+  }
+
+  @Get('stats/by-type')
+  @ApiOperation({ summary: 'Obtener estadisticas por tipo de DTE' })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  getStatsByType(
+    @Request() req: AuthRequest,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.dteService.getStatsByType(
+      req.user.tenantId,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+    );
+  }
+
+  @Get('stats/by-status')
+  @ApiOperation({ summary: 'Obtener estadisticas por estado' })
+  getStatsByStatus(@Request() req: AuthRequest) {
+    return this.dteService.getStatsByStatus(req.user.tenantId);
+  }
+
+  @Get('stats/top-clients')
+  @ApiOperation({ summary: 'Obtener top clientes por facturacion' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  getTopClients(
+    @Request() req: AuthRequest,
+    @Query('limit') limit?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.dteService.getTopClients(
+      req.user.tenantId,
+      limit ? parseInt(limit, 10) : 10,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+    );
+  }
+
+  @Get('recent')
+  @ApiOperation({ summary: 'Obtener los DTEs mas recientes' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  getRecentDTEs(
+    @Request() req: AuthRequest,
+    @Query('limit') limit?: string,
+  ) {
+    return this.dteService.getRecentDTEs(
+      req.user.tenantId,
+      limit ? parseInt(limit, 10) : 5,
+    );
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener DTE por ID' })
   findOne(@Param('id') id: string) {

@@ -1,4 +1,4 @@
-export type DTEStatus = 'PENDIENTE' | 'PROCESANDO' | 'PROCESADO' | 'RECHAZADO' | 'ANULADO' | 'ERROR';
+export type DTEStatus = 'PENDIENTE' | 'FIRMADO' | 'ENVIADO' | 'PROCESANDO' | 'PROCESADO' | 'RECHAZADO' | 'ANULADO' | 'ERROR';
 export type TipoDte = '01' | '03' | '05' | '06';
 
 export interface DTERecord {

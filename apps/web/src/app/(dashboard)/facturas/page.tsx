@@ -8,8 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
+import { SkeletonTable } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
-import { Plus, Search, Download, Eye, Ban, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Download, Eye, Ban, Loader2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import { DTEStatus, TipoDte } from '@/types';
 
 interface DTE {
@@ -36,6 +39,9 @@ interface DTEResponse {
 }
 
 export default function FacturasPage() {
+  const toast = useToast();
+  const { confirm, ConfirmDialog } = useConfirm();
+
   const [search, setSearch] = React.useState('');
   const [filterTipo, setFilterTipo] = React.useState<string>('all');
   const [filterStatus, setFilterStatus] = React.useState<string>('all');
@@ -131,9 +137,43 @@ export default function FacturasPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      toast.success('Documento descargado correctamente');
     } catch (err) {
       console.error('Error downloading DTE:', err);
-      alert('Error al descargar el documento');
+      toast.error('Error al descargar el documento');
+    }
+  };
+
+  const handleAnular = async (dte: DTE) => {
+    const confirmed = await confirm({
+      title: 'Anular documento',
+      description: `¿Estás seguro que deseas anular el documento ${dte.numeroControl}? Esta acción no se puede deshacer.`,
+      confirmText: 'Sí, anular',
+      cancelText: 'Cancelar',
+      variant: 'destructive',
+    });
+
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dte.id}/anular`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) throw new Error('Error al anular el documento');
+
+      toast.success('Documento anulado correctamente');
+      fetchDTEs(); // Refresh the list
+    } catch (err) {
+      console.error('Error anulando DTE:', err);
+      toast.error('Error al anular el documento');
     }
   };
 
@@ -230,8 +270,8 @@ export default function FacturasPage() {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="p-4">
+              <SkeletonTable rows={10} />
             </div>
           ) : (
             <>
@@ -287,8 +327,13 @@ export default function FacturasPage() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             <Link href={`/facturas/${dte.id}`}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title="Ver detalle">
                                 <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <Link href={`/facturas/nueva?duplicate=${dte.id}`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title="Duplicar factura">
+                                <Copy className="h-4 w-4" />
                               </Button>
                             </Link>
                             <Button
@@ -296,11 +341,18 @@ export default function FacturasPage() {
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handleDownload(dte.id)}
+                              title="Descargar JSON"
                             >
                               <Download className="h-4 w-4" />
                             </Button>
                             {dte.estado === 'PROCESADO' && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive"
+                                title="Anular"
+                                onClick={() => handleAnular(dte)}
+                              >
                                 <Ban className="h-4 w-4" />
                               </Button>
                             )}
@@ -347,6 +399,8 @@ export default function FacturasPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog />
     </div>
   );
 }

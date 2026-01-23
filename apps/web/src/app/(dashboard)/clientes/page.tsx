@@ -22,6 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Search, Pencil, Trash2, User, Loader2, X } from 'lucide-react';
+import { SkeletonTable } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/toast';
 
 interface Cliente {
   id: string;
@@ -71,6 +73,8 @@ const initialFormState: ClienteForm = {
 };
 
 export default function ClientesPage() {
+  const toast = useToast();
+
   const [search, setSearch] = React.useState('');
   const [clientes, setClientes] = React.useState<Cliente[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -217,9 +221,12 @@ export default function ClientesPage() {
 
       closeModal();
       fetchClientes();
+      toast.success(editingCliente ? 'Cliente actualizado correctamente' : 'Cliente creado correctamente');
     } catch (err) {
       console.error('Error saving cliente:', err);
-      setFormError(err instanceof Error ? err.message : 'Error al guardar cliente');
+      const errorMessage = err instanceof Error ? err.message : 'Error al guardar cliente';
+      setFormError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -246,9 +253,10 @@ export default function ClientesPage() {
 
       setDeleteConfirm(null);
       fetchClientes();
+      toast.success('Cliente eliminado correctamente');
     } catch (err) {
       console.error('Error deleting cliente:', err);
-      alert(err instanceof Error ? err.message : 'Error al eliminar cliente');
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar cliente');
     } finally {
       setDeleting(false);
     }
@@ -299,8 +307,8 @@ export default function ClientesPage() {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="p-4">
+              <SkeletonTable rows={8} />
             </div>
           ) : (
             <Table>

@@ -14,9 +14,9 @@ import {
   Plus,
   ArrowRight,
   BarChart3,
-  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { Skeleton, SkeletonCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton';
 
 interface SummaryStats {
   dtesHoy: number;
@@ -156,9 +156,37 @@ export default function DashboardPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
+        <>
+          {/* Skeleton Metrics Cards */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+
+          {/* Skeleton Charts */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="col-span-4">
+              <CardHeader>
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-4 w-60" />
+              </CardHeader>
+              <CardContent>
+                <SkeletonChart />
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-3">
+              <CardHeader>
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent>
+                <SkeletonList items={5} />
+              </CardContent>
+            </Card>
+          </div>
+        </>
       ) : (
         <>
           {/* Metrics Cards */}

@@ -32,6 +32,7 @@ import { PlantillasPanel, GuardarPlantillaModal } from '@/components/facturas/pl
 import { FavoritosPanel, AddToFavoritesButton } from '@/components/facturas/favoritos-panel';
 import { useTemplatesStore, InvoiceTemplate, FavoriteItem } from '@/store/templates';
 import { useKeyboardShortcuts, getShortcutDisplay } from '@/hooks/use-keyboard-shortcuts';
+import { useToast } from '@/components/ui/toast';
 import { cn, getTipoDteName } from '@/lib/utils';
 import type { Cliente, ItemFactura } from '@/types';
 
@@ -57,6 +58,7 @@ export default function NuevaFacturaPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { useTemplate, useFavorite } = useTemplatesStore();
+  const toast = useToast();
 
   // Form state
   const [formState, setFormState] = React.useState<FacturaFormState>(initialState);
@@ -144,8 +146,9 @@ export default function NuevaFacturaPage() {
         const draft = JSON.parse(savedDraft);
         setFormState(draft);
         setHasDraft(false);
+        toast.success('Borrador recuperado correctamente');
       } catch {
-        // Ignore
+        toast.error('Error al recuperar el borrador');
       }
     }
   };
@@ -154,12 +157,13 @@ export default function NuevaFacturaPage() {
   const handleDiscardDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
     setHasDraft(false);
+    toast.info('Borrador descartado');
   };
 
   // Save draft manually
   const handleSaveDraft = () => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(formState));
-    // Could show a toast here
+    toast.success('Borrador guardado correctamente');
   };
 
   // Handle template selection
@@ -179,6 +183,8 @@ export default function NuevaFacturaPage() {
       items: newItems,
       condicionPago: usedTemplate.condicionPago,
     });
+
+    toast.success(`Plantilla "${template.name}" aplicada`);
   };
 
   // Handle favorite selection - adds item to the invoice
@@ -205,6 +211,7 @@ export default function NuevaFacturaPage() {
     };
 
     updateForm('items', [...items, newItem]);
+    toast.success(`"${favorite.descripcion}" agregado a la factura`);
   };
 
   // Handle duplicate from URL params (coming from invoice list)
@@ -257,12 +264,13 @@ export default function NuevaFacturaPage() {
             items: duplicatedItems,
             condicionPago: '01',
           });
+          toast.success('Factura duplicada - selecciona un cliente para continuar');
         } catch {
-          // Ignore parse errors
+          toast.error('Error al cargar los datos de la factura');
         }
       }
     } catch {
-      // Ignore fetch errors
+      toast.error('No se pudo cargar la factura para duplicar');
     }
   };
 
@@ -436,9 +444,9 @@ export default function NuevaFacturaPage() {
         // Confetti not critical
       }
     } catch (error) {
-      setErrors({
-        submit: error instanceof Error ? error.message : 'Error desconocido al emitir la factura',
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al emitir la factura';
+      setErrors({ submit: errorMessage });
+      toast.error(errorMessage);
     } finally {
       setIsEmitting(false);
     }
@@ -448,6 +456,7 @@ export default function NuevaFacturaPage() {
   const handleClienteCreated = (newCliente: Cliente) => {
     updateForm('cliente', newCliente);
     setShowNuevoCliente(false);
+    toast.success(`Cliente "${newCliente.nombre}" creado y seleccionado`);
   };
 
   // Reset form for new invoice

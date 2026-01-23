@@ -23,6 +23,8 @@ import {
   Loader2,
   PieChart,
 } from 'lucide-react';
+import { Skeleton, SkeletonCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/toast';
 
 interface StatsData {
   fecha: string;
@@ -61,6 +63,8 @@ interface SummaryStats {
 }
 
 export default function ReportesPage() {
+  const toast = useToast();
+
   const [dateRange, setDateRange] = React.useState<'7d' | '30d' | '90d' | 'custom'>('30d');
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
@@ -142,17 +146,22 @@ export default function ReportesPage() {
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ['Fecha', 'Cantidad DTEs', 'Total Facturado'];
-    const rows = chartData.map((d) => [d.fecha, d.cantidad, d.total.toFixed(2)]);
-    const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
+    try {
+      const headers = ['Fecha', 'Cantidad DTEs', 'Total Facturado'];
+      const rows = chartData.map((d) => [d.fecha, d.cantidad, d.total.toFixed(2)]);
+      const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `reporte-ventas-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `reporte-ventas-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('Reporte exportado correctamente');
+    } catch (error) {
+      toast.error('Error al exportar el reporte');
+    }
   };
 
   // Calculate chart max
@@ -262,9 +271,78 @@ export default function ReportesPage() {
       </Card>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
+        <>
+          {/* Skeleton Summary Cards */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+
+          {/* Skeleton Charts */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-4 w-60" />
+              </CardHeader>
+              <CardContent>
+                <SkeletonChart />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-56" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center">
+                  <Skeleton className="w-32 h-32 rounded-full" />
+                </div>
+                <div className="mt-4 space-y-2">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-between">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-8" />
+                      </div>
+                      <Skeleton className="h-2 w-full rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Skeleton Top Clients */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+              <SkeletonList items={5} />
+            </CardContent>
+          </Card>
+        </>
       ) : (
         <>
           {/* Summary Cards */}

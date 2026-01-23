@@ -124,76 +124,15 @@ model DTELog {
 // EMAIL CONFIGURATION SYSTEM
 // ============================================================================
 
-enum EmailProvider {
-  SENDGRID
-  MAILGUN
-  AMAZON_SES
-  MICROSOFT_365
-  GOOGLE_WORKSPACE
-  POSTMARK
-  BREVO
-  MAILTRAP
-  SMTP_GENERIC
-}
-
-enum EmailAuthMethod {
-  API_KEY
-  SMTP_BASIC
-  OAUTH2
-  AWS_IAM
-}
-
-enum ConfiguredBy {
-  SELF         // Cliente lo configuró solo
-  REPUBLICODE  // Republicode lo configuró como servicio
-  PENDING      // Pendiente de configuración
-}
-
-enum HealthCheckType {
-  CONNECTION_TEST
-  AUTHENTICATION_TEST
-  SEND_TEST
-  QUOTA_CHECK
-  OAUTH_REFRESH
-}
-
-enum HealthStatus {
-  HEALTHY
-  DEGRADED
-  UNHEALTHY
-  UNKNOWN
-}
-
-enum EmailSendStatus {
-  PENDING
-  SENT
-  DELIVERED
-  OPENED
-  BOUNCED
-  FAILED
-  SPAM_REPORTED
-}
-
-enum EmailRequestType {
-  NEW_SETUP           // No tienen cliente de correo
-  MIGRATION           // Quieren migrar de otro
-  CONFIGURATION_HELP  // Tienen pero necesitan ayuda
-  TROUBLESHOOTING     // Problemas con configuración existente
-}
-
-enum RequestStatus {
-  PENDING
-  IN_PROGRESS
-  WAITING_CLIENT
-  COMPLETED
-  CANCELLED
-}
-
-enum MessageSender {
-  TENANT
-  REPUBLICODE
-  SYSTEM
-}
+// EmailProvider: SENDGRID, MAILGUN, AMAZON_SES, MICROSOFT_365, GOOGLE_WORKSPACE, POSTMARK, BREVO, MAILTRAP, SMTP_GENERIC
+// EmailAuthMethod: API_KEY, SMTP_BASIC, OAUTH2, AWS_IAM
+// ConfiguredBy: SELF, REPUBLICODE, PENDING
+// HealthCheckType: CONNECTION_TEST, AUTHENTICATION_TEST, SEND_TEST, QUOTA_CHECK, OAUTH_REFRESH
+// HealthStatus: HEALTHY, DEGRADED, UNHEALTHY, UNKNOWN
+// EmailSendStatus: PENDING, SENT, DELIVERED, OPENED, BOUNCED, FAILED, SPAM_REPORTED
+// EmailRequestType: NEW_SETUP, MIGRATION, CONFIGURATION_HELP, TROUBLESHOOTING
+// RequestStatus: PENDING, IN_PROGRESS, WAITING_CLIENT, COMPLETED, CANCELLED
+// MessageSender: TENANT, REPUBLICODE, SYSTEM
 
 // Configuración principal de email del tenant
 model TenantEmailConfig {
@@ -202,8 +141,8 @@ model TenantEmailConfig {
   tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   // Proveedor y método
-  provider          EmailProvider
-  authMethod        EmailAuthMethod
+  provider          String          // EmailProvider
+  authMethod        String          // EmailAuthMethod
   isActive          Boolean         @default(false)
   isVerified        Boolean         @default(false)
 
@@ -238,7 +177,7 @@ model TenantEmailConfig {
   timeoutSeconds    Int?            @default(30)
 
   // Metadatos
-  configuredBy      ConfiguredBy    @default(PENDING)
+  configuredBy      String          @default("PENDING") // ConfiguredBy
   configuredByUserId String?
   notes             String?         @db.NVarChar(Max)
 
@@ -261,8 +200,8 @@ model EmailHealthCheck {
   configId        String
   config          TenantEmailConfig @relation(fields: [configId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  checkType       HealthCheckType
-  status          HealthStatus
+  checkType       String            // HealthCheckType
+  status          String            // HealthStatus
   responseTimeMs  Int?
   errorMessage    String?           @db.NVarChar(Max)
   errorCode       String?
@@ -282,7 +221,7 @@ model EmailSendLog {
   recipientEmail    String
   subject           String
 
-  status            EmailSendStatus
+  status            String            // EmailSendStatus
   providerMessageId String?
   errorMessage      String?           @db.NVarChar(Max)
 
@@ -301,8 +240,8 @@ model EmailConfigRequest {
   tenantId          String
   tenant            Tenant           @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  requestType       EmailRequestType
-  desiredProvider   EmailProvider?
+  requestType       String           // EmailRequestType
+  desiredProvider   String?          // EmailProvider
 
   // Información proporcionada por el cliente
   currentProvider   String?
@@ -310,7 +249,7 @@ model EmailConfigRequest {
   additionalNotes   String?          @db.NVarChar(Max)
 
   // Estado del proceso
-  status            RequestStatus    @default(PENDING)
+  status            String           @default("PENDING") // RequestStatus
   assignedTo        String?
 
   // Comunicación
@@ -329,7 +268,7 @@ model EmailConfigMessage {
   requestId       String
   request         EmailConfigRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  senderType      MessageSender
+  senderType      String             // MessageSender
   senderId        String?
   message         String             @db.NVarChar(Max)
   attachments     String?            @db.NVarChar(Max) // JSON array de URLs
@@ -343,88 +282,15 @@ model EmailConfigMessage {
 // ONBOARDING WIZARD SYSTEM - PROCESO DE REGISTRO CON HACIENDA
 // ============================================================================
 
-enum OnboardingStep {
-  WELCOME                   // Bienvenida y explicación del proceso
-  COMPANY_INFO              // Recopilar información de la empresa
-  HACIENDA_CREDENTIALS      // Verificar acceso a Servicios en Línea MH
-  DTE_TYPE_SELECTION        // Seleccionar tipos de DTE a emitir
-  TEST_ENVIRONMENT_REQUEST  // Solicitar ambiente de pruebas
-  TEST_CERTIFICATE          // Generar certificado de pruebas
-  API_CREDENTIALS_TEST      // Configurar credenciales API (pruebas)
-  EXECUTE_TESTS             // Ejecutar pruebas requeridas
-  REQUEST_AUTHORIZATION     // Solicitar autorización como emisor
-  PROD_CERTIFICATE          // Generar certificado productivo
-  API_CREDENTIALS_PROD      // Configurar credenciales API (producción)
-  FINAL_VALIDATION          // Validación final
-  COMPLETED                 // Proceso completado
-}
-
-enum OnboardingStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  WAITING_HACIENDA   // Esperando respuesta de Hacienda
-  WAITING_CLIENT     // Esperando acción del cliente
-  BLOCKED            // Problema que requiere intervención
-  COMPLETED
-  CANCELLED
-}
-
-enum AssistanceLevel {
-  SELF_SERVICE       // Cliente hace todo solo
-  GUIDED             // Republicode guía paso a paso
-  FULL_SERVICE       // Republicode hace todo por el cliente
-}
-
-enum DteType {
-  FACTURA                          // 01 - Factura
-  CREDITO_FISCAL                   // 03 - Comprobante de Crédito Fiscal
-  NOTA_REMISION                    // 04 - Nota de Remisión
-  NOTA_CREDITO                     // 05 - Nota de Crédito
-  NOTA_DEBITO                      // 06 - Nota de Débito
-  COMPROBANTE_RETENCION            // 07 - Comprobante de Retención
-  COMPROBANTE_LIQUIDACION          // 08 - Comprobante de Liquidación
-  DOCUMENTO_CONTABLE_LIQUIDACION   // 09 - Documento Contable de Liquidación
-  FACTURA_EXPORTACION              // 11 - Factura de Exportación
-  FACTURA_SUJETO_EXCLUIDO          // 14 - Factura de Sujeto Excluido
-  COMPROBANTE_DONACION             // 15 - Comprobante de Donación
-}
-
-enum StepStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  SKIPPED
-  BLOCKED
-  FAILED
-}
-
-enum PerformedBy {
-  TENANT
-  REPUBLICODE
-  SYSTEM
-}
-
-enum TestResult {
-  SUCCESS
-  VALIDATION_ERROR
-  SIGNATURE_ERROR
-  TRANSMISSION_ERROR
-  OTHER_ERROR
-}
-
-enum CommunicationType {
-  EMAIL
-  IN_APP_MESSAGE
-  PHONE_CALL_LOG
-  MEETING_NOTES
-  SYSTEM_NOTIFICATION
-}
-
-enum CommunicationDirection {
-  TO_TENANT
-  FROM_TENANT
-  INTERNAL
-}
+// OnboardingStep: WELCOME, COMPANY_INFO, HACIENDA_CREDENTIALS, DTE_TYPE_SELECTION, TEST_ENVIRONMENT_REQUEST, TEST_CERTIFICATE, API_CREDENTIALS_TEST, EXECUTE_TESTS, REQUEST_AUTHORIZATION, PROD_CERTIFICATE, API_CREDENTIALS_PROD, FINAL_VALIDATION, COMPLETED
+// OnboardingStatus: NOT_STARTED, IN_PROGRESS, WAITING_HACIENDA, WAITING_CLIENT, BLOCKED, COMPLETED, CANCELLED
+// AssistanceLevel: SELF_SERVICE, GUIDED, FULL_SERVICE
+// DteType: FACTURA, CREDITO_FISCAL, NOTA_REMISION, NOTA_CREDITO, NOTA_DEBITO, COMPROBANTE_RETENCION, COMPROBANTE_LIQUIDACION, DOCUMENTO_CONTABLE_LIQUIDACION, FACTURA_EXPORTACION, FACTURA_SUJETO_EXCLUIDO, COMPROBANTE_DONACION
+// StepStatus: PENDING, IN_PROGRESS, COMPLETED, SKIPPED, BLOCKED, FAILED
+// PerformedBy: TENANT, REPUBLICODE, SYSTEM
+// TestResult: SUCCESS, VALIDATION_ERROR, SIGNATURE_ERROR, TRANSMISSION_ERROR, OTHER_ERROR
+// CommunicationType: EMAIL, IN_APP_MESSAGE, PHONE_CALL_LOG, MEETING_NOTES, SYSTEM_NOTIFICATION
+// CommunicationDirection: TO_TENANT, FROM_TENANT, INTERNAL
 
 // Proceso de onboarding del tenant
 model TenantOnboarding {
@@ -433,8 +299,8 @@ model TenantOnboarding {
   tenant              Tenant            @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   // Estado general
-  currentStep         OnboardingStep    @default(WELCOME)
-  overallStatus       OnboardingStatus  @default(NOT_STARTED)
+  currentStep         String            @default("WELCOME") // OnboardingStep
+  overallStatus       String            @default("NOT_STARTED") // OnboardingStatus
 
   // Información del contribuyente (puede diferir del Tenant base)
   nit                 String?
@@ -472,7 +338,7 @@ model TenantOnboarding {
   productionDeadline  DateTime?         // 30 días desde autorización
 
   // Servicio asistido
-  assistanceLevel     AssistanceLevel   @default(GUIDED)
+  assistanceLevel     String            @default("GUIDED") // AssistanceLevel
   assignedAgent       String?
 
   // Auditoría
@@ -497,7 +363,7 @@ model DteTypeSelection {
   onboardingId    String
   onboarding      TenantOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  dteType         DteType
+  dteType         String           // DteType
   isRequired      Boolean          @default(true)   // Algunos son obligatorios
   testCompleted   Boolean          @default(false)
   testCompletedAt DateTime?
@@ -512,8 +378,8 @@ model OnboardingStepRecord {
   onboardingId    String
   onboarding      TenantOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  step            OnboardingStep
-  status          StepStatus       @default(PENDING)
+  step            String           // OnboardingStep
+  status          String           @default("PENDING") // StepStatus
 
   // Datos específicos del paso (JSON)
   stepData        String?          @db.NVarChar(Max) // JSON data
@@ -523,7 +389,7 @@ model OnboardingStepRecord {
   blockerReason   String?          @db.NVarChar(Max)
 
   // Quién realizó la acción
-  performedBy     PerformedBy?
+  performedBy     String?          // PerformedBy
   performedById   String?
 
   // Fechas
@@ -549,7 +415,7 @@ model TestProgress {
   eventsCompleted String           @db.NVarChar(Max)
 
   lastTestAt      DateTime?
-  lastTestResult  TestResult?
+  lastTestResult  String?          // TestResult
   lastTestError   String?          @db.NVarChar(Max)
 
   @@index([onboardingId])
@@ -561,13 +427,13 @@ model OnboardingCommunication {
   onboardingId    String
   onboarding      TenantOnboarding       @relation(fields: [onboardingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  type            CommunicationType
-  direction       CommunicationDirection
+  type            String                 // CommunicationType
+  direction       String                 // CommunicationDirection
   subject         String?
   content         String                 @db.NVarChar(Max)
   attachments     String?                @db.NVarChar(Max) // JSON array de URLs
 
-  relatedStep     OnboardingStep?
+  relatedStep     String?                // OnboardingStep
 
   sentBy          String?
   sentAt          DateTime               @default(now())

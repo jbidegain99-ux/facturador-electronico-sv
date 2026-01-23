@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
-import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 interface TenantData {
   id: string;
@@ -345,6 +346,37 @@ export default function ConfiguracionPage() {
                 <Input type="password" placeholder="********" />
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Email Configuration Link */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Configuracion de Email
+            </CardTitle>
+            <CardDescription>
+              Configura el servicio de email para enviar facturas y DTEs a tus clientes
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/configuracion/email">
+              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <Mail className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Servicio de Email</p>
+                    <p className="text-sm text-muted-foreground">
+                      SendGrid, Mailgun, Amazon SES, Microsoft 365, Gmail y mas
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </Link>
           </CardContent>
         </Card>
       </div>

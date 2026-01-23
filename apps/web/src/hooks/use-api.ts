@@ -215,10 +215,10 @@ export function invalidateCache(keyOrPattern?: string | RegExp) {
   if (typeof keyOrPattern === 'string') {
     cache.delete(keyOrPattern);
   } else {
-    for (const key of cache.keys()) {
+    Array.from(cache.keys()).forEach((key) => {
       if (keyOrPattern.test(key)) {
         cache.delete(key);
       }
-    }
+    });
   }
 }

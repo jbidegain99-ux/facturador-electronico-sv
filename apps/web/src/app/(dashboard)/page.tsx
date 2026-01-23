@@ -1,8 +1,10 @@
 'use client';
 
+import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
+import { OnboardingChecklist, useOnboardingStatus } from '@/components/onboarding/onboarding-checklist';
 import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
 import {
   FileText,
@@ -42,9 +44,20 @@ const chartData = [
 
 export default function DashboardPage() {
   const maxChart = Math.max(...chartData.map((d) => d.cantidad));
+  const { status, isLoading: isLoadingOnboarding } = useOnboardingStatus();
+
+  // Check if onboarding is fully complete
+  const isOnboardingComplete = status
+    ? status.hasCompanyData && status.hasCertificate && status.hasTestedConnection
+    : true; // Assume complete if still loading to avoid flicker
 
   return (
     <div className="space-y-6">
+      {/* Onboarding Checklist - Show if not complete */}
+      {!isLoadingOnboarding && !isOnboardingComplete && status && (
+        <OnboardingChecklist status={status} className="mb-2" />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

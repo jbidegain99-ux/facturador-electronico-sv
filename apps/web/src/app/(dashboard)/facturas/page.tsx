@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
 import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
-import { Plus, Search, Download, Eye, Ban, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Download, Eye, Ban, Loader2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import { DTEStatus, TipoDte } from '@/types';
 
 interface DTE {
@@ -287,8 +287,13 @@ export default function FacturasPage() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             <Link href={`/facturas/${dte.id}`}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title="Ver detalle">
                                 <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <Link href={`/facturas/nueva?duplicate=${dte.id}`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title="Duplicar factura">
+                                <Copy className="h-4 w-4" />
                               </Button>
                             </Link>
                             <Button
@@ -296,11 +301,12 @@ export default function FacturasPage() {
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handleDownload(dte.id)}
+                              title="Descargar JSON"
                             >
                               <Download className="h-4 w-4" />
                             </Button>
                             {dte.estado === 'PROCESADO' && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Anular">
                                 <Ban className="h-4 w-4" />
                               </Button>
                             )}

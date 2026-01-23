@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   FileText,
   ArrowLeft,
@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   Keyboard,
   Sparkles,
+  Files,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +28,9 @@ import { ItemsTable } from '@/components/facturas/items-table';
 import { TotalesCard } from '@/components/facturas/totales-card';
 import { FacturaPreview } from '@/components/facturas/factura-preview';
 import { NuevoClienteModal } from '@/components/facturas/nuevo-cliente-modal';
+import { PlantillasPanel, GuardarPlantillaModal } from '@/components/facturas/plantillas-panel';
+import { FavoritosPanel, AddToFavoritesButton } from '@/components/facturas/favoritos-panel';
+import { useTemplatesStore, InvoiceTemplate, FavoriteItem } from '@/store/templates';
 import { useKeyboardShortcuts, getShortcutDisplay } from '@/hooks/use-keyboard-shortcuts';
 import { cn, getTipoDteName } from '@/lib/utils';
 import type { Cliente, ItemFactura } from '@/types';
@@ -50,6 +55,8 @@ const initialState: FacturaFormState = {
 
 export default function NuevaFacturaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { useTemplate, useFavorite } = useTemplatesStore();
 
   // Form state
   const [formState, setFormState] = React.useState<FacturaFormState>(initialState);
@@ -62,6 +69,7 @@ export default function NuevaFacturaPage() {
   const [showSuccess, setShowSuccess] = React.useState(false);
   const [successData, setSuccessData] = React.useState<{ id: string; numeroControl: string } | null>(null);
   const [hasDraft, setHasDraft] = React.useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = React.useState(false);
 
   const { tipoDte, cliente, items, condicionPago } = formState;
 
@@ -100,9 +108,13 @@ export default function NuevaFacturaPage() {
       },
       'mod+s': () => handleSaveDraft(),
       'mod+p': () => setShowPreview(true),
+      'mod+t': () => {
+        if (items.length > 0) setShowSaveTemplate(true);
+      },
       'escape': () => {
         setShowPreview(false);
         setShowNuevoCliente(false);
+        setShowSaveTemplate(false);
       },
     },
     { enabled: !isEmitting }
@@ -148,6 +160,110 @@ export default function NuevaFacturaPage() {
   const handleSaveDraft = () => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(formState));
     // Could show a toast here
+  };
+
+  // Handle template selection
+  const handleSelectTemplate = (template: InvoiceTemplate) => {
+    const usedTemplate = useTemplate(template.id);
+    if (!usedTemplate) return;
+
+    // Generate IDs for items
+    const newItems: ItemFactura[] = usedTemplate.items.map((item, index) => ({
+      ...item,
+      id: `item-${Date.now()}-${index}`,
+    }));
+
+    setFormState({
+      tipoDte: usedTemplate.tipoDte,
+      cliente: usedTemplate.cliente as Cliente | null,
+      items: newItems,
+      condicionPago: usedTemplate.condicionPago,
+    });
+  };
+
+  // Handle favorite selection - adds item to the invoice
+  const handleSelectFavorite = (favorite: FavoriteItem) => {
+    useFavorite(favorite.id);
+
+    const cantidad = 1;
+    const precioUnitario = favorite.precioUnitario;
+    const subtotal = cantidad * precioUnitario;
+    const iva = favorite.esGravado ? subtotal * 0.13 : 0;
+
+    const newItem: ItemFactura = {
+      id: `item-${Date.now()}`,
+      codigo: favorite.codigo,
+      descripcion: favorite.descripcion,
+      cantidad,
+      precioUnitario,
+      esGravado: favorite.esGravado,
+      esExento: !favorite.esGravado,
+      descuento: 0,
+      subtotal,
+      iva,
+      total: subtotal + iva,
+    };
+
+    updateForm('items', [...items, newItem]);
+  };
+
+  // Handle duplicate from URL params (coming from invoice list)
+  React.useEffect(() => {
+    const duplicateId = searchParams.get('duplicate');
+    if (duplicateId) {
+      loadInvoiceForDuplicate(duplicateId);
+    }
+  }, [searchParams]);
+
+  const loadInvoiceForDuplicate = async (dteId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dteId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) return;
+
+      const dte = await response.json();
+
+      // Parse the original JSON to extract items and other data
+      if (dte.jsonOriginal) {
+        try {
+          const originalData = JSON.parse(dte.jsonOriginal);
+          const cuerpo = originalData.cuerpoDocumento || [];
+
+          const duplicatedItems: ItemFactura[] = cuerpo.map((item: Record<string, unknown>, index: number) => ({
+            id: `item-${Date.now()}-${index}`,
+            codigo: item.codigo || '',
+            descripcion: item.descripcion as string,
+            cantidad: item.cantidad as number,
+            precioUnitario: item.precioUni as number,
+            esGravado: (item.ventaGravada as number) > 0,
+            esExento: (item.ventaExenta as number) > 0,
+            descuento: (item.montoDescu as number) || 0,
+            subtotal: (item.ventaGravada as number) || (item.ventaExenta as number) || 0,
+            iva: (item.ivaItem as number) || 0,
+            total: ((item.ventaGravada as number) || 0) + ((item.ivaItem as number) || 0),
+          }));
+
+          setFormState({
+            tipoDte: dte.tipoDte as '01' | '03',
+            cliente: null, // Don't copy client for duplicates (they should select)
+            items: duplicatedItems,
+            condicionPago: '01',
+          });
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    } catch {
+      // Ignore fetch errors
+    }
   };
 
   // Validation
@@ -550,6 +666,12 @@ export default function NuevaFacturaPage() {
 
         {/* Right column - Summary */}
         <div className="space-y-6">
+          {/* Templates Panel */}
+          <PlantillasPanel onSelectTemplate={handleSelectTemplate} />
+
+          {/* Favorites Panel */}
+          <FavoritosPanel onSelectFavorite={handleSelectFavorite} />
+
           {/* Totales */}
           <TotalesCard
             items={items}
@@ -582,6 +704,16 @@ export default function NuevaFacturaPage() {
               >
                 <Save className="w-4 h-4 mr-3" />
                 Guardar borrador
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-left"
+                onClick={() => setShowSaveTemplate(true)}
+                disabled={items.length === 0}
+              >
+                <Files className="w-4 h-4 mr-3" />
+                Guardar como plantilla
               </Button>
 
               <Button
@@ -631,6 +763,12 @@ export default function NuevaFacturaPage() {
                   {getShortcutDisplay('mod+p')}
                 </kbd>
               </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Guardar plantilla</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-white/5 font-mono">
+                  {getShortcutDisplay('mod+t')}
+                </kbd>
+              </div>
             </div>
           </div>
         </div>
@@ -655,6 +793,15 @@ export default function NuevaFacturaPage() {
         onClose={() => setShowNuevoCliente(false)}
         onCreated={handleClienteCreated}
         tipoDte={tipoDte}
+      />
+
+      <GuardarPlantillaModal
+        open={showSaveTemplate}
+        onOpenChange={setShowSaveTemplate}
+        tipoDte={tipoDte}
+        items={items}
+        condicionPago={condicionPago}
+        cliente={cliente || undefined}
       />
     </div>
   );

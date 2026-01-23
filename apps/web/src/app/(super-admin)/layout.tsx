@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -13,6 +13,7 @@ import {
   X,
   FileText,
   ChevronDown,
+  Loader2,
 } from 'lucide-react';
 
 const navigation = [
@@ -22,6 +23,13 @@ const navigation = [
   { name: 'Configuracion', href: '/admin/settings', icon: Settings },
 ];
 
+interface User {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: string;
+}
+
 export default function SuperAdminLayout({
   children,
 }: {
@@ -30,11 +38,67 @@ export default function SuperAdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        router.push('/admin/login');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          throw new Error('Unauthorized');
+        }
+
+        const userData = await res.json();
+
+        if (userData.rol !== 'SUPER_ADMIN') {
+          localStorage.removeItem('token');
+          router.push('/admin/login');
+          return;
+        }
+
+        setUser(userData);
+      } catch (err) {
+        localStorage.removeItem('token');
+        router.push('/admin/login');
+        return;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    router.push('/login');
+    router.push('/admin/login');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <span className="text-muted-foreground">Cargando panel de administracion...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen">
@@ -117,9 +181,9 @@ export default function SuperAdminLayout({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg glass-card">
                 <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-sm font-medium">
-                  SA
+                  {user.nombre?.charAt(0).toUpperCase() || 'SA'}
                 </div>
-                <span className="text-sm text-white">Super Admin</span>
+                <span className="text-sm text-white">{user.nombre || 'Super Admin'}</span>
                 <ChevronDown className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>

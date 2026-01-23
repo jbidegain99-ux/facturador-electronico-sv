@@ -133,4 +133,27 @@ export class AuthService {
       },
     };
   }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { tenant: true },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      rol: user.rol,
+      tenant: user.tenant ? {
+        id: user.tenant.id,
+        nombre: user.tenant.nombre,
+        nit: user.tenant.nit,
+      } : null,
+    };
+  }
 }

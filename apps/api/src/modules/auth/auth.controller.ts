@@ -1,8 +1,18 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+
+interface AuthRequest extends Request {
+  user: {
+    id: string;
+    email: string;
+    tenantId: string | null;
+    rol: string;
+  };
+}
 
 @ApiTags('auth')
 @Controller('auth')
@@ -23,5 +33,15 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'NIT o correo ya existe' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @Get('profile')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
+  @ApiResponse({ status: 200, description: 'Perfil del usuario' })
+  @ApiResponse({ status: 401, description: 'No autenticado' })
+  async getProfile(@Request() req: AuthRequest) {
+    return this.authService.getProfile(req.user.id);
   }
 }

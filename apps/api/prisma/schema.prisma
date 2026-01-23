@@ -42,6 +42,11 @@ model Tenant {
   usuarios        User[]
   dtes            DTE[]
   clientes        Cliente[]
+
+  // Email & Onboarding relations
+  emailConfig        TenantEmailConfig?
+  emailConfigRequests EmailConfigRequest[]
+  onboarding         TenantOnboarding?
 }
 
 model User {
@@ -113,4 +118,460 @@ model DTELog {
   createdAt DateTime @default(now())
 
   @@index([dteId])
+}
+
+// ============================================================================
+// EMAIL CONFIGURATION SYSTEM
+// ============================================================================
+
+enum EmailProvider {
+  SENDGRID
+  MAILGUN
+  AMAZON_SES
+  MICROSOFT_365
+  GOOGLE_WORKSPACE
+  POSTMARK
+  BREVO
+  MAILTRAP
+  SMTP_GENERIC
+}
+
+enum EmailAuthMethod {
+  API_KEY
+  SMTP_BASIC
+  OAUTH2
+  AWS_IAM
+}
+
+enum ConfiguredBy {
+  SELF         // Cliente lo configuró solo
+  REPUBLICODE  // Republicode lo configuró como servicio
+  PENDING      // Pendiente de configuración
+}
+
+enum HealthCheckType {
+  CONNECTION_TEST
+  AUTHENTICATION_TEST
+  SEND_TEST
+  QUOTA_CHECK
+  OAUTH_REFRESH
+}
+
+enum HealthStatus {
+  HEALTHY
+  DEGRADED
+  UNHEALTHY
+  UNKNOWN
+}
+
+enum EmailSendStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  BOUNCED
+  FAILED
+  SPAM_REPORTED
+}
+
+enum EmailRequestType {
+  NEW_SETUP           // No tienen cliente de correo
+  MIGRATION           // Quieren migrar de otro
+  CONFIGURATION_HELP  // Tienen pero necesitan ayuda
+  TROUBLESHOOTING     // Problemas con configuración existente
+}
+
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  WAITING_CLIENT
+  COMPLETED
+  CANCELLED
+}
+
+enum MessageSender {
+  TENANT
+  REPUBLICODE
+  SYSTEM
+}
+
+// Configuración principal de email del tenant
+model TenantEmailConfig {
+  id                String          @id @default(cuid())
+  tenantId          String          @unique
+  tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Proveedor y método
+  provider          EmailProvider
+  authMethod        EmailAuthMethod
+  isActive          Boolean         @default(false)
+  isVerified        Boolean         @default(false)
+
+  // Configuración SMTP (encriptada)
+  smtpHost          String?
+  smtpPort          Int?
+  smtpSecure        Boolean?        @default(true)
+  smtpUser          String?
+  smtpPassword      String?         @db.NVarChar(Max) // Encriptado en BD
+
+  // Configuración API (encriptada)
+  apiKey            String?         @db.NVarChar(Max) // Encriptado
+  apiSecret         String?         @db.NVarChar(Max) // Encriptado
+  apiEndpoint       String?
+
+  // OAuth2 (para M365 y Google)
+  oauth2ClientId     String?
+  oauth2ClientSecret String?        @db.NVarChar(Max) // Encriptado
+  oauth2TenantId     String?        // Para Azure AD
+  oauth2RefreshToken String?        @db.NVarChar(Max) // Encriptado
+  oauth2AccessToken  String?        @db.NVarChar(Max) // Encriptado
+  oauth2TokenExpiry  DateTime?
+
+  // Configuración de envío
+  fromEmail         String
+  fromName          String
+  replyToEmail      String?
+
+  // Configuración avanzada
+  rateLimitPerHour  Int?            @default(100)
+  retryAttempts     Int?            @default(3)
+  timeoutSeconds    Int?            @default(30)
+
+  // Metadatos
+  configuredBy      ConfiguredBy    @default(PENDING)
+  configuredByUserId String?
+  notes             String?         @db.NVarChar(Max)
+
+  // Auditoría
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  verifiedAt        DateTime?
+  lastTestAt        DateTime?
+
+  // Relaciones
+  healthChecks      EmailHealthCheck[]
+  sendLogs          EmailSendLog[]
+
+  @@index([tenantId])
+}
+
+// Monitoreo de salud del servicio de email
+model EmailHealthCheck {
+  id              String            @id @default(cuid())
+  configId        String
+  config          TenantEmailConfig @relation(fields: [configId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  checkType       HealthCheckType
+  status          HealthStatus
+  responseTimeMs  Int?
+  errorMessage    String?           @db.NVarChar(Max)
+  errorCode       String?
+
+  checkedAt       DateTime          @default(now())
+
+  @@index([configId, checkedAt])
+}
+
+// Log de envíos de email
+model EmailSendLog {
+  id                String            @id @default(cuid())
+  configId          String
+  config            TenantEmailConfig @relation(fields: [configId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  dteId             String?           // Referencia al DTE enviado
+  recipientEmail    String
+  subject           String
+
+  status            EmailSendStatus
+  providerMessageId String?
+  errorMessage      String?           @db.NVarChar(Max)
+
+  attemptNumber     Int               @default(1)
+  sentAt            DateTime          @default(now())
+  deliveredAt       DateTime?
+  openedAt          DateTime?
+
+  @@index([configId, sentAt])
+  @@index([dteId])
+}
+
+// Solicitudes de servicio asistido
+model EmailConfigRequest {
+  id                String           @id @default(cuid())
+  tenantId          String
+  tenant            Tenant           @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  requestType       EmailRequestType
+  desiredProvider   EmailProvider?
+
+  // Información proporcionada por el cliente
+  currentProvider   String?
+  accountEmail      String?
+  additionalNotes   String?          @db.NVarChar(Max)
+
+  // Estado del proceso
+  status            RequestStatus    @default(PENDING)
+  assignedTo        String?
+
+  // Comunicación
+  messages          EmailConfigMessage[]
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  completedAt       DateTime?
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+model EmailConfigMessage {
+  id              String             @id @default(cuid())
+  requestId       String
+  request         EmailConfigRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  senderType      MessageSender
+  senderId        String?
+  message         String             @db.NVarChar(Max)
+  attachments     String?            @db.NVarChar(Max) // JSON array de URLs
+
+  createdAt       DateTime           @default(now())
+
+  @@index([requestId])
+}
+
+// ============================================================================
+// ONBOARDING WIZARD SYSTEM - PROCESO DE REGISTRO CON HACIENDA
+// ============================================================================
+
+enum OnboardingStep {
+  WELCOME                   // Bienvenida y explicación del proceso
+  COMPANY_INFO              // Recopilar información de la empresa
+  HACIENDA_CREDENTIALS      // Verificar acceso a Servicios en Línea MH
+  DTE_TYPE_SELECTION        // Seleccionar tipos de DTE a emitir
+  TEST_ENVIRONMENT_REQUEST  // Solicitar ambiente de pruebas
+  TEST_CERTIFICATE          // Generar certificado de pruebas
+  API_CREDENTIALS_TEST      // Configurar credenciales API (pruebas)
+  EXECUTE_TESTS             // Ejecutar pruebas requeridas
+  REQUEST_AUTHORIZATION     // Solicitar autorización como emisor
+  PROD_CERTIFICATE          // Generar certificado productivo
+  API_CREDENTIALS_PROD      // Configurar credenciales API (producción)
+  FINAL_VALIDATION          // Validación final
+  COMPLETED                 // Proceso completado
+}
+
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  WAITING_HACIENDA   // Esperando respuesta de Hacienda
+  WAITING_CLIENT     // Esperando acción del cliente
+  BLOCKED            // Problema que requiere intervención
+  COMPLETED
+  CANCELLED
+}
+
+enum AssistanceLevel {
+  SELF_SERVICE       // Cliente hace todo solo
+  GUIDED             // Republicode guía paso a paso
+  FULL_SERVICE       // Republicode hace todo por el cliente
+}
+
+enum DteType {
+  FACTURA                          // 01 - Factura
+  CREDITO_FISCAL                   // 03 - Comprobante de Crédito Fiscal
+  NOTA_REMISION                    // 04 - Nota de Remisión
+  NOTA_CREDITO                     // 05 - Nota de Crédito
+  NOTA_DEBITO                      // 06 - Nota de Débito
+  COMPROBANTE_RETENCION            // 07 - Comprobante de Retención
+  COMPROBANTE_LIQUIDACION          // 08 - Comprobante de Liquidación
+  DOCUMENTO_CONTABLE_LIQUIDACION   // 09 - Documento Contable de Liquidación
+  FACTURA_EXPORTACION              // 11 - Factura de Exportación
+  FACTURA_SUJETO_EXCLUIDO          // 14 - Factura de Sujeto Excluido
+  COMPROBANTE_DONACION             // 15 - Comprobante de Donación
+}
+
+enum StepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  BLOCKED
+  FAILED
+}
+
+enum PerformedBy {
+  TENANT
+  REPUBLICODE
+  SYSTEM
+}
+
+enum TestResult {
+  SUCCESS
+  VALIDATION_ERROR
+  SIGNATURE_ERROR
+  TRANSMISSION_ERROR
+  OTHER_ERROR
+}
+
+enum CommunicationType {
+  EMAIL
+  IN_APP_MESSAGE
+  PHONE_CALL_LOG
+  MEETING_NOTES
+  SYSTEM_NOTIFICATION
+}
+
+enum CommunicationDirection {
+  TO_TENANT
+  FROM_TENANT
+  INTERNAL
+}
+
+// Proceso de onboarding del tenant
+model TenantOnboarding {
+  id                  String            @id @default(cuid())
+  tenantId            String            @unique
+  tenant              Tenant            @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Estado general
+  currentStep         OnboardingStep    @default(WELCOME)
+  overallStatus       OnboardingStatus  @default(NOT_STARTED)
+
+  // Información del contribuyente (puede diferir del Tenant base)
+  nit                 String?
+  nrc                 String?
+  razonSocial         String?
+  nombreComercial     String?
+  actividadEconomica  String?
+
+  // Información de contacto Hacienda
+  emailHacienda       String?           // Email registrado en Hacienda
+  telefonoHacienda    String?
+
+  // Credenciales MH (encriptadas)
+  haciendaUser        String?
+  haciendaPassword    String?           @db.NVarChar(Max) // Encriptado
+
+  // Ambiente de pruebas
+  testCertificate     String?           @db.NVarChar(Max) // Certificado de pruebas (base64)
+  testCertPassword    String?           @db.NVarChar(Max) // Encriptado
+  testCertExpiry      DateTime?
+  testApiPassword     String?           @db.NVarChar(Max) // Encriptado
+  testEnvironmentUrl  String?
+
+  // Ambiente productivo
+  prodCertificate     String?           @db.NVarChar(Max) // Certificado productivo (base64)
+  prodCertPassword    String?           @db.NVarChar(Max) // Encriptado
+  prodCertExpiry      DateTime?
+  prodApiPassword     String?           @db.NVarChar(Max) // Encriptado
+  prodEnvironmentUrl  String?
+
+  // Fechas clave
+  testAccessGrantedAt DateTime?
+  testDeadline        DateTime?         // 60 días desde acceso
+  authorizationDate   DateTime?
+  productionDeadline  DateTime?         // 30 días desde autorización
+
+  // Servicio asistido
+  assistanceLevel     AssistanceLevel   @default(GUIDED)
+  assignedAgent       String?
+
+  // Auditoría
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  completedAt         DateTime?
+
+  // Relaciones
+  dteTypes            DteTypeSelection[]
+  steps               OnboardingStepRecord[]
+  testProgress        TestProgress?
+  communications      OnboardingCommunication[]
+
+  @@index([tenantId])
+  @@index([currentStep])
+  @@index([overallStatus])
+}
+
+// Tipos de DTE que el tenant quiere emitir
+model DteTypeSelection {
+  id              String           @id @default(cuid())
+  onboardingId    String
+  onboarding      TenantOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  dteType         DteType
+  isRequired      Boolean          @default(true)   // Algunos son obligatorios
+  testCompleted   Boolean          @default(false)
+  testCompletedAt DateTime?
+
+  @@unique([onboardingId, dteType])
+  @@index([onboardingId])
+}
+
+// Registro detallado de cada paso
+model OnboardingStepRecord {
+  id              String           @id @default(cuid())
+  onboardingId    String
+  onboarding      TenantOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  step            OnboardingStep
+  status          StepStatus       @default(PENDING)
+
+  // Datos específicos del paso (JSON)
+  stepData        String?          @db.NVarChar(Max) // JSON data
+
+  // Notas y observaciones
+  notes           String?          @db.NVarChar(Max)
+  blockerReason   String?          @db.NVarChar(Max)
+
+  // Quién realizó la acción
+  performedBy     PerformedBy?
+  performedById   String?
+
+  // Fechas
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  @@unique([onboardingId, step])
+  @@index([onboardingId])
+}
+
+// Progreso de pruebas técnicas
+model TestProgress {
+  id              String           @id @default(cuid())
+  onboardingId    String           @unique
+  onboarding      TenantOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  // Contadores de pruebas por tipo de DTE (JSON)
+  testsRequired   String           @db.NVarChar(Max) // { "FACTURA": 5, "CREDITO_FISCAL": 3, ... }
+  testsCompleted  String           @db.NVarChar(Max) // { "FACTURA": 5, "CREDITO_FISCAL": 2, ... }
+
+  // Eventos requeridos (JSON)
+  eventsRequired  String           @db.NVarChar(Max) // { "ANULACION": 2, "CONTINGENCIA": 1, ... }
+  eventsCompleted String           @db.NVarChar(Max)
+
+  lastTestAt      DateTime?
+  lastTestResult  TestResult?
+  lastTestError   String?          @db.NVarChar(Max)
+
+  @@index([onboardingId])
+}
+
+// Comunicaciones durante el onboarding
+model OnboardingCommunication {
+  id              String                 @id @default(cuid())
+  onboardingId    String
+  onboarding      TenantOnboarding       @relation(fields: [onboardingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  type            CommunicationType
+  direction       CommunicationDirection
+  subject         String?
+  content         String                 @db.NVarChar(Max)
+  attachments     String?                @db.NVarChar(Max) // JSON array de URLs
+
+  relatedStep     OnboardingStep?
+
+  sentBy          String?
+  sentAt          DateTime               @default(now())
+  readAt          DateTime?
+
+  @@index([onboardingId])
 }

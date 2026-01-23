@@ -68,4 +68,13 @@ export class DteController {
   findOne(@Param('id') id: string) {
     return this.dteService.findOne(id);
   }
+
+  @Post(':id/anular')
+  @ApiOperation({ summary: 'Anular DTE' })
+  anular(
+    @Param('id') id: string,
+    @Body() body: { motivo: string },
+  ) {
+    return this.dteService.anularDte(id, body.motivo);
+  }
 }

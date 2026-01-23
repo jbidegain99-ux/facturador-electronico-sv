@@ -139,8 +139,14 @@ export default function FacturasPage() {
 
   const getTotalPagar = (dte: DTE): number => {
     if (typeof dte.totalPagar === 'number') return dte.totalPagar;
+    if (typeof dte.totalPagar === 'string') return parseFloat(dte.totalPagar) || 0;
     if (dte.totalPagar && typeof dte.totalPagar.toNumber === 'function') {
       return dte.totalPagar.toNumber();
+    }
+    // Handle Prisma Decimal object format
+    if (dte.totalPagar && typeof dte.totalPagar === 'object') {
+      const val = (dte.totalPagar as any).toString?.() || (dte.totalPagar as any).value;
+      return parseFloat(val) || 0;
     }
     return 0;
   };

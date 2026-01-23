@@ -272,6 +272,32 @@ export class DteService {
     });
   }
 
+  async anularDte(dteId: string, motivo: string) {
+    const dte = await this.prisma.dTE.findUnique({
+      where: { id: dteId },
+    });
+
+    if (!dte) {
+      throw new Error('DTE no encontrado');
+    }
+
+    if (dte.estado === DTEStatus.ANULADO) {
+      throw new Error('El DTE ya está anulado');
+    }
+
+    const updated = await this.prisma.dTE.update({
+      where: { id: dteId },
+      data: {
+        estado: DTEStatus.ANULADO,
+        descripcionMh: `Anulado: ${motivo}`,
+      },
+    });
+
+    await this.logDteAction(dteId, 'ANULADO', { motivo });
+
+    return updated;
+  }
+
   private async getNextCorrelativo(tenantId: string, tipoDte: string): Promise<number> {
     const lastDte = await this.prisma.dTE.findFirst({
       where: { tenantId, tipoDte },

@@ -46,8 +46,12 @@ WORKDIR /app
 # Copy built application
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api/node_modules ./node_modules_api
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api/package.json ./
+
+# Merge api node_modules into main node_modules (for dependencies not hoisted)
+RUN cp -rn ./node_modules_api/* ./node_modules/ 2>/dev/null || true && rm -rf ./node_modules_api
 
 # Copy Prisma schema (needed for migrations in production)
 COPY --from=builder /app/apps/api/prisma ./prisma

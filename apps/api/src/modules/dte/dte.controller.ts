@@ -166,7 +166,13 @@ export class DteController {
       throw new NotFoundException('DTE no encontrado');
     }
 
-    const pdfBuffer = await this.pdfService.generateInvoicePdf(dte);
+    // Map jsonOriginal to data for PDF service
+    const dteWithData = {
+      ...dte,
+      data: dte.jsonOriginal ? JSON.parse(dte.jsonOriginal) : {},
+    };
+
+    const pdfBuffer = await this.pdfService.generateInvoicePdf(dteWithData);
 
     const filename = `DTE-${dte.numeroControl || dte.codigoGeneracion}.pdf`;
 

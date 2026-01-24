@@ -36,10 +36,14 @@ export default function DashboardLayout({
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          // No token, let auth handle redirect
-          setIsCheckingOnboarding(false);
+          // No token, redirect to login
+          router.push('/login');
           return;
         }
+
+        // Add timeout to prevent hanging forever
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/onboarding-status`,
@@ -47,10 +51,20 @@ export default function DashboardLayout({
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            signal: controller.signal,
           }
         );
 
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
+          // If unauthorized, redirect to login
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            router.push('/login');
+            return;
+          }
+          // For other errors, just continue to dashboard
           setIsCheckingOnboarding(false);
           return;
         }
@@ -67,6 +81,8 @@ export default function DashboardLayout({
         setIsCheckingOnboarding(false);
       } catch (error) {
         console.error('Error checking onboarding status:', error);
+        // On timeout or network error, still show the dashboard
+        // This prevents the infinite loading state
         setIsCheckingOnboarding(false);
       }
     };

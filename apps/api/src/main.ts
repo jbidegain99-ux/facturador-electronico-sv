@@ -11,7 +11,6 @@ async function bootstrap() {
     ? process.env.CORS_ORIGINS.split(',')
     : [
         'https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net',
-        'https://facturador-web-sv.azurewebsites.net',
         'http://localhost:3000',
       ];
 

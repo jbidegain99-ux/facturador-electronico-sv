@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Query, UseGuards, Request, Res, NotFoundException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiProduces } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Response } from 'express';
 import { DteService } from './dte.service';
+import { PdfService } from './pdf.service';
 
 interface AuthRequest extends Request {
   user: {
@@ -14,7 +16,10 @@ interface AuthRequest extends Request {
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class DteController {
-  constructor(private dteService: DteService) {}
+  constructor(
+    private dteService: DteService,
+    private pdfService: PdfService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Crear nuevo DTE' })
@@ -146,6 +151,32 @@ export class DteController {
   @ApiOperation({ summary: 'Obtener DTE por ID' })
   findOne(@Param('id') id: string) {
     return this.dteService.findOne(id);
+  }
+
+  @Get(':id/pdf')
+  @ApiOperation({ summary: 'Descargar DTE como PDF' })
+  @ApiProduces('application/pdf')
+  async downloadPdf(
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const dte = await this.dteService.findOneWithTenant(id);
+
+    if (!dte) {
+      throw new NotFoundException('DTE no encontrado');
+    }
+
+    const pdfBuffer = await this.pdfService.generateInvoicePdf(dte);
+
+    const filename = `DTE-${dte.numeroControl || dte.codigoGeneracion}.pdf`;
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.end(pdfBuffer);
   }
 
   @Post(':id/anular')

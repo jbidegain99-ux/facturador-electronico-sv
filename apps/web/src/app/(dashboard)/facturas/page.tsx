@@ -12,7 +12,7 @@ import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
-import { Plus, Search, Download, Eye, Ban, Loader2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
+import { Plus, Search, Download, Eye, Ban, Loader2, ChevronLeft, ChevronRight, Copy, FileText } from 'lucide-react';
 import { DTEStatus, TipoDte } from '@/types';
 
 interface DTE {
@@ -141,6 +141,35 @@ export default function FacturasPage() {
     } catch (err) {
       console.error('Error downloading DTE:', err);
       toast.error('Error al descargar el documento');
+    }
+  };
+
+  const handleDownloadPdf = async (dte: DTE) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dte.id}/pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error('Error al generar el PDF');
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DTE-${dte.numeroControl || dte.codigoGeneracion}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('PDF descargado correctamente');
+    } catch (err) {
+      console.error('Error downloading PDF:', err);
+      toast.error('Error al generar el PDF');
     }
   };
 
@@ -336,6 +365,15 @@ export default function FacturasPage() {
                                 <Copy className="h-4 w-4" />
                               </Button>
                             </Link>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleDownloadPdf(dte)}
+                              title="Descargar PDF"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"

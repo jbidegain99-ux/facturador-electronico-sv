@@ -99,6 +99,28 @@ export default function OnboardingPage() {
   };
 
   const handleSkip = async () => {
+    try {
+      // Call API to skip onboarding and enable demo mode
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/onboarding-skip`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Demo mode activated:', data);
+      }
+    } catch (error) {
+      console.error('Error skipping onboarding:', error);
+    }
+
     router.push('/facturas');
   };
 

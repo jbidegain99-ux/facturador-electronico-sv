@@ -37,7 +37,7 @@ import {
   ExecuteEventTestDto,
   AddCommunicationDto,
 } from './dto';
-import { OnboardingStatus, OnboardingStep, StepStatus } from '@prisma/client';
+import { OnboardingStatus, OnboardingStep, StepStatus } from './types/onboarding.types';
 
 // =========================================================================
 // TENANT CONTROLLER

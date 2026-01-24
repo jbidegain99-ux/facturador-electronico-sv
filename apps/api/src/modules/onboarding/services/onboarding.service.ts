@@ -2,13 +2,19 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EncryptionService } from '../../email-config/services';
 import {
+  OnboardingStepRecord,
+  DteTypeSelection,
+  TenantOnboarding,
+  Tenant,
+} from '@prisma/client';
+import {
   OnboardingStep,
   OnboardingStatus,
   StepStatus,
   PerformedBy,
   AssistanceLevel,
   DteType,
-} from '@prisma/client';
+} from '../types/onboarding.types';
 import {
   StartOnboardingDto,
   UpdateCompanyInfoDto,
@@ -165,7 +171,7 @@ export class OnboardingService {
     }
 
     const completedCount = onboarding.steps.filter(
-      (s) => s.status === 'COMPLETED',
+      (s: OnboardingStepRecord) => s.status === 'COMPLETED',
     ).length;
 
     return {
@@ -368,12 +374,12 @@ export class OnboardingService {
       : { testsCompleted: {} };
 
     return {
-      selected: onboarding.dteTypes.map((dt) => ({
+      selected: onboarding.dteTypes.map((dt: DteTypeSelection) => ({
         dteType: dt.dteType,
         isRequired: dt.isRequired,
         testCompleted: dt.testCompleted,
         testCompletedAt: dt.testCompletedAt,
-        testsRequired: TESTS_REQUIRED[dt.dteType] || 1,
+        testsRequired: TESTS_REQUIRED[dt.dteType as DteType] || 1,
         testsCompleted: testProgress.testsCompleted[dt.dteType] || 0,
       })),
       available: this.getAvailableDteTypes(),
@@ -596,7 +602,7 @@ export class OnboardingService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return onboardings.map((o) => ({
+    return onboardings.map((o: TenantOnboarding & { tenant: Pick<Tenant, 'id' | 'nombre' | 'nit'>; steps: OnboardingStepRecord[] }) => ({
       id: o.id,
       tenantId: o.tenantId,
       tenantName: o.tenant.nombre,
@@ -604,7 +610,7 @@ export class OnboardingService {
       currentStep: o.currentStep,
       overallStatus: o.overallStatus,
       assistanceLevel: o.assistanceLevel,
-      completedSteps: o.steps.filter((s) => s.status === 'COMPLETED').length,
+      completedSteps: o.steps.filter((s: OnboardingStepRecord) => s.status === 'COMPLETED').length,
       totalSteps: STEP_ORDER.length,
       createdAt: o.createdAt,
       updatedAt: o.updatedAt,

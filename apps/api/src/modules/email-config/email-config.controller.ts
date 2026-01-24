@@ -34,7 +34,7 @@ import {
   UpdateEmailAssistanceRequestDto,
   AddMessageDto,
 } from './dto';
-import { ConfiguredBy, MessageSender, RequestStatus } from '@prisma/client';
+import { ConfiguredBy, MessageSender, RequestStatus } from './types/email.types';
 
 @ApiTags('email-config')
 @Controller('email-config')

@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { EmailProvider } from '@prisma/client';
+import { EmailProvider } from '../types/email.types';
 import {
   BaseEmailAdapter,
   ConnectionTestResult,

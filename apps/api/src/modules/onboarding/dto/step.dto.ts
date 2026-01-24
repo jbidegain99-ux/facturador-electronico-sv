@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { OnboardingStep, StepStatus, PerformedBy } from '@prisma/client';
+import { OnboardingStep, StepStatus, PerformedBy } from '../types/onboarding.types';
 
 export class UpdateStepDto {
   @ApiProperty({

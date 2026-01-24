@@ -1,6 +1,6 @@
 import { IsEnum, IsOptional, IsObject, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DteType, TestResult } from '@prisma/client';
+import { DteType, TestResult } from '../types/onboarding.types';
 
 export class ExecuteTestDto {
   @ApiProperty({

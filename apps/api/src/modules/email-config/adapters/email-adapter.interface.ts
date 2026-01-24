@@ -1,4 +1,5 @@
-import { EmailProvider, TenantEmailConfig } from '@prisma/client';
+import { TenantEmailConfig } from '@prisma/client';
+import { EmailProvider } from '../types/email.types';
 
 /**
  * Parameters for sending an email

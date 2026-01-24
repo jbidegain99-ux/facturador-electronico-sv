@@ -1,6 +1,6 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AssistanceLevel } from '@prisma/client';
+import { AssistanceLevel } from '../types/onboarding.types';
 
 export class StartOnboardingDto {
   @ApiProperty({

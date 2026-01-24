@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsEnum, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EmailProvider, EmailRequestType, RequestStatus } from '@prisma/client';
+import { EmailProvider, EmailRequestType, RequestStatus } from '../types/email.types';
 
 export class CreateEmailAssistanceRequestDto {
   @ApiProperty({

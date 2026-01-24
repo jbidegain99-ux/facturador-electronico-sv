@@ -16,6 +16,10 @@ COPY packages ./packages
 # Install all dependencies (root + workspaces)
 RUN npm install
 
+# Install api dependencies explicitly to ensure they're in node_modules
+WORKDIR /app/apps/api
+RUN npm install --legacy-peer-deps
+
 # Build shared packages first
 WORKDIR /app/packages/mh-client
 RUN npm run build || echo "mh-client build skipped"
@@ -41,8 +45,12 @@ WORKDIR /app
 # Copy built application
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api/node_modules ./api_node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api/package.json ./
+
+# Merge api node_modules into main (for deps not hoisted)
+RUN cp -rn ./api_node_modules/* ./node_modules/ 2>/dev/null || true && rm -rf ./api_node_modules
 
 # Copy Prisma schema (needed for migrations in production)
 COPY --from=builder /app/apps/api/prisma ./prisma

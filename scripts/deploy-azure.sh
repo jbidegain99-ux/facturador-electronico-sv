@@ -28,11 +28,11 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Default values (adjust these for your setup)
-ACR_NAME="${ACR_NAME:-republicodeacr}"
-RESOURCE_GROUP="${RESOURCE_GROUP:-republicode-rg}"
+ACR_NAME="${ACR_NAME:-facturadorsvacr}"
+RESOURCE_GROUP="${RESOURCE_GROUP:-facturador-sv-rg}"
 API_APP_NAME="${API_APP_NAME:-facturador-api-sv}"
 WEB_APP_NAME="${WEB_APP_NAME:-facturador-web-sv}"
-NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-https://${API_APP_NAME}.azurewebsites.net}"
+NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-https://facturador-api-sv-gvavh8heb5c5gkc9.eastus2-01.azurewebsites.net}"
 
 # Image names
 API_IMAGE="${ACR_NAME}.azurecr.io/facturador-api:latest"

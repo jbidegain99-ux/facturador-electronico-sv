@@ -6,14 +6,20 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Habilitar CORS
+  // Habilitar CORS - permitir orígenes desde variable de entorno o defaults
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',')
+    : [
+        'https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net',
+        'https://facturador-web-sv.azurewebsites.net',
+        'http://localhost:3000',
+      ];
+
   app.enableCors({
-    origin: [
-      'https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net',
-      'http://localhost:3000',
-    ],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
   app.setGlobalPrefix('api/v1', {

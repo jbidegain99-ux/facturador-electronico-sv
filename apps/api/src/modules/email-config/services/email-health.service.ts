@@ -272,7 +272,7 @@ export class EmailHealthService {
         tenantId: config.tenantId,
         tenantName: config.tenant.nombre,
         provider: config.provider,
-        status: lastCheck?.status || HealthStatus.UNKNOWN,
+        status: (lastCheck?.status as HealthStatus) || HealthStatus.UNKNOWN,
         lastCheck: lastCheck?.checkedAt,
         lastError: lastCheck?.errorMessage || undefined,
         isActive: config.isActive,

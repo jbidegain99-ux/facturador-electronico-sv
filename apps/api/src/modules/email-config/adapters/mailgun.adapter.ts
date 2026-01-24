@@ -220,7 +220,9 @@ export class MailgunAdapter extends BaseEmailAdapter {
           ? att.content
           : Buffer.from(att.content, 'base64');
 
-        const blob = new Blob([content], { type: att.contentType });
+        // Convert Buffer to Uint8Array for Blob compatibility
+        const uint8Array = new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
+        const blob = new Blob([uint8Array], { type: att.contentType });
         formData.append('attachment', blob, att.filename);
       }
 

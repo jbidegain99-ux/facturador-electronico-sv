@@ -75,7 +75,7 @@ export class EmailAdapterFactory {
     return {
       id: config.id,
       tenantId: config.tenantId,
-      provider: config.provider,
+      provider: config.provider as EmailProvider,
 
       // SMTP
       smtpHost: config.smtpHost || undefined,

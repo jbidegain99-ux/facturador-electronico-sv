@@ -428,25 +428,25 @@ export class EmailConfigService {
   /**
    * Encrypt sensitive fields before storing
    */
-  private encryptSensitiveFields(dto: Partial<CreateEmailConfigDto>) {
-    const result: Record<string, unknown> = { ...dto };
+  private encryptSensitiveFields<T extends Partial<CreateEmailConfigDto>>(dto: T): T {
+    const result = { ...dto } as T;
 
     // Encrypt SMTP password
     if (dto.smtpPassword) {
-      result.smtpPassword = this.encryptionService.encrypt(dto.smtpPassword);
+      (result as Record<string, unknown>).smtpPassword = this.encryptionService.encrypt(dto.smtpPassword);
     }
 
     // Encrypt API credentials
     if (dto.apiKey) {
-      result.apiKey = this.encryptionService.encrypt(dto.apiKey);
+      (result as Record<string, unknown>).apiKey = this.encryptionService.encrypt(dto.apiKey);
     }
     if (dto.apiSecret) {
-      result.apiSecret = this.encryptionService.encrypt(dto.apiSecret);
+      (result as Record<string, unknown>).apiSecret = this.encryptionService.encrypt(dto.apiSecret);
     }
 
     // Encrypt OAuth2 credentials
     if (dto.oauth2ClientSecret) {
-      result.oauth2ClientSecret = this.encryptionService.encrypt(
+      (result as Record<string, unknown>).oauth2ClientSecret = this.encryptionService.encrypt(
         dto.oauth2ClientSecret,
       );
     }

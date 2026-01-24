@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { EmailProvider } from '@prisma/client';
+import { EmailProvider } from '../types/email.types';
 import * as nodemailer from 'nodemailer';
 import {
   BaseEmailAdapter,
@@ -125,11 +125,9 @@ export class AmazonSesAdapter extends BaseEmailAdapter {
         html: params.html,
         text: params.text,
         replyTo: params.replyTo || this.getReplyTo(),
-        headers: {
-          ...params.headers,
-          'X-SES-CONFIGURATION-SET':
-            process.env.SES_CONFIGURATION_SET || undefined,
-        },
+        headers: process.env.SES_CONFIGURATION_SET
+          ? { ...params.headers, 'X-SES-CONFIGURATION-SET': process.env.SES_CONFIGURATION_SET }
+          : params.headers,
       };
 
       const info = await this.transporter.sendMail(mailOptions);

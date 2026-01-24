@@ -271,6 +271,26 @@ export function OnboardingWizard({
               <p className="text-sm text-muted-foreground">
                 Tiempo estimado: 3-5 minutos
               </p>
+
+              <div className="glass-card p-4 text-left max-w-md mx-auto border-yellow-500/30">
+                <h3 className="font-medium text-yellow-400 mb-2 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  ¿Solo quieres probar?
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Puedes activar el <strong className="text-white">modo demo</strong> para
+                  probar la plataforma sin necesidad de un certificado real.
+                  Las facturas se generaran simuladas.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={onSkip}
+                  className="w-full border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Activar Modo Demo
+                </Button>
+              </div>
             </div>
           )}
 

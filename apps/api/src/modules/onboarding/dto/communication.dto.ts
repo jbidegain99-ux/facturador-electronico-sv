@@ -10,7 +10,7 @@ import {
   CommunicationType,
   CommunicationDirection,
   OnboardingStep,
-} from '@prisma/client';
+} from '../types/onboarding.types';
 
 export class AddCommunicationDto {
   @ApiProperty({

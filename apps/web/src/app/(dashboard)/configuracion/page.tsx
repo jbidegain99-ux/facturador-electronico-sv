@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
-import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket } from 'lucide-react';
+import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface TenantData {
@@ -32,6 +32,8 @@ export default function ConfiguracionPage() {
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
+  const [demoMode, setDemoMode] = React.useState(false);
+  const [togglingDemo, setTogglingDemo] = React.useState(false);
 
   // Form state
   const [formData, setFormData] = React.useState<Partial<TenantData>>({
@@ -43,9 +45,9 @@ export default function ConfiguracionPage() {
     direccion: { departamento: '', municipio: '', complemento: '' },
   });
 
-  // Load tenant data on mount
+  // Load tenant data and demo status on mount
   React.useEffect(() => {
-    const loadTenantData = async () => {
+    const loadData = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setError('No hay sesion activa');
@@ -54,19 +56,28 @@ export default function ConfiguracionPage() {
       }
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        // Fetch tenant data and onboarding status in parallel
+        const [tenantRes, statusRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/onboarding-status`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }),
+        ]);
 
-        if (!res.ok) {
-          const errorData = await res.json();
+        if (!tenantRes.ok) {
+          const errorData = await tenantRes.json();
           throw new Error(errorData.message || 'Error al cargar datos');
         }
 
-        const data: TenantData = await res.json();
+        const data: TenantData = await tenantRes.json();
         setFormData({
           nombre: data.nombre || '',
           nit: data.nit || '',
@@ -76,6 +87,14 @@ export default function ConfiguracionPage() {
           direccion: data.direccion || { departamento: '', municipio: '', complemento: '' },
         });
         setTenant(data);
+
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          setDemoMode(statusData.demoMode || false);
+          if (statusData.hasCertificate && !statusData.demoMode) {
+            setCertificateStatus('loaded');
+          }
+        }
       } catch (err) {
         console.error('Error loading tenant:', err);
         setError(err instanceof Error ? err.message : 'Error al cargar configuracion');
@@ -84,8 +103,47 @@ export default function ConfiguracionPage() {
       }
     };
 
-    loadTenantData();
+    loadData();
   }, [setTenant]);
+
+  const toggleDemoMode = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('No hay sesion activa');
+      return;
+    }
+
+    setTogglingDemo(true);
+    setError(null);
+
+    try {
+      const endpoint = demoMode
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/disable-demo`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/onboarding-skip`;
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Error al cambiar modo demo');
+      }
+
+      const data = await res.json();
+      setDemoMode(data.demoMode);
+      setSuccess(data.message);
+    } catch (err) {
+      console.error('Error toggling demo mode:', err);
+      setError(err instanceof Error ? err.message : 'Error al cambiar modo demo');
+    } finally {
+      setTogglingDemo(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -408,6 +466,78 @@ export default function ConfiguracionPage() {
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
             </Link>
+          </CardContent>
+        </Card>
+
+        {/* Demo Mode Card */}
+        <Card className={`lg:col-span-2 ${demoMode ? 'border-yellow-500/50' : ''}`}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className={`h-5 w-5 ${demoMode ? 'text-yellow-500' : ''}`} />
+              Modo Demo
+              {demoMode && (
+                <Badge variant="outline" className="ml-2 border-yellow-500 text-yellow-500">
+                  Activo
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>
+              Prueba la plataforma sin conectar con el Ministerio de Hacienda
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-4">
+                {demoMode ? (
+                  <>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                      <Sparkles className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-yellow-600 dark:text-yellow-400">Modo Demo Activo</p>
+                      <p className="text-sm text-muted-foreground">
+                        Las facturas se crean con datos simulados. No se envian a Hacienda.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                      <XCircle className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Modo Demo Desactivado</p>
+                      <p className="text-sm text-muted-foreground">
+                        Las facturas se envian al Ministerio de Hacienda en modo produccion.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <Button
+                variant={demoMode ? 'destructive' : 'outline'}
+                onClick={toggleDemoMode}
+                disabled={togglingDemo}
+                className={!demoMode ? 'border-yellow-500 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20' : ''}
+              >
+                {togglingDemo ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : demoMode ? (
+                  <XCircle className="h-4 w-4 mr-2" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
+                {demoMode ? 'Desactivar Demo' : 'Activar Demo'}
+              </Button>
+            </div>
+            {demoMode && (
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                  <strong>Nota:</strong> En modo demo, las facturas se generan con un sello simulado y no son validas legalmente.
+                  Para emitir facturas reales, desactiva el modo demo y completa el proceso de habilitacion con Hacienda.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

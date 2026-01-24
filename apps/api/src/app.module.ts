@@ -12,6 +12,7 @@ import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 import { EmailConfigModule } from './modules/email-config/email-config.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { HealthModule } from './health/health.module';
 
 const imports: any[] = [
   ConfigModule.forRoot({
@@ -19,6 +20,7 @@ const imports: any[] = [
     envFilePath: ['.env.local', '.env'],
   }),
   PrismaModule,
+  HealthModule,
   AuthModule,
   TenantsModule,
   ClientesModule,

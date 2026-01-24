@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EncryptionService } from '../../email-config/services';
-import { DteType, TestResult } from '@prisma/client';
+import { DteTypeSelection } from '@prisma/client';
+import { DteType, TestResult } from '../types/onboarding.types';
 import { ExecuteTestDto, ExecuteEventTestDto } from '../dto';
 
 // Test requirements per DTE type
@@ -62,27 +63,27 @@ export class TestExecutionService {
     const eventsCompleted = JSON.parse(onboarding.testProgress.eventsCompleted);
 
     // Calculate totals
-    const totalTestsRequired = Object.values(testsRequired).reduce(
-      (sum: number, val) => sum + (val as number),
+    const totalTestsRequired: number = Object.values(testsRequired as Record<string, number>).reduce(
+      (sum, val) => sum + val,
       0,
     );
-    const totalTestsCompleted = Object.values(testsCompleted).reduce(
-      (sum: number, val) => sum + (val as number),
+    const totalTestsCompleted: number = Object.values(testsCompleted as Record<string, number>).reduce(
+      (sum, val) => sum + val,
       0,
     );
-    const totalEventsRequired = Object.values(eventsRequired).reduce(
-      (sum: number, val) => sum + (val as number),
+    const totalEventsRequired: number = Object.values(eventsRequired as Record<string, number>).reduce(
+      (sum, val) => sum + val,
       0,
     );
-    const totalEventsCompleted = Object.values(eventsCompleted).reduce(
-      (sum: number, val) => sum + (val as number),
+    const totalEventsCompleted: number = Object.values(eventsCompleted as Record<string, number>).reduce(
+      (sum, val) => sum + val,
       0,
     );
 
     // Build DTE progress
-    const dteProgress = onboarding.dteTypes.map((dt) => ({
+    const dteProgress = onboarding.dteTypes.map((dt: DteTypeSelection) => ({
       dteType: dt.dteType,
-      name: this.getDteTypeName(dt.dteType),
+      name: this.getDteTypeName(dt.dteType as DteType),
       required: testsRequired[dt.dteType] || 0,
       completed: testsCompleted[dt.dteType] || 0,
       isComplete:
@@ -133,7 +134,7 @@ export class TestExecutionService {
 
     // Check if this DTE type is selected
     const dteSelection = onboarding.dteTypes.find(
-      (dt) => dt.dteType === dto.dteType,
+      (dt: DteTypeSelection) => dt.dteType === dto.dteType,
     );
     if (!dteSelection) {
       throw new BadRequestException(

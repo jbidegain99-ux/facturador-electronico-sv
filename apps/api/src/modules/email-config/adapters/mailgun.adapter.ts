@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { EmailProvider } from '@prisma/client';
+import { EmailProvider } from '../types/email.types';
 import {
   BaseEmailAdapter,
   ConnectionTestResult,
@@ -220,7 +220,12 @@ export class MailgunAdapter extends BaseEmailAdapter {
           ? att.content
           : Buffer.from(att.content, 'base64');
 
-        const blob = new Blob([content], { type: att.contentType });
+        // Create Blob from ArrayBuffer copy to avoid type issues
+        const arrayBuffer = content.buffer.slice(
+          content.byteOffset,
+          content.byteOffset + content.byteLength,
+        ) as ArrayBuffer;
+        const blob = new Blob([arrayBuffer], { type: att.contentType });
         formData.append('attachment', blob, att.filename);
       }
 

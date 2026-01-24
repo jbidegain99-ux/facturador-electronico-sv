@@ -20,6 +20,7 @@ import {
   FileJson,
   Loader2,
   AlertCircle,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -75,6 +76,7 @@ export default function FacturaDetallePage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [anulando, setAnulando] = React.useState(false);
+  const [downloadingPdf, setDownloadingPdf] = React.useState(false);
 
   const dteId = params.id as string;
 
@@ -135,6 +137,39 @@ export default function FacturaDetallePage() {
       URL.revokeObjectURL(url);
     } catch (err) {
       alert('Error al descargar el JSON');
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!dte) return;
+
+    setDownloadingPdf(true);
+    const token = localStorage.getItem('token');
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dteId}/pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Error al generar el PDF');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DTE-${dte.numeroControl || dte.codigoGeneracion}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al descargar el PDF');
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -238,6 +273,14 @@ export default function FacturaDetallePage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleDownloadPDF} disabled={downloadingPdf}>
+            {downloadingPdf ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="mr-2 h-4 w-4" />
+            )}
+            Descargar PDF
+          </Button>
           <Button variant="outline" onClick={handleDownloadJSON}>
             <Download className="mr-2 h-4 w-4" />
             Descargar JSON

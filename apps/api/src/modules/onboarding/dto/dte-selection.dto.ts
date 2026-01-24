@@ -1,6 +1,6 @@
 import { IsEnum, IsArray, ArrayNotEmpty, IsBoolean, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DteType } from '@prisma/client';
+import { DteType } from '../types/onboarding.types';
 
 export class DteTypeSelectionItemDto {
   @ApiProperty({

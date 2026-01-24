@@ -53,7 +53,7 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
   const apiCall = async (
     endpoint: string,
     method = 'GET',
-    body?: Record<string, unknown>
+    body?: object
   ) => {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/v1/onboarding${endpoint}`,

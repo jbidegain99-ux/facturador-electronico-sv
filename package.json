@@ -17,6 +17,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
+    "@types/nodemailer": "^7.0.5",
     "prettier": "^3.2.5",
     "turbo": "^2.0.0",
     "typescript": "^5.4.0"
@@ -24,5 +25,9 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "npm@10.2.0"
+  "packageManager": "npm@10.2.0",
+  "dependencies": {
+    "@nestjs/schedule": "^6.1.0",
+    "nodemailer": "^7.0.12"
+  }
 }

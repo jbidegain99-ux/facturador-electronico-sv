@@ -150,11 +150,15 @@ export class TenantsController {
       throw new NotFoundException('Tenant no encontrado');
     }
 
+    const isDemoMode = tenant.plan === 'DEMO' || tenant.certificatePath === 'DEMO_MODE';
+
     return {
       hasCompanyData: true, // Always true after registration
       hasCertificate: !!tenant.certificatePath,
       hasTestedConnection: !!tenant.mhToken,
       hasFirstInvoice: tenant._count.dtes > 0,
+      demoMode: isDemoMode,
+      plan: tenant.plan,
     };
   }
 
@@ -320,5 +324,65 @@ export class TenantsController {
     this.logger.log(`Onboarding marked complete for tenant ${user.tenantId}`);
 
     return { success: true, message: 'Onboarding completado' };
+  }
+
+  @Post('me/onboarding-skip')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Saltar onboarding y activar modo demo' })
+  @ApiResponse({ status: 200, description: 'Onboarding saltado, modo demo activado' })
+  async skipOnboarding(@CurrentUser() user: CurrentUserData) {
+    if (!user.tenantId) {
+      throw new ForbiddenException('Usuario no tiene tenant asignado');
+    }
+
+    // Set demo mode: create fake certificate path and token to bypass checks
+    await this.prisma.tenant.update({
+      where: { id: user.tenantId },
+      data: {
+        certificatePath: 'DEMO_MODE',
+        mhToken: 'DEMO_TOKEN_' + Date.now(),
+        mhTokenExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+        plan: 'DEMO', // Set plan to DEMO to enable demo mode features
+      },
+    });
+
+    this.logger.log(`Onboarding skipped for tenant ${user.tenantId}, demo mode activated`);
+
+    return {
+      success: true,
+      message: 'Modo demo activado. Puedes crear facturas de prueba sin conectar a Hacienda.',
+      demoMode: true,
+    };
+  }
+
+  @Post('me/disable-demo')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Desactivar modo demo y volver al modo real' })
+  @ApiResponse({ status: 200, description: 'Modo demo desactivado' })
+  async disableDemoMode(@CurrentUser() user: CurrentUserData) {
+    if (!user.tenantId) {
+      throw new ForbiddenException('Usuario no tiene tenant asignado');
+    }
+
+    // Clear demo mode settings
+    await this.prisma.tenant.update({
+      where: { id: user.tenantId },
+      data: {
+        certificatePath: null,
+        mhToken: null,
+        mhTokenExpiry: null,
+        plan: 'TRIAL', // Reset to TRIAL
+      },
+    });
+
+    this.logger.log(`Demo mode disabled for tenant ${user.tenantId}`);
+
+    return {
+      success: true,
+      message: 'Modo demo desactivado. Debes completar el onboarding para usar el sistema real.',
+      demoMode: false,
+    };
   }
 }

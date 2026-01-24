@@ -10,7 +10,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EmailProvider, EmailAuthMethod } from '@prisma/client';
+import { EmailProvider, EmailAuthMethod } from '../types/email.types';
 
 export class CreateEmailConfigDto {
   @ApiProperty({

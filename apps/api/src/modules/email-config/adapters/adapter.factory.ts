@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EmailProvider, TenantEmailConfig } from '@prisma/client';
+import { TenantEmailConfig } from '@prisma/client';
+import { EmailProvider } from '../types/email.types';
 import { EncryptionService } from '../services/encryption.service';
 import {
   DecryptedEmailConfig,
@@ -74,7 +75,7 @@ export class EmailAdapterFactory {
     return {
       id: config.id,
       tenantId: config.tenantId,
-      provider: config.provider,
+      provider: config.provider as EmailProvider,
 
       // SMTP
       smtpHost: config.smtpHost || undefined,

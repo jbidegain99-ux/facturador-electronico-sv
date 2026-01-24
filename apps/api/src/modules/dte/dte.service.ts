@@ -27,6 +27,30 @@ export class DteService {
     private mhAuthService: MhAuthService,
   ) {}
 
+  /**
+   * Check if demo mode is enabled for a tenant
+   * Demo mode simulates Hacienda responses without actual API calls
+   */
+  private isDemoMode(tenant?: { plan?: string } | null): boolean {
+    // Enable demo mode via environment variable or if tenant plan is DEMO/TRIAL
+    if (process.env.DEMO_MODE === 'true') return true;
+    if (tenant?.plan === 'DEMO' || tenant?.plan === 'TRIAL') return true;
+    return false;
+  }
+
+  /**
+   * Generate simulated Hacienda response for demo mode
+   */
+  private generateDemoResponse(codigoGeneracion: string) {
+    const selloRecibido = `DEMO${Date.now()}${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+    return {
+      estado: 'PROCESADO',
+      selloRecibido,
+      fhProcesamiento: new Date().toISOString(),
+      observaciones: ['[MODO DEMO] Documento procesado en modo de prueba - No enviado a Hacienda'],
+    };
+  }
+
   async createDte(tenantId: string, tipoDte: string, data: Record<string, unknown>) {
     this.logger.log(`Creating DTE for tenant ${tenantId}, type ${tipoDte}`);
 
@@ -123,16 +147,27 @@ export class DteService {
       throw new Error('DTE no encontrado');
     }
 
-    if (!this.signerService.isCertificateLoaded()) {
-      throw new Error('No certificate loaded for signing');
-    }
-
     // Parse jsonOriginal from string
     const jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
       ? JSON.parse(dte.jsonOriginal)
       : dte.jsonOriginal;
 
-    const jsonFirmado = await this.signerService.signDTE(jsonOriginalParsed);
+    let jsonFirmado: string;
+
+    // Demo mode: simulate signing without a real certificate
+    if (this.isDemoMode(dte.tenant)) {
+      this.logger.log(`[DEMO MODE] Simulating DTE signing for ${dteId}`);
+      // Create a mock JWS-like string for demo purposes
+      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+      const payload = Buffer.from(JSON.stringify(jsonOriginalParsed)).toString('base64url');
+      const signature = Buffer.from(`DEMO_SIGNATURE_${Date.now()}`).toString('base64url');
+      jsonFirmado = `${header}.${payload}.${signature}`;
+    } else {
+      if (!this.signerService.isCertificateLoaded()) {
+        throw new Error('No certificate loaded for signing');
+      }
+      jsonFirmado = await this.signerService.signDTE(jsonOriginalParsed);
+    }
 
     const updated = await this.prisma.dTE.update({
       where: { id: dteId },
@@ -142,7 +177,10 @@ export class DteService {
       },
     });
 
-    await this.logDteAction(dteId, 'SIGNED', { jsonFirmado: jsonFirmado.substring(0, 100) + '...' });
+    await this.logDteAction(dteId, 'SIGNED', {
+      jsonFirmado: jsonFirmado.substring(0, 100) + '...',
+      demoMode: this.isDemoMode(dte.tenant),
+    });
 
     return updated;
   }
@@ -155,6 +193,27 @@ export class DteService {
 
     if (!dte || !dte.jsonFirmado) {
       throw new Error('DTE no encontrado o no firmado');
+    }
+
+    // Demo mode: simulate Hacienda response
+    if (this.isDemoMode(dte.tenant)) {
+      this.logger.log(`[DEMO MODE] Simulating DTE transmission for ${dteId}`);
+      const demoResponse = this.generateDemoResponse(dte.codigoGeneracion);
+
+      const updated = await this.prisma.dTE.update({
+        where: { id: dteId },
+        data: {
+          estado: DTEStatus.PROCESADO,
+          selloRecepcion: demoResponse.selloRecibido,
+          fechaRecepcion: new Date(demoResponse.fhProcesamiento),
+          descripcionMh: demoResponse.observaciones?.join(', '),
+          intentosEnvio: { increment: 1 },
+        },
+      });
+
+      await this.logDteAction(dteId, 'TRANSMITTED_DEMO', { response: demoResponse, demoMode: true });
+
+      return updated;
     }
 
     try {
@@ -269,6 +328,13 @@ export class DteService {
     return this.prisma.dTE.findUnique({
       where: { id },
       include: { cliente: true, logs: true },
+    });
+  }
+
+  async findOneWithTenant(id: string) {
+    return this.prisma.dTE.findUnique({
+      where: { id },
+      include: { cliente: true, logs: true, tenant: true },
     });
   }
 

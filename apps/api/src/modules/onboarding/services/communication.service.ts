@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { CommunicationDirection, CommunicationType } from '@prisma/client';
+import { CommunicationDirection, CommunicationType } from '../types/onboarding.types';
 import { AddCommunicationDto } from '../dto';
 
 @Injectable()

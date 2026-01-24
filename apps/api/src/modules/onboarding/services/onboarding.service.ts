@@ -2,13 +2,19 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EncryptionService } from '../../email-config/services';
 import {
+  OnboardingStepRecord,
+  DteTypeSelection,
+  TenantOnboarding,
+  Tenant,
+} from '@prisma/client';
+import {
   OnboardingStep,
   OnboardingStatus,
   StepStatus,
   PerformedBy,
   AssistanceLevel,
   DteType,
-} from '@prisma/client';
+} from '../types/onboarding.types';
 import {
   StartOnboardingDto,
   UpdateCompanyInfoDto,
@@ -165,7 +171,7 @@ export class OnboardingService {
     }
 
     const completedCount = onboarding.steps.filter(
-      (s) => s.status === 'COMPLETED',
+      (s: OnboardingStepRecord) => s.status === 'COMPLETED',
     ).length;
 
     return {
@@ -223,7 +229,7 @@ export class OnboardingService {
             step: 'WELCOME',
             status: 'IN_PROGRESS',
             startedAt: new Date(),
-            performedBy: 'CLIENT',
+            performedBy: PerformedBy.TENANT,
             performedById: userId,
           },
         },
@@ -266,7 +272,7 @@ export class OnboardingService {
     await this.upsertStepRecord(onboarding.id, 'COMPANY_INFO', {
       status: 'COMPLETED',
       stepData: JSON.stringify(dto),
-      performedBy: 'CLIENT',
+      performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),
     });
@@ -302,7 +308,7 @@ export class OnboardingService {
     await this.upsertStepRecord(onboarding.id, 'HACIENDA_CREDENTIALS', {
       status: 'COMPLETED',
       stepData: JSON.stringify({ haciendaUser: dto.haciendaUser }),
-      performedBy: 'CLIENT',
+      performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),
     });
@@ -338,7 +344,7 @@ export class OnboardingService {
     await this.upsertStepRecord(onboarding.id, 'DTE_TYPE_SELECTION', {
       status: 'COMPLETED',
       stepData: JSON.stringify({ dteTypes: dto.dteTypes }),
-      performedBy: 'CLIENT',
+      performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),
     });
@@ -368,12 +374,12 @@ export class OnboardingService {
       : { testsCompleted: {} };
 
     return {
-      selected: onboarding.dteTypes.map((dt) => ({
+      selected: onboarding.dteTypes.map((dt: DteTypeSelection) => ({
         dteType: dt.dteType,
         isRequired: dt.isRequired,
         testCompleted: dt.testCompleted,
         testCompletedAt: dt.testCompletedAt,
-        testsRequired: TESTS_REQUIRED[dt.dteType] || 1,
+        testsRequired: TESTS_REQUIRED[dt.dteType as DteType] || 1,
         testsCompleted: testProgress.testsCompleted[dt.dteType] || 0,
       })),
       available: this.getAvailableDteTypes(),
@@ -407,7 +413,7 @@ export class OnboardingService {
     await this.upsertStepRecord(onboarding.id, 'TEST_CERTIFICATE', {
       status: 'COMPLETED',
       stepData: JSON.stringify({ expiryDate: dto.expiryDate }),
-      performedBy: 'CLIENT',
+      performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),
     });
@@ -437,7 +443,7 @@ export class OnboardingService {
     await this.upsertStepRecord(onboarding.id, 'PROD_CERTIFICATE', {
       status: 'COMPLETED',
       stepData: JSON.stringify({ expiryDate: dto.expiryDate }),
-      performedBy: 'CLIENT',
+      performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),
     });
@@ -470,7 +476,7 @@ export class OnboardingService {
 
     await this.upsertStepRecord(onboarding.id, 'API_CREDENTIALS_TEST', {
       status: 'COMPLETED',
-      performedBy: 'CLIENT',
+      performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),
     });
@@ -498,7 +504,7 @@ export class OnboardingService {
 
     await this.upsertStepRecord(onboarding.id, 'API_CREDENTIALS_PROD', {
       status: 'COMPLETED',
-      performedBy: 'CLIENT',
+      performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),
     });
@@ -518,7 +524,7 @@ export class OnboardingService {
       status: 'COMPLETED',
       stepData: dto.stepData ? JSON.stringify(dto.stepData) : undefined,
       notes: dto.notes,
-      performedBy: 'CLIENT',
+      performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),
     });
@@ -563,7 +569,7 @@ export class OnboardingService {
 
     // Verify step is accessible (completed previously or is current)
     const targetIndex = STEP_ORDER.indexOf(dto.step);
-    const currentIndex = STEP_ORDER.indexOf(onboarding.currentStep);
+    const currentIndex = STEP_ORDER.indexOf(onboarding.currentStep as OnboardingStep);
 
     if (targetIndex > currentIndex) {
       throw new BadRequestException(
@@ -596,7 +602,7 @@ export class OnboardingService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return onboardings.map((o) => ({
+    return onboardings.map((o: TenantOnboarding & { tenant: Pick<Tenant, 'id' | 'nombre' | 'nit'>; steps: OnboardingStepRecord[] }) => ({
       id: o.id,
       tenantId: o.tenantId,
       tenantName: o.tenant.nombre,
@@ -604,7 +610,7 @@ export class OnboardingService {
       currentStep: o.currentStep,
       overallStatus: o.overallStatus,
       assistanceLevel: o.assistanceLevel,
-      completedSteps: o.steps.filter((s) => s.status === 'COMPLETED').length,
+      completedSteps: o.steps.filter((s: OnboardingStepRecord) => s.status === 'COMPLETED').length,
       totalSteps: STEP_ORDER.length,
       createdAt: o.createdAt,
       updatedAt: o.updatedAt,
@@ -857,8 +863,8 @@ export class OnboardingService {
     return true;
   }
 
-  private getNextAction(onboarding: any): string | undefined {
-    const step = onboarding.currentStep;
+  private getNextAction(onboarding: { currentStep: string }): string | undefined {
+    const step = onboarding.currentStep as OnboardingStep;
 
     const actions: Partial<Record<OnboardingStep, string>> = {
       WELCOME: 'Complete la introducción para continuar',

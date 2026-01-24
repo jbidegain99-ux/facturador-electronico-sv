@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EmailAdapterFactory } from '../adapters/adapter.factory';
-import { HealthStatus, TenantEmailConfig } from '@prisma/client';
+import { TenantEmailConfig } from '@prisma/client';
+import { HealthStatus } from '../types/email.types';
 
 export interface HealthDashboardStats {
   total: number;
@@ -271,7 +272,7 @@ export class EmailHealthService {
         tenantId: config.tenantId,
         tenantName: config.tenant.nombre,
         provider: config.provider,
-        status: lastCheck?.status || HealthStatus.UNKNOWN,
+        status: (lastCheck?.status as HealthStatus) || HealthStatus.UNKNOWN,
         lastCheck: lastCheck?.checkedAt,
         lastError: lastCheck?.errorMessage || undefined,
         isActive: config.isActive,

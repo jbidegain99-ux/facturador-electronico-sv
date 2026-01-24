@@ -13,10 +13,15 @@ COPY package*.json ./
 COPY apps/api ./apps/api
 COPY packages ./packages
 
-# Install all dependencies
+# Install all dependencies (root + workspaces)
 RUN npm install
 
+# Install api dependencies explicitly (in case workspace hoisting misses them)
+WORKDIR /app/apps/api
+RUN npm install --legacy-peer-deps
+
 # Build shared packages first
+WORKDIR /app
 WORKDIR /app/packages/mh-client
 RUN npm run build || echo "mh-client build skipped"
 

@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Facturas', href: '/facturas', icon: FileText },
   { name: 'Reportes', href: '/reportes', icon: BarChart3 },
   { name: 'Clientes', href: '/clientes', icon: Users },
@@ -38,7 +38,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b px-4">
         {sidebarOpen && (
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <Receipt className="h-8 w-8 text-primary" />
             <span className="text-lg font-bold">Facturador</span>
           </Link>
@@ -60,8 +60,7 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex flex-col gap-1 p-2">
         {navigation.map((item) => {
-          const isActive = pathname === item.href ||
-            (item.href !== '/' && pathname.startsWith(item.href));
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 
           return (
             <Link

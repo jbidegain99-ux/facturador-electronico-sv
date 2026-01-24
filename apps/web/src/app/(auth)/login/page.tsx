@@ -34,7 +34,7 @@ export default function LoginPage() {
       if (data.user?.rol === 'SUPER_ADMIN') {
         router.push('/admin');
       } else {
-        router.push('/facturas');
+        router.push('/dashboard');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesion');

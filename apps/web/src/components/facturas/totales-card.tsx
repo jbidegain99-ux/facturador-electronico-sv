@@ -56,14 +56,14 @@ export function TotalesCard({
       {/* Header */}
       <div className="flex items-center gap-2 pb-3 border-b border-border">
         <Calculator className="w-5 h-5 text-primary" />
-        <h3 className="font-semibold text-white">Resumen</h3>
+        <h3 className="font-semibold text-foreground">Resumen</h3>
       </div>
 
       {/* Totals breakdown */}
       <div className="space-y-3">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Subtotal (gravado):</span>
-          <span className="text-white font-medium">{formatCurrency(subtotalGravado)}</span>
+          <span className="text-foreground font-medium">{formatCurrency(subtotalGravado)}</span>
         </div>
 
         {totalDescuentos > 0 && (
@@ -77,19 +77,19 @@ export function TotalesCard({
 
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Sub-total:</span>
-          <span className="text-white font-medium">{formatCurrency(subtotalNeto)}</span>
+          <span className="text-foreground font-medium">{formatCurrency(subtotalNeto)}</span>
         </div>
 
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">IVA (13%):</span>
-          <span className="text-white font-medium">{formatCurrency(totalIva)}</span>
+          <span className="text-foreground font-medium">{formatCurrency(totalIva)}</span>
         </div>
 
         <div className="h-px bg-primary/30" />
 
         {/* Total to pay */}
         <div className="flex justify-between items-center pt-1">
-          <span className="text-lg font-semibold text-white">TOTAL A PAGAR:</span>
+          <span className="text-lg font-semibold text-foreground">TOTAL A PAGAR:</span>
           <span
             className={cn(
               'text-2xl font-bold text-primary transition-all duration-300',
@@ -111,13 +111,9 @@ export function TotalesCard({
           <SelectTrigger className="w-full input-rc">
             <SelectValue placeholder="Seleccionar condicion" />
           </SelectTrigger>
-          <SelectContent className="bg-[#12121a] border-border">
+          <SelectContent>
             {CONDICIONES_PAGO.map((condicion) => (
-              <SelectItem
-                key={condicion.value}
-                value={condicion.value}
-                className="text-white hover:bg-primary/20 focus:bg-primary/20"
-              >
+              <SelectItem key={condicion.value} value={condicion.value}>
                 {condicion.label}
               </SelectItem>
             ))}

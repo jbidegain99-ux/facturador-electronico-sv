@@ -237,7 +237,7 @@ export function ClienteSearch({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h4 className="font-semibold text-white truncate">{value.nombre}</h4>
+              <h4 className="font-semibold text-foreground truncate">{value.nombre}</h4>
               {value.nrc && (
                 <span className="badge-info text-xs">Contribuyente</span>
               )}
@@ -307,7 +307,7 @@ export function ClienteSearch({
       </PopoverTrigger>
 
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-0 bg-[#12121a] border-border overflow-hidden"
+        className="w-[var(--radix-popover-trigger-width)] p-0 bg-popover border-border overflow-hidden"
         align="start"
         sideOffset={4}
         onOpenAutoFocus={(e) => e.preventDefault()}
@@ -361,8 +361,8 @@ export function ClienteSearch({
                   className={cn(
                     'w-full px-3 py-2.5 flex items-center gap-3 text-left transition-colors',
                     isHighlighted
-                      ? 'bg-primary/20 text-white'
-                      : 'hover:bg-white/5 text-white'
+                      ? 'bg-primary/20 text-foreground'
+                      : 'hover:bg-muted text-foreground'
                   )}
                   onClick={() => handleSelect(cliente)}
                   onMouseEnter={() => setHighlightedIndex(selectableIndex)}
@@ -395,7 +395,7 @@ export function ClienteSearch({
                     'w-full px-3 py-2.5 flex items-center gap-3 text-left border-t border-border transition-colors',
                     isHighlighted
                       ? 'bg-primary/20 text-primary'
-                      : 'hover:bg-white/5 text-primary'
+                      : 'hover:bg-muted text-primary'
                   )}
                   onClick={handleCreateNew}
                   onMouseEnter={() => setHighlightedIndex(selectableIndex)}

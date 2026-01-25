@@ -217,7 +217,7 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
         <div className="glass-card overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-white/5">
+              <tr className="border-b border-border bg-muted/50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-12">
                   #
                 </th>
@@ -243,11 +243,11 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
               {items.map((item, index) => (
                 <tr
                   key={item.id}
-                  className="border-b border-border/50 hover:bg-white/5 transition-colors animate-in fade-in-50 duration-200"
+                  className="border-b border-border/50 hover:bg-muted/50 transition-colors animate-in fade-in-50 duration-200"
                 >
                   <td className="px-4 py-3 text-sm text-muted-foreground">{index + 1}</td>
                   <td className="px-4 py-3">
-                    <span className="text-sm font-medium text-white">{item.descripcion}</span>
+                    <span className="text-sm font-medium text-foreground">{item.descripcion}</span>
                     {item.codigo && (
                       <span className="ml-2 text-xs text-muted-foreground font-mono">
                         [{item.codigo}]
@@ -271,7 +271,7 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
                     ) : (
                       <button
                         onClick={() => setEditingField({ id: item.id, field: 'cantidad' })}
-                        className="w-full text-center text-sm font-medium text-white hover:text-primary transition-colors cursor-pointer"
+                        className="w-full text-center text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
                         disabled={disabled}
                       >
                         {item.cantidad}
@@ -298,7 +298,7 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
                     ) : (
                       <button
                         onClick={() => setEditingField({ id: item.id, field: 'precioUnitario' })}
-                        className="w-full text-right text-sm font-medium text-white hover:text-primary transition-colors cursor-pointer"
+                        className="w-full text-right text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
                         disabled={disabled}
                       >
                         {formatCurrency(item.precioUnitario)}
@@ -338,7 +338,7 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-foreground">
                       {formatCurrency(item.subtotal)}
                     </span>
                   </td>
@@ -357,9 +357,9 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
               ))}
             </tbody>
             <tfoot>
-              <tr className="bg-white/5">
+              <tr className="bg-muted/50">
                 <td colSpan={5} className="px-4 py-3 text-right text-sm text-muted-foreground">
-                  Total items: <span className="font-medium text-white">{totalItems}</span>
+                  Total items: <span className="font-medium text-foreground">{totalItems}</span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <span className="text-sm font-bold text-primary">
@@ -377,7 +377,7 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
             <Package className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium text-white mb-1">No hay items en la factura</h3>
+          <h3 className="text-lg font-medium text-foreground mb-1">No hay items en la factura</h3>
           <p className="text-sm text-muted-foreground">
             Escribe una descripcion arriba y presiona Enter para agregar productos
           </p>

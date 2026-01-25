@@ -191,7 +191,7 @@ export default function TenantsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Empresas</h1>
+          <h1 className="text-3xl font-bold">Empresas</h1>
           <p className="text-muted-foreground mt-1">Gestiona las empresas registradas</p>
         </div>
       </div>
@@ -247,7 +247,7 @@ export default function TenantsPage() {
       </div>
 
       {/* Table */}
-      <div className="glass-card overflow-hidden">
+      <div className="glass-card overflow-visible">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -259,8 +259,8 @@ export default function TenantsPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="table-rc">
+            <div className="overflow-x-auto overflow-y-visible">
+              <table className="table-rc w-full">
                 <thead>
                   <tr>
                     <th>Empresa</th>
@@ -278,7 +278,7 @@ export default function TenantsPage() {
                     <tr key={tenant.id}>
                       <td>
                         <div>
-                          <div className="font-medium text-white">{tenant.nombre}</div>
+                          <div className="font-medium">{tenant.nombre}</div>
                           <div className="text-xs text-muted-foreground">{tenant.correo}</div>
                         </div>
                       </td>
@@ -298,48 +298,56 @@ export default function TenantsPage() {
                       <td className="text-sm text-muted-foreground">
                         {new Date(tenant.createdAt).toLocaleDateString('es')}
                       </td>
-                      <td>
-                        <div className="relative">
+                      <td className="relative">
+                        <div>
                           <button
                             onClick={() => setActiveMenu(activeMenu === tenant.id ? null : tenant.id)}
-                            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                            className="p-2 hover:bg-muted rounded-lg transition-colors"
                           >
                             <MoreVertical className="w-4 h-4 text-muted-foreground" />
                           </button>
                           {activeMenu === tenant.id && (
-                            <div className="absolute right-0 mt-2 w-48 glass-card py-2 z-10">
-                              <Link
-                                href={`/admin/tenants/${tenant.id}`}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-white hover:bg-white/5"
-                              >
-                                <Eye className="w-4 h-4" />
-                                Ver Detalles
-                              </Link>
-                              {tenant.planStatus === 'ACTIVE' ? (
-                                <button
-                                  onClick={() => handleSuspend(tenant.id)}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10 w-full"
+                            <>
+                              {/* Overlay to close menu when clicking outside */}
+                              <div
+                                className="fixed inset-0 z-40"
+                                onClick={() => setActiveMenu(null)}
+                              />
+                              <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-border bg-popover shadow-lg py-1 z-50">
+                                <Link
+                                  href={`/admin/tenants/${tenant.id}`}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-popover-foreground hover:bg-muted"
                                 >
-                                  <Pause className="w-4 h-4" />
-                                  Suspender
-                                </button>
-                              ) : (
+                                  <Eye className="w-4 h-4" />
+                                  Ver Detalles
+                                </Link>
+                                {tenant.planStatus === 'ACTIVE' ? (
+                                  <button
+                                    onClick={() => handleSuspend(tenant.id)}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-muted w-full text-left"
+                                  >
+                                    <Pause className="w-4 h-4" />
+                                    Suspender
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleActivate(tenant.id)}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-muted w-full text-left"
+                                  >
+                                    <Play className="w-4 h-4" />
+                                    Activar
+                                  </button>
+                                )}
+                                <div className="border-t border-border my-1" />
                                 <button
-                                  onClick={() => handleActivate(tenant.id)}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-green-400 hover:bg-green-500/10 w-full"
+                                  onClick={() => handleDelete(tenant.id)}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-muted w-full text-left"
                                 >
-                                  <Play className="w-4 h-4" />
-                                  Activar
+                                  <Trash2 className="w-4 h-4" />
+                                  Eliminar
                                 </button>
-                              )}
-                              <button
-                                onClick={() => handleDelete(tenant.id)}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 w-full"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Eliminar
-                              </button>
-                            </div>
+                              </div>
+                            </>
                           )}
                         </div>
                       </td>

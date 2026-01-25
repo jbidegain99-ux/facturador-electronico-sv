@@ -39,7 +39,7 @@ interface RecentDTE {
   numeroControl: string;
   tipoDte: string;
   estado: string;
-  totalPagar: number | { toString(): string };
+  totalPagar: number | string | { toString(): string };
   createdAt: string;
   cliente?: {
     nombre: string;
@@ -115,9 +115,11 @@ export default function DashboardPage() {
 
   const maxChart = Math.max(...chartData.map((d) => d.cantidad), 1);
 
-  // Helper to get totalPagar as number
+  // Helper to get totalPagar as number (handles Prisma Decimal serialization)
   const getTotalPagar = (dte: RecentDTE): number => {
+    if (dte.totalPagar === null || dte.totalPagar === undefined) return 0;
     if (typeof dte.totalPagar === 'number') return dte.totalPagar;
+    if (typeof dte.totalPagar === 'string') return parseFloat(dte.totalPagar) || 0;
     if (typeof dte.totalPagar === 'object' && dte.totalPagar !== null) {
       return parseFloat(dte.totalPagar.toString()) || 0;
     }

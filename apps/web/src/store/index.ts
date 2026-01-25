@@ -10,8 +10,8 @@ interface AppState {
   setTenant: (tenant: Tenant | null) => void;
 
   // Theme
-  theme: 'light' | 'dark' | 'system';
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
 
   // Sidebar
   sidebarOpen: boolean;
@@ -33,7 +33,7 @@ export const useAppStore = create<AppState>()(
       setTenant: (tenant) => set({ tenant }),
 
       // Theme
-      theme: 'system',
+      theme: 'dark',
       setTheme: (theme) => set({ theme }),
 
       // Sidebar

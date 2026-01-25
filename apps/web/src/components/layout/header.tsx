@@ -59,26 +59,17 @@ export function Header() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const toggleTheme = () => {
-    if (theme === 'light') {
-      setTheme('dark');
-    } else if (theme === 'dark') {
-      setTheme('system');
-    } else {
-      setTheme('light');
-    }
+    // Simple toggle between light and dark
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   const getThemeIcon = () => {
-    if (theme === 'dark') return <Moon className="h-5 w-5" />;
-    if (theme === 'light') return <Sun className="h-5 w-5" />;
-    // system - show based on actual preference
-    return <Sun className="h-5 w-5" />;
+    // Show moon in dark mode, sun in light mode
+    return theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />;
   };
 
   const getThemeLabel = () => {
-    if (theme === 'dark') return 'Oscuro';
-    if (theme === 'light') return 'Claro';
-    return 'Sistema';
+    return theme === 'dark' ? 'Oscuro' : 'Claro';
   };
 
   const handleLogout = () => {

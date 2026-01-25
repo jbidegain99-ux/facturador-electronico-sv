@@ -14,6 +14,8 @@ import {
   Calendar,
   Save,
   AlertCircle,
+  Settings,
+  TicketCheck,
 } from 'lucide-react';
 
 interface TenantDetail {
@@ -291,6 +293,40 @@ export default function TenantDetailPage() {
               rows={4}
               className="input-rc"
             />
+          </div>
+
+          {/* Email Config - Coming Soon */}
+          <div className="glass-card p-6 opacity-70">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Configuracion de Email</h3>
+              </div>
+              <span className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+                Proximamente
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Configura el servicio de email para esta empresa. Podras ayudar a configurar
+              SendGrid, Mailgun, Amazon SES y otros proveedores directamente desde aqui.
+            </p>
+          </div>
+
+          {/* Support Tickets - Coming Soon */}
+          <div className="glass-card p-6 opacity-70">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <TicketCheck className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Tickets de Soporte</h3>
+              </div>
+              <span className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+                Proximamente
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Gestiona las solicitudes de soporte de esta empresa. Podras ver y responder
+              tickets, asignar prioridades y dar seguimiento a las incidencias.
+            </p>
           </div>
 
           {/* Users */}

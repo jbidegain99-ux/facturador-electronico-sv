@@ -17,35 +17,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const root = document.documentElement;
 
-    // Remove existing theme classes
+    // Remove existing theme classes and apply new one
     root.classList.remove('light', 'dark');
-
-    if (theme === 'system') {
-      // Check system preference
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
+    root.classList.add(theme);
   }, [theme, mounted]);
 
-  // Listen for system theme changes when set to 'system'
+  // Set initial theme class on mount to prevent flash
   React.useEffect(() => {
-    if (!mounted || theme !== 'system') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      const root = document.documentElement;
-      root.classList.remove('light', 'dark');
-      root.classList.add(e.matches ? 'dark' : 'light');
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme, mounted]);
+    const root = document.documentElement;
+    // Default to dark if no theme is set
+    if (!root.classList.contains('light') && !root.classList.contains('dark')) {
+      root.classList.add('dark');
+    }
+  }, []);
 
   return <>{children}</>;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, Server, Database, Mail, Shield } from 'lucide-react';
+import { Settings, Server, Database, Mail, Shield, BookOpen, Gauge, Bell, FileText, HardDrive, Webhook, Lock } from 'lucide-react';
 
 export default function SettingsPage() {
   return (
@@ -49,7 +49,7 @@ export default function SettingsPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Proveedor</span>
-              <span className="text-white">PostgreSQL (Supabase)</span>
+              <span className="text-white">Azure SQL Database</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Estado</span>
@@ -99,14 +99,106 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Coming Soon */}
-      <div className="glass-card p-8 text-center">
-        <Settings className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-white mb-2">Mas configuraciones proximamente</h3>
-        <p className="text-muted-foreground">
-          Estamos trabajando en agregar mas opciones de configuracion como notificaciones por email,
-          integraciones con pasarelas de pago, y mas.
-        </p>
+      {/* Coming Soon Features */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Proximamente</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Catalogos */}
+          <div className="glass-card p-5 opacity-60">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <h3 className="font-medium">Gestion de Catalogos</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Administra catalogos del MH: actividades economicas, departamentos, municipios.
+            </p>
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+              Proximamente
+            </span>
+          </div>
+
+          {/* Limites por Plan */}
+          <div className="glass-card p-5 opacity-60">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                <Gauge className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <h3 className="font-medium">Limites por Plan</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Configura limites de DTEs, usuarios y almacenamiento por plan.
+            </p>
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+              Proximamente
+            </span>
+          </div>
+
+          {/* Notificaciones */}
+          <div className="glass-card p-5 opacity-60">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                <Bell className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <h3 className="font-medium">Notificaciones</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Alertas del sistema, emails automaticos y notificaciones push.
+            </p>
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+              Proximamente
+            </span>
+          </div>
+
+          {/* Logs y Auditoria */}
+          <div className="glass-card p-5 opacity-60">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <h3 className="font-medium">Logs y Auditoria</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Historial de acciones, logs del sistema y auditoria de seguridad.
+            </p>
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+              Proximamente
+            </span>
+          </div>
+
+          {/* Backups */}
+          <div className="glass-card p-5 opacity-60">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                <HardDrive className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <h3 className="font-medium">Backups</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Programacion de backups, restauracion y retencion de datos.
+            </p>
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+              Proximamente
+            </span>
+          </div>
+
+          {/* Integraciones */}
+          <div className="glass-card p-5 opacity-60">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                <Webhook className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <h3 className="font-medium">Integraciones y Webhooks</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              APIs externas, webhooks y conectores con sistemas ERP.
+            </p>
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+              Proximamente
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

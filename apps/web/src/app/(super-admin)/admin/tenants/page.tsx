@@ -15,6 +15,21 @@ import {
   ChevronRight,
   AlertCircle,
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 interface Tenant {
   id: string;
@@ -49,7 +64,6 @@ export default function TenantsPage() {
   const [search, setSearch] = useState('');
   const [planFilter, setPlanFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTenants();
@@ -118,7 +132,6 @@ export default function TenantsPage() {
     } catch (err) {
       alert('Error al suspender la empresa');
     }
-    setActiveMenu(null);
   };
 
   const handleActivate = async (id: string) => {
@@ -139,7 +152,6 @@ export default function TenantsPage() {
     } catch (err) {
       alert('Error al activar la empresa');
     }
-    setActiveMenu(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -163,7 +175,6 @@ export default function TenantsPage() {
     } catch (err) {
       alert('Error al eliminar la empresa');
     }
-    setActiveMenu(null);
   };
 
   const getPlanBadge = (plan: string) => {
@@ -211,34 +222,42 @@ export default function TenantsPage() {
               />
             </div>
           </div>
-          <select
+          <Select
             value={planFilter}
-            onChange={(e) => {
-              setPlanFilter(e.target.value);
+            onValueChange={(value) => {
+              setPlanFilter(value === 'ALL' ? '' : value);
               setPage(1);
             }}
-            className="input-rc w-40"
           >
-            <option value="">Todos los planes</option>
-            <option value="TRIAL">Prueba</option>
-            <option value="BASIC">Basico</option>
-            <option value="PROFESSIONAL">Profesional</option>
-            <option value="ENTERPRISE">Empresa</option>
-          </select>
-          <select
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Todos los planes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todos los planes</SelectItem>
+              <SelectItem value="TRIAL">Prueba</SelectItem>
+              <SelectItem value="BASIC">Basico</SelectItem>
+              <SelectItem value="PROFESSIONAL">Profesional</SelectItem>
+              <SelectItem value="ENTERPRISE">Empresa</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
             value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
+            onValueChange={(value) => {
+              setStatusFilter(value === 'ALL' ? '' : value);
               setPage(1);
             }}
-            className="input-rc w-40"
           >
-            <option value="">Todos los estados</option>
-            <option value="ACTIVE">Activo</option>
-            <option value="SUSPENDED">Suspendido</option>
-            <option value="CANCELLED">Cancelado</option>
-            <option value="EXPIRED">Expirado</option>
-          </select>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Todos los estados" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todos los estados</SelectItem>
+              <SelectItem value="ACTIVE">Activo</SelectItem>
+              <SelectItem value="SUSPENDED">Suspendido</SelectItem>
+              <SelectItem value="CANCELLED">Cancelado</SelectItem>
+              <SelectItem value="EXPIRED">Expirado</SelectItem>
+            </SelectContent>
+          </Select>
           <button type="submit" className="btn-primary">
             <Filter className="w-4 h-4" />
             Filtrar
@@ -298,58 +317,47 @@ export default function TenantsPage() {
                       <td className="text-sm text-muted-foreground">
                         {new Date(tenant.createdAt).toLocaleDateString('es')}
                       </td>
-                      <td className="relative">
-                        <div>
-                          <button
-                            onClick={() => setActiveMenu(activeMenu === tenant.id ? null : tenant.id)}
-                            className="p-2 hover:bg-muted rounded-lg transition-colors"
-                          >
-                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                          </button>
-                          {activeMenu === tenant.id && (
-                            <>
-                              {/* Overlay to close menu when clicking outside */}
-                              <div
-                                className="fixed inset-0 z-40"
-                                onClick={() => setActiveMenu(null)}
-                              />
-                              <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-border bg-popover shadow-lg py-1 z-50">
-                                <Link
-                                  href={`/admin/tenants/${tenant.id}`}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-popover-foreground hover:bg-muted"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  Ver Detalles
-                                </Link>
-                                {tenant.planStatus === 'ACTIVE' ? (
-                                  <button
-                                    onClick={() => handleSuspend(tenant.id)}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-muted w-full text-left"
-                                  >
-                                    <Pause className="w-4 h-4" />
-                                    Suspender
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => handleActivate(tenant.id)}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-muted w-full text-left"
-                                  >
-                                    <Play className="w-4 h-4" />
-                                    Activar
-                                  </button>
-                                )}
-                                <div className="border-t border-border my-1" />
-                                <button
-                                  onClick={() => handleDelete(tenant.id)}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-muted w-full text-left"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Eliminar
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                      <td>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" sideOffset={5}>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/tenants/${tenant.id}`} className="flex items-center gap-2">
+                                <Eye className="w-4 h-4" />
+                                Ver Detalles
+                              </Link>
+                            </DropdownMenuItem>
+                            {tenant.planStatus === 'ACTIVE' ? (
+                              <DropdownMenuItem
+                                onClick={() => handleSuspend(tenant.id)}
+                                className="text-yellow-600 dark:text-yellow-400"
+                              >
+                                <Pause className="w-4 h-4 mr-2" />
+                                Suspender
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => handleActivate(tenant.id)}
+                                className="text-green-600 dark:text-green-400"
+                              >
+                                <Play className="w-4 h-4 mr-2" />
+                                Activar
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(tenant.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))}
@@ -374,14 +382,14 @@ export default function TenantsPage() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="p-2 rounded-lg hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="p-2 rounded-lg hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>

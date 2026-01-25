@@ -76,8 +76,15 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%);
     min-height: 100vh;
+  }
+
+  .dark body {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%);
+  }
+
+  .light body {
+    background: hsl(var(--background));
   }
 
   /* Custom scrollbar */
@@ -103,15 +110,23 @@
 @layer components {
   /* Glass Card Effect */
   .glass-card {
-    background: rgba(255, 255, 255, 0.05);
+    @apply bg-card text-card-foreground;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid hsl(var(--border));
     border-radius: 1rem;
+  }
+
+  .dark .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .glass-card:hover {
     border-color: rgba(139, 92, 246, 0.5);
+  }
+
+  .dark .glass-card:hover {
     background: rgba(255, 255, 255, 0.08);
   }
 
@@ -165,19 +180,28 @@
 
   /* Input Styles */
   .input-rc {
-    @apply w-full px-4 py-3 rounded-lg text-white transition-all duration-200;
+    @apply w-full px-4 py-3 rounded-lg bg-background text-foreground transition-all duration-200;
+    border: 1px solid hsl(var(--border));
+  }
+
+  .dark .input-rc {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .input-rc:focus {
-    border-color: #8b5cf6;
+    border-color: hsl(var(--primary));
     outline: none;
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
   }
 
   .input-rc::placeholder {
-    color: #71717a;
+    @apply text-muted-foreground;
+  }
+
+  /* Select dropdown styles for native selects */
+  .input-rc option {
+    @apply bg-popover text-popover-foreground;
   }
 
   /* Card Hover Animation */

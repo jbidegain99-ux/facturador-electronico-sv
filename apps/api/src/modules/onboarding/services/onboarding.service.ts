@@ -2,16 +2,18 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EncryptionService } from '../../email-config/services';
 import {
+  OnboardingStepRecord,
+  DteTypeSelection,
+  TenantOnboarding,
+  Tenant,
+} from '@prisma/client';
+import {
   OnboardingStep,
   OnboardingStatus,
   StepStatus,
   PerformedBy,
   AssistanceLevel,
   DteType,
-  OnboardingStepRecord,
-  DteTypeSelection,
-  TenantOnboarding,
-  Tenant,
 } from '../types/onboarding.types';
 import {
   StartOnboardingDto,
@@ -372,7 +374,7 @@ export class OnboardingService {
       : { testsCompleted: {} };
 
     return {
-      selected: onboarding.dteTypes.map((dt: DteTypeSelection) => ({
+      selected: onboarding.dteTypes.map((dt) => ({
         dteType: dt.dteType,
         isRequired: dt.isRequired,
         testCompleted: dt.testCompleted,
@@ -600,7 +602,7 @@ export class OnboardingService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return onboardings.map((o: TenantOnboarding & { tenant: Pick<Tenant, 'id' | 'nombre' | 'nit'>; steps: OnboardingStepRecord[] }) => ({
+    return onboardings.map((o) => ({
       id: o.id,
       tenantId: o.tenantId,
       tenantName: o.tenant.nombre,
@@ -608,7 +610,7 @@ export class OnboardingService {
       currentStep: o.currentStep,
       overallStatus: o.overallStatus,
       assistanceLevel: o.assistanceLevel,
-      completedSteps: o.steps.filter((s: OnboardingStepRecord) => s.status === 'COMPLETED').length,
+      completedSteps: o.steps.filter((s) => s.status === 'COMPLETED').length,
       totalSteps: STEP_ORDER.length,
       createdAt: o.createdAt,
       updatedAt: o.updatedAt,

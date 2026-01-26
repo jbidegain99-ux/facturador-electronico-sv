@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EncryptionService } from '../../email-config/services';
-import { DteType, TestResult, DteTypeSelection } from '../types/onboarding.types';
+import { DteTypeSelection } from '@prisma/client';
+import { DteType, TestResult } from '../types/onboarding.types';
 import { ExecuteTestDto, ExecuteEventTestDto } from '../dto';
 
 // Test requirements per DTE type
@@ -80,7 +81,7 @@ export class TestExecutionService {
     );
 
     // Build DTE progress
-    const dteProgress = onboarding.dteTypes.map((dt: DteTypeSelection) => ({
+    const dteProgress = onboarding.dteTypes.map((dt) => ({
       dteType: dt.dteType,
       name: this.getDteTypeName(dt.dteType as DteType),
       required: testsRequired[dt.dteType] || 0,
@@ -133,7 +134,7 @@ export class TestExecutionService {
 
     // Check if this DTE type is selected
     const dteSelection = onboarding.dteTypes.find(
-      (dt: DteTypeSelection) => dt.dteType === dto.dteType,
+      (dt) => dt.dteType === dto.dteType,
     );
     if (!dteSelection) {
       throw new BadRequestException(

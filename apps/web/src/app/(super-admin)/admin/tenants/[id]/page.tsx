@@ -17,6 +17,7 @@ import {
   Clock,
   ChevronRight,
   MessageSquare,
+  Mail,
 } from 'lucide-react';
 import { TenantEmailConfig } from '@/components/admin/tenant-email-config';
 import { TenantPlanManager } from '@/components/admin/tenant-plan-manager';

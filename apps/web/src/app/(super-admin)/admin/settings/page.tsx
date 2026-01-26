@@ -1,6 +1,7 @@
 'use client';
 
-import { Settings, Server, Database, Mail, Shield, BookOpen, Gauge, Bell, FileText, HardDrive, Webhook, Lock } from 'lucide-react';
+import { Server, Database, Mail, Shield, BookOpen, Gauge, Bell, FileText, HardDrive, Webhook, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 
 export default function SettingsPage() {
   return (
@@ -99,105 +100,111 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Coming Soon Features */}
+      {/* Available Features */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Proximamente</h2>
+        <h2 className="text-lg font-semibold mb-4">Modulos Disponibles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Catalogos */}
-          <div className="glass-card p-5 opacity-60">
+          <Link href="/admin/catalogos" className="glass-card p-5 hover:border-purple-500/50 transition-colors group">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                <BookOpen className="w-4 h-4 text-muted-foreground" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-white" />
               </div>
-              <h3 className="font-medium">Gestion de Catalogos</h3>
+              <h3 className="font-medium text-white group-hover:text-purple-400 transition-colors">Gestion de Catalogos</h3>
+              <ExternalLink className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <p className="text-sm text-muted-foreground">
               Administra catalogos del MH: actividades economicas, departamentos, municipios.
             </p>
-            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-              Proximamente
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400">
+              Disponible
             </span>
-          </div>
+          </Link>
 
-          {/* Limites por Plan */}
-          <div className="glass-card p-5 opacity-60">
+          {/* Planes */}
+          <Link href="/admin/planes" className="glass-card p-5 hover:border-purple-500/50 transition-colors group">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                <Gauge className="w-4 h-4 text-muted-foreground" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+                <Gauge className="w-4 h-4 text-white" />
               </div>
-              <h3 className="font-medium">Limites por Plan</h3>
+              <h3 className="font-medium text-white group-hover:text-purple-400 transition-colors">Planes y Limites</h3>
+              <ExternalLink className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <p className="text-sm text-muted-foreground">
               Configura limites de DTEs, usuarios y almacenamiento por plan.
             </p>
-            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-              Proximamente
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400">
+              Disponible
             </span>
-          </div>
+          </Link>
 
           {/* Notificaciones */}
-          <div className="glass-card p-5 opacity-60">
+          <Link href="/admin/notificaciones" className="glass-card p-5 hover:border-purple-500/50 transition-colors group">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                <Bell className="w-4 h-4 text-muted-foreground" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center">
+                <Bell className="w-4 h-4 text-white" />
               </div>
-              <h3 className="font-medium">Notificaciones</h3>
+              <h3 className="font-medium text-white group-hover:text-purple-400 transition-colors">Notificaciones</h3>
+              <ExternalLink className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <p className="text-sm text-muted-foreground">
               Alertas del sistema, emails automaticos y notificaciones push.
             </p>
-            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-              Proximamente
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400">
+              Disponible
             </span>
-          </div>
+          </Link>
 
           {/* Logs y Auditoria */}
-          <div className="glass-card p-5 opacity-60">
+          <Link href="/admin/logs" className="glass-card p-5 hover:border-purple-500/50 transition-colors group">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                <FileText className="w-4 h-4 text-muted-foreground" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-500 to-gray-600 flex items-center justify-center">
+                <FileText className="w-4 h-4 text-white" />
               </div>
-              <h3 className="font-medium">Logs y Auditoria</h3>
+              <h3 className="font-medium text-white group-hover:text-purple-400 transition-colors">Logs y Auditoria</h3>
+              <ExternalLink className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <p className="text-sm text-muted-foreground">
               Historial de acciones, logs del sistema y auditoria de seguridad.
             </p>
-            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-              Proximamente
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400">
+              Disponible
             </span>
-          </div>
+          </Link>
 
           {/* Backups */}
-          <div className="glass-card p-5 opacity-60">
+          <Link href="/admin/backups" className="glass-card p-5 hover:border-purple-500/50 transition-colors group">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                <HardDrive className="w-4 h-4 text-muted-foreground" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center">
+                <HardDrive className="w-4 h-4 text-white" />
               </div>
-              <h3 className="font-medium">Backups</h3>
+              <h3 className="font-medium text-white group-hover:text-purple-400 transition-colors">Backups</h3>
+              <ExternalLink className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <p className="text-sm text-muted-foreground">
               Programacion de backups, restauracion y retencion de datos.
             </p>
-            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-              Proximamente
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400">
+              Disponible
             </span>
-          </div>
+          </Link>
 
-          {/* Integraciones */}
-          <div className="glass-card p-5 opacity-60">
+          {/* Webhooks */}
+          <Link href="/admin/webhooks" className="glass-card p-5 hover:border-purple-500/50 transition-colors group">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                <Webhook className="w-4 h-4 text-muted-foreground" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
+                <Webhook className="w-4 h-4 text-white" />
               </div>
-              <h3 className="font-medium">Integraciones y Webhooks</h3>
+              <h3 className="font-medium text-white group-hover:text-purple-400 transition-colors">Integraciones y Webhooks</h3>
+              <ExternalLink className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <p className="text-sm text-muted-foreground">
               APIs externas, webhooks y conectores con sistemas ERP.
             </p>
-            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-              Proximamente
+            <span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400">
+              Disponible
             </span>
-          </div>
+          </Link>
         </div>
       </div>
     </div>

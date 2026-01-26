@@ -6,8 +6,8 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { TenantEmailConfig } from '@prisma/client';
 import {
-  TenantEmailConfig,
   EmailProvider,
   EmailAuthMethod,
   ConfiguredBy,

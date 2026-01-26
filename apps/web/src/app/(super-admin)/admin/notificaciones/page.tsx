@@ -129,11 +129,19 @@ const targetOptions = [
   { value: 'BY_PLAN', label: 'Por plan', icon: CreditCard },
 ];
 
+// Helper to get current datetime in local format for min attribute
+const getCurrentDateTime = () => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 16);
+};
+
 export default function NotificacionesPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showInactive, setShowInactive] = useState(false);
+  const [formError, setFormError] = useState('');
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -205,15 +213,25 @@ export default function NotificacionesPage() {
 
   const openCreateModal = () => {
     setEditingNotification(null);
+    setFormError('');
     setForm({
       ...initialForm,
-      startsAt: new Date().toISOString().slice(0, 16),
+      startsAt: getCurrentDateTime(),
     });
     setShowModal(true);
   };
 
   const openEditModal = (notification: Notification) => {
     setEditingNotification(notification);
+    setFormError('');
+
+    // If the original startsAt is in the past, set it to current time
+    const originalStartsAt = notification.startsAt ? new Date(notification.startsAt) : new Date();
+    const now = new Date();
+    const startsAtValue = originalStartsAt < now
+      ? getCurrentDateTime()
+      : new Date(notification.startsAt).toISOString().slice(0, 16);
+
     setForm({
       title: notification.title,
       message: notification.message,
@@ -223,7 +241,7 @@ export default function NotificacionesPage() {
       targetTenantId: notification.targetTenantId || '',
       targetUserId: notification.targetUserId || '',
       targetPlanIds: notification.targetPlanIds || '',
-      startsAt: notification.startsAt ? new Date(notification.startsAt).toISOString().slice(0, 16) : '',
+      startsAt: startsAtValue,
       expiresAt: notification.expiresAt ? new Date(notification.expiresAt).toISOString().slice(0, 16) : '',
       isDismissable: notification.isDismissable,
       showOnce: notification.showOnce,
@@ -236,6 +254,18 @@ export default function NotificacionesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError('');
+
+    // Validate start date is not in the past
+    if (form.startsAt) {
+      const startsAtDate = new Date(form.startsAt);
+      const now = new Date();
+      if (startsAtDate < now) {
+        setFormError('La fecha de inicio no puede ser en el pasado');
+        return;
+      }
+    }
+
     try {
       setSaving(true);
       const token = localStorage.getItem('token');
@@ -658,9 +688,17 @@ export default function NotificacionesPage() {
                   id="startsAt"
                   type="datetime-local"
                   value={form.startsAt}
-                  onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
+                  onChange={(e) => {
+                    setFormError('');
+                    setForm({ ...form, startsAt: e.target.value });
+                  }}
+                  min={getCurrentDateTime()}
                   className="input-rc mt-1"
+                  required
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Solo se permiten fechas actuales o futuras
+                </p>
               </div>
               <div>
                 <Label htmlFor="expiresAt">Fecha de expiración</Label>
@@ -669,10 +707,17 @@ export default function NotificacionesPage() {
                   type="datetime-local"
                   value={form.expiresAt}
                   onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+                  min={form.startsAt || getCurrentDateTime()}
                   className="input-rc mt-1"
                 />
               </div>
             </div>
+
+            {formError && (
+              <div className="text-sm text-red-500 bg-red-500/10 p-3 rounded-lg">
+                {formError}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>

@@ -65,6 +65,19 @@ export class NotificationsService {
       throw new NotFoundException('Notificación no encontrada');
     }
 
+    // If title, message or startsAt changes significantly, clear all dismissals
+    // so users see the updated notification again
+    const shouldClearDismissals =
+      (dto.title && dto.title !== notification.title) ||
+      (dto.message && dto.message !== notification.message) ||
+      (dto.startsAt && new Date(dto.startsAt).getTime() !== notification.startsAt.getTime());
+
+    if (shouldClearDismissals) {
+      await this.prisma.notificationDismissal.deleteMany({
+        where: { notificationId: id },
+      });
+    }
+
     return this.prisma.systemNotification.update({
       where: { id },
       data: {

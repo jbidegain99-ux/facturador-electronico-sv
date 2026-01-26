@@ -7,6 +7,7 @@ import {
   Param,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -20,7 +21,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 interface CurrentUserData {
   id: string;
   email: string;
-  tenantId: string;
+  tenantId: string | null;
   rol: string;
 }
 
@@ -38,6 +39,9 @@ export class SupportController {
     @CurrentUser() user: CurrentUserData,
     @Body() data: CreateTicketDto,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de empresas pueden crear tickets de soporte');
+    }
     return this.supportService.createTicket(user.tenantId, user.id, data);
   }
 
@@ -50,6 +54,9 @@ export class SupportController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de empresas pueden ver tickets');
+    }
     return this.supportService.getUserTickets(
       user.tenantId,
       page ? parseInt(page) : 1,

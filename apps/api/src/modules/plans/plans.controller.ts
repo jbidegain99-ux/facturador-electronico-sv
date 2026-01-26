@@ -16,7 +16,7 @@ import { CreatePlanDto, UpdatePlanDto, AssignPlanDto } from './dto';
 
 @ApiTags('Plans')
 @ApiBearerAuth()
-@Controller('api/v1/admin/plans')
+@Controller('admin/plans')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class PlansAdminController {
   constructor(private readonly plansService: PlansService) {}
@@ -87,7 +87,7 @@ export class PlansAdminController {
 
 @ApiTags('Plans')
 @ApiBearerAuth()
-@Controller('api/v1/plans')
+@Controller('plans')
 @UseGuards(JwtAuthGuard)
 export class PlansController {
   constructor(private readonly plansService: PlansService) {}

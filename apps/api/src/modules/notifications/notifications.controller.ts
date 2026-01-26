@@ -18,7 +18,7 @@ import { CreateNotificationDto, UpdateNotificationDto } from './dto';
 
 @ApiTags('Notifications - Admin')
 @ApiBearerAuth()
-@Controller('api/v1/admin/notifications')
+@Controller('admin/notifications')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class NotificationsAdminController {
   constructor(private readonly notificationsService: NotificationsService) {}
@@ -75,7 +75,7 @@ export class NotificationsAdminController {
 
 @ApiTags('Notifications - User')
 @ApiBearerAuth()
-@Controller('api/v1/notifications')
+@Controller('notifications')
 @UseGuards(JwtAuthGuard)
 export class NotificationsUserController {
   constructor(private readonly notificationsService: NotificationsService) {}

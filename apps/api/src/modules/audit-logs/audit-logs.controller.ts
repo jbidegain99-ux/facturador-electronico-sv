@@ -16,7 +16,7 @@ import { AuditLogFilterDto, AuditAction, AuditModule } from './dto';
 
 @ApiTags('Audit Logs')
 @ApiBearerAuth()
-@Controller('api/v1/admin/audit-logs')
+@Controller('admin/audit-logs')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class AuditLogsController {
   constructor(private readonly auditLogsService: AuditLogsService) {}

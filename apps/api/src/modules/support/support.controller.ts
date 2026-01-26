@@ -70,6 +70,9 @@ export class SupportController {
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de empresas pueden ver tickets');
+    }
     return this.supportService.getUserTicketById(user.tenantId, id, user.id);
   }
 
@@ -80,6 +83,9 @@ export class SupportController {
     @Param('id') id: string,
     @Body() data: CreateCommentDto,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de empresas pueden agregar comentarios');
+    }
     return this.supportService.addUserComment(user.tenantId, id, user.id, data);
   }
 }

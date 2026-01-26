@@ -166,7 +166,7 @@ export class OnboardingService {
     }
 
     const completedCount = onboarding.steps.filter(
-      (s) => s.status === 'COMPLETED',
+      (s: { status: string }) => s.status === 'COMPLETED',
     ).length;
 
     return {
@@ -369,7 +369,7 @@ export class OnboardingService {
       : { testsCompleted: {} };
 
     return {
-      selected: onboarding.dteTypes.map((dt) => ({
+      selected: onboarding.dteTypes.map((dt: typeof onboarding.dteTypes[number]) => ({
         dteType: dt.dteType,
         isRequired: dt.isRequired,
         testCompleted: dt.testCompleted,
@@ -597,7 +597,7 @@ export class OnboardingService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return onboardings.map((o) => ({
+    return onboardings.map((o: typeof onboardings[number]) => ({
       id: o.id,
       tenantId: o.tenantId,
       tenantName: o.tenant.nombre,
@@ -605,7 +605,7 @@ export class OnboardingService {
       currentStep: o.currentStep,
       overallStatus: o.overallStatus,
       assistanceLevel: o.assistanceLevel,
-      completedSteps: o.steps.filter((s) => s.status === 'COMPLETED').length,
+      completedSteps: o.steps.filter((s: { status: string }) => s.status === 'COMPLETED').length,
       totalSteps: STEP_ORDER.length,
       createdAt: o.createdAt,
       updatedAt: o.updatedAt,

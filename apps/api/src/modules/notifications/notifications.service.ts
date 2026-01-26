@@ -122,10 +122,10 @@ export class NotificationsService {
       select: { notificationId: true },
     });
 
-    const dismissedIds = new Set(dismissals.map((d) => d.notificationId));
+    const dismissedIds = new Set(dismissals.map((d: { notificationId: string }) => d.notificationId));
 
     // Filter notifications based on targeting and dismissals
-    const filteredNotifications = notifications.filter((notif) => {
+    const filteredNotifications = notifications.filter((notif: typeof notifications[number]) => {
       // Skip if showOnce and already dismissed
       if (notif.showOnce && dismissedIds.has(notif.id)) {
         return false;
@@ -214,17 +214,17 @@ export class NotificationsService {
     const existingDismissals = await this.prisma.notificationDismissal.findMany({
       where: {
         userId,
-        notificationId: { in: notifications.map((n) => n.id) },
+        notificationId: { in: notifications.map((n: { id: string }) => n.id) },
       },
       select: { notificationId: true },
     });
 
-    const existingIds = new Set(existingDismissals.map((d) => d.notificationId));
+    const existingIds = new Set(existingDismissals.map((d: { notificationId: string }) => d.notificationId));
 
     // Create dismissals for notifications not yet dismissed
     const newDismissals = notifications
-      .filter((n) => !existingIds.has(n.id))
-      .map((n) => ({
+      .filter((n: { id: string }) => !existingIds.has(n.id))
+      .map((n: { id: string }) => ({
         notificationId: n.id,
         userId,
       }));
@@ -257,8 +257,8 @@ export class NotificationsService {
     return {
       total,
       active,
-      byType: byType.map((g) => ({ type: g.type, count: g._count })),
-      byPriority: byPriority.map((g) => ({ priority: g.priority, count: g._count })),
+      byType: byType.map((g: { type: string; _count: number }) => ({ type: g.type, count: g._count })),
+      byPriority: byPriority.map((g: { priority: string; _count: number }) => ({ priority: g.priority, count: g._count })),
     };
   }
 

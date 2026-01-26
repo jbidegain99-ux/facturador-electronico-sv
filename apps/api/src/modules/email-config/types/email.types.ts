@@ -94,25 +94,49 @@ export type MessageSender = (typeof MessageSender)[keyof typeof MessageSender];
 export interface TenantEmailConfig {
   id: string;
   tenantId: string;
+
+  // Provider and method
   provider: string;
   authMethod: string;
-  fromEmail: string;
-  fromName: string | null;
-  replyToEmail: string | null;
+  isActive: boolean;
+  isVerified: boolean;
+
+  // SMTP Configuration
   smtpHost: string | null;
   smtpPort: number | null;
   smtpSecure: boolean | null;
+  smtpUser: string | null;
+  smtpPassword: string | null;
+
+  // API Configuration
   apiKey: string | null;
   apiSecret: string | null;
-  accessToken: string | null;
-  refreshToken: string | null;
-  tokenExpiresAt: Date | null;
-  awsRegion: string | null;
-  awsAccessKeyId: string | null;
-  awsSecretAccessKey: string | null;
-  isVerified: boolean;
-  isActive: boolean;
+  apiEndpoint: string | null;
+
+  // OAuth2 (for M365 and Google)
+  oauth2ClientId: string | null;
+  oauth2ClientSecret: string | null;
+  oauth2TenantId: string | null;
+  oauth2RefreshToken: string | null;
+  oauth2AccessToken: string | null;
+  oauth2TokenExpiry: Date | null;
+
+  // Sender Configuration
+  fromEmail: string;
+  fromName: string;
+  replyToEmail: string | null;
+
+  // Advanced Configuration
+  rateLimitPerHour: number | null;
+  retryAttempts: number | null;
+  timeoutSeconds: number | null;
+
+  // Metadata
   configuredBy: string;
+  configuredByUserId: string | null;
+  notes: string | null;
+
+  // Audit
   createdAt: Date;
   updatedAt: Date;
   verifiedAt: Date | null;

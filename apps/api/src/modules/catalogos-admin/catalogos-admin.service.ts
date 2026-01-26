@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SyncCatalogoDto, CreateCatalogoDto, UpdateCatalogoDto, CatalogoItemDto } from './dto';
 
@@ -17,7 +18,7 @@ export class CatalogosAdminService {
       },
     });
 
-    return catalogos.map((cat) => ({
+    return catalogos.map((cat: typeof catalogos[number]) => ({
       ...cat,
       totalItems: cat._count.items,
     }));
@@ -144,7 +145,7 @@ export class CatalogosAdminService {
     }
 
     // Use transaction to replace all items
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Delete all existing items
       await tx.catalogoItem.deleteMany({
         where: { catalogoId: catalogo.id },
@@ -200,7 +201,7 @@ export class CatalogosAdminService {
       descripcion: catalogo.descripcion,
       version: catalogo.version,
       exportedAt: new Date().toISOString(),
-      items: catalogo.items.map((item) => ({
+      items: catalogo.items.map((item: typeof catalogo.items[number]) => ({
         codigo: item.codigo,
         valor: item.valor,
         descripcion: item.descripcion,

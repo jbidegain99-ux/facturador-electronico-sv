@@ -8,18 +8,17 @@ import {
   Building2,
   Users,
   FileText,
-  Mail,
   Phone,
   MapPin,
   Calendar,
   Save,
   AlertCircle,
-  Settings,
   Ticket,
   Clock,
   ChevronRight,
   MessageSquare,
 } from 'lucide-react';
+import { TenantEmailConfig } from '@/components/admin/tenant-email-config';
 
 interface SupportTicket {
   id: string;
@@ -351,22 +350,8 @@ export default function TenantDetailPage() {
             />
           </div>
 
-          {/* Email Config - Coming Soon */}
-          <div className="glass-card p-6 opacity-70">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-semibold">Configuracion de Email</h3>
-              </div>
-              <span className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-                Proximamente
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Configura el servicio de email para esta empresa. Podras ayudar a configurar
-              SendGrid, Mailgun, Amazon SES y otros proveedores directamente desde aqui.
-            </p>
-          </div>
+          {/* Email Configuration */}
+          <TenantEmailConfig tenantId={tenant.id} tenantName={tenant.nombre} />
 
           {/* Support Tickets */}
           <div className="glass-card p-6">

@@ -8,10 +8,7 @@ import {
   PerformedBy,
   AssistanceLevel,
   DteType,
-  OnboardingStepRecord,
   DteTypeSelection,
-  TenantOnboarding,
-  Tenant,
 } from '../types/onboarding.types';
 import {
   StartOnboardingDto,
@@ -169,7 +166,7 @@ export class OnboardingService {
     }
 
     const completedCount = onboarding.steps.filter(
-      (s: OnboardingStepRecord) => s.status === 'COMPLETED',
+      (s) => s.status === 'COMPLETED',
     ).length;
 
     return {
@@ -600,7 +597,7 @@ export class OnboardingService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return onboardings.map((o: TenantOnboarding & { tenant: Pick<Tenant, 'id' | 'nombre' | 'nit'>; steps: OnboardingStepRecord[] }) => ({
+    return onboardings.map((o) => ({
       id: o.id,
       tenantId: o.tenantId,
       tenantName: o.tenant.nombre,
@@ -608,7 +605,7 @@ export class OnboardingService {
       currentStep: o.currentStep,
       overallStatus: o.overallStatus,
       assistanceLevel: o.assistanceLevel,
-      completedSteps: o.steps.filter((s: OnboardingStepRecord) => s.status === 'COMPLETED').length,
+      completedSteps: o.steps.filter((s) => s.status === 'COMPLETED').length,
       totalSteps: STEP_ORDER.length,
       createdAt: o.createdAt,
       updatedAt: o.updatedAt,

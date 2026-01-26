@@ -19,6 +19,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { TenantEmailConfig } from '@/components/admin/tenant-email-config';
+import { TenantPlanManager } from '@/components/admin/tenant-plan-manager';
 
 interface SupportTicket {
   id: string;
@@ -352,6 +353,9 @@ export default function TenantDetailPage() {
 
           {/* Email Configuration */}
           <TenantEmailConfig tenantId={tenant.id} tenantName={tenant.nombre} />
+
+          {/* Plan Management */}
+          <TenantPlanManager tenantId={tenant.id} tenantName={tenant.nombre} />
 
           {/* Support Tickets */}
           <div className="glass-card p-6">

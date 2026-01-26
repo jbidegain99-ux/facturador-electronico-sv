@@ -27,10 +27,14 @@ model Tenant {
   primaryColor    String?   @default("#8b5cf6")
 
   // Suscripcion SaaS
-  plan            String    @default("TRIAL")
+  plan            String    @default("TRIAL") // Codigo del plan (legacy, usar planId)
+  planId          String?
+  planRef         Plan?     @relation("TenantPlan", fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   planStatus      String    @default("ACTIVE")
   planExpiry      DateTime?
   maxDtesPerMonth Int       @default(50)
+  maxUsers        Int       @default(5)
+  maxClientes     Int       @default(100)
   dtesUsedThisMonth Int     @default(0)
   monthResetDate  DateTime?
 
@@ -581,4 +585,37 @@ model CatalogoItem {
   @@unique([catalogoId, codigo])
   @@index([catalogoId])
   @@index([parentCodigo])
+}
+
+// ============================================================================
+// PLANES Y LIMITES
+// ============================================================================
+
+model Plan {
+  id              String    @id @default(cuid())
+  codigo          String    @unique // DEMO, TRIAL, BASIC, PRO, ENTERPRISE
+  nombre          String    @db.NVarChar(100)
+  descripcion     String?   @db.NVarChar(500)
+
+  // Limites
+  maxDtesPerMonth Int       @default(100)   // -1 para ilimitado
+  maxUsers        Int       @default(1)     // -1 para ilimitado
+  maxClientes     Int       @default(100)   // -1 para ilimitado
+  maxStorageMb    Int       @default(500)   // -1 para ilimitado
+
+  // Features habilitados (JSON array)
+  features        String?   @db.NVarChar(Max)
+
+  // Precios (referencia)
+  precioMensual   Decimal?  @db.Decimal(10, 2)
+  precioAnual     Decimal?  @db.Decimal(10, 2)
+
+  isActive        Boolean   @default(true)
+  isDefault       Boolean   @default(false) // Plan por defecto para nuevos tenants
+  orden           Int       @default(0) // Para ordenar en UI
+
+  tenants         Tenant[]  @relation("TenantPlan")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

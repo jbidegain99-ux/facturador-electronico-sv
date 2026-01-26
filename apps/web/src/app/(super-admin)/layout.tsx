@@ -16,6 +16,7 @@ import {
   Loader2,
   Ticket,
   Database,
+  CreditCard,
 } from 'lucide-react';
 
 const navigation = [
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Empresas', href: '/admin/tenants', icon: Building2 },
   { name: 'Soporte', href: '/admin/support', icon: Ticket },
   { name: 'Catalogos', href: '/admin/catalogos', icon: Database },
+  { name: 'Planes', href: '/admin/planes', icon: CreditCard },
   { name: 'Administradores', href: '/admin/admins', icon: Users },
   { name: 'Configuracion', href: '/admin/settings', icon: Settings },
 ];

@@ -13,6 +13,7 @@ import { EmailConfigModule } from './modules/email-config/email-config.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { SupportModule } from './modules/support/support.module';
 import { CatalogosAdminModule } from './modules/catalogos-admin/catalogos-admin.module';
+import { PlansModule } from './modules/plans/plans.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
@@ -35,6 +36,7 @@ const imports: any[] = [
   OnboardingModule,
   SupportModule,
   CatalogosAdminModule,
+  PlansModule,
 ];
 
 if (process.env.REDIS_URL) {

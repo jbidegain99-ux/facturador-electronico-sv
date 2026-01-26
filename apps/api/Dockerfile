@@ -13,10 +13,6 @@ COPY package*.json ./
 COPY apps/api ./apps/api
 COPY packages ./packages
 
-# DEBUG: Show what was copied
-RUN echo "=== DEBUG: Content of email.types.ts ===" && \
-    cat apps/api/src/modules/email-config/types/email.types.ts | grep -n "smtpUser\|refreshToken\|oauth2" | head -20
-
 # Install all dependencies (root + workspaces)
 RUN npm install
 

@@ -678,3 +678,57 @@ model NotificationDismissal {
   @@unique([notificationId, userId])
   @@index([userId])
 }
+
+// ============================================================================
+// SISTEMA DE LOGS Y AUDITORIA
+// ============================================================================
+
+// AuditAction: LOGIN, LOGOUT, CREATE, UPDATE, DELETE, VIEW, EXPORT, IMPORT, UPLOAD, DOWNLOAD, SEND, SIGN, TRANSMIT, CONFIG_CHANGE
+// AuditModule: AUTH, TENANT, USER, DTE, CLIENTE, CERTIFICATE, EMAIL_CONFIG, SETTINGS, SUPPORT, ADMIN
+
+model AuditLog {
+  id            String    @id @default(cuid())
+
+  // Quien realizo la accion
+  userId        String?
+  userEmail     String?   @db.NVarChar(255)
+  userName      String?   @db.NVarChar(255)
+  userRole      String?   @db.NVarChar(50)
+
+  // Contexto del tenant
+  tenantId      String?
+  tenantNombre  String?   @db.NVarChar(255)
+
+  // Detalles de la accion
+  action        String    @db.NVarChar(50)  // AuditAction
+  module        String    @db.NVarChar(50)  // AuditModule
+  description   String    @db.NVarChar(500)
+
+  // Entidad afectada
+  entityType    String?   @db.NVarChar(100) // Tipo de entidad (ej: DTE, Cliente, User)
+  entityId      String?   // ID de la entidad afectada
+
+  // Datos adicionales
+  oldValue      String?   @db.NVarChar(Max) // JSON con valor anterior
+  newValue      String?   @db.NVarChar(Max) // JSON con valor nuevo
+  metadata      String?   @db.NVarChar(Max) // JSON con datos adicionales
+
+  // Informacion de la peticion
+  ipAddress     String?   @db.NVarChar(50)
+  userAgent     String?   @db.NVarChar(500)
+  requestPath   String?   @db.NVarChar(500)
+  requestMethod String?   @db.NVarChar(10)
+
+  // Resultado
+  success       Boolean   @default(true)
+  errorMessage  String?   @db.NVarChar(Max)
+
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([action])
+  @@index([module])
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}

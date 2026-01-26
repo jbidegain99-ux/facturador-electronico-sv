@@ -15,11 +15,7 @@ interface DteData {
     nombre: string;
     nit: string;
     nrc: string;
-    direccion?: {
-      departamento: string;
-      municipio: string;
-      complemento: string;
-    };
+    direccion?: string;
     telefono: string;
     correo: string;
   };
@@ -197,7 +193,7 @@ export class PdfService {
               { text: dte.tenant?.nombre || 'Empresa', style: 'header' },
               { text: `NIT: ${dte.tenant?.nit || 'N/A'}`, style: 'small' },
               { text: `NRC: ${dte.tenant?.nrc || 'N/A'}`, style: 'small' },
-              { text: dte.tenant?.direccion?.complemento || '', style: 'small' },
+              { text: dte.tenant?.direccion || '', style: 'small' },
               { text: `Tel: ${dte.tenant?.telefono || 'N/A'}`, style: 'small' },
               { text: dte.tenant?.correo || '', style: 'small' },
             ],

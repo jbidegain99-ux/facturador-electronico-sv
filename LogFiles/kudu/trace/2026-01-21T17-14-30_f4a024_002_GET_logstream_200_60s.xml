@@ -1,0 +1,5 @@
+<step title="Incoming Request" date="2026-01-21T17:14:30.766" instance="f4a024" url="/logstream" method="GET" type="request" pid="770,1,5" Host="facturador-api-sv-gvavh8heb5c5gkc9.scm.eastus2-01.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (DEB)" Accept-Encoding="identity" Authorization="Bea..." x-ms-client-request-id="8ae2a7e2-f6ec-11f0-98bf-27c51caa6038" X-ARR-LOG-ID="8ae2a7e2-f6ec-11f0-98bf-27c51caa6038" CLIENT-IP="201.247.160.197:56853" X-SITE-DEPLOYMENT-ID="facturador-api-sv" WAS-DEFAULT-HOSTNAME="facturador-api-sv-gvavh8heb5c5gkc9.scm.eastus2-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/logstream" X-Client-IP="201.247.160.197" X-Client-Port="56853" >
+  <step title="LogStreamHandlerMiddleware.Invoke" date="2026-01-21T17:14:30.840" /><!-- duration: 177ms -->
+  <step title="Error occurred" date="2026-01-21T17:15:31.008" type="error" text="LogStreamManager: ProcessRequest end" /><!-- duration: 3ms -->
+  <step title="Outgoing response" date="2026-01-21T17:15:31.020" type="response" statusCode="200" statusText="OK" /><!-- duration: 4ms -->
+</step><!-- duration: 60260ms -->

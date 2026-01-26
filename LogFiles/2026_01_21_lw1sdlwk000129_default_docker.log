@@ -1,0 +1,398 @@
+2026-01-21T17:18:22.5395240Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-01-21T17:18:22.6901041Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +152ms[39m
+2026-01-21T17:18:22.7000589Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +8ms[39m
+2026-01-21T17:18:22.7000934Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:22.7001040Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-01-21T17:18:22.7001084Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMhAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:22.7078473Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCatalogModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:22.7269861Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDteModule dependencies initialized[39m[38;5;3m +6ms[39m
+2026-01-21T17:18:22.7270131Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +10ms[39m
+2026-01-21T17:18:22.7270174Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:22.7270207Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSignerModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-01-21T17:18:22.7270240Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTransmitterModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:22.7270309Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTenantsModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:22.7270345Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:22.7270382Z [32m[Nest] 1  - [39m01/21/2026, 5:18:22 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:23.2450782Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/v1/auth}:[39m[38;5;3m +526ms[39m
+2026-01-21T17:18:23.2557983Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/login, POST} route[39m[38;5;3m +11ms[39m
+2026-01-21T17:18:23.2631256Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/register, POST} route[39m[38;5;3m +7ms[39m
+2026-01-21T17:18:23.2719442Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTenantsController {/api/v1/tenants}:[39m[38;5;3m +9ms[39m
+2026-01-21T17:18:23.2744736Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, POST} route[39m[38;5;3m +3ms[39m
+2026-01-21T17:18:23.2823316Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, GET} route[39m[38;5;3m +8ms[39m
+2026-01-21T17:18:23.2913073Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:23.2938079Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, PATCH} route[39m[38;5;3m +10ms[39m
+2026-01-21T17:18:23.3011516Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSignerController {/api/v1/signer}:[39m[38;5;3m +8ms[39m
+2026-01-21T17:18:23.3033777Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/status, GET} route[39m[38;5;3m +2ms[39m
+2026-01-21T17:18:23.3124330Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/load, POST} route[39m[38;5;3m +8ms[39m
+2026-01-21T17:18:23.3124490Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/test, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:23.3215215Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/verify, POST} route[39m[38;5;3m +9ms[39m
+2026-01-21T17:18:23.3287352Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/decode, POST} route[39m[38;5;3m +7ms[39m
+2026-01-21T17:18:23.3294441Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMhAuthController {/api/v1/mh-auth}:[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:23.3301494Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/mh-auth/token, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:23.3306511Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTransmitterController {/api/v1/transmitter}:[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:23.3312793Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/send/:dteId, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:23.3320649Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/create-and-send, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:23.3386285Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/status/:codigoGeneracion, GET} route[39m[38;5;3m +7ms[39m
+2026-01-21T17:18:23.3392589Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:24.1735302Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/json, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1735621Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/logs, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1735668Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/anular/:dteId, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:24.1735709Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/job/:jobId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1735769Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCatalogController {/api/v1/catalogs}:[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1735808Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:24.1735846Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos/:codigo, GET} route[39m[38;5;3m +7ms[39m
+2026-01-21T17:18:24.1735884Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/municipios, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1735923Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-documento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1735999Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/unidades-medida, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:24.1736039Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-establecimiento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1736079Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/formas-pago, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1736117Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/condiciones-operacion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1736172Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-dte, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1736211Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:18:24.1736252Z [32m[Nest] 1  - [39m01/21/2026, 5:18:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas/:codigo, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:18:24.7128079Z [32m[Nest] 1  - [39m01/21/2026, 5:18:24 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +1361ms[39m
+2026-01-21T17:18:24.7239300Z API running on http://localhost:3001
+2026-01-21T17:18:24.7243226Z Swagger docs on http://localhost:3001/api/docs
+2026-01-21T17:51:43.4520576Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-01-21T17:51:43.6417530Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +197ms[39m
+2026-01-21T17:51:43.6577460Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +7ms[39m
+2026-01-21T17:51:43.6577678Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:43.6577725Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:43.6577764Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMhAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:43.6577859Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCatalogModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:43.6577903Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDteModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:43.6577941Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:43.6577979Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:43.6772482Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSignerModule dependencies initialized[39m[38;5;3m +18ms[39m
+2026-01-21T17:51:43.6772796Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTransmitterModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:43.6772848Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTenantsModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:43.6773008Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:43.6773058Z [32m[Nest] 1  - [39m01/21/2026, 5:51:43 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.0224903Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/v1/auth}:[39m[38;5;3m +352ms[39m
+2026-01-21T17:51:44.0429844Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/login, POST} route[39m[38;5;3m +20ms[39m
+2026-01-21T17:51:44.0607641Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/register, POST} route[39m[38;5;3m +10ms[39m
+2026-01-21T17:51:44.0608164Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTenantsController {/api/v1/tenants}:[39m[38;5;3m +2ms[39m
+2026-01-21T17:51:44.0717468Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, POST} route[39m[38;5;3m +17ms[39m
+2026-01-21T17:51:44.0745032Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, GET} route[39m[38;5;3m +3ms[39m
+2026-01-21T17:51:44.0832273Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, GET} route[39m[38;5;3m +7ms[39m
+2026-01-21T17:51:44.0832486Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, PATCH} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:44.0832565Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSignerController {/api/v1/signer}:[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.0832610Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/status, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:44.0846234Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/load, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:44.1007538Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/test, POST} route[39m[38;5;3m +7ms[39m
+2026-01-21T17:51:44.1007951Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/verify, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008069Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/decode, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008131Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMhAuthController {/api/v1/mh-auth}:[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008172Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/mh-auth/token, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:44.1008211Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTransmitterController {/api/v1/transmitter}:[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008276Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/send/:dteId, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008318Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/create-and-send, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:44.1008358Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/status/:codigoGeneracion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008396Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008457Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/json, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008503Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/logs, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008541Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/anular/:dteId, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:44.1008578Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/job/:jobId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1008639Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCatalogController {/api/v1/catalogs}:[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1211484Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos, GET} route[39m[38;5;3m +17ms[39m
+2026-01-21T17:51:44.1211768Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos/:codigo, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1211817Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/municipios, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1211883Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-documento, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:44.1211923Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/unidades-medida, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1211961Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-establecimiento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1211999Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/formas-pago, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1212036Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/condiciones-operacion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1212097Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-dte, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:44.1212136Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T17:51:44.1212175Z [32m[Nest] 1  - [39m01/21/2026, 5:51:44 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas/:codigo, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T17:51:45.4589223Z [32m[Nest] 1  - [39m01/21/2026, 5:51:45 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +1342ms[39m
+2026-01-21T17:51:45.4852454Z API running on http://localhost:3001
+2026-01-21T17:51:45.4879432Z Swagger docs on http://localhost:3001/api/docs
+2026-01-21T19:41:01.2425020Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-01-21T19:41:01.2817618Z [33m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [33m   WARN[39m [38;5;3m[ModuleTokenFactory] [39m[33mThe module "ConfigModule" is taking 10.65ms to serialize, this may be caused by larger objects statically assigned to the module. More details: https://github.com/nestjs/nest/issues/12738[39m[38;5;3m +40ms[39m
+2026-01-21T19:41:01.6128038Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +330ms[39m
+2026-01-21T19:41:01.6128584Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:01.6128634Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:01.6128676Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +8ms[39m
+2026-01-21T19:41:01.6150901Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMhAuthModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-01-21T19:41:01.6404240Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCatalogModule dependencies initialized[39m[38;5;3m +7ms[39m
+2026-01-21T19:41:01.6404581Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDteModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:01.6404631Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:01.6404690Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:01.6404731Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSignerModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:01.6404791Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTransmitterModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:01.6404834Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTenantsModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:01.6404879Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:01.6404920Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +6ms[39m
+2026-01-21T19:41:01.9492736Z [32m[Nest] 1  - [39m01/21/2026, 7:41:01 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/v1/auth}:[39m[38;5;3m +312ms[39m
+2026-01-21T19:41:02.0315392Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/login, POST} route[39m[38;5;3m +88ms[39m
+2026-01-21T19:41:02.0799001Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/register, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.0799509Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTenantsController {/api/v1/tenants}:[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:02.0800040Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, POST} route[39m[38;5;3m +2ms[39m
+2026-01-21T19:41:02.0831508Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, GET} route[39m[38;5;3m +40ms[39m
+2026-01-21T19:41:02.1039466Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, GET} route[39m[38;5;3m +30ms[39m
+2026-01-21T19:41:02.1304103Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, PATCH} route[39m[38;5;3m +18ms[39m
+2026-01-21T19:41:02.1304425Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSignerController {/api/v1/signer}:[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.1304473Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/status, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.1339887Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/load, POST} route[39m[38;5;3m +12ms[39m
+2026-01-21T19:41:02.1420445Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/test, POST} route[39m[38;5;3m +8ms[39m
+2026-01-21T19:41:02.1431915Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/verify, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:02.1605628Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/decode, POST} route[39m[38;5;3m +2ms[39m
+2026-01-21T19:41:02.1619881Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMhAuthController {/api/v1/mh-auth}:[39m[38;5;3m +6ms[39m
+2026-01-21T19:41:02.1810441Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/mh-auth/token, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.1819098Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTransmitterController {/api/v1/transmitter}:[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2126828Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/send/:dteId, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:02.2126959Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/create-and-send, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127005Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/status/:codigoGeneracion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127106Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127149Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/json, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:02.2127188Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/logs, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127227Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/anular/:dteId, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127265Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/job/:jobId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127332Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCatalogController {/api/v1/catalogs}:[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127371Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:02.2127410Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos/:codigo, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127449Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/municipios, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127512Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-documento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127550Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/unidades-medida, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127613Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-establecimiento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2127652Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/formas-pago, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T19:41:02.2127716Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/condiciones-operacion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2128102Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-dte, GET} route[39m[38;5;3m +37ms[39m
+2026-01-21T19:41:02.2128148Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:02.2128187Z [32m[Nest] 1  - [39m01/21/2026, 7:41:02 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas/:codigo, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T19:41:03.6962697Z [32m[Nest] 1  - [39m01/21/2026, 7:41:03 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +1502ms[39m
+2026-01-21T19:41:03.7287222Z API running on http://localhost:3001
+2026-01-21T19:41:03.7439554Z Swagger docs on http://localhost:3001/api/docs
+2026-01-21T20:08:16.6499740Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-01-21T20:08:16.8396433Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +187ms[39m
+2026-01-21T20:08:16.8397197Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:16.8397242Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:16.8397352Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-01-21T20:08:16.8397388Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMhAuthModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:16.8397451Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCatalogModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:16.8896224Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDteModule dependencies initialized[39m[38;5;3m +26ms[39m
+2026-01-21T20:08:16.8896628Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-01-21T20:08:16.8896671Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:16.8896707Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSignerModule dependencies initialized[39m[38;5;3m +26ms[39m
+2026-01-21T20:08:16.8896742Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTransmitterModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:16.8896794Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTenantsModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:16.8896829Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:16.8896863Z [32m[Nest] 1  - [39m01/21/2026, 8:08:16 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.6076960Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/v1/auth}:[39m[38;5;3m +712ms[39m
+2026-01-21T20:08:17.6505212Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/login, POST} route[39m[38;5;3m +47ms[39m
+2026-01-21T20:08:17.6711730Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/register, POST} route[39m[38;5;3m +22ms[39m
+2026-01-21T20:08:17.6883503Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTenantsController {/api/v1/tenants}:[39m[38;5;3m +8ms[39m
+2026-01-21T20:08:17.6883829Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.6883883Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:17.6883975Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:17.7080307Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, PATCH} route[39m[38;5;3m +19ms[39m
+2026-01-21T20:08:17.7080623Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSignerController {/api/v1/signer}:[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7080668Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/status, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7080747Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/load, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:17.7080784Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/test, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:17.7099344Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/verify, POST} route[39m[38;5;3m +8ms[39m
+2026-01-21T20:08:17.7112436Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/decode, POST} route[39m[38;5;3m +2ms[39m
+2026-01-21T20:08:17.7314105Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMhAuthController {/api/v1/mh-auth}:[39m[38;5;3m +7ms[39m
+2026-01-21T20:08:17.7314450Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/mh-auth/token, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7314521Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTransmitterController {/api/v1/transmitter}:[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7314565Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/send/:dteId, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7314610Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/create-and-send, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:17.7314673Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/status/:codigoGeneracion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7314718Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7381972Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/json, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382293Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/logs, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382361Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/anular/:dteId, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:17.7382450Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/job/:jobId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382495Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCatalogController {/api/v1/catalogs}:[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382539Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382583Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos/:codigo, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:17.7382646Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/municipios, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382691Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-documento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382735Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/unidades-medida, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382780Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-establecimiento, GET} route[39m[38;5;3m +7ms[39m
+2026-01-21T20:08:17.7382841Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/formas-pago, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382884Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/condiciones-operacion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382926Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-dte, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:17.7382969Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:08:17.7383030Z [32m[Nest] 1  - [39m01/21/2026, 8:08:17 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas/:codigo, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:08:19.0063366Z [32m[Nest] 1  - [39m01/21/2026, 8:08:19 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +1277ms[39m
+2026-01-21T20:08:19.0378831Z API running on http://localhost:3001
+2026-01-21T20:08:19.0465399Z Swagger docs on http://localhost:3001/api/docs
+2026-01-21T20:11:12.2394353Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-01-21T20:11:12.3695572Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +136ms[39m
+2026-01-21T20:11:12.4054043Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +16ms[39m
+2026-01-21T20:11:12.4054584Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.4054631Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.4054670Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMhAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.4054707Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCatalogModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.4054790Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDteModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.4054830Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-01-21T20:11:12.4054866Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.4054905Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSignerModule dependencies initialized[39m[38;5;3m +7ms[39m
+2026-01-21T20:11:12.4054968Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTransmitterModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.4055007Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTenantsModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.4055043Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.4055080Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.6043947Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/v1/auth}:[39m[38;5;3m +207ms[39m
+2026-01-21T20:11:12.6554755Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/login, POST} route[39m[38;5;3m +51ms[39m
+2026-01-21T20:11:12.6933134Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/register, POST} route[39m[38;5;3m +30ms[39m
+2026-01-21T20:11:12.6943000Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTenantsController {/api/v1/tenants}:[39m[38;5;3m +9ms[39m
+2026-01-21T20:11:12.6954136Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.7034517Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, GET} route[39m[38;5;3m +8ms[39m
+2026-01-21T20:11:12.7047048Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.7060826Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, PATCH} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.7628448Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSignerController {/api/v1/signer}:[39m[38;5;3m +48ms[39m
+2026-01-21T20:11:12.7628924Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/status, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.7628973Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/load, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.7629013Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/test, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.7755591Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/verify, POST} route[39m[38;5;3m +21ms[39m
+2026-01-21T20:11:12.7764405Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/decode, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.7839219Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMhAuthController {/api/v1/mh-auth}:[39m[38;5;3m +7ms[39m
+2026-01-21T20:11:12.7851174Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/mh-auth/token, POST} route[39m[38;5;3m +2ms[39m
+2026-01-21T20:11:12.7868220Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTransmitterController {/api/v1/transmitter}:[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.8032750Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/send/:dteId, POST} route[39m[38;5;3m +7ms[39m
+2026-01-21T20:11:12.8032964Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/create-and-send, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033004Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/status/:codigoGeneracion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033043Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033094Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/json, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.8033129Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/logs, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033162Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/anular/:dteId, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033194Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/job/:jobId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033226Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCatalogController {/api/v1/catalogs}:[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033283Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033318Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos/:codigo, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.8033351Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/municipios, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033384Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-documento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033434Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/unidades-medida, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033468Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-establecimiento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033525Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/formas-pago, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033558Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/condiciones-operacion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033781Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-dte, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:11:12.8033823Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:12.8234098Z [32m[Nest] 1  - [39m01/21/2026, 8:11:12 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas/:codigo, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:11:13.8689244Z [32m[Nest] 1  - [39m01/21/2026, 8:11:13 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +1064ms[39m
+2026-01-21T20:11:13.8812525Z API running on http://localhost:3001
+2026-01-21T20:11:13.8888126Z Swagger docs on http://localhost:3001/api/docs
+2026-01-21T20:16:33.9642830Z [32m[Nest] 1  - [39m01/21/2026, 8:16:33 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-01-21T20:16:34.1051208Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +142ms[39m
+2026-01-21T20:16:34.1147966Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +7ms[39m
+2026-01-21T20:16:34.1148134Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.1148171Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.1148204Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMhAuthModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.1148260Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCatalogModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.1148312Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDteModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.1148346Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.1148378Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.1224873Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSignerModule dependencies initialized[39m[38;5;3m +8ms[39m
+2026-01-21T20:16:34.1228408Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTransmitterModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.1237516Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTenantsModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.1239928Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.1245987Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.4726133Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/v1/auth}:[39m[38;5;3m +348ms[39m
+2026-01-21T20:16:34.5009589Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/login, POST} route[39m[38;5;3m +28ms[39m
+2026-01-21T20:16:34.5032575Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/register, POST} route[39m[38;5;3m +3ms[39m
+2026-01-21T20:16:34.5107397Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTenantsController {/api/v1/tenants}:[39m[38;5;3m +7ms[39m
+2026-01-21T20:16:34.5208410Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, POST} route[39m[38;5;3m +10ms[39m
+2026-01-21T20:16:34.5222838Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, GET} route[39m[38;5;3m +2ms[39m
+2026-01-21T20:16:34.5407601Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, GET} route[39m[38;5;3m +18ms[39m
+2026-01-21T20:16:34.5424778Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, PATCH} route[39m[38;5;3m +2ms[39m
+2026-01-21T20:16:34.5492482Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSignerController {/api/v1/signer}:[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.5807058Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/status, GET} route[39m[38;5;3m +7ms[39m
+2026-01-21T20:16:34.5807403Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/load, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5807463Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/test, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.5807507Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/verify, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5807607Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/decode, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5807649Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMhAuthController {/api/v1/mh-auth}:[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.5807691Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/mh-auth/token, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5807734Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTransmitterController {/api/v1/transmitter}:[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5807794Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/send/:dteId, POST} route[39m[38;5;3m +17ms[39m
+2026-01-21T20:16:34.5807839Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/create-and-send, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5807882Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/status/:codigoGeneracion, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.5807923Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5807982Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/json, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5808025Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/logs, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5808068Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/anular/:dteId, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.5808109Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/job/:jobId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5808188Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCatalogController {/api/v1/catalogs}:[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5808237Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.5989768Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos/:codigo, GET} route[39m[38;5;3m +16ms[39m
+2026-01-21T20:16:34.5990060Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/municipios, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.5990174Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-documento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5990220Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/unidades-medida, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5990261Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-establecimiento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5990302Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/formas-pago, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5990343Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/condiciones-operacion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5990403Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-dte, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:34.5990447Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T20:16:34.5990488Z [32m[Nest] 1  - [39m01/21/2026, 8:16:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas/:codigo, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T20:16:35.8409301Z [32m[Nest] 1  - [39m01/21/2026, 8:16:35 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +1241ms[39m
+2026-01-21T20:16:35.8599259Z API running on http://localhost:3001
+2026-01-21T20:16:35.8614057Z Swagger docs on http://localhost:3001/api/docs
+2026-01-21T23:54:05.8815740Z [32m[Nest] 1  - [39m01/21/2026, 11:54:05 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-01-21T23:54:06.1815633Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +319ms[39m
+2026-01-21T23:54:06.2159703Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +6ms[39m
+2026-01-21T23:54:06.2160039Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:06.2160085Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-01-21T23:54:06.2160120Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMhAuthModule dependencies initialized[39m[38;5;3m +8ms[39m
+2026-01-21T23:54:06.2160205Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCatalogModule dependencies initialized[39m[38;5;3m +9ms[39m
+2026-01-21T23:54:06.2160266Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDteModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:06.2160300Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:06.2160332Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:06.2160383Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSignerModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:06.2160421Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTransmitterModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:06.2160453Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTenantsModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:06.2160486Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:06.2160538Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSuperAdminModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:06.2160572Z [32m[Nest] 1  - [39m01/21/2026, 11:54:06 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.0727092Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/v1/auth}:[39m[38;5;3m +863ms[39m
+2026-01-21T23:54:07.1192516Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/login, POST} route[39m[38;5;3m +39ms[39m
+2026-01-21T23:54:07.1374239Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/register, POST} route[39m[38;5;3m +19ms[39m
+2026-01-21T23:54:07.1388202Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTenantsController {/api/v1/tenants}:[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.1403275Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, POST} route[39m[38;5;3m +2ms[39m
+2026-01-21T23:54:07.1509802Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants, GET} route[39m[38;5;3m +10ms[39m
+2026-01-21T23:54:07.1848318Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, GET} route[39m[38;5;3m +27ms[39m
+2026-01-21T23:54:07.1848705Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/tenants/:id, PATCH} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.1848756Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSignerController {/api/v1/signer}:[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.1848800Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/status, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.2054804Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/load, POST} route[39m[38;5;3m +10ms[39m
+2026-01-21T23:54:07.2334904Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/test, POST} route[39m[38;5;3m +26ms[39m
+2026-01-21T23:54:07.2335364Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/verify, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2335417Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/signer/decode, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2335458Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMhAuthController {/api/v1/mh-auth}:[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.2335555Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/mh-auth/token, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2335598Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTransmitterController {/api/v1/transmitter}:[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2335639Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/send/:dteId, POST} route[39m[38;5;3m +8ms[39m
+2026-01-21T23:54:07.2335681Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/create-and-send, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2335787Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/status/:codigoGeneracion, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2335860Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.2335903Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/json, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2335944Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/dte/:dteId/logs, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2335986Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/anular/:dteId, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.2336044Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/transmitter/job/:jobId, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2336140Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCatalogController {/api/v1/catalogs}:[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2336187Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.2336228Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/departamentos/:codigo, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2336305Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/municipios, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2336394Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-documento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2336436Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/unidades-medida, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.2336476Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-establecimiento, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2842313Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/formas-pago, GET} route[39m[38;5;3m +48ms[39m
+2026-01-21T23:54:07.2842820Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/condiciones-operacion, GET} route[39m[38;5;3m +6ms[39m
+2026-01-21T23:54:07.2842870Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/tipos-dte, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.2842910Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2842986Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/catalogs/actividades-economicas/:codigo, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2843046Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSuperAdminController {/api/v1/super-admin}:[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2843085Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/dashboard, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2843124Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/activity, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2843161Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/tenants, GET} route[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.2843217Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/tenants/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2937686Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/tenants/:id, PUT} route[39m[38;5;3m +9ms[39m
+2026-01-21T23:54:07.2937993Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/tenants/:id/suspend, POST} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.2938041Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/tenants/:id/activate, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:07.2938106Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/tenants/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-01-21T23:54:07.3204179Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/admins, GET} route[39m[38;5;3m +7ms[39m
+2026-01-21T23:54:07.3204471Z [32m[Nest] 1  - [39m01/21/2026, 11:54:07 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/super-admin/admins, POST} route[39m[38;5;3m +1ms[39m
+2026-01-21T23:54:08.5749829Z [32m[Nest] 1  - [39m01/21/2026, 11:54:08 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +1269ms[39m
+2026-01-21T23:54:08.5884063Z API running on http://localhost:3001
+2026-01-21T23:54:08.5951625Z Swagger docs on http://localhost:3001/api/docs

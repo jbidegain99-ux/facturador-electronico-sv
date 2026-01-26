@@ -101,3 +101,68 @@ export const CommunicationDirection = {
 } as const;
 
 export type CommunicationDirection = (typeof CommunicationDirection)[keyof typeof CommunicationDirection];
+
+// Model interfaces (to avoid direct @prisma/client imports)
+export interface Tenant {
+  id: string;
+  nombre: string;
+  nit: string;
+  nrc: string;
+  actividadEcon: string;
+  telefono: string;
+  correo: string;
+  nombreComercial: string | null;
+  direccion: string;
+  plan: string;
+  planId: string | null;
+  planStatus: string;
+  planStartDate: Date | null;
+  planEndDate: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TenantOnboarding {
+  id: string;
+  tenantId: string;
+  currentStep: string;
+  overallStatus: string;
+  assistanceLevel: string;
+  assignedTo: string | null;
+  notes: string | null;
+  testCertificatePath: string | null;
+  testCertificatePassword: string | null;
+  prodCertificatePath: string | null;
+  prodCertificatePassword: string | null;
+  haciendaUserTest: string | null;
+  haciendaPasswordTest: string | null;
+  haciendaUserProd: string | null;
+  haciendaPasswordProd: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface OnboardingStepRecord {
+  id: string;
+  onboardingId: string;
+  step: string;
+  status: string;
+  stepData: string | null;
+  notes: string | null;
+  blockerReason: string | null;
+  performedBy: string | null;
+  performedById: string | null;
+  startedAt: Date | null;
+  completedAt: Date | null;
+}
+
+export interface DteTypeSelection {
+  id: string;
+  onboardingId: string;
+  dteType: string;
+  isEnabled: boolean;
+  testStatus: string | null;
+  prodStatus: string | null;
+  testCompletedAt: Date | null;
+  prodCompletedAt: Date | null;
+}

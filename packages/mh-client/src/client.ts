@@ -1,4 +1,3 @@
-import { MH_ENDPOINTS } from '@facturador/shared';
 import type {
   MhClientConfig,
   MhAuthRequest,
@@ -6,6 +5,12 @@ import type {
   MhRecepcionRequest,
   MhRecepcionResponse,
 } from './types';
+
+const MH_ENDPOINTS = {
+  AUTH: '/seguridad/auth',
+  RECEPCION_DTE: '/fesv/recepciondte',
+  CONSULTA_DTE: '/fesv/consultadte',
+} as const;
 
 export class MhClient {
   private config: MhClientConfig;
@@ -35,12 +40,12 @@ export class MhClient {
 
     const data: MhAuthResponse = await response.json();
 
-    if (data.status !== 'OK') {
+    if (data.status !== 'OK' || !('token' in data.body)) {
       throw new Error('Authentication failed');
     }
 
     this.token = data.body.token;
-    return this.token;
+    return this.token as string;
   }
 
   async sendDte(request: Omit<MhRecepcionRequest, 'ambiente'>): Promise<MhRecepcionResponse> {

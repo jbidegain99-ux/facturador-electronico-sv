@@ -414,4 +414,40 @@ export class EmailConfigAdminController {
       provider: config.provider,
     };
   }
+
+  @Get(':tenantId')
+  @ApiOperation({ summary: 'Get email configuration for a specific tenant (admin)' })
+  @ApiResponse({ status: 200, description: 'Tenant email configuration' })
+  async getTenantConfig(@Param('tenantId') tenantId: string) {
+    const config = await this.emailConfigService.getConfig(tenantId);
+    if (!config) {
+      return { configured: false, config: null };
+    }
+    return { configured: true, config };
+  }
+
+  @Delete(':tenantId')
+  @ApiOperation({ summary: 'Delete email configuration for a tenant (admin)' })
+  @ApiResponse({ status: 200, description: 'Configuration deleted' })
+  async deleteTenantConfig(@Param('tenantId') tenantId: string) {
+    await this.emailConfigService.deleteConfig(tenantId);
+    return { message: 'Email configuration deleted' };
+  }
+
+  @Post(':tenantId/test-connection')
+  @ApiOperation({ summary: 'Test email connection for a tenant (admin)' })
+  @ApiResponse({ status: 200, description: 'Connection test result' })
+  async testTenantConnection(@Param('tenantId') tenantId: string) {
+    return this.emailConfigService.testConnection(tenantId);
+  }
+
+  @Post(':tenantId/send-test')
+  @ApiOperation({ summary: 'Send test email for a tenant (admin)' })
+  @ApiResponse({ status: 200, description: 'Test email result' })
+  async sendTestForTenant(
+    @Param('tenantId') tenantId: string,
+    @Body() dto: TestEmailConfigDto,
+  ) {
+    return this.emailConfigService.sendTestEmail(tenantId, dto);
+  }
 }

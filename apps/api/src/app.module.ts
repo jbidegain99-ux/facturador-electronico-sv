@@ -11,6 +11,11 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 import { EmailConfigModule } from './modules/email-config/email-config.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { SupportModule } from './modules/support/support.module';
+import { CatalogosAdminModule } from './modules/catalogos-admin/catalogos-admin.module';
+import { PlansModule } from './modules/plans/plans.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
@@ -31,6 +36,11 @@ const imports: any[] = [
   SuperAdminModule,
   EmailConfigModule,
   OnboardingModule,
+  SupportModule,
+  CatalogosAdminModule,
+  PlansModule,
+  NotificationsModule,
+  AuditLogsModule,
 ];
 
 if (process.env.REDIS_URL) {

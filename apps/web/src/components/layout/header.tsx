@@ -12,59 +12,144 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Bell, User, LogOut, Settings, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { Moon, Sun, Bell, User, LogOut, Settings, Info, X, ExternalLink, Megaphone, Zap, Shield, AlertTriangle, AlertCircle, CheckCheck } from 'lucide-react';
 
-interface Notification {
+interface SystemNotification {
   id: string;
-  type: 'success' | 'warning' | 'info';
   title: string;
   message: string;
-  time: string;
-  read: boolean;
+  type: string;
+  priority: string;
+  isDismissable: boolean;
+  actionUrl: string | null;
+  actionLabel: string | null;
+  createdAt: string;
 }
 
-// Mock notifications for now - can be replaced with real API data
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'success',
-    title: 'DTE Procesado',
-    message: 'La factura FC-001234 fue aceptada por Hacienda',
-    time: 'Hace 5 min',
-    read: false,
-  },
-  {
-    id: '2',
-    type: 'warning',
-    title: 'DTE Rechazado',
-    message: 'La factura FC-001233 fue rechazada',
-    time: 'Hace 1 hora',
-    read: false,
-  },
-  {
-    id: '3',
-    type: 'info',
-    title: 'Nuevo cliente registrado',
-    message: 'Se ha agregado un nuevo cliente al sistema',
-    time: 'Hace 2 horas',
-    read: true,
-  },
-];
+const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  SYSTEM_ANNOUNCEMENT: Megaphone,
+  MAINTENANCE: Settings,
+  NEW_FEATURE: Zap,
+  PLAN_LIMIT_WARNING: AlertTriangle,
+  PLAN_EXPIRED: AlertCircle,
+  SECURITY_ALERT: Shield,
+  GENERAL: Info,
+};
+
+const priorityStyles: Record<string, string> = {
+  LOW: 'border-l-2 border-l-gray-400',
+  MEDIUM: 'border-l-2 border-l-blue-400',
+  HIGH: 'border-l-2 border-l-orange-400',
+  URGENT: 'border-l-2 border-l-red-400',
+};
 
 export function Header() {
   const router = useRouter();
   const { tenant, user, theme, setTheme, setUser, setTenant } = useAppStore();
-  const [notifications, setNotifications] = React.useState<Notification[]>(mockNotifications);
+  const [notifications, setNotifications] = React.useState<SystemNotification[]>([]);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+  const [isOpen, setIsOpen] = React.useState(false);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  React.useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+    }
+  }, [isOpen]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/count`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.count);
+      }
+    } catch (err) {
+      console.error('Error fetching notification count:', err);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    }
+  };
+
+  const dismissNotification = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/${id}/dismiss`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.ok) {
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('Error dismissing notification:', err);
+    }
+  };
+
+  const dismissAll = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/dismiss-all`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+    } catch (err) {
+      console.error('Error dismissing all notifications:', err);
+    }
+  };
 
   const toggleTheme = () => {
-    // Simple toggle between light and dark
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   const getThemeIcon = () => {
-    // Show moon in dark mode, sun in light mode
     return theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />;
   };
 
@@ -79,19 +164,9 @@ export function Header() {
     router.push('/login');
   };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const getNotificationIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'warning':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'info':
-        return <Info className="h-4 w-4 text-blue-500" />;
-    }
+  const getNotificationIcon = (type: string) => {
+    const Icon = typeIcons[type] || Info;
+    return <Icon className="h-4 w-4 text-primary" />;
   };
 
   return (
@@ -109,48 +184,80 @@ export function Header() {
       {/* Actions */}
       <div className="flex items-center gap-2">
         {/* Notifications Dropdown */}
-        <DropdownMenu>
+        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
-                  {unreadCount}
+                  {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuContent align="end" className="w-96">
             <DropdownMenuLabel className="flex items-center justify-between">
               <span>Notificaciones</span>
-              {unreadCount > 0 && (
-                <Button variant="ghost" size="sm" className="h-auto p-0 text-xs" onClick={markAllAsRead}>
-                  Marcar como leidas
-                </Button>
+              {notifications.length > 0 && (
+                <button
+                  onClick={dismissAll}
+                  className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
+                >
+                  <CheckCheck className="w-3 h-3" />
+                  Marcar todas como leidas
+                </button>
               )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {notifications.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                No hay notificaciones
-              </div>
-            ) : (
-              notifications.map((notification) => (
-                <DropdownMenuItem
-                  key={notification.id}
-                  className={`flex items-start gap-3 p-3 cursor-pointer ${
-                    !notification.read ? 'bg-muted/50' : ''
-                  }`}
-                >
-                  {getNotificationIcon(notification.type)}
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">{notification.title}</p>
-                    <p className="text-xs text-muted-foreground">{notification.message}</p>
-                    <p className="text-xs text-muted-foreground">{notification.time}</p>
+            <div className="max-h-80 overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="py-8 text-center">
+                  <Bell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    No hay notificaciones
+                  </p>
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-3 hover:bg-muted/50 ${priorityStyles[notification.priority] || priorityStyles.MEDIUM}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="p-1.5 rounded-md bg-primary/10">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="text-sm font-medium">{notification.title}</h4>
+                          {notification.isDismissable && (
+                            <button
+                              onClick={(e) => dismissNotification(e, notification.id)}
+                              className="text-muted-foreground hover:text-foreground p-1 -m-1"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {notification.message}
+                        </p>
+                        {notification.actionUrl && (
+                          <a
+                            href={notification.actionUrl}
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            {notification.actionLabel || 'Ver mas'}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </DropdownMenuItem>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
 

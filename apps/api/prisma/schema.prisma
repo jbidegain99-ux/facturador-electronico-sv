@@ -27,10 +27,14 @@ model Tenant {
   primaryColor    String?   @default("#8b5cf6")
 
   // Suscripcion SaaS
-  plan            String    @default("TRIAL")
+  plan            String    @default("TRIAL") // Codigo del plan (legacy, usar planId)
+  planId          String?
+  planRef         Plan?     @relation("TenantPlan", fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   planStatus      String    @default("ACTIVE")
   planExpiry      DateTime?
   maxDtesPerMonth Int       @default(50)
+  maxUsers        Int       @default(5)
+  maxClientes     Int       @default(100)
   dtesUsedThisMonth Int     @default(0)
   monthResetDate  DateTime?
 
@@ -47,6 +51,9 @@ model Tenant {
   emailConfig        TenantEmailConfig?
   emailConfigRequests EmailConfigRequest[]
   onboarding         TenantOnboarding?
+
+  // Support tickets relation
+  supportTickets     SupportTicket[]
 }
 
 model User {
@@ -58,6 +65,12 @@ model User {
   tenantId  String?
   tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   createdAt DateTime @default(now())
+
+  // Support tickets relations
+  assignedTickets   SupportTicket[]   @relation("AssignedTickets")
+  requestedTickets  SupportTicket[]   @relation("RequestedTickets")
+  ticketComments    TicketComment[]   @relation("TicketComments")
+  ticketActivities  TicketActivity[]  @relation("TicketActivities")
 
   @@index([tenantId])
 }
@@ -440,4 +453,282 @@ model OnboardingCommunication {
   readAt          DateTime?
 
   @@index([onboardingId])
+}
+
+// ============================================================================
+// SISTEMA DE TICKETS DE SOPORTE
+// ============================================================================
+
+// TicketType: EMAIL_CONFIG, TECHNICAL, BILLING, GENERAL, ONBOARDING
+// TicketStatus: PENDING, ASSIGNED, IN_PROGRESS, WAITING_CUSTOMER, RESOLVED, CLOSED
+// TicketPriority: LOW, MEDIUM, HIGH, URGENT
+// TicketAction: CREATED, STATUS_CHANGED, ASSIGNED, PRIORITY_CHANGED, COMMENT_ADDED, RESOLVED, CLOSED
+
+model SupportTicket {
+  id            String    @id @default(cuid())
+  ticketNumber  String    @unique // Formato: TKT-YYYYMMDD-XXXX
+
+  // Relacion con tenant
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Informacion del ticket
+  type          String    // EMAIL_CONFIG, TECHNICAL, BILLING, GENERAL, ONBOARDING
+  subject       String    @db.NVarChar(255)
+  description   String?   @db.NVarChar(Max)
+
+  // Estado y prioridad
+  status        String    @default("PENDING") // PENDING, ASSIGNED, IN_PROGRESS, WAITING_CUSTOMER, RESOLVED, CLOSED
+  priority      String    @default("MEDIUM")  // LOW, MEDIUM, HIGH, URGENT
+
+  // Asignacion
+  assignedToId  String?
+  assignedTo    User?     @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assignedAt    DateTime?
+
+  // Solicitante
+  requesterId   String
+  requester     User      @relation("RequestedTickets", fields: [requesterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Metadatos (JSON con datos del formulario de ayuda)
+  metadata      String?   @db.NVarChar(Max)
+
+  // Resolucion
+  resolution    String?   @db.NVarChar(Max)
+  resolvedAt    DateTime?
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relaciones
+  comments      TicketComment[]
+  activities    TicketActivity[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+model TicketComment {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  authorId    String
+  author      User          @relation("TicketComments", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  content     String        @db.NVarChar(Max)
+  isInternal  Boolean       @default(false) // Solo visible para admins
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([ticketId])
+}
+
+model TicketActivity {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  actorId     String
+  actor       User          @relation("TicketActivities", fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  action      String   // CREATED, STATUS_CHANGED, ASSIGNED, PRIORITY_CHANGED, COMMENT_ADDED, RESOLVED, CLOSED
+  oldValue    String?
+  newValue    String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+// ============================================================================
+// GESTION DE CATALOGOS DEL MINISTERIO DE HACIENDA
+// ============================================================================
+
+model Catalogo {
+  id            String         @id @default(cuid())
+  codigo        String         @unique // CAT-002, CAT-013, etc.
+  nombre        String         @db.NVarChar(255)
+  descripcion   String?        @db.NVarChar(500)
+  version       String         @default("1.0")
+  totalItems    Int            @default(0)
+  lastSyncAt    DateTime?
+  isActive      Boolean        @default(true)
+
+  items         CatalogoItem[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model CatalogoItem {
+  id            String    @id @default(cuid())
+  catalogoId    String
+  catalogo      Catalogo  @relation(fields: [catalogoId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  codigo        String
+  valor         String    @db.NVarChar(255)
+  descripcion   String?   @db.NVarChar(500)
+  parentCodigo  String?   // Para municipios (codigo del departamento padre)
+  orden         Int       @default(0)
+  isActive      Boolean   @default(true)
+
+  metadata      String?   @db.NVarChar(Max) // JSON para datos adicionales
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([catalogoId, codigo])
+  @@index([catalogoId])
+  @@index([parentCodigo])
+}
+
+// ============================================================================
+// PLANES Y LIMITES
+// ============================================================================
+
+model Plan {
+  id              String    @id @default(cuid())
+  codigo          String    @unique // DEMO, TRIAL, BASIC, PRO, ENTERPRISE
+  nombre          String    @db.NVarChar(100)
+  descripcion     String?   @db.NVarChar(500)
+
+  // Limites
+  maxDtesPerMonth Int       @default(100)   // -1 para ilimitado
+  maxUsers        Int       @default(1)     // -1 para ilimitado
+  maxClientes     Int       @default(100)   // -1 para ilimitado
+  maxStorageMb    Int       @default(500)   // -1 para ilimitado
+
+  // Features habilitados (JSON array)
+  features        String?   @db.NVarChar(Max)
+
+  // Precios (referencia)
+  precioMensual   Decimal?  @db.Decimal(10, 2)
+  precioAnual     Decimal?  @db.Decimal(10, 2)
+
+  isActive        Boolean   @default(true)
+  isDefault       Boolean   @default(false) // Plan por defecto para nuevos tenants
+  orden           Int       @default(0) // Para ordenar en UI
+
+  tenants         Tenant[]  @relation("TenantPlan")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ============================================================================
+// SISTEMA DE NOTIFICACIONES
+// ============================================================================
+
+// NotificationType: SYSTEM_ANNOUNCEMENT, MAINTENANCE, NEW_FEATURE, PLAN_LIMIT_WARNING, PLAN_EXPIRED, SECURITY_ALERT, GENERAL
+// NotificationPriority: LOW, MEDIUM, HIGH, URGENT
+// NotificationTarget: ALL_USERS, ALL_TENANTS, SPECIFIC_TENANT, SPECIFIC_USER, BY_PLAN
+
+model SystemNotification {
+  id              String    @id @default(cuid())
+
+  // Contenido
+  title           String    @db.NVarChar(255)
+  message         String    @db.NVarChar(Max)
+  type            String    @default("GENERAL") // NotificationType
+  priority        String    @default("MEDIUM")  // NotificationPriority
+
+  // Targeting
+  target          String    @default("ALL_USERS") // NotificationTarget
+  targetTenantId  String?   // Si target = SPECIFIC_TENANT
+  targetUserId    String?   // Si target = SPECIFIC_USER
+  targetPlanIds   String?   // JSON array de plan IDs si target = BY_PLAN
+
+  // Programacion
+  startsAt        DateTime  @default(now())
+  expiresAt       DateTime?
+
+  // Comportamiento
+  isDismissable   Boolean   @default(true)
+  showOnce        Boolean   @default(false) // Solo mostrar una vez por usuario
+  actionUrl       String?   // URL opcional para redirigir
+  actionLabel     String?   @db.NVarChar(100) // Texto del boton de accion
+
+  // Metadata
+  createdById     String?
+  isActive        Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relaciones
+  dismissals      NotificationDismissal[]
+
+  @@index([isActive, startsAt])
+  @@index([target])
+}
+
+model NotificationDismissal {
+  id              String             @id @default(cuid())
+  notificationId  String
+  notification    SystemNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  userId          String
+  dismissedAt     DateTime           @default(now())
+
+  @@unique([notificationId, userId])
+  @@index([userId])
+}
+
+// ============================================================================
+// SISTEMA DE LOGS Y AUDITORIA
+// ============================================================================
+
+// AuditAction: LOGIN, LOGOUT, CREATE, UPDATE, DELETE, VIEW, EXPORT, IMPORT, UPLOAD, DOWNLOAD, SEND, SIGN, TRANSMIT, CONFIG_CHANGE
+// AuditModule: AUTH, TENANT, USER, DTE, CLIENTE, CERTIFICATE, EMAIL_CONFIG, SETTINGS, SUPPORT, ADMIN
+
+model AuditLog {
+  id            String    @id @default(cuid())
+
+  // Quien realizo la accion
+  userId        String?
+  userEmail     String?   @db.NVarChar(255)
+  userName      String?   @db.NVarChar(255)
+  userRole      String?   @db.NVarChar(50)
+
+  // Contexto del tenant
+  tenantId      String?
+  tenantNombre  String?   @db.NVarChar(255)
+
+  // Detalles de la accion
+  action        String    @db.NVarChar(50)  // AuditAction
+  module        String    @db.NVarChar(50)  // AuditModule
+  description   String    @db.NVarChar(500)
+
+  // Entidad afectada
+  entityType    String?   @db.NVarChar(100) // Tipo de entidad (ej: DTE, Cliente, User)
+  entityId      String?   // ID de la entidad afectada
+
+  // Datos adicionales
+  oldValue      String?   @db.NVarChar(Max) // JSON con valor anterior
+  newValue      String?   @db.NVarChar(Max) // JSON con valor nuevo
+  metadata      String?   @db.NVarChar(Max) // JSON con datos adicionales
+
+  // Informacion de la peticion
+  ipAddress     String?   @db.NVarChar(50)
+  userAgent     String?   @db.NVarChar(500)
+  requestPath   String?   @db.NVarChar(500)
+  requestMethod String?   @db.NVarChar(10)
+
+  // Resultado
+  success       Boolean   @default(true)
+  errorMessage  String?   @db.NVarChar(Max)
+
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([action])
+  @@index([module])
+  @@index([createdAt])
+  @@index([entityType, entityId])
 }

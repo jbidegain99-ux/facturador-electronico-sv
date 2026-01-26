@@ -14,11 +14,25 @@ import {
   FileText,
   ChevronDown,
   Loader2,
+  Ticket,
+  Database,
+  CreditCard,
+  Bell,
+  ScrollText,
+  HardDrive,
+  Webhook,
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Empresas', href: '/admin/tenants', icon: Building2 },
+  { name: 'Soporte', href: '/admin/support', icon: Ticket },
+  { name: 'Catalogos', href: '/admin/catalogos', icon: Database },
+  { name: 'Planes', href: '/admin/planes', icon: CreditCard },
+  { name: 'Notificaciones', href: '/admin/notificaciones', icon: Bell },
+  { name: 'Logs', href: '/admin/logs', icon: ScrollText },
+  { name: 'Backups', href: '/admin/backups', icon: HardDrive },
+  { name: 'Webhooks', href: '/admin/webhooks', icon: Webhook },
   { name: 'Administradores', href: '/admin/admins', icon: Users },
   { name: 'Configuracion', href: '/admin/settings', icon: Settings },
 ];

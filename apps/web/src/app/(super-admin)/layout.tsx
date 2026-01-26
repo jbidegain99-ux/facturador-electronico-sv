@@ -17,6 +17,7 @@ import {
   Ticket,
   Database,
   CreditCard,
+  Bell,
 } from 'lucide-react';
 
 const navigation = [
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Soporte', href: '/admin/support', icon: Ticket },
   { name: 'Catalogos', href: '/admin/catalogos', icon: Database },
   { name: 'Planes', href: '/admin/planes', icon: CreditCard },
+  { name: 'Notificaciones', href: '/admin/notificaciones', icon: Bell },
   { name: 'Administradores', href: '/admin/admins', icon: Users },
   { name: 'Configuracion', href: '/admin/settings', icon: Settings },
 ];

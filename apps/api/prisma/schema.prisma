@@ -619,3 +619,62 @@ model Plan {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
+
+// ============================================================================
+// SISTEMA DE NOTIFICACIONES
+// ============================================================================
+
+// NotificationType: SYSTEM_ANNOUNCEMENT, MAINTENANCE, NEW_FEATURE, PLAN_LIMIT_WARNING, PLAN_EXPIRED, SECURITY_ALERT, GENERAL
+// NotificationPriority: LOW, MEDIUM, HIGH, URGENT
+// NotificationTarget: ALL_USERS, ALL_TENANTS, SPECIFIC_TENANT, SPECIFIC_USER, BY_PLAN
+
+model SystemNotification {
+  id              String    @id @default(cuid())
+
+  // Contenido
+  title           String    @db.NVarChar(255)
+  message         String    @db.NVarChar(Max)
+  type            String    @default("GENERAL") // NotificationType
+  priority        String    @default("MEDIUM")  // NotificationPriority
+
+  // Targeting
+  target          String    @default("ALL_USERS") // NotificationTarget
+  targetTenantId  String?   // Si target = SPECIFIC_TENANT
+  targetUserId    String?   // Si target = SPECIFIC_USER
+  targetPlanIds   String?   // JSON array de plan IDs si target = BY_PLAN
+
+  // Programacion
+  startsAt        DateTime  @default(now())
+  expiresAt       DateTime?
+
+  // Comportamiento
+  isDismissable   Boolean   @default(true)
+  showOnce        Boolean   @default(false) // Solo mostrar una vez por usuario
+  actionUrl       String?   // URL opcional para redirigir
+  actionLabel     String?   @db.NVarChar(100) // Texto del boton de accion
+
+  // Metadata
+  createdById     String?
+  isActive        Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relaciones
+  dismissals      NotificationDismissal[]
+
+  @@index([isActive, startsAt])
+  @@index([target])
+}
+
+model NotificationDismissal {
+  id              String             @id @default(cuid())
+  notificationId  String
+  notification    SystemNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  userId          String
+  dismissedAt     DateTime           @default(now())
+
+  @@unique([notificationId, userId])
+  @@index([userId])
+}

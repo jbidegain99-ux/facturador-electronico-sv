@@ -14,6 +14,7 @@ import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { SupportModule } from './modules/support/support.module';
 import { CatalogosAdminModule } from './modules/catalogos-admin/catalogos-admin.module';
 import { PlansModule } from './modules/plans/plans.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
@@ -37,6 +38,7 @@ const imports: any[] = [
   SupportModule,
   CatalogosAdminModule,
   PlansModule,
+  NotificationsModule,
 ];
 
 if (process.env.REDIS_URL) {

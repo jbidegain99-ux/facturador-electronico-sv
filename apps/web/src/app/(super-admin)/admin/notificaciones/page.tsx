@@ -62,6 +62,12 @@ interface Notification {
   _count: { dismissals: number };
 }
 
+interface Tenant {
+  id: string;
+  nombre: string;
+  nit: string;
+}
+
 interface NotificationForm {
   title: string;
   message: string;
@@ -139,9 +145,41 @@ export default function NotificacionesPage() {
   const [deletingNotification, setDeletingNotification] = useState<Notification | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Tenants for dropdown
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [loadingTenants, setLoadingTenants] = useState(false);
+
   useEffect(() => {
     fetchNotifications();
   }, [showInactive]);
+
+  useEffect(() => {
+    if (showModal && form.target === 'SPECIFIC_TENANT' && tenants.length === 0) {
+      fetchTenants();
+    }
+  }, [showModal, form.target]);
+
+  const fetchTenants = async () => {
+    try {
+      setLoadingTenants(true);
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/tenants?limit=100`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.ok) throw new Error('Error al cargar empresas');
+
+      const data = await res.json();
+      setTenants(data.data || []);
+    } catch (err) {
+      console.error('Error fetching tenants:', err);
+    } finally {
+      setLoadingTenants(false);
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -559,15 +597,29 @@ export default function NotificacionesPage() {
 
             {form.target === 'SPECIFIC_TENANT' && (
               <div>
-                <Label htmlFor="targetTenantId">ID del Tenant</Label>
-                <input
-                  id="targetTenantId"
-                  type="text"
-                  value={form.targetTenantId}
-                  onChange={(e) => setForm({ ...form, targetTenantId: e.target.value })}
-                  className="input-rc mt-1"
-                  placeholder="ID del tenant"
-                />
+                <Label>Empresa</Label>
+                {loadingTenants ? (
+                  <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    Cargando empresas...
+                  </div>
+                ) : (
+                  <Select
+                    value={form.targetTenantId}
+                    onValueChange={(value) => setForm({ ...form, targetTenantId: value })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecciona una empresa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tenants.map((tenant) => (
+                        <SelectItem key={tenant.id} value={tenant.id}>
+                          {tenant.nombre} ({tenant.nit})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             )}
 

@@ -148,10 +148,12 @@ export interface EmailConfigRequest {
   tenantId: string;
   requestType: string;
   status: string;
-  preferredProvider: string | null;
-  description: string | null;
+  desiredProvider: string | null;
+  currentProvider: string | null;
+  accountEmail: string | null;
+  additionalNotes: string | null;
   assignedTo: string | null;
   createdAt: Date;
   updatedAt: Date;
-  resolvedAt: Date | null;
+  completedAt: Date | null;
 }

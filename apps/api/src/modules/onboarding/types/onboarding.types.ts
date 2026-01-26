@@ -102,24 +102,22 @@ export const CommunicationDirection = {
 
 export type CommunicationDirection = (typeof CommunicationDirection)[keyof typeof CommunicationDirection];
 
-// Interface definitions for Prisma models (for when Prisma client is unavailable)
+// Model interfaces (to avoid direct @prisma/client imports)
 export interface Tenant {
   id: string;
   nombre: string;
   nit: string;
   nrc: string;
   actividadEcon: string;
-  direccion: string;
   telefono: string;
   correo: string;
   nombreComercial: string | null;
-  certificatePath: string | null;
-  mhToken: string | null;
-  mhTokenExpiry: Date | null;
-  logoUrl: string | null;
-  primaryColor: string | null;
-  plan: string | null;
-  isActive: boolean;
+  direccion: string;
+  plan: string;
+  planId: string | null;
+  planStatus: string;
+  planStartDate: Date | null;
+  planEndDate: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -129,38 +127,19 @@ export interface TenantOnboarding {
   tenantId: string;
   currentStep: string;
   overallStatus: string;
-  nit: string | null;
-  nrc: string | null;
-  razonSocial: string | null;
-  nombreComercial: string | null;
-  actividadEconomica: string | null;
-  haciendaUser: string | null;
-  haciendaPassword: string | null;
-  assistanceLevel: string | null;
+  assistanceLevel: string;
   assignedTo: string | null;
   notes: string | null;
   testCertificatePath: string | null;
   testCertificatePassword: string | null;
   prodCertificatePath: string | null;
   prodCertificatePassword: string | null;
-  testApiUser: string | null;
-  testApiPassword: string | null;
-  prodApiUser: string | null;
-  prodApiPassword: string | null;
-  startedAt: Date | null;
-  completedAt: Date | null;
-  lastActivityAt: Date | null;
+  haciendaUserTest: string | null;
+  haciendaPasswordTest: string | null;
+  haciendaUserProd: string | null;
+  haciendaPasswordProd: string | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface DteTypeSelection {
-  id: string;
-  onboardingId: string;
-  dteType: string;
-  isRequired: boolean;
-  testCompleted: boolean;
-  testCompletedAt: Date | null;
 }
 
 export interface OnboardingStepRecord {
@@ -175,4 +154,15 @@ export interface OnboardingStepRecord {
   performedById: string | null;
   startedAt: Date | null;
   completedAt: Date | null;
+}
+
+export interface DteTypeSelection {
+  id: string;
+  onboardingId: string;
+  dteType: string;
+  isEnabled: boolean;
+  testStatus: string | null;
+  prodStatus: string | null;
+  testCompletedAt: Date | null;
+  prodCompletedAt: Date | null;
 }

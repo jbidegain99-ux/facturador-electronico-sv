@@ -1,25 +1,33 @@
-export interface MhClientConfig {
-  baseUrl: string;
-  ambiente: '00' | '01'; // 00 = pruebas, 01 = produccion
-}
-
-export interface MhAuthRequest {
+export interface MHAuthRequest {
   user: string;
   pwd: string;
 }
 
-export interface MhAuthResponseBody {
+export interface MHAuthResponseBody {
   token: string;
   roles: string[];
 }
 
-export interface MhAuthErrorBody {
+export interface MHAuthErrorBody {
   message: string;
 }
 
-export interface MhAuthResponse {
+export interface MHAuthResponse {
   status: 'OK' | 'ERROR';
-  body: MhAuthResponseBody | MhAuthErrorBody;
+  body: MHAuthResponseBody | MHAuthErrorBody;
+}
+
+export function isAuthSuccess(response: MHAuthResponse): response is MHAuthResponse & { body: MHAuthResponseBody } {
+  return response.status === 'OK';
+}
+
+// Aliases for compatibility
+export type MhAuthRequest = MHAuthRequest;
+export type MhAuthResponse = MHAuthResponse;
+
+export interface MhClientConfig {
+  baseUrl: string;
+  ambiente: '00' | '01'; // 00 = pruebas, 01 = produccion
 }
 
 export interface MhRecepcionRequest {
@@ -27,39 +35,19 @@ export interface MhRecepcionRequest {
   idEnvio: number;
   version: number;
   tipoDte: string;
-  documento: string; // JSON firmado del DTE
-}
-
-export interface MhRecepcionResponseBody {
-  selloRecibido: string;
-  estado: string;
-  codigoGeneracion: string;
-  observaciones?: string[];
-}
-
-export interface MhRecepcionErrorBody {
-  descripcionMsg: string;
-  codigoMsg?: string;
-  observaciones?: string[];
+  documento: string;
 }
 
 export interface MhRecepcionResponse {
-  estado: 'PROCESADO' | 'RECHAZADO';
-  codigoGeneracion?: string;
-  selloRecibido?: string;
-  fhProcesamiento?: string;
-  observaciones?: string[];
-  clasificaMsg?: string;
-  codigoMsg?: string;
-  descripcionMsg?: string;
+  version: number;
+  ambiente: string;
+  versionApp: number;
+  estado: string;
+  codigoGeneracion: string;
+  selloRecibido: string | null;
+  fhProcesamiento: string;
+  clasificaMsg: string;
+  codigoMsg: string;
+  descripcionMsg: string;
+  observaciones: string[];
 }
-
-export function isAuthSuccess(response: MhAuthResponse): response is MhAuthResponse & { body: MhAuthResponseBody } {
-  return response.status === 'OK';
-}
-
-// Aliases for backward compatibility
-export type MHAuthRequest = MhAuthRequest;
-export type MHAuthResponse = MhAuthResponse;
-export type MHAuthResponseBody = MhAuthResponseBody;
-export type MHAuthErrorBody = MhAuthErrorBody;

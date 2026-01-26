@@ -80,7 +80,7 @@ export class TestExecutionService {
     );
 
     // Build DTE progress
-    const dteProgress = onboarding.dteTypes.map((dt: DteTypeSelection) => ({
+    const dteProgress = onboarding.dteTypes.map((dt) => ({
       dteType: dt.dteType,
       name: this.getDteTypeName(dt.dteType as DteType),
       required: testsRequired[dt.dteType] || 0,
@@ -133,7 +133,7 @@ export class TestExecutionService {
 
     // Check if this DTE type is selected
     const dteSelection = onboarding.dteTypes.find(
-      (dt: DteTypeSelection) => dt.dteType === dto.dteType,
+      (dt) => dt.dteType === dto.dteType,
     );
     if (!dteSelection) {
       throw new BadRequestException(

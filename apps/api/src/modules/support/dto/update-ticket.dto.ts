@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TicketPriority } from './create-ticket.dto';
 

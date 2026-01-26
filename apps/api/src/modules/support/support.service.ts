@@ -277,7 +277,7 @@ export class SupportService {
 
     let avgResolutionHours = 0;
     if (resolvedTickets.length > 0) {
-      const totalHours = resolvedTickets.reduce((acc: number, t: typeof resolvedTickets[0]) => {
+      const totalHours = resolvedTickets.reduce((acc, t) => {
         if (t.resolvedAt) {
           const hours = (t.resolvedAt.getTime() - t.createdAt.getTime()) / (1000 * 60 * 60);
           return acc + hours;
@@ -296,8 +296,8 @@ export class SupportService {
       closed,
       total: pending + assigned + inProgress + waitingCustomer + resolved + closed,
       open: pending + assigned + inProgress + waitingCustomer,
-      byPriority: byPriority.map((p: { priority: string; _count: { priority: number } }) => ({ priority: p.priority, count: p._count.priority })),
-      byType: byType.map((t: { type: string; _count: { type: number } }) => ({ type: t.type, count: t._count.type })),
+      byPriority: byPriority.map((p) => ({ priority: p.priority, count: p._count.priority })),
+      byType: byType.map((t) => ({ type: t.type, count: t._count.type })),
       avgResolutionHours,
     };
   }

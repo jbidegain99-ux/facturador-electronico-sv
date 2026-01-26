@@ -3,9 +3,6 @@ import { ToastProvider } from '@/components/ui/toast';
 import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
 
-// Use system fonts to avoid network dependency during build
-const fontClassName = 'font-sans';
-
 export const metadata: Metadata = {
   title: 'Facturador Electronico SV',
   description: 'Sistema de Facturacion Electronica para El Salvador',
@@ -18,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="dark" suppressHydrationWarning>
-      <body className={fontClassName}>
+      <body className="font-sans">
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
         </ThemeProvider>

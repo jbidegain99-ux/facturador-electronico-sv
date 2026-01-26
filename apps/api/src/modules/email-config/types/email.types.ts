@@ -90,53 +90,44 @@ export const MessageSender = {
 
 export type MessageSender = (typeof MessageSender)[keyof typeof MessageSender];
 
-// Interface for TenantEmailConfig matching Prisma schema
+// Model interfaces (to avoid direct @prisma/client imports)
 export interface TenantEmailConfig {
   id: string;
   tenantId: string;
   provider: string;
   authMethod: string;
-  isActive: boolean;
-  isVerified: boolean;
+  fromEmail: string;
+  fromName: string | null;
+  replyToEmail: string | null;
   smtpHost: string | null;
   smtpPort: number | null;
   smtpSecure: boolean | null;
-  smtpUser: string | null;
-  smtpPassword: string | null;
   apiKey: string | null;
   apiSecret: string | null;
-  apiEndpoint: string | null;
-  oauth2ClientId: string | null;
-  oauth2ClientSecret: string | null;
-  oauth2TenantId: string | null;
-  oauth2RefreshToken: string | null;
-  oauth2AccessToken: string | null;
-  oauth2TokenExpiry: Date | null;
-  fromEmail: string;
-  fromName: string;
-  replyToEmail: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  tokenExpiresAt: Date | null;
+  awsRegion: string | null;
+  awsAccessKeyId: string | null;
+  awsSecretAccessKey: string | null;
+  isVerified: boolean;
+  isActive: boolean;
   configuredBy: string;
-  rateLimitPerHour: number | null;
-  retryAttempts: number | null;
-  timeoutSeconds: number | null;
   createdAt: Date;
   updatedAt: Date;
   verifiedAt: Date | null;
   lastTestAt: Date | null;
 }
 
-// Interface for EmailConfigRequest matching Prisma schema
 export interface EmailConfigRequest {
   id: string;
   tenantId: string;
   requestType: string;
-  desiredProvider: string | null;
-  currentProvider: string | null;
-  accountEmail: string | null;
-  additionalNotes: string | null;
   status: string;
+  preferredProvider: string | null;
+  description: string | null;
   assignedTo: string | null;
   createdAt: Date;
   updatedAt: Date;
-  completedAt: Date | null;
+  resolvedAt: Date | null;
 }

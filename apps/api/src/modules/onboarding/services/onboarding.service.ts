@@ -369,7 +369,7 @@ export class OnboardingService {
       : { testsCompleted: {} };
 
     return {
-      selected: onboarding.dteTypes.map((dt: DteTypeSelection) => ({
+      selected: onboarding.dteTypes.map((dt) => ({
         dteType: dt.dteType,
         isRequired: dt.isRequired,
         testCompleted: dt.testCompleted,

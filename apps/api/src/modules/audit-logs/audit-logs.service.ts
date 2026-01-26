@@ -173,10 +173,10 @@ export class AuditLogsService {
 
     return {
       total,
-      byAction: byAction.map((g: { action: string; _count: number }) => ({ action: g.action, count: g._count })),
-      byModule: byModule.map((g: { module: string; _count: number }) => ({ module: g.module, count: g._count })),
-      successRate: bySuccess.find((g: { success: boolean; _count: number }) => g.success)?._count ?? 0,
-      failureRate: bySuccess.find((g: { success: boolean; _count: number }) => !g.success)?._count ?? 0,
+      byAction: byAction.map((g) => ({ action: g.action, count: g._count })),
+      byModule: byModule.map((g) => ({ module: g.module, count: g._count })),
+      successRate: bySuccess.find((g) => g.success)?._count ?? 0,
+      failureRate: bySuccess.find((g) => !g.success)?._count ?? 0,
       recentActivity,
     };
   }

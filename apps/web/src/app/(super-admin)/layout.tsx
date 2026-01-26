@@ -14,11 +14,13 @@ import {
   FileText,
   ChevronDown,
   Loader2,
+  Ticket,
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Empresas', href: '/admin/tenants', icon: Building2 },
+  { name: 'Soporte', href: '/admin/support', icon: Ticket },
   { name: 'Administradores', href: '/admin/admins', icon: Users },
   { name: 'Configuracion', href: '/admin/settings', icon: Settings },
 ];

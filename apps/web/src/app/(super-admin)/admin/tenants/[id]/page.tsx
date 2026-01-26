@@ -16,7 +16,22 @@ import {
   AlertCircle,
   Settings,
   Ticket,
+  Clock,
+  ChevronRight,
+  MessageSquare,
 } from 'lucide-react';
+
+interface SupportTicket {
+  id: string;
+  ticketNumber: string;
+  type: string;
+  subject: string;
+  status: string;
+  priority: string;
+  createdAt: string;
+  requester: { nombre: string };
+  assignedTo: { nombre: string } | null;
+}
 
 interface TenantDetail {
   id: string;
@@ -56,6 +71,7 @@ export default function TenantDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [tenant, setTenant] = useState<TenantDetail | null>(null);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -68,6 +84,7 @@ export default function TenantDetailPage() {
 
   useEffect(() => {
     fetchTenant();
+    fetchTickets();
   }, [params.id]);
 
   const fetchTenant = async () => {
@@ -97,6 +114,45 @@ export default function TenantDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchTickets = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/support-tickets/tenant/${params.id}?limit=5`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setTickets(data);
+      }
+    } catch (err) {
+      console.error('Error fetching tickets:', err);
+    }
+  };
+
+  const getTicketStatusBadge = (status: string) => {
+    const badges: Record<string, string> = {
+      PENDING: 'bg-yellow-500/20 text-yellow-400',
+      ASSIGNED: 'bg-blue-500/20 text-blue-400',
+      IN_PROGRESS: 'bg-purple-500/20 text-purple-400',
+      WAITING_CUSTOMER: 'bg-orange-500/20 text-orange-400',
+      RESOLVED: 'bg-green-500/20 text-green-400',
+      CLOSED: 'bg-gray-500/20 text-gray-400',
+    };
+    return badges[status] || 'bg-gray-500/20 text-gray-400';
+  };
+
+  const ticketStatusLabels: Record<string, string> = {
+    PENDING: 'Pendiente',
+    ASSIGNED: 'Asignado',
+    IN_PROGRESS: 'En Progreso',
+    WAITING_CUSTOMER: 'Esperando',
+    RESOLVED: 'Resuelto',
+    CLOSED: 'Cerrado',
   };
 
   const handleSave = async () => {
@@ -312,21 +368,58 @@ export default function TenantDetailPage() {
             </p>
           </div>
 
-          {/* Support Tickets - Coming Soon */}
-          <div className="glass-card p-6 opacity-70">
+          {/* Support Tickets */}
+          <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Ticket className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-semibold">Tickets de Soporte</h3>
+                <h3 className="text-lg font-semibold text-white">Tickets de Soporte</h3>
               </div>
-              <span className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-                Proximamente
-              </span>
+              <Link
+                href={`/admin/support?tenantId=${params.id}`}
+                className="text-sm text-primary hover:underline"
+              >
+                Ver todos
+              </Link>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Gestiona las solicitudes de soporte de esta empresa. Podras ver y responder
-              tickets, asignar prioridades y dar seguimiento a las incidencias.
-            </p>
+
+            {tickets.length > 0 ? (
+              <div className="space-y-3">
+                {tickets.map((ticket) => (
+                  <Link
+                    key={ticket.id}
+                    href={`/admin/support/${ticket.id}`}
+                    className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-mono text-muted-foreground">
+                            {ticket.ticketNumber}
+                          </span>
+                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${getTicketStatusBadge(ticket.status)}`}>
+                            {ticketStatusLabels[ticket.status] || ticket.status}
+                          </span>
+                        </div>
+                        <div className="text-sm text-white truncate">{ticket.subject}</div>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          {new Date(ticket.createdAt).toLocaleDateString('es')}
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Esta empresa no tiene tickets de soporte
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Users */}

@@ -11,6 +11,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 import { EmailConfigModule } from './modules/email-config/email-config.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { SupportModule } from './modules/support/support.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
@@ -31,6 +32,7 @@ const imports: any[] = [
   SuperAdminModule,
   EmailConfigModule,
   OnboardingModule,
+  SupportModule,
 ];
 
 if (process.env.REDIS_URL) {

@@ -47,6 +47,9 @@ model Tenant {
   emailConfig        TenantEmailConfig?
   emailConfigRequests EmailConfigRequest[]
   onboarding         TenantOnboarding?
+
+  // Support tickets relation
+  supportTickets     SupportTicket[]
 }
 
 model User {
@@ -58,6 +61,12 @@ model User {
   tenantId  String?
   tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   createdAt DateTime @default(now())
+
+  // Support tickets relations
+  assignedTickets   SupportTicket[]   @relation("AssignedTickets")
+  requestedTickets  SupportTicket[]   @relation("RequestedTickets")
+  ticketComments    TicketComment[]   @relation("TicketComments")
+  ticketActivities  TicketActivity[]  @relation("TicketActivities")
 
   @@index([tenantId])
 }
@@ -440,4 +449,94 @@ model OnboardingCommunication {
   readAt          DateTime?
 
   @@index([onboardingId])
+}
+
+// ============================================================================
+// SISTEMA DE TICKETS DE SOPORTE
+// ============================================================================
+
+// TicketType: EMAIL_CONFIG, TECHNICAL, BILLING, GENERAL, ONBOARDING
+// TicketStatus: PENDING, ASSIGNED, IN_PROGRESS, WAITING_CUSTOMER, RESOLVED, CLOSED
+// TicketPriority: LOW, MEDIUM, HIGH, URGENT
+// TicketAction: CREATED, STATUS_CHANGED, ASSIGNED, PRIORITY_CHANGED, COMMENT_ADDED, RESOLVED, CLOSED
+
+model SupportTicket {
+  id            String    @id @default(cuid())
+  ticketNumber  String    @unique // Formato: TKT-YYYYMMDD-XXXX
+
+  // Relacion con tenant
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Informacion del ticket
+  type          String    // EMAIL_CONFIG, TECHNICAL, BILLING, GENERAL, ONBOARDING
+  subject       String    @db.NVarChar(255)
+  description   String?   @db.NVarChar(Max)
+
+  // Estado y prioridad
+  status        String    @default("PENDING") // PENDING, ASSIGNED, IN_PROGRESS, WAITING_CUSTOMER, RESOLVED, CLOSED
+  priority      String    @default("MEDIUM")  // LOW, MEDIUM, HIGH, URGENT
+
+  // Asignacion
+  assignedToId  String?
+  assignedTo    User?     @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assignedAt    DateTime?
+
+  // Solicitante
+  requesterId   String
+  requester     User      @relation("RequestedTickets", fields: [requesterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Metadatos (JSON con datos del formulario de ayuda)
+  metadata      String?   @db.NVarChar(Max)
+
+  // Resolucion
+  resolution    String?   @db.NVarChar(Max)
+  resolvedAt    DateTime?
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relaciones
+  comments      TicketComment[]
+  activities    TicketActivity[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+model TicketComment {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  authorId    String
+  author      User          @relation("TicketComments", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  content     String        @db.NVarChar(Max)
+  isInternal  Boolean       @default(false) // Solo visible para admins
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([ticketId])
+}
+
+model TicketActivity {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  actorId     String
+  actor       User          @relation("TicketActivities", fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  action      String   // CREATED, STATUS_CHANGED, ASSIGNED, PRIORITY_CHANGED, COMMENT_ADDED, RESOLVED, CLOSED
+  oldValue    String?
+  newValue    String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([ticketId])
 }

@@ -248,7 +248,7 @@ export class PlansService {
 
     // Get active tenants per plan
     const planStats = await Promise.all(
-      plans.map(async (plan) => {
+      plans.map(async (plan: typeof plans[0]) => {
         const activeTenantsCount = await this.prisma.tenant.count({
           where: { planId: plan.id, isActive: true },
         });

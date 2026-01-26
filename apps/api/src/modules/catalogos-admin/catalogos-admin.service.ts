@@ -17,7 +17,7 @@ export class CatalogosAdminService {
       },
     });
 
-    return catalogos.map((cat) => ({
+    return catalogos.map((cat: typeof catalogos[0]) => ({
       ...cat,
       totalItems: cat._count.items,
     }));
@@ -144,7 +144,7 @@ export class CatalogosAdminService {
     }
 
     // Use transaction to replace all items
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: Omit<PrismaService, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
       // Delete all existing items
       await tx.catalogoItem.deleteMany({
         where: { catalogoId: catalogo.id },
@@ -153,7 +153,7 @@ export class CatalogosAdminService {
       // Insert new items
       if (data.items.length > 0) {
         await tx.catalogoItem.createMany({
-          data: data.items.map((item, index) => ({
+          data: data.items.map((item: typeof data.items[0], index: number) => ({
             catalogoId: catalogo.id,
             codigo: item.codigo,
             valor: item.valor,
@@ -200,7 +200,7 @@ export class CatalogosAdminService {
       descripcion: catalogo.descripcion,
       version: catalogo.version,
       exportedAt: new Date().toISOString(),
-      items: catalogo.items.map((item) => ({
+      items: catalogo.items.map((item: typeof catalogo.items[0]) => ({
         codigo: item.codigo,
         valor: item.valor,
         descripcion: item.descripcion,

@@ -39,7 +39,8 @@ export class MhClient {
       throw new Error('Authentication failed');
     }
 
-    this.token = data.body.token;
+    const body = data.body as { token: string; roles: string[] };
+    this.token = body.token;
     return this.token;
   }
 

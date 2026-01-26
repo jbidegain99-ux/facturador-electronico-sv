@@ -6,13 +6,13 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { TenantEmailConfig } from '@prisma/client';
 import {
   EmailProvider,
   EmailAuthMethod,
   ConfiguredBy,
   HealthStatus,
   EmailSendStatus,
+  TenantEmailConfig,
 } from '../types/email.types';
 import { EncryptionService } from './encryption.service';
 import { EmailAdapterFactory } from '../adapters/adapter.factory';

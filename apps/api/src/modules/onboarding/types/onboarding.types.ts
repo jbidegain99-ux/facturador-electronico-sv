@@ -101,3 +101,80 @@ export const CommunicationDirection = {
 } as const;
 
 export type CommunicationDirection = (typeof CommunicationDirection)[keyof typeof CommunicationDirection];
+
+// Interface definitions for Prisma models (for when Prisma client is unavailable)
+export interface Tenant {
+  id: string;
+  nombre: string;
+  nit: string;
+  nrc: string;
+  actividadEcon: string;
+  direccion: string;
+  telefono: string;
+  correo: string;
+  nombreComercial: string | null;
+  certificatePath: string | null;
+  mhToken: string | null;
+  mhTokenExpiry: Date | null;
+  logoUrl: string | null;
+  primaryColor: string | null;
+  plan: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TenantOnboarding {
+  id: string;
+  tenantId: string;
+  currentStep: string;
+  overallStatus: string;
+  nit: string | null;
+  nrc: string | null;
+  razonSocial: string | null;
+  nombreComercial: string | null;
+  actividadEconomica: string | null;
+  haciendaUser: string | null;
+  haciendaPassword: string | null;
+  assistanceLevel: string | null;
+  assignedTo: string | null;
+  notes: string | null;
+  testCertificatePath: string | null;
+  testCertificatePassword: string | null;
+  prodCertificatePath: string | null;
+  prodCertificatePassword: string | null;
+  testApiUser: string | null;
+  testApiPassword: string | null;
+  prodApiUser: string | null;
+  prodApiPassword: string | null;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  lastActivityAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DteTypeSelection {
+  id: string;
+  onboardingId: string;
+  dteType: string;
+  isRequired: boolean;
+  testCompleted: boolean;
+  testCompletedAt: Date | null;
+}
+
+export interface OnboardingStepRecord {
+  id: string;
+  onboardingId: string;
+  step: string;
+  status: string;
+  stepData: string | null;
+  notes: string | null;
+  blockerReason: string | null;
+  performedBy: string | null;
+  performedByUserId: string | null;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}

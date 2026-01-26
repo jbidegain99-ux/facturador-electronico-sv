@@ -78,8 +78,8 @@ export class EmailConfigController {
       replyToEmail: config.replyToEmail,
       rateLimitPerHour: config.rateLimitPerHour,
       configuredBy: config.configuredBy,
-      lastTestAt: config.lastTestAt,
-      verifiedAt: config.verifiedAt,
+      lastTestedAt: config.lastTestedAt,
+      verifiedAt: config.isVerified ? config.updatedAt : null,
       createdAt: config.createdAt,
       updatedAt: config.updatedAt,
     };

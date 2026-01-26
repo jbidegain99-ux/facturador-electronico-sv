@@ -118,9 +118,9 @@ export class DteService {
           codigoGeneracion,
           numeroControl,
           jsonOriginal: JSON.stringify(jsonOriginal),
-          totalGravada: new Prisma.Decimal(totalGravada.toFixed(2)),
-          totalIva: new Prisma.Decimal(totalIva.toFixed(2)),
-          totalPagar: new Prisma.Decimal(totalPagar.toFixed(2)),
+          totalGravada: parseFloat(totalGravada.toFixed(2)),
+          totalIva: parseFloat(totalIva.toFixed(2)),
+          totalPagar: parseFloat(totalPagar.toFixed(2)),
           estado: DTEStatus.PENDIENTE,
           ...(clienteId && { clienteId }),
         },
@@ -498,7 +498,7 @@ export class DteService {
     // Group by date
     const grouped: Record<string, { count: number; total: number; date: string }> = {};
 
-    dtes.forEach((dte) => {
+    dtes.forEach((dte: typeof dtes[0]) => {
       const date = dte.createdAt;
       let key: string;
 
@@ -582,7 +582,7 @@ export class DteService {
       '14': 'Factura Sujeto Excluido',
     };
 
-    return stats.map((s) => ({
+    return stats.map((s: typeof stats[0]) => ({
       tipoDte: s.tipoDte,
       nombre: tipoDteNames[s.tipoDte] || s.tipoDte,
       cantidad: s._count.id,
@@ -597,7 +597,7 @@ export class DteService {
       _count: { id: true },
     });
 
-    return stats.map((s) => ({
+    return stats.map((s: typeof stats[0]) => ({
       estado: s.estado,
       cantidad: s._count.id,
     }));
@@ -631,16 +631,16 @@ export class DteService {
     });
 
     // Get client names
-    const clientIds = stats.map((s) => s.clienteId).filter(Boolean) as string[];
+    const clientIds = stats.map((s: typeof stats[0]) => s.clienteId).filter(Boolean) as string[];
     const clients = await this.prisma.cliente.findMany({
       where: { id: { in: clientIds } },
       select: { id: true, nombre: true, numDocumento: true },
     });
 
-    const clientMap = new Map(clients.map((c) => [c.id, c]));
+    const clientMap = new Map(clients.map((c: typeof clients[0]) => [c.id, c]));
 
-    return stats.map((s) => {
-      const client = clientMap.get(s.clienteId!);
+    return stats.map((s: typeof stats[0]) => {
+      const client = clientMap.get(s.clienteId!) as typeof clients[0] | undefined;
       return {
         clienteId: s.clienteId,
         nombre: client?.nombre || 'Sin nombre',

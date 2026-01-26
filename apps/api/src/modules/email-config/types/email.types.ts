@@ -121,8 +121,8 @@ export interface TenantEmailConfig {
   timeoutSeconds: number | null;
   createdAt: Date;
   updatedAt: Date;
-  lastTestedAt: Date | null;
-  lastTestResult: boolean | null;
+  verifiedAt: Date | null;
+  lastTestAt: Date | null;
 }
 
 // Interface for EmailConfigRequest matching Prisma schema

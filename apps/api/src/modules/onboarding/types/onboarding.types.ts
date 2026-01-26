@@ -172,9 +172,7 @@ export interface OnboardingStepRecord {
   notes: string | null;
   blockerReason: string | null;
   performedBy: string | null;
-  performedByUserId: string | null;
+  performedById: string | null;
   startedAt: Date | null;
   completedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
 }

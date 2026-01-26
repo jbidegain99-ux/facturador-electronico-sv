@@ -540,3 +540,45 @@ model TicketActivity {
 
   @@index([ticketId])
 }
+
+// ============================================================================
+// GESTION DE CATALOGOS DEL MINISTERIO DE HACIENDA
+// ============================================================================
+
+model Catalogo {
+  id            String         @id @default(cuid())
+  codigo        String         @unique // CAT-002, CAT-013, etc.
+  nombre        String         @db.NVarChar(255)
+  descripcion   String?        @db.NVarChar(500)
+  version       String         @default("1.0")
+  totalItems    Int            @default(0)
+  lastSyncAt    DateTime?
+  isActive      Boolean        @default(true)
+
+  items         CatalogoItem[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model CatalogoItem {
+  id            String    @id @default(cuid())
+  catalogoId    String
+  catalogo      Catalogo  @relation(fields: [catalogoId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  codigo        String
+  valor         String    @db.NVarChar(255)
+  descripcion   String?   @db.NVarChar(500)
+  parentCodigo  String?   // Para municipios (codigo del departamento padre)
+  orden         Int       @default(0)
+  isActive      Boolean   @default(true)
+
+  metadata      String?   @db.NVarChar(Max) // JSON para datos adicionales
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([catalogoId, codigo])
+  @@index([catalogoId])
+  @@index([parentCodigo])
+}

@@ -15,12 +15,14 @@ import {
   ChevronDown,
   Loader2,
   Ticket,
+  Database,
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Empresas', href: '/admin/tenants', icon: Building2 },
   { name: 'Soporte', href: '/admin/support', icon: Ticket },
+  { name: 'Catalogos', href: '/admin/catalogos', icon: Database },
   { name: 'Administradores', href: '/admin/admins', icon: Users },
   { name: 'Configuracion', href: '/admin/settings', icon: Settings },
 ];

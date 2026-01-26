@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Building2,
@@ -56,6 +57,7 @@ interface TenantsResponse {
 }
 
 export default function TenantsPage() {
+  const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -325,11 +327,12 @@ export default function TenantsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" sideOffset={5}>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/admin/tenants/${tenant.id}`} className="flex items-center gap-2">
-                                <Eye className="w-4 h-4" />
-                                Ver Detalles
-                              </Link>
+                            <DropdownMenuItem
+                              onClick={() => router.push(`/admin/tenants/${tenant.id}`)}
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <Eye className="w-4 h-4" />
+                              Ver Detalles
                             </DropdownMenuItem>
                             {tenant.planStatus === 'ACTIVE' ? (
                               <DropdownMenuItem

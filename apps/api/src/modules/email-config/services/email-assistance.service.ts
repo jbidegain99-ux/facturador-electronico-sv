@@ -5,8 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { EmailConfigRequest } from '@prisma/client';
-import { RequestStatus, MessageSender } from '../types/email.types';
+import { RequestStatus, MessageSender, EmailConfigRequest } from '../types/email.types';
 import {
   CreateEmailAssistanceRequestDto,
   UpdateEmailAssistanceRequestDto,

@@ -42,7 +42,7 @@ export class OnboardingCommunicationService {
     ]);
 
     return {
-      communications: communications.map((c) => ({
+      communications: communications.map((c: typeof communications[0]) => ({
         id: c.id,
         type: c.type,
         direction: c.direction,
@@ -214,7 +214,7 @@ export class OnboardingCommunicationService {
     ]);
 
     return {
-      communications: communications.map((c) => ({
+      communications: communications.map((c: typeof communications[0]) => ({
         id: c.id,
         tenantId: c.onboarding.tenantId,
         tenantName: c.onboarding.tenant.nombre || c.onboarding.razonSocial,

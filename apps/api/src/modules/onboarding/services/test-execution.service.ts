@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EncryptionService } from '../../email-config/services';
-import { DteTypeSelection } from '@prisma/client';
-import { DteType, TestResult } from '../types/onboarding.types';
+import { DteType, TestResult, DteTypeSelection } from '../types/onboarding.types';
 import { ExecuteTestDto, ExecuteEventTestDto } from '../dto';
 
 // Test requirements per DTE type

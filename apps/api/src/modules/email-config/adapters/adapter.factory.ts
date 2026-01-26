@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TenantEmailConfig } from '@prisma/client';
-import { EmailProvider } from '../types/email.types';
+import { EmailProvider, TenantEmailConfig } from '../types/email.types';
 import { EncryptionService } from '../services/encryption.service';
 import {
   DecryptedEmailConfig,

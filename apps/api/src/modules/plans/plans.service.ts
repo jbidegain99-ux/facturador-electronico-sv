@@ -36,7 +36,7 @@ export class PlansService {
             id: true,
             nombre: true,
             nit: true,
-            isActive: true,
+            planStatus: true,
           },
           take: 10,
         },
@@ -172,7 +172,7 @@ export class PlansService {
         planRef: true,
         _count: {
           select: {
-            users: true,
+            usuarios: true,
             clientes: true,
           },
         },
@@ -206,16 +206,16 @@ export class PlansService {
         dtesThisMonth,
         maxDtesPerMonth: plan?.maxDtesPerMonth ?? -1,
         dtesRemaining: plan?.maxDtesPerMonth === -1 ? -1 : Math.max(0, (plan?.maxDtesPerMonth ?? 0) - dtesThisMonth),
-        users: tenant._count.users,
+        users: tenant._count.usuarios,
         maxUsers: plan?.maxUsers ?? -1,
-        usersRemaining: plan?.maxUsers === -1 ? -1 : Math.max(0, (plan?.maxUsers ?? 0) - tenant._count.users),
+        usersRemaining: plan?.maxUsers === -1 ? -1 : Math.max(0, (plan?.maxUsers ?? 0) - tenant._count.usuarios),
         clientes: tenant._count.clientes,
         maxClientes: plan?.maxClientes ?? -1,
         clientesRemaining: plan?.maxClientes === -1 ? -1 : Math.max(0, (plan?.maxClientes ?? 0) - tenant._count.clientes),
       },
       limits: {
         canCreateDte: plan?.maxDtesPerMonth === -1 || dtesThisMonth < (plan?.maxDtesPerMonth ?? 0),
-        canAddUser: plan?.maxUsers === -1 || tenant._count.users < (plan?.maxUsers ?? 0),
+        canAddUser: plan?.maxUsers === -1 || tenant._count.usuarios < (plan?.maxUsers ?? 0),
         canAddCliente: plan?.maxClientes === -1 || tenant._count.clientes < (plan?.maxClientes ?? 0),
       },
     };
@@ -250,7 +250,7 @@ export class PlansService {
     const planStats = await Promise.all(
       plans.map(async (plan) => {
         const activeTenantsCount = await this.prisma.tenant.count({
-          where: { planId: plan.id, isActive: true },
+          where: { planId: plan.id, planStatus: 'ACTIVE' },
         });
 
         return {

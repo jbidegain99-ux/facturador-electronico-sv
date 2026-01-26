@@ -19,6 +19,8 @@ import {
   CreditCard,
   Bell,
   ScrollText,
+  HardDrive,
+  Webhook,
 } from 'lucide-react';
 
 const navigation = [
@@ -29,6 +31,8 @@ const navigation = [
   { name: 'Planes', href: '/admin/planes', icon: CreditCard },
   { name: 'Notificaciones', href: '/admin/notificaciones', icon: Bell },
   { name: 'Logs', href: '/admin/logs', icon: ScrollText },
+  { name: 'Backups', href: '/admin/backups', icon: HardDrive },
+  { name: 'Webhooks', href: '/admin/webhooks', icon: Webhook },
   { name: 'Administradores', href: '/admin/admins', icon: Users },
   { name: 'Configuracion', href: '/admin/settings', icon: Settings },
 ];

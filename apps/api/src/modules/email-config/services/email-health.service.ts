@@ -2,8 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EmailAdapterFactory } from '../adapters/adapter.factory';
-import { TenantEmailConfig } from '@prisma/client';
-import { HealthStatus } from '../types/email.types';
+import { HealthStatus, TenantEmailConfig } from '../types/email.types';
 
 export interface HealthDashboardStats {
   total: number;

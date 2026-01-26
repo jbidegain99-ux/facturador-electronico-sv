@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { SuperAdminGuard } from '../auth/guards/super-admin.guard';
+import { SuperAdminGuard } from '../super-admin/guards/super-admin.guard';
 import { AuditLogsService } from './audit-logs.service';
 import { AuditLogFilterDto, AuditAction, AuditModule } from './dto';
 

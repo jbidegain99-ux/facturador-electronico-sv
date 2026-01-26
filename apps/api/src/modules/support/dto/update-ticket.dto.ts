@@ -1,5 +1,6 @@
-import { IsString, IsEnum, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { TicketPriority } from './create-ticket.dto';
 
 export enum TicketStatus {
   PENDING = 'PENDING',
@@ -8,13 +9,6 @@ export enum TicketStatus {
   WAITING_CUSTOMER = 'WAITING_CUSTOMER',
   RESOLVED = 'RESOLVED',
   CLOSED = 'CLOSED',
-}
-
-export enum TicketPriority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  URGENT = 'URGENT',
 }
 
 export class UpdateTicketDto {

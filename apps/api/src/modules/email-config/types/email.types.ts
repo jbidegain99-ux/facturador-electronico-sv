@@ -89,3 +89,45 @@ export const MessageSender = {
 } as const;
 
 export type MessageSender = (typeof MessageSender)[keyof typeof MessageSender];
+
+// Model interfaces (to avoid direct @prisma/client imports)
+export interface TenantEmailConfig {
+  id: string;
+  tenantId: string;
+  provider: string;
+  authMethod: string;
+  fromEmail: string;
+  fromName: string | null;
+  replyToEmail: string | null;
+  smtpHost: string | null;
+  smtpPort: number | null;
+  smtpSecure: boolean | null;
+  apiKey: string | null;
+  apiSecret: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  tokenExpiresAt: Date | null;
+  awsRegion: string | null;
+  awsAccessKeyId: string | null;
+  awsSecretAccessKey: string | null;
+  isVerified: boolean;
+  isActive: boolean;
+  configuredBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  verifiedAt: Date | null;
+  lastTestAt: Date | null;
+}
+
+export interface EmailConfigRequest {
+  id: string;
+  tenantId: string;
+  requestType: string;
+  status: string;
+  preferredProvider: string | null;
+  description: string | null;
+  assignedTo: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  resolvedAt: Date | null;
+}

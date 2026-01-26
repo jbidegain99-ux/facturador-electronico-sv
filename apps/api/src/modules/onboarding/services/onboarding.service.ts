@@ -2,18 +2,16 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EncryptionService } from '../../email-config/services';
 import {
-  OnboardingStepRecord,
-  DteTypeSelection,
-  TenantOnboarding,
-  Tenant,
-} from '@prisma/client';
-import {
   OnboardingStep,
   OnboardingStatus,
   StepStatus,
   PerformedBy,
   AssistanceLevel,
   DteType,
+  OnboardingStepRecord,
+  DteTypeSelection,
+  TenantOnboarding,
+  Tenant,
 } from '../types/onboarding.types';
 import {
   StartOnboardingDto,

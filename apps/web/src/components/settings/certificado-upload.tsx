@@ -56,8 +56,13 @@ export function CertificadoUpload({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (!selectedFile.name.endsWith('.p12') && !selectedFile.name.endsWith('.pfx')) {
-        setError('El archivo debe ser .p12 o .pfx');
+      const fileName = selectedFile.name.toLowerCase();
+      if (!fileName.endsWith('.p12') && !fileName.endsWith('.pfx')) {
+        if (fileName.endsWith('.cer') || fileName.endsWith('.crt') || fileName.endsWith('.pem')) {
+          setError('El archivo debe ser .p12 o .pfx (contiene clave privada). Los archivos .cer, .crt o .pem no incluyen la clave privada necesaria para firmar.');
+        } else {
+          setError('Formato no soportado. El certificado debe ser .p12 o .pfx');
+        }
         return;
       }
       setFile(selectedFile);
@@ -69,8 +74,13 @@ export function CertificadoUpload({
     e.preventDefault();
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) {
-      if (!droppedFile.name.endsWith('.p12') && !droppedFile.name.endsWith('.pfx')) {
-        setError('El archivo debe ser .p12 o .pfx');
+      const fileName = droppedFile.name.toLowerCase();
+      if (!fileName.endsWith('.p12') && !fileName.endsWith('.pfx')) {
+        if (fileName.endsWith('.cer') || fileName.endsWith('.crt') || fileName.endsWith('.pem')) {
+          setError('El archivo debe ser .p12 o .pfx (contiene clave privada). Los archivos .cer, .crt o .pem no incluyen la clave privada necesaria para firmar.');
+        } else {
+          setError('Formato no soportado. El certificado debe ser .p12 o .pfx');
+        }
         return;
       }
       setFile(droppedFile);
@@ -257,7 +267,7 @@ export function CertificadoUpload({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".p12,.pfx"
+              accept=".p12,.pfx,.cer,.crt,.pem,application/x-pkcs12"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -273,10 +283,10 @@ export function CertificadoUpload({
               <>
                 <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                 <p className="font-medium text-white">
-                  Arrastra tu archivo .p12 aqui
+                  Arrastra tu archivo .p12 o .pfx aqui
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  o haz click para seleccionar
+                  o haz click para seleccionar (formatos: .p12, .pfx)
                 </p>
               </>
             )}

@@ -13,6 +13,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from './guards/super-admin.guard';
 import { SuperAdminService } from './super-admin.service';
+import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 
 // Bootstrap controller - no authentication required
 @ApiTags('super-admin')
@@ -98,8 +99,9 @@ export class SuperAdminController {
       maxDtesPerMonth?: number;
       adminNotes?: string;
     },
+    @CurrentUser() user: CurrentUserData,
   ) {
-    return this.superAdminService.updateTenantPlan(id, data);
+    return this.superAdminService.updateTenantPlan(id, data, user.id, user.email);
   }
 
   @Post('tenants/:id/suspend')
@@ -107,20 +109,27 @@ export class SuperAdminController {
   suspendTenant(
     @Param('id') id: string,
     @Body() data: { reason?: string },
+    @CurrentUser() user: CurrentUserData,
   ) {
-    return this.superAdminService.suspendTenant(id, data.reason);
+    return this.superAdminService.suspendTenant(id, data.reason, user.id, user.email);
   }
 
   @Post('tenants/:id/activate')
   @ApiOperation({ summary: 'Activar una empresa suspendida' })
-  activateTenant(@Param('id') id: string) {
-    return this.superAdminService.activateTenant(id);
+  activateTenant(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    return this.superAdminService.activateTenant(id, user.id, user.email);
   }
 
   @Delete('tenants/:id')
   @ApiOperation({ summary: 'Eliminar una empresa y todos sus datos' })
-  deleteTenant(@Param('id') id: string) {
-    return this.superAdminService.deleteTenant(id);
+  deleteTenant(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    return this.superAdminService.deleteTenant(id, user.id, user.email);
   }
 
   // ============ SUPER ADMINS ============
@@ -134,7 +143,8 @@ export class SuperAdminController {
   @ApiOperation({ summary: 'Crear nuevo super administrador' })
   createSuperAdmin(
     @Body() data: { email: string; password: string; nombre: string },
+    @CurrentUser() user: CurrentUserData,
   ) {
-    return this.superAdminService.createSuperAdmin(data);
+    return this.superAdminService.createSuperAdmin(data, user.id, user.email);
   }
 }

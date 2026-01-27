@@ -1,10 +1,15 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AuditAction, AuditModule } from '../audit-logs/dto';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class SuperAdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditLogsService: AuditLogsService,
+  ) {}
 
   // ============ DASHBOARD STATS ============
   async getDashboardStats() {
@@ -198,19 +203,30 @@ export class SuperAdminService {
     };
   }
 
-  async updateTenantPlan(id: string, data: {
-    plan?: string;
-    planStatus?: string;
-    planExpiry?: Date;
-    maxDtesPerMonth?: number;
-    adminNotes?: string;
-  }) {
+  async updateTenantPlan(
+    id: string,
+    data: {
+      plan?: string;
+      planStatus?: string;
+      planExpiry?: Date;
+      maxDtesPerMonth?: number;
+      adminNotes?: string;
+    },
+    adminUserId?: string,
+    adminEmail?: string,
+  ) {
     const tenant = await this.prisma.tenant.findUnique({ where: { id } });
     if (!tenant) {
       throw new NotFoundException('Empresa no encontrada');
     }
 
-    return this.prisma.tenant.update({
+    const oldValues = {
+      plan: tenant.plan,
+      planStatus: tenant.planStatus,
+      maxDtesPerMonth: tenant.maxDtesPerMonth,
+    };
+
+    const updated = await this.prisma.tenant.update({
       where: { id },
       data: {
         plan: data.plan as any,
@@ -220,40 +236,97 @@ export class SuperAdminService {
         adminNotes: data.adminNotes,
       },
     });
+
+    // Audit log
+    await this.auditLogsService.log({
+      userId: adminUserId,
+      userEmail: adminEmail,
+      userRole: 'SUPER_ADMIN',
+      tenantId: id,
+      tenantNombre: tenant.nombre,
+      action: AuditAction.UPDATE,
+      module: AuditModule.ADMIN,
+      description: `Plan de empresa actualizado: ${tenant.nombre}`,
+      entityType: 'Tenant',
+      entityId: id,
+      oldValue: oldValues,
+      newValue: data,
+      success: true,
+    });
+
+    return updated;
   }
 
-  async suspendTenant(id: string, reason?: string) {
+  async suspendTenant(id: string, reason?: string, adminUserId?: string, adminEmail?: string) {
     const tenant = await this.prisma.tenant.findUnique({ where: { id } });
     if (!tenant) {
       throw new NotFoundException('Empresa no encontrada');
     }
 
-    return this.prisma.tenant.update({
+    const updated = await this.prisma.tenant.update({
       where: { id },
       data: {
         planStatus: 'SUSPENDED',
         adminNotes: reason ? `SUSPENDIDO: ${reason}\n${tenant.adminNotes || ''}` : tenant.adminNotes,
       },
     });
+
+    // Audit log
+    await this.auditLogsService.log({
+      userId: adminUserId,
+      userEmail: adminEmail,
+      userRole: 'SUPER_ADMIN',
+      tenantId: id,
+      tenantNombre: tenant.nombre,
+      action: AuditAction.UPDATE,
+      module: AuditModule.ADMIN,
+      description: `Empresa suspendida: ${tenant.nombre}${reason ? ` - Motivo: ${reason}` : ''}`,
+      entityType: 'Tenant',
+      entityId: id,
+      metadata: { reason },
+      success: true,
+    });
+
+    return updated;
   }
 
-  async activateTenant(id: string) {
+  async activateTenant(id: string, adminUserId?: string, adminEmail?: string) {
     const tenant = await this.prisma.tenant.findUnique({ where: { id } });
     if (!tenant) {
       throw new NotFoundException('Empresa no encontrada');
     }
 
-    return this.prisma.tenant.update({
+    const updated = await this.prisma.tenant.update({
       where: { id },
       data: { planStatus: 'ACTIVE' },
     });
+
+    // Audit log
+    await this.auditLogsService.log({
+      userId: adminUserId,
+      userEmail: adminEmail,
+      userRole: 'SUPER_ADMIN',
+      tenantId: id,
+      tenantNombre: tenant.nombre,
+      action: AuditAction.UPDATE,
+      module: AuditModule.ADMIN,
+      description: `Empresa activada: ${tenant.nombre}`,
+      entityType: 'Tenant',
+      entityId: id,
+      success: true,
+    });
+
+    return updated;
   }
 
-  async deleteTenant(id: string) {
+  async deleteTenant(id: string, adminUserId?: string, adminEmail?: string) {
     const tenant = await this.prisma.tenant.findUnique({ where: { id } });
     if (!tenant) {
       throw new NotFoundException('Empresa no encontrada');
     }
+
+    // Store tenant info for audit before deletion
+    const tenantInfo = { nombre: tenant.nombre, nit: tenant.nit };
 
     // Eliminar en orden por las relaciones
     await this.prisma.$transaction([
@@ -266,11 +339,29 @@ export class SuperAdminService {
       this.prisma.tenant.delete({ where: { id } }),
     ]);
 
+    // Audit log
+    await this.auditLogsService.log({
+      userId: adminUserId,
+      userEmail: adminEmail,
+      userRole: 'SUPER_ADMIN',
+      action: AuditAction.DELETE,
+      module: AuditModule.ADMIN,
+      description: `Empresa eliminada: ${tenantInfo.nombre} (NIT: ${tenantInfo.nit})`,
+      entityType: 'Tenant',
+      entityId: id,
+      oldValue: tenantInfo,
+      success: true,
+    });
+
     return { message: 'Empresa eliminada correctamente' };
   }
 
   // ============ SUPER ADMIN MANAGEMENT ============
-  async createSuperAdmin(data: { email: string; password: string; nombre: string }) {
+  async createSuperAdmin(
+    data: { email: string; password: string; nombre: string },
+    createdByUserId?: string,
+    createdByEmail?: string,
+  ) {
     const existing = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -281,7 +372,7 @@ export class SuperAdminService {
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    return this.prisma.user.create({
+    const admin = await this.prisma.user.create({
       data: {
         email: data.email,
         password: hashedPassword,
@@ -297,6 +388,22 @@ export class SuperAdminService {
         createdAt: true,
       },
     });
+
+    // Audit log
+    await this.auditLogsService.log({
+      userId: createdByUserId,
+      userEmail: createdByEmail,
+      userRole: 'SUPER_ADMIN',
+      action: AuditAction.CREATE,
+      module: AuditModule.ADMIN,
+      description: `Nuevo Super Admin creado: ${data.email}`,
+      entityType: 'User',
+      entityId: admin.id,
+      newValue: { email: data.email, nombre: data.nombre },
+      success: true,
+    });
+
+    return admin;
   }
 
   async getAllSuperAdmins() {

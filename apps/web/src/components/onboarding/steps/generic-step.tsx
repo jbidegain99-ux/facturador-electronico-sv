@@ -68,8 +68,13 @@ export function CertificateStep({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.p12') && !file.name.endsWith('.pfx')) {
-      setError('Solo se permiten archivos .p12 o .pfx');
+    const fileName = file.name.toLowerCase();
+    if (!fileName.endsWith('.p12') && !fileName.endsWith('.pfx')) {
+      if (fileName.endsWith('.cer') || fileName.endsWith('.crt') || fileName.endsWith('.pem')) {
+        setError('El archivo debe ser .p12 o .pfx (contiene clave privada). Los archivos .cer, .crt o .pem no incluyen la clave privada necesaria para firmar.');
+      } else {
+        setError('Formato no soportado. El certificado debe ser .p12 o .pfx');
+      }
       return;
     }
 
@@ -138,7 +143,7 @@ export function CertificateStep({
                 <Input
                   id="certificate"
                   type="file"
-                  accept=".p12,.pfx"
+                  accept=".p12,.pfx,.cer,.crt,.pem,application/x-pkcs12"
                   onChange={handleFileChange}
                   className="hidden"
                 />

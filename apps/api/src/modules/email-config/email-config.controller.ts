@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -54,9 +55,13 @@ export class EmailConfigController {
   @Get()
   @ApiOperation({ summary: 'Get current tenant email configuration' })
   @ApiResponse({ status: 200, description: 'Email configuration retrieved' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can access email configuration' })
   @ApiResponse({ status: 404, description: 'Configuration not found' })
   async getConfig(@CurrentUser() user: CurrentUserData) {
-    const config = await this.emailConfigService.getConfig(user.tenantId!);
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden acceder a la configuración de email');
+    }
+    const config = await this.emailConfigService.getConfig(user.tenantId);
 
     if (!config) {
       return {
@@ -88,12 +93,16 @@ export class EmailConfigController {
   @Post()
   @ApiOperation({ summary: 'Create or update email configuration' })
   @ApiResponse({ status: 201, description: 'Configuration created/updated' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can configure email' })
   async createOrUpdateConfig(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: CreateEmailConfigDto,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden configurar el email');
+    }
     const config = await this.emailConfigService.upsertConfig(
-      user.tenantId!,
+      user.tenantId,
       dto,
       ConfiguredBy.SELF,
       user.id,
@@ -111,12 +120,16 @@ export class EmailConfigController {
   @Patch()
   @ApiOperation({ summary: 'Update email configuration' })
   @ApiResponse({ status: 200, description: 'Configuration updated' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can update email configuration' })
   async updateConfig(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: UpdateEmailConfigDto,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden actualizar la configuración de email');
+    }
     const config = await this.emailConfigService.updateConfig(
-      user.tenantId!,
+      user.tenantId,
       dto,
     );
 
@@ -133,15 +146,23 @@ export class EmailConfigController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete email configuration' })
   @ApiResponse({ status: 204, description: 'Configuration deleted' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can delete email configuration' })
   async deleteConfig(@CurrentUser() user: CurrentUserData) {
-    await this.emailConfigService.deleteConfig(user.tenantId!);
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden eliminar la configuración de email');
+    }
+    await this.emailConfigService.deleteConfig(user.tenantId);
   }
 
   @Post('test-connection')
   @ApiOperation({ summary: 'Test email configuration connection' })
   @ApiResponse({ status: 200, description: 'Connection test result' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can test connection' })
   async testConnection(@CurrentUser() user: CurrentUserData) {
-    const result = await this.emailConfigService.testConnection(user.tenantId!);
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden probar la conexión');
+    }
+    const result = await this.emailConfigService.testConnection(user.tenantId);
 
     return {
       success: result.success,
@@ -156,12 +177,16 @@ export class EmailConfigController {
   @Post('send-test')
   @ApiOperation({ summary: 'Send a test email' })
   @ApiResponse({ status: 200, description: 'Test email result' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can send test emails' })
   async sendTestEmail(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: TestEmailConfigDto,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden enviar emails de prueba');
+    }
     const result = await this.emailConfigService.sendTestEmail(
-      user.tenantId!,
+      user.tenantId,
       dto,
     );
 
@@ -177,12 +202,16 @@ export class EmailConfigController {
   @Patch('activate')
   @ApiOperation({ summary: 'Activate or deactivate email sending' })
   @ApiResponse({ status: 200, description: 'Activation status updated' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can activate/deactivate email' })
   async setActive(
     @CurrentUser() user: CurrentUserData,
     @Body() body: { isActive: boolean },
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden activar/desactivar el email');
+    }
     const config = await this.emailConfigService.setActive(
-      user.tenantId!,
+      user.tenantId,
       body.isActive,
     );
 
@@ -199,13 +228,17 @@ export class EmailConfigController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Email send logs' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can view email logs' })
   async getSendLogs(
     @CurrentUser() user: CurrentUserData,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden ver los logs de email');
+    }
     return this.emailConfigService.getSendLogs(
-      user.tenantId!,
+      user.tenantId,
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
     );
@@ -218,12 +251,17 @@ export class EmailConfigController {
   @Post('request-assistance')
   @ApiOperation({ summary: 'Request email configuration assistance' })
   @ApiResponse({ status: 201, description: 'Assistance request created' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can request assistance' })
   async requestAssistance(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: CreateEmailAssistanceRequestDto,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden solicitar asistencia de email');
+    }
+
     const request = await this.emailAssistanceService.createRequest(
-      user.tenantId!,
+      user.tenantId,
       dto,
     );
 
@@ -238,30 +276,42 @@ export class EmailConfigController {
   @Get('requests')
   @ApiOperation({ summary: 'Get tenant assistance requests' })
   @ApiResponse({ status: 200, description: 'Assistance requests list' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can view their requests' })
   async getMyRequests(@CurrentUser() user: CurrentUserData) {
-    return this.emailAssistanceService.getTenantRequests(user.tenantId!);
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden ver sus solicitudes');
+    }
+    return this.emailAssistanceService.getTenantRequests(user.tenantId);
   }
 
   @Get('requests/:id')
   @ApiOperation({ summary: 'Get specific assistance request' })
   @ApiResponse({ status: 200, description: 'Assistance request details' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can view their requests' })
   async getRequest(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
   ) {
-    return this.emailAssistanceService.getRequest(id, user.tenantId!);
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden ver sus solicitudes');
+    }
+    return this.emailAssistanceService.getRequest(id, user.tenantId);
   }
 
   @Post('requests/:id/messages')
   @ApiOperation({ summary: 'Add message to assistance request' })
   @ApiResponse({ status: 201, description: 'Message added' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can add messages to their requests' })
   async addMessageToRequest(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
     @Body() dto: AddMessageDto,
   ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden agregar mensajes');
+    }
     // Verify this request belongs to the tenant
-    await this.emailAssistanceService.getRequest(id, user.tenantId!);
+    await this.emailAssistanceService.getRequest(id, user.tenantId);
 
     return this.emailAssistanceService.addMessage(
       id,
@@ -278,8 +328,12 @@ export class EmailConfigController {
   @Get('health')
   @ApiOperation({ summary: 'Get email configuration health status' })
   @ApiResponse({ status: 200, description: 'Health status' })
+  @ApiResponse({ status: 400, description: 'Only tenant users can view health status' })
   async getHealth(@CurrentUser() user: CurrentUserData) {
-    const config = await this.emailConfigService.getConfig(user.tenantId!);
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden ver el estado de salud del email');
+    }
+    const config = await this.emailConfigService.getConfig(user.tenantId);
 
     if (!config) {
       return {
@@ -288,7 +342,7 @@ export class EmailConfigController {
       };
     }
 
-    return this.emailHealthService.forceHealthCheck(user.tenantId!);
+    return this.emailHealthService.forceHealthCheck(user.tenantId);
   }
 }
 

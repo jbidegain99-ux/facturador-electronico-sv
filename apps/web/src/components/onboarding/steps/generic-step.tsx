@@ -34,6 +34,8 @@ import { OnboardingStep, CertificateForm, ApiCredentialsForm } from '@/types/onb
 // CERTIFICATE UPLOAD STEP
 // ============================================================================
 
+type CertificateUploadMode = 'combined' | 'separate';
+
 interface CertificateStepProps {
   type: 'test' | 'prod';
   hasCertificate?: boolean;
@@ -49,11 +51,16 @@ export function CertificateStep({
   onBack,
   loading,
 }: CertificateStepProps) {
+  const [uploadMode, setUploadMode] = React.useState<CertificateUploadMode>('combined');
   const [formData, setFormData] = React.useState<CertificateForm>({
     certificate: '',
     password: '',
     expiryDate: '',
   });
+  // For separate file upload
+  const [privateKey, setPrivateKey] = React.useState<string>('');
+  const [privateKeyFileName, setPrivateKeyFileName] = React.useState<string>('');
+
   const [fileName, setFileName] = React.useState<string>('');
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState<string>('');
@@ -64,17 +71,13 @@ export function CertificateStep({
     ? 'Suba su certificado digital para el ambiente de pruebas'
     : 'Suba su certificado digital para el ambiente de producción';
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCombinedFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const fileName = file.name.toLowerCase();
-    if (!fileName.endsWith('.p12') && !fileName.endsWith('.pfx')) {
-      if (fileName.endsWith('.cer') || fileName.endsWith('.crt') || fileName.endsWith('.pem')) {
-        setError('El archivo debe ser .p12 o .pfx (contiene clave privada). Los archivos .cer, .crt o .pem no incluyen la clave privada necesaria para firmar.');
-      } else {
-        setError('Formato no soportado. El certificado debe ser .p12 o .pfx');
-      }
+    const fileNameLower = file.name.toLowerCase();
+    if (!fileNameLower.endsWith('.p12') && !fileNameLower.endsWith('.pfx')) {
+      setError('Para el modo combinado, el archivo debe ser .p12 o .pfx');
       return;
     }
 
@@ -89,6 +92,64 @@ export function CertificateStep({
     reader.readAsDataURL(file);
   };
 
+  const handleCertificateFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileNameLower = file.name.toLowerCase();
+    const validExtensions = ['.crt', '.cer', '.pem'];
+    const isValid = validExtensions.some(ext => fileNameLower.endsWith(ext));
+
+    if (!isValid) {
+      setError('El certificado debe ser .crt, .cer o .pem');
+      return;
+    }
+
+    setFileName(file.name);
+    setError('');
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      setFormData((prev) => ({ ...prev, certificate: base64 }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePrivateKeyFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileNameLower = file.name.toLowerCase();
+    const validExtensions = ['.key', '.pem'];
+    const isValid = validExtensions.some(ext => fileNameLower.endsWith(ext));
+
+    if (!isValid) {
+      setError('La llave privada debe ser .key o .pem');
+      return;
+    }
+
+    setPrivateKeyFileName(file.name);
+    setError('');
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      setPrivateKey(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleModeChange = (mode: CertificateUploadMode) => {
+    setUploadMode(mode);
+    // Reset form when switching modes
+    setFormData({ certificate: '', password: '', expiryDate: '' });
+    setPrivateKey('');
+    setFileName('');
+    setPrivateKeyFileName('');
+    setError('');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -97,12 +158,22 @@ export function CertificateStep({
       return;
     }
 
-    if (!formData.password) {
+    if (uploadMode === 'combined' && !formData.password) {
       setError('Debe ingresar la contraseña del certificado');
       return;
     }
 
-    onSubmit(formData);
+    if (uploadMode === 'separate' && !privateKey) {
+      setError('Debe seleccionar el archivo de llave privada');
+      return;
+    }
+
+    // Include private key in the form data for separate mode
+    const submitData = uploadMode === 'separate'
+      ? { ...formData, privateKey, uploadMode: 'separate' as const }
+      : { ...formData, uploadMode: 'combined' as const };
+
+    onSubmit(submitData);
   };
 
   return (
@@ -126,69 +197,200 @@ export function CertificateStep({
         </Alert>
       )}
 
+      {/* Upload mode selector */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tipo de Certificado</CardTitle>
+          <CardDescription>
+            Seleccione cómo desea cargar su certificado digital
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={() => handleModeChange('combined')}
+              className={`p-4 rounded-lg border-2 text-left transition-all ${
+                uploadMode === 'combined'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-primary/50'
+              }`}
+            >
+              <div className="font-medium mb-1">Archivo combinado (.p12 / .pfx)</div>
+              <div className="text-sm text-muted-foreground">
+                Contiene certificado y llave privada en un solo archivo
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleModeChange('separate')}
+              className={`p-4 rounded-lg border-2 text-left transition-all ${
+                uploadMode === 'separate'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-primary/50'
+              }`}
+            >
+              <div className="font-medium mb-1">Archivos separados</div>
+              <div className="text-sm text-muted-foreground">
+                Certificado (.crt/.cer/.pem) + Llave privada (.key/.pem)
+              </div>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Archivo del Certificado</CardTitle>
+            <CardTitle>
+              {uploadMode === 'combined' ? 'Archivo del Certificado' : 'Archivos del Certificado'}
+            </CardTitle>
             <CardDescription>
-              Seleccione el archivo .p12 o .pfx de su certificado digital
+              {uploadMode === 'combined'
+                ? 'Seleccione el archivo .p12 o .pfx de su certificado digital'
+                : 'Seleccione el certificado público y la llave privada'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="certificate">
-                Certificado (.p12 / .pfx) <span className="text-red-500">*</span>
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="certificate"
-                  type="file"
-                  accept=".p12,.pfx,.cer,.crt,.pem,application/x-pkcs12"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('certificate')?.click()}
-                  className="w-full justify-start"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  {fileName || 'Seleccionar archivo...'}
-                </Button>
-              </div>
-            </div>
+            {uploadMode === 'combined' ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="certificate">
+                    Certificado (.p12 / .pfx) <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="certificate"
+                      type="file"
+                      accept=".p12,.pfx,application/x-pkcs12"
+                      onChange={handleCombinedFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('certificate')?.click()}
+                      className="w-full justify-start"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      {fileName || 'Seleccionar archivo...'}
+                    </Button>
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="certPassword">
-                Contraseña del Certificado <span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <Input
-                  id="certPassword"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, password: e.target.value }))
-                  }
-                  placeholder="••••••••"
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="certPassword">
+                    Contraseña del Certificado <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="certPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, password: e.target.value }))
+                      }
+                      placeholder="••••••••"
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="publicCert">
+                    Certificado Público (.crt / .cer / .pem) <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="publicCert"
+                      type="file"
+                      accept=".crt,.cer,.pem,application/x-x509-ca-cert,application/x-pem-file"
+                      onChange={handleCertificateFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('publicCert')?.click()}
+                      className="w-full justify-start"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      {fileName || 'Seleccionar certificado...'}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="privateKey">
+                    Llave Privada (.key / .pem) <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="privateKey"
+                      type="file"
+                      accept=".key,.pem"
+                      onChange={handlePrivateKeyFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('privateKey')?.click()}
+                      className="w-full justify-start"
+                    >
+                      <KeyRound className="mr-2 h-4 w-4" />
+                      {privateKeyFileName || 'Seleccionar llave privada...'}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="keyPassword">
+                    Contraseña de la Llave (si está encriptada)
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="keyPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, password: e.target.value }))
+                      }
+                      placeholder="Dejar vacío si no tiene contraseña"
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="expiryDate">Fecha de Expiración (opcional)</Label>

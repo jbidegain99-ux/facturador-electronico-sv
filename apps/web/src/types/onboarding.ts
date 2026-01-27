@@ -184,9 +184,11 @@ export interface HaciendaCredentialsForm {
 }
 
 export interface CertificateForm {
-  certificate: string; // base64
-  password: string;
+  certificate: string; // base64 - public certificate for separate mode, combined cert for p12/pfx mode
+  password: string; // password for p12/pfx or encrypted private key
   expiryDate?: string;
+  privateKey?: string; // base64 - private key for separate mode
+  uploadMode?: 'combined' | 'separate';
 }
 
 export interface ApiCredentialsForm {

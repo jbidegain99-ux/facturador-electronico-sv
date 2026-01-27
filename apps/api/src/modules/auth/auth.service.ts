@@ -3,12 +3,15 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AuditAction, AuditModule } from '../audit-logs/dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private auditLogsService: AuditLogsService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -29,8 +32,24 @@ export class AuthService {
     return user;
   }
 
-  async login(email: string, password: string) {
-    const user = await this.validateUser(email, password);
+  async login(email: string, password: string, ipAddress?: string, userAgent?: string) {
+    let user;
+    try {
+      user = await this.validateUser(email, password);
+    } catch (error) {
+      // Log failed login attempt
+      await this.auditLogsService.log({
+        action: AuditAction.LOGIN,
+        module: AuditModule.AUTH,
+        description: `Intento de inicio de sesión fallido para ${email}`,
+        userEmail: email,
+        ipAddress,
+        userAgent,
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Credenciales inválidas',
+      });
+      throw error;
+    }
 
     const payload = {
       sub: user.id,
@@ -44,6 +63,22 @@ export class AuthService {
       id: tenant.id,
       nombre: tenant.nombre,
     } : null;
+
+    // Log successful login
+    await this.auditLogsService.log({
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.nombre,
+      userRole: user.rol,
+      tenantId: user.tenantId || undefined,
+      tenantNombre: tenant?.nombre,
+      action: AuditAction.LOGIN,
+      module: AuditModule.AUTH,
+      description: `Usuario ${user.email} inició sesión exitosamente`,
+      ipAddress,
+      userAgent,
+      success: true,
+    });
 
     return {
       access_token: this.jwtService.sign(payload),
@@ -61,7 +96,7 @@ export class AuthService {
     return bcrypt.hash(password, 10);
   }
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto, ipAddress?: string, userAgent?: string) {
     const { tenant, user } = registerDto;
 
     // Check if NIT already exists
@@ -117,6 +152,24 @@ export class AuthService {
       });
 
       return { tenant: newTenant, user: newUser };
+    });
+
+    // Log registration
+    await this.auditLogsService.log({
+      userId: result.user.id,
+      userEmail: result.user.email,
+      userName: result.user.nombre,
+      userRole: 'ADMIN',
+      tenantId: result.tenant.id,
+      tenantNombre: result.tenant.nombre,
+      action: AuditAction.CREATE,
+      module: AuditModule.TENANT,
+      description: `Nueva empresa registrada: ${result.tenant.nombre} (NIT: ${result.tenant.nit})`,
+      entityType: 'Tenant',
+      entityId: result.tenant.id,
+      ipAddress,
+      userAgent,
+      success: true,
     });
 
     return {

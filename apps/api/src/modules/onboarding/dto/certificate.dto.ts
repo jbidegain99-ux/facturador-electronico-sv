@@ -1,36 +1,61 @@
-import { IsString, IsOptional, IsDateString, MinLength } from 'class-validator';
+import { IsString, IsOptional, IsDateString, MinLength, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+export enum CertificateUploadMode {
+  COMBINED = 'combined',
+  SEPARATE = 'separate',
+}
+
 export class UploadTestCertificateDto {
-  @ApiProperty({ description: 'Certificado de pruebas en base64' })
+  @ApiProperty({ description: 'Certificado de pruebas en base64 (público para modo separado, combinado para .p12/.pfx)' })
   @IsString()
   certificate: string;
 
-  @ApiProperty({ description: 'Contraseña del certificado' })
+  @ApiPropertyOptional({ description: 'Contraseña del certificado (.p12/.pfx) o llave privada encriptada' })
+  @IsOptional()
   @IsString()
-  @MinLength(4)
-  password: string;
+  password?: string;
 
   @ApiPropertyOptional({ description: 'Fecha de expiración del certificado' })
   @IsOptional()
   @IsDateString()
   expiryDate?: string;
+
+  @ApiPropertyOptional({ description: 'Llave privada en base64 (solo para modo separado)' })
+  @IsOptional()
+  @IsString()
+  privateKey?: string;
+
+  @ApiPropertyOptional({ description: 'Modo de carga: combined (.p12/.pfx) o separate (.crt + .key)', enum: CertificateUploadMode })
+  @IsOptional()
+  @IsEnum(CertificateUploadMode)
+  uploadMode?: CertificateUploadMode;
 }
 
 export class UploadProdCertificateDto {
-  @ApiProperty({ description: 'Certificado productivo en base64' })
+  @ApiProperty({ description: 'Certificado productivo en base64 (público para modo separado, combinado para .p12/.pfx)' })
   @IsString()
   certificate: string;
 
-  @ApiProperty({ description: 'Contraseña del certificado' })
+  @ApiPropertyOptional({ description: 'Contraseña del certificado (.p12/.pfx) o llave privada encriptada' })
+  @IsOptional()
   @IsString()
-  @MinLength(4)
-  password: string;
+  password?: string;
 
   @ApiPropertyOptional({ description: 'Fecha de expiración del certificado' })
   @IsOptional()
   @IsDateString()
   expiryDate?: string;
+
+  @ApiPropertyOptional({ description: 'Llave privada en base64 (solo para modo separado)' })
+  @IsOptional()
+  @IsString()
+  privateKey?: string;
+
+  @ApiPropertyOptional({ description: 'Modo de carga: combined (.p12/.pfx) o separate (.crt + .key)', enum: CertificateUploadMode })
+  @IsOptional()
+  @IsEnum(CertificateUploadMode)
+  uploadMode?: CertificateUploadMode;
 }
 
 export class SetApiCredentialsDto {

@@ -101,8 +101,13 @@ export function OnboardingWizard({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.name.endsWith('.p12') && !file.name.endsWith('.pfx')) {
-        setCertificateError('El archivo debe ser .p12 o .pfx');
+      const fileName = file.name.toLowerCase();
+      if (!fileName.endsWith('.p12') && !fileName.endsWith('.pfx')) {
+        if (fileName.endsWith('.cer') || fileName.endsWith('.crt') || fileName.endsWith('.pem')) {
+          setCertificateError('El archivo debe ser .p12 o .pfx (contiene clave privada). Los archivos .cer, .crt o .pem no incluyen la clave privada necesaria para firmar.');
+        } else {
+          setCertificateError('Formato no soportado. El certificado debe ser .p12 o .pfx');
+        }
         return;
       }
       setCertificateFile(file);
@@ -397,7 +402,7 @@ export function OnboardingWizard({
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept=".p12,.pfx"
+                      accept=".p12,.pfx,.cer,.crt,.pem,application/x-pkcs12"
                       onChange={handleFileChange}
                       className="hidden"
                     />
@@ -415,10 +420,10 @@ export function OnboardingWizard({
                       <>
                         <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                         <p className="font-medium text-white">
-                          Arrastra tu archivo .p12 aqui
+                          Arrastra tu archivo .p12 o .pfx aqui
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          o haz click para seleccionar
+                          o haz click para seleccionar (formatos: .p12, .pfx)
                         </p>
                       </>
                     )}

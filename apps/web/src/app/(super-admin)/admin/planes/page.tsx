@@ -230,13 +230,18 @@ export default function PlanesPage() {
     }
   };
 
-  const formatLimit = (value: number) => {
-    return value === -1 ? <Infinity className="w-4 h-4 inline" /> : value.toLocaleString();
+  const formatLimit = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return '-';
+    const numValue = Number(value);
+    if (isNaN(numValue)) return '-';
+    return numValue === -1 ? <Infinity className="w-4 h-4 inline" /> : numValue.toLocaleString();
   };
 
-  const formatPrice = (value: number | null) => {
-    if (value === null) return '-';
-    return `$${value.toFixed(2)}`;
+  const formatPrice = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return '-';
+    const numValue = Number(value);
+    if (isNaN(numValue)) return '-';
+    return `$${numValue.toFixed(2)}`;
   };
 
   return (

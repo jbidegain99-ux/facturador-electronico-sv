@@ -392,13 +392,38 @@ export class OnboardingService {
   ) {
     const onboarding = await this.getOnboardingOrThrow(tenantId);
 
-    // Encrypt certificate password
-    const encryptedPassword = this.encryptionService.encrypt(dto.password);
+    // Determine upload mode and prepare data
+    const isSeparateMode = dto.uploadMode === 'separate' && dto.privateKey;
+
+    // For separate mode, store certificate and private key as JSON
+    // For combined mode (.p12/.pfx), store directly
+    let certificateData: string;
+    let encryptedPassword: string | null = null;
+
+    if (isSeparateMode) {
+      // Store both public cert and private key in a JSON structure
+      const certJson = JSON.stringify({
+        mode: 'separate',
+        publicCertificate: dto.certificate,
+        privateKey: dto.privateKey,
+      });
+      certificateData = certJson;
+      // Encrypt password if provided (for encrypted private keys)
+      if (dto.password) {
+        encryptedPassword = this.encryptionService.encrypt(dto.password);
+      }
+    } else {
+      // Combined mode (.p12/.pfx)
+      certificateData = dto.certificate;
+      encryptedPassword = dto.password
+        ? this.encryptionService.encrypt(dto.password)
+        : null;
+    }
 
     const updated = await this.prisma.tenantOnboarding.update({
       where: { tenantId },
       data: {
-        testCertificate: dto.certificate,
+        testCertificate: certificateData,
         testCertPassword: encryptedPassword,
         testCertExpiry: dto.expiryDate ? new Date(dto.expiryDate) : null,
       },
@@ -407,7 +432,10 @@ export class OnboardingService {
 
     await this.upsertStepRecord(onboarding.id, 'TEST_CERTIFICATE', {
       status: 'COMPLETED',
-      stepData: JSON.stringify({ expiryDate: dto.expiryDate }),
+      stepData: JSON.stringify({
+        expiryDate: dto.expiryDate,
+        uploadMode: dto.uploadMode || 'combined',
+      }),
       performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),
@@ -423,12 +451,33 @@ export class OnboardingService {
   ) {
     const onboarding = await this.getOnboardingOrThrow(tenantId);
 
-    const encryptedPassword = this.encryptionService.encrypt(dto.password);
+    // Determine upload mode and prepare data
+    const isSeparateMode = dto.uploadMode === 'separate' && dto.privateKey;
+
+    let certificateData: string;
+    let encryptedPassword: string | null = null;
+
+    if (isSeparateMode) {
+      const certJson = JSON.stringify({
+        mode: 'separate',
+        publicCertificate: dto.certificate,
+        privateKey: dto.privateKey,
+      });
+      certificateData = certJson;
+      if (dto.password) {
+        encryptedPassword = this.encryptionService.encrypt(dto.password);
+      }
+    } else {
+      certificateData = dto.certificate;
+      encryptedPassword = dto.password
+        ? this.encryptionService.encrypt(dto.password)
+        : null;
+    }
 
     const updated = await this.prisma.tenantOnboarding.update({
       where: { tenantId },
       data: {
-        prodCertificate: dto.certificate,
+        prodCertificate: certificateData,
         prodCertPassword: encryptedPassword,
         prodCertExpiry: dto.expiryDate ? new Date(dto.expiryDate) : null,
       },
@@ -437,7 +486,10 @@ export class OnboardingService {
 
     await this.upsertStepRecord(onboarding.id, 'PROD_CERTIFICATE', {
       status: 'COMPLETED',
-      stepData: JSON.stringify({ expiryDate: dto.expiryDate }),
+      stepData: JSON.stringify({
+        expiryDate: dto.expiryDate,
+        uploadMode: dto.uploadMode || 'combined',
+      }),
       performedBy: PerformedBy.TENANT,
       performedById: userId,
       completedAt: new Date(),

@@ -161,7 +161,7 @@ export default function TicketDetailPage() {
       setTicket(data);
       setStatus(data.status);
       setPriority(data.priority);
-      setAssignedToId(data.assignedTo?.id || '');
+      setAssignedToId(data.assignedTo?.id || 'UNASSIGNED');
       setResolution(data.resolution || '');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error');
@@ -197,7 +197,7 @@ export default function TicketDetailPage() {
       const body: any = {};
       if (status !== ticket?.status) body.status = status;
       if (priority !== ticket?.priority) body.priority = priority;
-      if (assignedToId !== (ticket?.assignedTo?.id || '')) body.assignedToId = assignedToId || null;
+      if (assignedToId !== (ticket?.assignedTo?.id || 'UNASSIGNED')) body.assignedToId = assignedToId === 'UNASSIGNED' ? null : assignedToId;
       if (resolution !== (ticket?.resolution || '')) body.resolution = resolution;
 
       if (Object.keys(body).length === 0) {
@@ -539,7 +539,7 @@ export default function TicketDetailPage() {
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin asignar</SelectItem>
+                    <SelectItem value="UNASSIGNED">Sin asignar</SelectItem>
                     {admins.map((admin) => (
                       <SelectItem key={admin.id} value={admin.id}>
                         {admin.nombre}

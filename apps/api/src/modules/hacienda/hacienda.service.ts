@@ -26,6 +26,8 @@ import {
   HaciendaTestStatus,
 } from './interfaces';
 import { ConfigureEnvironmentDto, ExecuteTestDto } from './dto';
+import { GeneratedTestData } from './services/test-data-generator.service';
+import { HaciendaEnvironmentConfig, HaciendaTestRecord } from '@prisma/client';
 
 @Injectable()
 export class HaciendaService {
@@ -72,10 +74,10 @@ export class HaciendaService {
     }
 
     const testConfig = config.environmentConfigs.find(
-      (ec) => ec.environment === 'TEST',
+      (ec: HaciendaEnvironmentConfig) => ec.environment === 'TEST',
     );
     const prodConfig = config.environmentConfigs.find(
-      (ec) => ec.environment === 'PRODUCTION',
+      (ec: HaciendaEnvironmentConfig) => ec.environment === 'PRODUCTION',
     );
 
     return {
@@ -280,7 +282,7 @@ export class HaciendaService {
 
     // Verify environment is configured and validated
     const envConfig = config.environmentConfigs.find(
-      (ec) => ec.environment === environment,
+      (ec: HaciendaEnvironmentConfig) => ec.environment === environment,
     );
 
     if (!envConfig || !envConfig.isConfigured) {
@@ -791,7 +793,7 @@ export class HaciendaService {
       skip: filters.offset || 0,
     });
 
-    return records.map((record) => ({
+    return records.map((record: HaciendaTestRecord) => ({
       id: record.id,
       dteType: record.dteType as DteTypeCode,
       dteName: DTE_TYPES[record.dteType as DteTypeCode] || record.dteType,
@@ -810,7 +812,7 @@ export class HaciendaService {
   async generateTestDataPreview(
     tenantId: string,
     dteType: DteTypeCode,
-  ): Promise<Record<string, unknown>> {
+  ): Promise<GeneratedTestData> {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
     });
@@ -856,7 +858,7 @@ export class HaciendaService {
     }
 
     const envConfig = config.environmentConfigs.find(
-      (ec) => ec.environment === environment,
+      (ec: HaciendaEnvironmentConfig) => ec.environment === environment,
     );
 
     if (!envConfig) {

@@ -32,6 +32,10 @@ import {
   GenerateTestDataDto,
   HaciendaConfigResponseDto,
   TestProgressResponseDto,
+  QuickSetupDto,
+  QuickSetupResponseDto,
+  ValidateConnectionDto,
+  ValidateConnectionResponseDto,
 } from './dto';
 import { HaciendaEnvironment } from './interfaces';
 
@@ -56,6 +60,117 @@ export class HaciendaController {
       throw new BadRequestException('Usuario no tiene tenant asignado');
     }
     return this.haciendaService.getOrCreateConfig(user.tenantId);
+  }
+
+  // ===== QUICK SETUP =====
+
+  @Post('quick-setup')
+  @UseInterceptors(FileInterceptor('certificate'))
+  @ApiOperation({
+    summary: 'Configuración rápida para empresas con credenciales existentes',
+    description: 'Configura ambiente con certificado y credenciales en un solo paso, validando todo automáticamente',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['certificate', 'environment', 'apiUser', 'apiPassword', 'certificatePassword'],
+      properties: {
+        certificate: {
+          type: 'string',
+          format: 'binary',
+          description: 'Archivo de certificado .p12 o .pfx',
+        },
+        environment: {
+          type: 'string',
+          enum: ['TEST', 'PRODUCTION'],
+          description: 'Ambiente a configurar',
+        },
+        apiUser: {
+          type: 'string',
+          description: 'Usuario de API de Hacienda (NIT sin guiones)',
+        },
+        apiPassword: {
+          type: 'string',
+          description: 'Contraseña de API de Hacienda',
+        },
+        certificatePassword: {
+          type: 'string',
+          description: 'Contraseña del certificado',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Configuración completada exitosamente',
+    type: QuickSetupResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Error de validación',
+    type: QuickSetupResponseDto,
+  })
+  async quickSetup(
+    @CurrentUser() user: CurrentUserData,
+    @UploadedFile() certificate: Express.Multer.File,
+    @Body() dto: QuickSetupDto,
+  ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Usuario no tiene tenant asignado');
+    }
+
+    if (!certificate) {
+      throw new BadRequestException('Se requiere el archivo de certificado');
+    }
+
+    // Validate file extension
+    const allowedExtensions = ['.p12', '.pfx'];
+    const fileExt = certificate.originalname
+      .toLowerCase()
+      .slice(certificate.originalname.lastIndexOf('.'));
+
+    if (!allowedExtensions.includes(fileExt)) {
+      throw new BadRequestException(
+        'El archivo debe ser un certificado .p12 o .pfx',
+      );
+    }
+
+    // Validate file size (max 5MB)
+    const maxSizeBytes = 5 * 1024 * 1024;
+    if (certificate.size > maxSizeBytes) {
+      throw new BadRequestException(
+        'El archivo de certificado no puede exceder 5MB',
+      );
+    }
+
+    return this.haciendaService.quickSetup(
+      user.tenantId,
+      dto,
+      certificate.buffer,
+      certificate.originalname,
+    );
+  }
+
+  @Post('validate-connection')
+  @ApiOperation({
+    summary: 'Validar conexión con Hacienda sin guardar',
+    description: 'Prueba las credenciales de API sin guardar la configuración',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Resultado de la validación',
+    type: ValidateConnectionResponseDto,
+  })
+  async validateConnection(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: ValidateConnectionDto,
+  ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Usuario no tiene tenant asignado');
+    }
+
+    return this.haciendaService.validateConnection(dto);
   }
 
   @Post('config/:environment')

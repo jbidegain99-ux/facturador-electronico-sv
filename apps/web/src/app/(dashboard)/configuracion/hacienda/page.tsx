@@ -9,11 +9,15 @@ import { useToast } from '@/components/ui/toast';
 import { EnvironmentConfig } from './components/EnvironmentConfig';
 import { TestCenterDashboard } from './components/TestCenter/TestCenterDashboard';
 import { ConfigurationStatus } from './components/ConfigurationStatus';
+import { SetupSelector } from './components/SetupSelector';
+import { QuickSetupWizard } from './components/QuickSetup';
 import type {
   HaciendaConfig,
   HaciendaEnvironment,
   TestProgress,
 } from './types';
+
+type ViewMode = 'loading' | 'selector' | 'quick-setup' | 'configured';
 
 export default function HaciendaConfigPage() {
   const router = useRouter();
@@ -25,6 +29,7 @@ export default function HaciendaConfigPage() {
   const [testProgress, setTestProgress] = React.useState<TestProgress | null>(null);
   const [activeTab, setActiveTab] = React.useState<'config' | 'tests'>('config');
   const [activeEnvironment, setActiveEnvironment] = React.useState<HaciendaEnvironment>('TEST');
+  const [viewMode, setViewMode] = React.useState<ViewMode>('loading');
 
   // Load configuration
   const loadConfig = React.useCallback(async () => {
@@ -45,14 +50,25 @@ export default function HaciendaConfigPage() {
         const data = await res.json();
         setConfig(data);
         setActiveEnvironment(data.activeEnvironment || 'TEST');
+
+        // Determine view mode based on configuration state
+        const hasTestConfig = data.testConfig?.isConfigured;
+        const hasProdConfig = data.prodConfig?.isConfigured;
+
+        if (hasTestConfig || hasProdConfig) {
+          setViewMode('configured');
+        } else {
+          setViewMode('selector');
+        }
       } else {
         const error = await res.json().catch(() => ({}));
-        throw new Error(error.message || 'Error al cargar configuración');
+        throw new Error(error.message || 'Error al cargar configuracion');
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Error al cargar configuración'
+        error instanceof Error ? error.message : 'Error al cargar configuracion'
       );
+      setViewMode('selector');
     } finally {
       setLoading(false);
     }
@@ -86,7 +102,31 @@ export default function HaciendaConfigPage() {
     loadTestProgress();
   }, [loadConfig, loadTestProgress]);
 
-  if (loading) {
+  // Handle quick setup selection
+  const handleSelectQuickSetup = () => {
+    setViewMode('quick-setup');
+  };
+
+  // Handle full wizard selection
+  const handleSelectFullWizard = () => {
+    router.push('/onboarding-hacienda');
+  };
+
+  // Handle quick setup back
+  const handleQuickSetupBack = () => {
+    setViewMode('selector');
+  };
+
+  // Handle quick setup completion
+  const handleQuickSetupComplete = () => {
+    toast.success('Configuracion completada exitosamente');
+    loadConfig();
+    loadTestProgress();
+    setViewMode('configured');
+  };
+
+  // Loading state
+  if (loading || viewMode === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -94,6 +134,51 @@ export default function HaciendaConfigPage() {
     );
   }
 
+  // Setup Selector view
+  if (viewMode === 'selector') {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/configuracion')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-3">
+              <Building2 className="h-6 w-6 text-primary" />
+              Configuracion de Hacienda
+            </h1>
+            <p className="text-muted-foreground">
+              Configure su integracion con el Ministerio de Hacienda de El Salvador
+            </p>
+          </div>
+        </div>
+
+        <SetupSelector
+          onSelectQuickSetup={handleSelectQuickSetup}
+          onSelectFullWizard={handleSelectFullWizard}
+        />
+      </div>
+    );
+  }
+
+  // Quick Setup Wizard view
+  if (viewMode === 'quick-setup') {
+    return (
+      <div className="space-y-6">
+        <QuickSetupWizard
+          onBack={handleQuickSetupBack}
+          onComplete={handleQuickSetupComplete}
+        />
+      </div>
+    );
+  }
+
+  // Configured view (normal page)
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -109,10 +194,10 @@ export default function HaciendaConfigPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-3">
               <Building2 className="h-6 w-6 text-primary" />
-              Configuración de Hacienda
+              Configuracion de Hacienda
             </h1>
             <p className="text-muted-foreground">
-              Configure su integración con el Ministerio de Hacienda de El Salvador
+              Configure su integracion con el Ministerio de Hacienda de El Salvador
             </p>
           </div>
         </div>
@@ -127,7 +212,7 @@ export default function HaciendaConfigPage() {
         className="space-y-6"
       >
         <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="config">Configuración</TabsTrigger>
+          <TabsTrigger value="config">Configuracion</TabsTrigger>
           <TabsTrigger value="tests">Centro de Pruebas</TabsTrigger>
         </TabsList>
 
@@ -145,7 +230,7 @@ export default function HaciendaConfigPage() {
               </TabsTrigger>
               <TabsTrigger value="PRODUCTION" className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Producción
+                Produccion
               </TabsTrigger>
             </TabsList>
 
@@ -165,7 +250,7 @@ export default function HaciendaConfigPage() {
                 environment="PRODUCTION"
                 config={config?.prodConfig || null}
                 disabled={config?.testingStatus !== 'AUTHORIZED'}
-                disabledMessage="Debe completar las pruebas y obtener autorización antes de configurar producción"
+                disabledMessage="Debe completar las pruebas y obtener autorizacion antes de configurar produccion"
                 onConfigured={() => {
                   loadConfig();
                 }}

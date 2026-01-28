@@ -25,7 +25,7 @@ import {
   HaciendaTestType,
   HaciendaTestStatus,
 } from './interfaces';
-import { ConfigureEnvironmentDto, ExecuteTestDto } from './dto';
+import { ConfigureEnvironmentDto, ExecuteTestDto, QuickSetupDto, ValidateConnectionDto } from './dto';
 import { GeneratedTestData } from './services/test-data-generator.service';
 import { HaciendaEnvironmentConfig, HaciendaTestRecord } from '@prisma/client';
 
@@ -188,6 +188,220 @@ export class HaciendaService {
         subject: validation.info.subject,
       },
     };
+  }
+
+  /**
+   * Quick setup for companies that already have credentials
+   * Configures environment and validates connection in a single operation
+   */
+  async quickSetup(
+    tenantId: string,
+    dto: QuickSetupDto,
+    certificateBuffer: Buffer,
+    certificateFileName: string,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      environment: HaciendaEnvironment;
+      certificate: {
+        valid: boolean;
+        nit: string | null;
+        expiresAt: Date;
+        subject: string;
+        daysUntilExpiry: number;
+      };
+      authentication: {
+        valid: boolean;
+        tokenExpiresAt: Date;
+      };
+    };
+    errors?: { field: string; message: string }[];
+  }> {
+    const errors: { field: string; message: string }[] = [];
+
+    // Step 1: Validate certificate
+    this.logger.log(`Quick setup: Validating certificate for tenant ${tenantId}`);
+    const certValidation = await this.certificateService.validateCertificate(
+      certificateBuffer,
+      dto.certificatePassword,
+    );
+
+    if (!certValidation.valid) {
+      errors.push({
+        field: 'certificate',
+        message: certValidation.message,
+      });
+      return {
+        success: false,
+        message: 'Error de validación',
+        errors,
+      };
+    }
+
+    // Calculate days until certificate expiry
+    const daysUntilExpiry = this.certificateService.getDaysUntilExpiry(
+      certValidation.info.validTo,
+    );
+
+    // Step 2: Get tenant info for authentication
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+    });
+
+    if (!tenant) {
+      errors.push({
+        field: 'tenant',
+        message: 'Empresa no encontrada',
+      });
+      return {
+        success: false,
+        message: 'Error de validación',
+        errors,
+      };
+    }
+
+    // Step 3: Validate API credentials (authenticate without saving)
+    this.logger.log(`Quick setup: Validating API credentials for tenant ${tenantId}`);
+    const authValidation = await this.haciendaAuthService.validateCredentials(
+      dto.apiUser,
+      dto.apiPassword,
+      dto.environment,
+    );
+
+    if (!authValidation.valid) {
+      errors.push({
+        field: 'authentication',
+        message: authValidation.message,
+      });
+      return {
+        success: false,
+        message: 'Error de validación',
+        errors,
+      };
+    }
+
+    // Step 4: All validations passed - now save the configuration
+    this.logger.log(`Quick setup: Saving configuration for tenant ${tenantId}`);
+
+    // Ensure config exists
+    await this.getOrCreateConfig(tenantId);
+
+    // Find or create environment config
+    const config = await this.prisma.haciendaConfig.findUnique({
+      where: { tenantId },
+    });
+
+    if (!config) {
+      throw new BadRequestException('Configuración de Hacienda no encontrada');
+    }
+
+    let envConfig = await this.prisma.haciendaEnvironmentConfig.findFirst({
+      where: {
+        haciendaConfigId: config.id,
+        environment: dto.environment,
+      },
+    });
+
+    if (!envConfig) {
+      envConfig = await this.prisma.haciendaEnvironmentConfig.create({
+        data: {
+          haciendaConfigId: config.id,
+          environment: dto.environment,
+        },
+      });
+    }
+
+    // Update environment config with encrypted credentials
+    await this.prisma.haciendaEnvironmentConfig.update({
+      where: { id: envConfig.id },
+      data: {
+        apiUser: dto.apiUser,
+        apiPasswordEncrypted: this.encryptionService.encrypt(dto.apiPassword),
+        certificateP12: certificateBuffer,
+        certificateFileName,
+        certificatePasswordEnc: this.encryptionService.encrypt(dto.certificatePassword),
+        certificateValidUntil: certValidation.info.validTo,
+        certificateNit: certValidation.info.nit,
+        certificateSubject: certValidation.info.subject,
+        isConfigured: true,
+        isValidated: true, // Already validated through test connection
+        lastValidationAt: new Date(),
+        lastValidationError: null,
+        tokenExpiresAt: authValidation.expiresAt,
+        tokenRefreshedAt: new Date(),
+      },
+    });
+
+    // Update testing status if needed
+    if (dto.environment === 'TEST' && config.testingStatus === 'NOT_STARTED') {
+      await this.prisma.haciendaConfig.update({
+        where: { id: config.id },
+        data: {
+          testingStatus: 'IN_PROGRESS',
+          testingStartedAt: new Date(),
+        },
+      });
+    }
+
+    this.logger.log(`Quick setup completed successfully for tenant ${tenantId}`);
+
+    return {
+      success: true,
+      message: 'Configuración completada exitosamente',
+      data: {
+        environment: dto.environment,
+        certificate: {
+          valid: true,
+          nit: certValidation.info.nit,
+          expiresAt: certValidation.info.validTo,
+          subject: certValidation.info.subject,
+          daysUntilExpiry,
+        },
+        authentication: {
+          valid: true,
+          tokenExpiresAt: authValidation.expiresAt!,
+        },
+      },
+    };
+  }
+
+  /**
+   * Validate API connection without saving configuration
+   * Useful for testing credentials before committing
+   */
+  async validateConnection(
+    dto: ValidateConnectionDto,
+  ): Promise<{
+    success: boolean;
+    tokenExpiry?: Date;
+    error?: string;
+  }> {
+    try {
+      const result = await this.haciendaAuthService.validateCredentials(
+        dto.apiUser,
+        dto.apiPassword,
+        dto.environment,
+      );
+
+      if (result.valid) {
+        return {
+          success: true,
+          tokenExpiry: result.expiresAt,
+        };
+      } else {
+        return {
+          success: false,
+          error: result.message,
+        };
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      return {
+        success: false,
+        error: message,
+      };
+    }
   }
 
   /**

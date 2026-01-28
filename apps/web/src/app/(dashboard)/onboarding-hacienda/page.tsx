@@ -60,15 +60,25 @@ export default function OnboardingHaciendaPage() {
 
       // Process onboarding data
       if (onboardingRes.ok) {
-        const result = await onboardingRes.json();
-        // Only set data if onboarding exists (not null/404)
-        if (result && result.id) {
-          setData(result);
+        const text = await onboardingRes.text();
+        if (text) {
+          try {
+            const result = JSON.parse(text);
+            // Only set data if onboarding exists (not null/404)
+            if (result && result.id) {
+              setData(result);
+            }
+          } catch {
+            // Empty or invalid JSON response, treat as no onboarding yet
+            console.log('No onboarding data found, starting fresh');
+          }
         }
       } else if (onboardingRes.status !== 404) {
         // 404 means not started yet, which is fine
-        const errorData = await onboardingRes.json();
-        console.warn('Onboarding not found or error:', errorData);
+        const text = await onboardingRes.text();
+        if (text) {
+          console.warn('Onboarding error:', text);
+        }
       }
     } catch (err) {
       console.error('Error loading onboarding:', err);

@@ -11,6 +11,9 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
+// Re-export quick setup DTOs
+export * from './quick-setup.dto';
+
 export class ConfigureEnvironmentDto {
   @ApiProperty({
     description: 'API user for Hacienda authentication (usually NIT without dashes)',

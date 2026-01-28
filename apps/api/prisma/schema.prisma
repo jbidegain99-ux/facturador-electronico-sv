@@ -54,6 +54,9 @@ model Tenant {
 
   // Support tickets relation
   supportTickets     SupportTicket[]
+
+  // Hacienda configuration
+  haciendaConfig     HaciendaConfig?
 }
 
 model User {
@@ -731,4 +734,103 @@ model AuditLog {
   @@index([module])
   @@index([createdAt])
   @@index([entityType, entityId])
+}
+
+// ============================================================================
+// HACIENDA CONFIGURATION SYSTEM - ROBUST MH INTEGRATION
+// ============================================================================
+
+// HaciendaEnvironment: TEST, PRODUCTION
+// TestingStatus: NOT_STARTED, IN_PROGRESS, PENDING_AUTHORIZATION, AUTHORIZED
+// HaciendaTestType: EMISSION, CANCELLATION, CONTINGENCY
+// HaciendaTestStatus: PENDING, SUCCESS, FAILED
+
+// Configuración principal de Hacienda por Tenant
+model HaciendaConfig {
+  id                      String              @id @default(cuid())
+  tenantId                String              @unique
+  tenant                  Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  // Ambiente activo para emisión
+  activeEnvironment       String              @default("TEST") // HaciendaEnvironment
+
+  // Estado del proceso de acreditación
+  testingStatus           String              @default("NOT_STARTED") // TestingStatus
+  testingStartedAt        DateTime?
+  testingCompletedAt      DateTime?
+  productionAuthorizedAt  DateTime?
+
+  // Relaciones
+  environmentConfigs      HaciendaEnvironmentConfig[]
+  testRecords             HaciendaTestRecord[]
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@index([tenantId])
+}
+
+// Configuración por ambiente (TEST o PRODUCTION)
+model HaciendaEnvironmentConfig {
+  id                      String              @id @default(cuid())
+
+  haciendaConfigId        String
+  haciendaConfig          HaciendaConfig      @relation(fields: [haciendaConfigId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  environment             String              // HaciendaEnvironment: TEST | PRODUCTION
+
+  // === CREDENCIALES API ===
+  apiUser                 String?
+  apiPasswordEncrypted    String?             @db.NVarChar(500)
+
+  // === CERTIFICADO DIGITAL ===
+  certificateP12          Bytes?              @db.VarBinary(Max)
+  certificateFileName     String?
+  certificatePasswordEnc  String?             @db.NVarChar(500)
+  certificateValidUntil   DateTime?
+  certificateNit          String?
+  certificateSubject      String?             @db.NVarChar(500)
+
+  // === TOKEN ACTUAL ===
+  currentTokenEncrypted   String?             @db.NVarChar(Max)
+  tokenExpiresAt          DateTime?
+  tokenRefreshedAt        DateTime?
+
+  // === ESTADO ===
+  isConfigured            Boolean             @default(false)
+  isValidated             Boolean             @default(false)
+  lastValidationAt        DateTime?
+  lastValidationError     String?             @db.NVarChar(500)
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@unique([haciendaConfigId, environment])
+  @@index([haciendaConfigId])
+}
+
+// Registro de pruebas ejecutadas
+model HaciendaTestRecord {
+  id                      String              @id @default(cuid())
+
+  haciendaConfigId        String
+  haciendaConfig          HaciendaConfig      @relation(fields: [haciendaConfigId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  // Tipo de prueba
+  dteType                 String              // 01, 03, 04, 05, 06, 11, 14
+  testType                String              // HaciendaTestType: EMISSION, CANCELLATION, CONTINGENCY
+
+  // Resultado
+  status                  String              // HaciendaTestStatus: PENDING, SUCCESS, FAILED
+  codigoGeneracion        String?
+  selloRecibido           String?
+
+  // Detalles para debugging
+  requestPayload          String?             @db.NVarChar(Max)
+  responsePayload         String?             @db.NVarChar(Max)
+  errorMessage            String?             @db.NVarChar(500)
+
+  executedAt              DateTime            @default(now())
+
+  @@index([haciendaConfigId, dteType])
+  @@index([haciendaConfigId, status])
 }

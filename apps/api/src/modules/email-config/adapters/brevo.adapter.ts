@@ -107,7 +107,7 @@ export class BrevoAdapter extends BaseEmailAdapter {
 
       const emailRequest: BrevoEmailRequest = {
         sender: {
-          name: this.config.fromName,
+          name: this.config.fromName || this.config.fromEmail,
           email: this.config.fromEmail,
         },
         to: recipients.map((email) => ({ email })),
@@ -178,7 +178,7 @@ export class BrevoAdapter extends BaseEmailAdapter {
 
       const emailRequest: BrevoEmailRequest = {
         sender: {
-          name: this.config.fromName,
+          name: this.config.fromName || this.config.fromEmail,
           email: this.config.fromEmail,
         },
         to: recipients.map((email) => ({ email })),

@@ -130,7 +130,7 @@ export class SendGridAdapter extends BaseEmailAdapter {
         ],
         from: {
           email: this.config.fromEmail,
-          name: this.config.fromName,
+          name: this.config.fromName || this.config.fromEmail,
         },
         subject: params.subject,
         content: [
@@ -206,7 +206,7 @@ export class SendGridAdapter extends BaseEmailAdapter {
         ],
         from: {
           email: this.config.fromEmail,
-          name: this.config.fromName,
+          name: this.config.fromName || this.config.fromEmail,
         },
         subject: params.subject,
         content: [

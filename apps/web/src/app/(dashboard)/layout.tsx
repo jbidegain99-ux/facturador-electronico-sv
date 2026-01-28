@@ -13,6 +13,7 @@ interface OnboardingStatus {
   hasCertificate: boolean;
   hasTestedConnection: boolean;
   hasFirstInvoice: boolean;
+  demoMode?: boolean;
 }
 
 export default function DashboardLayout({
@@ -27,8 +28,8 @@ export default function DashboardLayout({
 
   React.useEffect(() => {
     const checkOnboarding = async () => {
-      // Skip onboarding check if already on onboarding page
-      if (pathname === '/onboarding') {
+      // Skip check if already on onboarding pages
+      if (pathname === '/onboarding' || pathname === '/onboarding-hacienda') {
         setIsCheckingOnboarding(false);
         return;
       }
@@ -71,10 +72,15 @@ export default function DashboardLayout({
 
         const status: OnboardingStatus = await response.json();
 
-        // If user hasn't uploaded certificate, redirect to onboarding
-        // Certificate is the minimum requirement to use the system
+        // Demo mode users can access dashboard directly (to create demo invoices)
+        if (status.demoMode) {
+          setIsCheckingOnboarding(false);
+          return;
+        }
+
+        // Non-demo users without certificate must complete the new Hacienda wizard
         if (!status.hasCertificate) {
-          router.push('/onboarding');
+          router.push('/onboarding-hacienda');
           return;
         }
 
@@ -91,7 +97,7 @@ export default function DashboardLayout({
   }, [pathname, router]);
 
   // Show loading while checking onboarding status
-  if (isCheckingOnboarding && pathname !== '/onboarding') {
+  if (isCheckingOnboarding && pathname !== '/onboarding' && pathname !== '/onboarding-hacienda') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

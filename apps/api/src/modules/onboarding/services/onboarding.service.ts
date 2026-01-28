@@ -187,13 +187,23 @@ export class OnboardingService {
   // =========================================================================
 
   async startOnboarding(tenantId: string, dto: StartOnboardingDto, userId: string) {
-    // Check if already exists
+    // Check if already exists - if so, return the existing onboarding
     const existing = await this.prisma.tenantOnboarding.findUnique({
       where: { tenantId },
+      include: {
+        dteTypes: true,
+        steps: true,
+        testProgress: true,
+        communications: {
+          orderBy: { sentAt: 'desc' },
+          take: 10,
+        },
+      },
     });
 
     if (existing) {
-      throw new BadRequestException('El proceso de onboarding ya fue iniciado');
+      // Return existing onboarding instead of error
+      return this.formatOnboardingResponse(existing);
     }
 
     // Get tenant info

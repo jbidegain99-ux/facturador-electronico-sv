@@ -13,6 +13,7 @@ interface OnboardingStatus {
   hasCertificate: boolean;
   hasTestedConnection: boolean;
   hasFirstInvoice: boolean;
+  demoMode?: boolean;
 }
 
 export default function DashboardLayout({
@@ -71,9 +72,9 @@ export default function DashboardLayout({
 
         const status: OnboardingStatus = await response.json();
 
-        // If user hasn't uploaded certificate, redirect to onboarding
-        // Certificate is the minimum requirement to use the system
-        if (!status.hasCertificate) {
+        // If user hasn't uploaded certificate AND is not in demo mode, redirect to onboarding
+        // Certificate is the minimum requirement to use the system (unless in demo mode)
+        if (!status.hasCertificate && !status.demoMode) {
           router.push('/onboarding');
           return;
         }

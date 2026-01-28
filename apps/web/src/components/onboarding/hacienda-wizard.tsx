@@ -106,6 +106,8 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
       });
       setData(result);
       toast.success('Proceso de onboarding iniciado');
+      // Complete the WELCOME step to move to COMPANY_INFO
+      await handleCompleteStep('WELCOME');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al iniciar');
     } finally {

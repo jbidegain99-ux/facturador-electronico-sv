@@ -62,6 +62,10 @@ export default function AdminLoginPage() {
         throw new Error('Acceso denegado. Esta pagina es solo para Super Administradores.');
       }
 
+      // Clear any existing auth data before setting new token
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
       localStorage.setItem('token', data.access_token);
       router.push('/admin');
     } catch (err) {

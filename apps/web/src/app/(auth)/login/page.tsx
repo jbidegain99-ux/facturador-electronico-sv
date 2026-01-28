@@ -28,6 +28,11 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
+
+      // Clear any existing auth data before setting new token
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
       localStorage.setItem('token', data.access_token);
 
       // Redirect based on user role

@@ -48,7 +48,7 @@ interface Tenant {
 }
 
 export default function BackupsPage() {
-  const { toast } = useToast();
+  const { success, error: showError } = useToast();
   const [loading, setLoading] = React.useState(true);
   const [generating, setGenerating] = React.useState<string | null>(null);
   const [stats, setStats] = React.useState<BackupStats | null>(null);
@@ -82,13 +82,9 @@ export default function BackupsPage() {
         const tenantsData = await tenantsRes.json();
         setTenants(tenantsData.data || []);
       }
-    } catch (error) {
-      console.error('Error loading backup data:', error);
-      toast({
-        title: 'Error',
-        description: 'Error al cargar datos de backup',
-        variant: 'destructive',
-      });
+    } catch (err) {
+      console.error('Error loading backup data:', err);
+      showError('Error al cargar datos de backup');
     } finally {
       setLoading(false);
     }
@@ -127,16 +123,9 @@ export default function BackupsPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast({
-        title: 'Backup generado',
-        description: 'El backup se ha descargado exitosamente',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Error al generar backup del sistema',
-        variant: 'destructive',
-      });
+      success('El backup se ha descargado exitosamente');
+    } catch (err) {
+      showError('Error al generar backup del sistema');
     } finally {
       setGenerating(null);
     }
@@ -171,16 +160,9 @@ export default function BackupsPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast({
-        title: 'Backup generado',
-        description: `Backup de ${tenantName} descargado exitosamente`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Error al generar backup del tenant',
-        variant: 'destructive',
-      });
+      success(`Backup de ${tenantName} descargado exitosamente`);
+    } catch (err) {
+      showError('Error al generar backup del tenant');
     } finally {
       setGenerating(null);
     }

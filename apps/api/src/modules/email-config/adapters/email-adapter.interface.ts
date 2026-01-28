@@ -111,7 +111,7 @@ export interface DecryptedEmailConfig {
 
   // Sender
   fromEmail: string;
-  fromName: string;
+  fromName: string | null;
   replyToEmail?: string;
 
   // Settings

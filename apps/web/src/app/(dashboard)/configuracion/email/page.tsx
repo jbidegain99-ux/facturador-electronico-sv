@@ -217,22 +217,46 @@ export default function EmailConfigPage() {
 
   const handleAssistanceSubmit = async (data: AssistanceFormData) => {
     const token = localStorage.getItem('token');
+
+    // Map request type to subject
+    const subjectMap: Record<string, string> = {
+      'NEW_SETUP': 'Solicitud de configuración de email - Nueva configuración',
+      'MIGRATION': 'Solicitud de configuración de email - Migración de proveedor',
+      'CONFIGURATION_HELP': 'Solicitud de configuración de email - Ayuda con configuración',
+      'TROUBLESHOOTING': 'Solicitud de configuración de email - Problemas técnicos',
+    };
+
+    // Build description from form data
+    const descriptionParts = [
+      `Tipo de solicitud: ${data.requestType}`,
+      data.desiredProvider ? `Proveedor deseado: ${data.desiredProvider}` : null,
+      data.currentProvider ? `Proveedor actual: ${data.currentProvider}` : null,
+      data.accountEmail ? `Email de cuenta: ${data.accountEmail}` : null,
+      data.additionalNotes ? `Notas adicionales: ${data.additionalNotes}` : null,
+    ].filter(Boolean).join('\n');
+
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/email-config/request-assistance`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/support-tickets`,
       {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          type: 'EMAIL_CONFIG',
+          subject: subjectMap[data.requestType] || 'Solicitud de configuración de email',
+          description: descriptionParts,
+          metadata: JSON.stringify(data),
+          priority: 'MEDIUM',
+        }),
       }
     );
 
     const result = await res.json();
 
     if (res.ok) {
-      toast.success(result.message);
+      toast.success('Su solicitud ha sido recibida. Un miembro del equipo de Republicode se pondrá en contacto pronto.');
     } else {
       toast.error(result.message || 'Error al enviar solicitud');
     }

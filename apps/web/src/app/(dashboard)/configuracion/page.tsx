@@ -438,6 +438,38 @@ export default function ConfiguracionPage() {
           </CardContent>
         </Card>
 
+        {/* Hacienda Configuration Link */}
+        <Card className="lg:col-span-2 border-primary/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              Configuracion de Hacienda
+              <Badge className="ml-2 bg-primary/10 text-primary border-primary/20">Nuevo</Badge>
+            </CardTitle>
+            <CardDescription>
+              Configure su integracion con el Ministerio de Hacienda y ejecute las pruebas de acreditacion
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/configuracion/hacienda">
+              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-primary/5 transition-colors cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <Building2 className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Centro de Configuracion y Pruebas</p>
+                    <p className="text-sm text-muted-foreground">
+                      Certificados, credenciales API, ambiente de pruebas y produccion
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
+
         {/* Hacienda Onboarding Link */}
         <Card className="lg:col-span-2">
           <CardHeader>

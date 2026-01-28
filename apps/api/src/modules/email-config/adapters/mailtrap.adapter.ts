@@ -118,7 +118,7 @@ export class MailtrapAdapter extends BaseEmailAdapter {
       const emailRequest: MailtrapEmailRequest = {
         from: {
           email: this.config.fromEmail,
-          name: this.config.fromName,
+          name: this.config.fromName || this.config.fromEmail,
         },
         to: recipients.map((email) => ({ email })),
         subject: params.subject,
@@ -184,7 +184,7 @@ export class MailtrapAdapter extends BaseEmailAdapter {
       const emailRequest: MailtrapEmailRequest = {
         from: {
           email: this.config.fromEmail,
-          name: this.config.fromName,
+          name: this.config.fromName || this.config.fromEmail,
         },
         to: recipients.map((email) => ({ email })),
         subject: params.subject,

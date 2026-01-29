@@ -28,8 +28,8 @@ export default function DashboardLayout({
 
   React.useEffect(() => {
     const checkOnboarding = async () => {
-      // Skip check if already on onboarding pages
-      if (pathname === '/onboarding' || pathname === '/onboarding-hacienda') {
+      // Skip check if already on onboarding pages or hacienda config page
+      if (pathname === '/onboarding' || pathname === '/onboarding-hacienda' || pathname === '/configuracion/hacienda') {
         setIsCheckingOnboarding(false);
         return;
       }

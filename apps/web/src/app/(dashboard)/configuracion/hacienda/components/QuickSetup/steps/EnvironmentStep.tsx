@@ -56,7 +56,7 @@ export function EnvironmentStep({ environment, onSelect }: EnvironmentStepProps)
       </div>
 
       {/* Info Alert */}
-      <Alert className="max-w-3xl mx-auto bg-slate-800/50 border-slate-700">
+      <Alert className="max-w-3xl mx-auto bg-muted/50 border-border">
         <Shield className="h-4 w-4" />
         <AlertDescription>
           <strong>Recomendacion:</strong> Si es tu primera vez, comienza con el ambiente de
@@ -107,9 +107,9 @@ function EnvironmentCard({
 
   return (
     <Card
+      variant="glass"
       className={cn(
         'cursor-pointer transition-all duration-200',
-        'bg-slate-900/50 backdrop-blur-sm border-white/10',
         colors.hover,
         selected && `ring-2 ${colors.ring}`
       )}
@@ -151,7 +151,7 @@ function EnvironmentCard({
             'w-full h-1 rounded-full transition-all',
             selected
               ? colors.icon.replace('text-', 'bg-').replace('/20', '')
-              : 'bg-slate-700'
+              : 'bg-muted'
           )}
         />
       </CardContent>

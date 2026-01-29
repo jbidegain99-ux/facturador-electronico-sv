@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
 import { OnboardingChecklist, useOnboardingStatus } from '@/components/onboarding/onboarding-checklist';
+import { HaciendaConfigBanner, useHaciendaStatus } from '@/components/HaciendaConfigBanner';
 import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
 import {
   FileText,
@@ -49,6 +50,7 @@ interface RecentDTE {
 
 export default function DashboardPage() {
   const { status, isLoading: isLoadingOnboarding } = useOnboardingStatus();
+  const { isConfigured: isHaciendaConfigured, isLoading: isLoadingHacienda, demoMode } = useHaciendaStatus();
   const [isLoading, setIsLoading] = React.useState(true);
   const [summary, setSummary] = React.useState<SummaryStats | null>(null);
   const [chartData, setChartData] = React.useState<ChartData[]>([]);
@@ -58,6 +60,9 @@ export default function DashboardPage() {
   const isOnboardingComplete = status
     ? status.hasCompanyData && status.hasCertificate && status.hasTestedConnection
     : true;
+
+  // Show Hacienda banner if not configured and not in demo mode
+  const showHaciendaBanner = !isLoadingHacienda && !isHaciendaConfigured && !demoMode;
 
   // Fetch dashboard data
   React.useEffect(() => {
@@ -128,8 +133,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Onboarding Checklist - Show if not complete */}
-      {!isLoadingOnboarding && !isOnboardingComplete && status && (
+      {/* Hacienda Configuration Banner - Show if not configured */}
+      {showHaciendaBanner && (
+        <HaciendaConfigBanner variant="prominent" className="mb-2" />
+      )}
+
+      {/* Onboarding Checklist - Show if not complete (and Hacienda is configured) */}
+      {!isLoadingOnboarding && !isOnboardingComplete && status && !showHaciendaBanner && (
         <OnboardingChecklist status={status} className="mb-2" />
       )}
 

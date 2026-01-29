@@ -31,11 +31,11 @@ export function CertificateStep({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): boolean => {
-    const allowedExtensions = ['.p12', '.pfx'];
+    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem'];
     const fileExt = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
 
     if (!allowedExtensions.includes(fileExt)) {
-      setError('El archivo debe ser un certificado .p12 o .pfx');
+      setError('El archivo debe ser un certificado .p12, .pfx, .crt, .cer o .pem');
       return false;
     }
 
@@ -108,7 +108,7 @@ export function CertificateStep({
       <div className="text-center space-y-2">
         <h3 className="text-xl font-semibold">Sube tu Certificado Digital</h3>
         <p className="text-muted-foreground">
-          El certificado .p12 o .pfx que recibiste del Ministerio de Hacienda
+          El certificado que recibiste del Ministerio de Hacienda (.p12, .pfx, .crt, .cer o .pem)
         </p>
       </div>
 
@@ -116,8 +116,8 @@ export function CertificateStep({
       <div
         className={cn(
           'border-2 border-dashed rounded-xl p-8 transition-all cursor-pointer',
-          'bg-slate-900/30 border-slate-700',
-          isDragging && 'border-purple-500 bg-purple-500/5',
+          'bg-muted/30 border-border',
+          isDragging && 'border-primary bg-primary/5',
           certificate && 'border-green-500/50 bg-green-500/5'
         )}
         onDrop={handleDrop}
@@ -128,7 +128,7 @@ export function CertificateStep({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".p12,.pfx"
+          accept=".p12,.pfx,.crt,.cer,.pem"
           onChange={handleFileChange}
           className="hidden"
         />
@@ -159,16 +159,16 @@ export function CertificateStep({
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-xl bg-purple-500/20 flex items-center justify-center">
-              <FileKey2 className="h-8 w-8 text-purple-400" />
+            <div className="w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
+              <FileKey2 className="h-8 w-8 text-primary" />
             </div>
             <div className="text-center">
               <p className="font-medium">
                 Arrastra tu archivo aqui o{' '}
-                <span className="text-purple-400">haz clic para seleccionar</span>
+                <span className="text-primary">haz clic para seleccionar</span>
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Archivos .p12 o .pfx (max 5MB)
+                Archivos .p12, .pfx, .crt, .cer o .pem (max 5MB)
               </p>
             </div>
           </div>
@@ -176,7 +176,7 @@ export function CertificateStep({
       </div>
 
       {/* Password Field */}
-      <Card className="bg-slate-900/50 border-white/10">
+      <Card variant="glass">
         <CardContent className="p-6">
           <div className="space-y-2">
             <Label htmlFor="certificatePassword">Contrasena del Certificado</Label>
@@ -187,12 +187,12 @@ export function CertificateStep({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Ingresa la contrasena de tu certificado"
-                className="pr-10 bg-slate-800/50"
+                className="pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -213,7 +213,7 @@ export function CertificateStep({
       )}
 
       {/* Info Alert */}
-      <Alert className="bg-slate-800/50 border-slate-700">
+      <Alert className="bg-muted/50 border-border">
         <FileKey2 className="h-4 w-4" />
         <AlertDescription>
           <strong>Importante:</strong> Tu certificado sera almacenado de forma segura y encriptada.
@@ -228,7 +228,6 @@ export function CertificateStep({
         </Button>
         <Button
           type="submit"
-          className="bg-purple-600 hover:bg-purple-700"
           disabled={!certificate || !password}
         >
           Continuar

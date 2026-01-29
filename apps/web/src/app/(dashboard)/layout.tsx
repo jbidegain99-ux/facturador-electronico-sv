@@ -70,20 +70,12 @@ export default function DashboardLayout({
           return;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const status: OnboardingStatus = await response.json();
 
-        // Demo mode users can access dashboard directly (to create demo invoices)
-        if (status.demoMode) {
-          setIsCheckingOnboarding(false);
-          return;
-        }
-
-        // Non-demo users without certificate must complete the new Hacienda wizard
-        if (!status.hasCertificate) {
-          router.push('/onboarding-hacienda');
-          return;
-        }
-
+        // No forced redirect - allow users to navigate freely
+        // Individual pages will show HaciendaConfigBanner when needed
+        // using the useHaciendaStatus hook from @/components/HaciendaConfigBanner
         setIsCheckingOnboarding(false);
       } catch (error) {
         console.error('Error checking onboarding status:', error);

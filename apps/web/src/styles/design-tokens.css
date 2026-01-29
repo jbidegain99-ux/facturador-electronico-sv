@@ -1,0 +1,371 @@
+/* ============================================
+   FACTURO BY REPUBLICODE - DESIGN TOKENS
+   ============================================ */
+
+:root {
+  /* === BRAND COLORS - VIOLET SCALE === */
+  --facturo-violet-50: #F5F3FF;
+  --facturo-violet-100: #EDE9FE;
+  --facturo-violet-200: #DDD6FE;
+  --facturo-violet-300: #C4B5FD;
+  --facturo-violet-400: #A78BFA;
+  --facturo-violet-500: #8B5CF6;  /* PRIMARY */
+  --facturo-violet-600: #7C3AED;
+  --facturo-violet-700: #6D28D9;
+  --facturo-violet-800: #5B21B6;
+  --facturo-violet-900: #4C1D95;
+  --facturo-violet-950: #2E1065;
+
+  /* === SEMANTIC COLORS === */
+  --facturo-success: #10B981;
+  --facturo-success-light: #D1FAE5;
+  --facturo-success-dark: #059669;
+  --facturo-warning: #F59E0B;
+  --facturo-warning-light: #FEF3C7;
+  --facturo-warning-dark: #D97706;
+  --facturo-error: #EF4444;
+  --facturo-error-light: #FEE2E2;
+  --facturo-error-dark: #DC2626;
+  --facturo-info: #3B82F6;
+  --facturo-info-light: #DBEAFE;
+  --facturo-info-dark: #2563EB;
+
+  /* === DARK MODE (Default) === */
+  --facturo-bg-primary: #0F172A;
+  --facturo-bg-secondary: #1E293B;
+  --facturo-bg-tertiary: #334155;
+  --facturo-bg-card: rgba(30, 41, 59, 0.5);
+  --facturo-bg-elevated: rgba(51, 65, 85, 0.5);
+  --facturo-bg-overlay: rgba(0, 0, 0, 0.5);
+
+  --facturo-text-primary: #F8FAFC;
+  --facturo-text-secondary: #94A3B8;
+  --facturo-text-muted: #64748B;
+  --facturo-text-inverse: #0F172A;
+
+  --facturo-border: #334155;
+  --facturo-border-light: rgba(255, 255, 255, 0.1);
+  --facturo-border-focus: #8B5CF6;
+
+  /* === EFFECTS === */
+  --facturo-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --facturo-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --facturo-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --facturo-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --facturo-shadow-glow: 0 0 40px rgba(139, 92, 246, 0.3);
+  --facturo-shadow-glow-lg: 0 0 60px rgba(139, 92, 246, 0.4);
+
+  --facturo-blur-sm: 8px;
+  --facturo-blur-md: 16px;
+  --facturo-blur-lg: 24px;
+
+  /* === RADIUS === */
+  --facturo-radius-sm: 6px;
+  --facturo-radius-md: 8px;
+  --facturo-radius-lg: 12px;
+  --facturo-radius-xl: 16px;
+  --facturo-radius-2xl: 24px;
+  --facturo-radius-full: 9999px;
+  --facturo-radius-squircle: 22%;
+
+  /* === TRANSITIONS === */
+  --facturo-transition-fast: 150ms ease;
+  --facturo-transition-normal: 300ms ease;
+  --facturo-transition-slow: 500ms ease;
+  --facturo-transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* === TYPOGRAPHY === */
+  --facturo-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --facturo-font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --facturo-font-brand: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --facturo-font-brand-weight: 600;
+  --facturo-font-brand-tracking: -0.02em;
+
+  /* === Z-INDEX SCALE === */
+  --facturo-z-base: 0;
+  --facturo-z-dropdown: 100;
+  --facturo-z-sticky: 200;
+  --facturo-z-fixed: 300;
+  --facturo-z-modal-backdrop: 400;
+  --facturo-z-modal: 500;
+  --facturo-z-popover: 600;
+  --facturo-z-tooltip: 700;
+  --facturo-z-toast: 800;
+}
+
+/* === LIGHT MODE OVERRIDES === */
+.light {
+  --facturo-bg-primary: #FFFFFF;
+  --facturo-bg-secondary: #F8FAFC;
+  --facturo-bg-tertiary: #F1F5F9;
+  --facturo-bg-card: #FFFFFF;
+  --facturo-bg-elevated: #FFFFFF;
+  --facturo-bg-overlay: rgba(0, 0, 0, 0.3);
+
+  --facturo-text-primary: #0F172A;
+  --facturo-text-secondary: #475569;
+  --facturo-text-muted: #94A3B8;
+  --facturo-text-inverse: #F8FAFC;
+
+  --facturo-border: #E2E8F0;
+  --facturo-border-light: rgba(0, 0, 0, 0.1);
+  --facturo-border-focus: #8B5CF6;
+
+  --facturo-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --facturo-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --facturo-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --facturo-shadow-glow: 0 0 40px rgba(139, 92, 246, 0.2);
+}
+
+/* ============================================
+   COMPONENT STYLES
+   ============================================ */
+
+/* Glass Card Effect */
+.facturo-card {
+  background: var(--facturo-bg-card);
+  backdrop-filter: blur(var(--facturo-blur-md));
+  -webkit-backdrop-filter: blur(var(--facturo-blur-md));
+  border: 1px solid var(--facturo-border-light);
+  border-radius: var(--facturo-radius-xl);
+  transition: all var(--facturo-transition-normal);
+}
+
+.facturo-card:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: var(--facturo-shadow-glow);
+}
+
+/* Glass Card Elevated */
+.facturo-card-elevated {
+  background: var(--facturo-bg-elevated);
+  backdrop-filter: blur(var(--facturo-blur-lg));
+  -webkit-backdrop-filter: blur(var(--facturo-blur-lg));
+  border: 1px solid var(--facturo-border-light);
+  border-radius: var(--facturo-radius-xl);
+  box-shadow: var(--facturo-shadow-lg);
+}
+
+/* Input Styles */
+.facturo-input {
+  background: var(--facturo-bg-card);
+  border: 1px solid var(--facturo-border);
+  border-radius: var(--facturo-radius-lg);
+  padding: 12px 16px;
+  color: var(--facturo-text-primary);
+  font-size: 14px;
+  transition: all var(--facturo-transition-fast);
+  width: 100%;
+}
+
+.facturo-input::placeholder {
+  color: var(--facturo-text-muted);
+}
+
+.facturo-input:focus {
+  outline: none;
+  border-color: var(--facturo-violet-500);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.facturo-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Button Primary */
+.facturo-btn-primary {
+  background: linear-gradient(135deg, var(--facturo-violet-500) 0%, var(--facturo-violet-600) 100%);
+  color: white;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: var(--facturo-radius-lg);
+  border: none;
+  cursor: pointer;
+  transition: all var(--facturo-transition-normal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.facturo-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+}
+
+.facturo-btn-primary:active {
+  transform: translateY(0);
+}
+
+.facturo-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Button Secondary */
+.facturo-btn-secondary {
+  background: transparent;
+  color: var(--facturo-text-primary);
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: var(--facturo-radius-lg);
+  border: 1px solid var(--facturo-border);
+  cursor: pointer;
+  transition: all var(--facturo-transition-normal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.facturo-btn-secondary:hover {
+  border-color: var(--facturo-violet-500);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+/* Button Ghost */
+.facturo-btn-ghost {
+  background: transparent;
+  color: var(--facturo-text-secondary);
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--facturo-radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--facturo-transition-fast);
+}
+
+.facturo-btn-ghost:hover {
+  color: var(--facturo-text-primary);
+  background: var(--facturo-border-light);
+}
+
+/* Status Badges */
+.facturo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--facturo-radius-full);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.facturo-badge-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--facturo-success);
+}
+
+.facturo-badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--facturo-warning);
+}
+
+.facturo-badge-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--facturo-error);
+}
+
+.facturo-badge-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--facturo-info);
+}
+
+.facturo-badge-violet {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--facturo-violet-400);
+}
+
+/* Gradient Text */
+.facturo-gradient-text {
+  background: linear-gradient(135deg, var(--facturo-violet-400), var(--facturo-violet-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow Effects */
+.facturo-glow {
+  box-shadow: var(--facturo-shadow-glow);
+}
+
+.facturo-glow-lg {
+  box-shadow: var(--facturo-shadow-glow-lg);
+}
+
+.facturo-glow-text {
+  text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+/* Animated Gradient Border */
+.facturo-gradient-border {
+  position: relative;
+  background: var(--facturo-bg-secondary);
+  border-radius: var(--facturo-radius-xl);
+}
+
+.facturo-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--facturo-violet-500), var(--facturo-violet-700), var(--facturo-violet-500));
+  background-size: 200% 200%;
+  animation: facturo-gradient-rotate 3s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@keyframes facturo-gradient-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Skeleton Shimmer */
+.facturo-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--facturo-bg-tertiary) 0%,
+    var(--facturo-bg-elevated) 50%,
+    var(--facturo-bg-tertiary) 100%
+  );
+  background-size: 200% 100%;
+  animation: facturo-shimmer 1.5s infinite;
+  border-radius: var(--facturo-radius-md);
+}
+
+@keyframes facturo-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Focus Ring */
+.facturo-focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--facturo-bg-primary), 0 0 0 4px var(--facturo-violet-500);
+}
+
+/* Scrollbar Styling */
+.facturo-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.facturo-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.facturo-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--facturo-border);
+  border-radius: var(--facturo-radius-full);
+}
+
+.facturo-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--facturo-violet-500);
+}

@@ -103,10 +103,10 @@ export function CredentialsStep({
       </div>
 
       {/* Form Card */}
-      <Card className="bg-slate-900/50 border-white/10">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Key className="h-5 w-5 text-purple-400" />
+            <Key className="h-5 w-5 text-primary" />
             Credenciales de Hacienda
           </CardTitle>
         </CardHeader>
@@ -120,7 +120,6 @@ export function CredentialsStep({
               value={apiUser}
               onChange={(e) => setApiUser(e.target.value)}
               placeholder="06141234567890"
-              className="bg-slate-800/50"
             />
             <p className="text-xs text-muted-foreground">
               Generalmente es tu NIT sin guiones (14 digitos)
@@ -137,12 +136,12 @@ export function CredentialsStep({
                 value={apiPassword}
                 onChange={(e) => setApiPassword(e.target.value)}
                 placeholder="Tu contrasena de API"
-                className="pr-10 bg-slate-800/50"
+                className="pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -163,12 +162,12 @@ export function CredentialsStep({
       )}
 
       {/* Help Card */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card variant="glass">
         <CardContent className="p-4">
           <div className="flex gap-4">
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                <ExternalLink className="h-5 w-5 text-blue-400" />
+              <div className="w-10 h-10 rounded-lg bg-info/20 flex items-center justify-center">
+                <ExternalLink className="h-5 w-5 text-info" />
               </div>
             </div>
             <div className="space-y-1">
@@ -180,7 +179,7 @@ export function CredentialsStep({
                 href={portalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-purple-400 hover:text-purple-300 inline-flex items-center gap-1"
+                className="text-xs text-primary hover:text-primary/80 inline-flex items-center gap-1"
               >
                 Ir al portal de Hacienda
                 <ExternalLink className="h-3 w-3" />
@@ -191,7 +190,7 @@ export function CredentialsStep({
       </Card>
 
       {/* Security Note */}
-      <Alert className="bg-slate-800/50 border-slate-700">
+      <Alert className="bg-muted/50 border-border">
         <Shield className="h-4 w-4" />
         <AlertDescription>
           <strong>Seguridad:</strong> Tus credenciales se almacenan de forma encriptada (AES-256).
@@ -206,7 +205,6 @@ export function CredentialsStep({
         </Button>
         <Button
           type="submit"
-          className="bg-purple-600 hover:bg-purple-700"
           disabled={!apiUser || !apiPassword || validating}
         >
           {validating ? (

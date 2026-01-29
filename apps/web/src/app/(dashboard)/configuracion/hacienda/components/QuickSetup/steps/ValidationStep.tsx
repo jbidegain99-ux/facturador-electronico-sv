@@ -149,11 +149,11 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
         {/* Results Summary */}
         <div className="grid gap-4">
           {/* Certificate Info */}
-          <Card className="bg-slate-900/50 border-green-500/30">
+          <Card variant="glass" className="border-green-500/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
-                  <FileKey2 className="h-6 w-6 text-green-400" />
+                  <FileKey2 className="h-6 w-6 text-green-500" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium">Certificado Validado</p>
@@ -164,17 +164,17 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
                     Expira en {result.data?.certificate.daysUntilExpiry} dias
                   </p>
                 </div>
-                <CheckCircle className="h-6 w-6 text-green-400" />
+                <CheckCircle className="h-6 w-6 text-green-500" />
               </div>
             </CardContent>
           </Card>
 
           {/* Auth Info */}
-          <Card className="bg-slate-900/50 border-green-500/30">
+          <Card variant="glass" className="border-green-500/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
-                  <Key className="h-6 w-6 text-green-400" />
+                  <Key className="h-6 w-6 text-green-500" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium">Autenticacion Exitosa</p>
@@ -185,14 +185,14 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
                       : 'N/A'}
                   </p>
                 </div>
-                <CheckCircle className="h-6 w-6 text-green-400" />
+                <CheckCircle className="h-6 w-6 text-green-500" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Next Steps */}
-        <Alert className="bg-purple-500/10 border-purple-500/30">
+        <Alert className="bg-primary/10 border-primary/30">
           <Server className="h-4 w-4" />
           <AlertDescription>
             <strong>Siguiente paso:</strong> Ahora puedes ir al Centro de Pruebas para ejecutar
@@ -203,10 +203,7 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 pt-4">
-          <Button
-            onClick={onComplete}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
+          <Button onClick={onComplete}>
             Continuar al Dashboard
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
@@ -240,24 +237,24 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
         </Alert>
 
         {/* Troubleshooting */}
-        <Card className="bg-slate-900/50 border-white/10">
+        <Card variant="glass">
           <CardContent className="p-4 space-y-3">
             <p className="font-medium">Posibles soluciones:</p>
             <ul className="text-sm text-muted-foreground space-y-2">
               <li className="flex items-start gap-2">
-                <span className="text-purple-400">1.</span>
+                <span className="text-primary">1.</span>
                 Verifica que la contrasena del certificado sea correcta
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-purple-400">2.</span>
+                <span className="text-primary">2.</span>
                 Asegurate que el certificado no haya expirado
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-purple-400">3.</span>
+                <span className="text-primary">3.</span>
                 Confirma que el usuario y contrasena de API sean correctos
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-purple-400">4.</span>
+                <span className="text-primary">4.</span>
                 Verifica que el ambiente seleccionado coincida con tus credenciales
               </li>
             </ul>
@@ -269,7 +266,7 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
           <Button variant="ghost" onClick={onBack}>
             Volver y Corregir
           </Button>
-          <Button onClick={startValidation} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={startValidation}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Reintentar
           </Button>
@@ -298,7 +295,7 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
       </div>
 
       {/* Steps Progress */}
-      <Card className="bg-slate-900/50 border-white/10">
+      <Card variant="glass">
         <CardContent className="p-4 space-y-3">
           <ValidationPhaseItem
             label="Subir certificado"
@@ -334,8 +331,8 @@ function ValidationPhaseItem({ label, status }: ValidationPhaseItemProps) {
         className={cn(
           'w-6 h-6 rounded-full flex items-center justify-center',
           status === 'complete' && 'bg-green-500',
-          status === 'active' && 'bg-purple-500',
-          status === 'pending' && 'bg-slate-700'
+          status === 'active' && 'bg-primary',
+          status === 'pending' && 'bg-muted'
         )}
       >
         {status === 'complete' ? (
@@ -343,14 +340,14 @@ function ValidationPhaseItem({ label, status }: ValidationPhaseItemProps) {
         ) : status === 'active' ? (
           <Loader2 className="h-4 w-4 text-white animate-spin" />
         ) : (
-          <div className="w-2 h-2 rounded-full bg-slate-500" />
+          <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
         )}
       </div>
       <span
         className={cn(
           'text-sm',
-          status === 'complete' && 'text-green-400',
-          status === 'active' && 'text-purple-400',
+          status === 'complete' && 'text-green-500',
+          status === 'active' && 'text-primary',
           status === 'pending' && 'text-muted-foreground'
         )}
       >

@@ -91,7 +91,7 @@ export function EnvironmentConfig({
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/config/${environment}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/config/${environment}`,
         {
           method: 'POST',
           headers: {
@@ -125,7 +125,7 @@ export function EnvironmentConfig({
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/config/test-connection`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/config/test-connection`,
         {
           method: 'POST',
           headers: {
@@ -156,7 +156,7 @@ export function EnvironmentConfig({
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/config/renew-token`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/config/renew-token`,
         {
           method: 'POST',
           headers: {

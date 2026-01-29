@@ -85,7 +85,7 @@ export function TestExecutor({
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/generate-data`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/tests/generate-data`,
         {
           method: 'POST',
           headers: {
@@ -112,7 +112,7 @@ export function TestExecutor({
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/successful-emissions?dteType=${dteType}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/tests/successful-emissions?dteType=${dteType}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -151,7 +151,7 @@ export function TestExecutor({
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/execute`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/tests/execute`,
         {
           method: 'POST',
           headers: {

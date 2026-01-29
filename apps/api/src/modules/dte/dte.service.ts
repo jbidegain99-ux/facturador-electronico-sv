@@ -365,9 +365,11 @@ export class DteService {
   }
 
   private async getNextCorrelativo(tenantId: string, tipoDte: string): Promise<number> {
+    // Query across ALL tenants since numeroControl must be globally unique
+    // The establecimiento code is currently hardcoded, so we need global uniqueness
     const lastDte = await this.prisma.dTE.findFirst({
-      where: { tenantId, tipoDte },
-      orderBy: { createdAt: 'desc' },
+      where: { tipoDte },
+      orderBy: { numeroControl: 'desc' },
     });
 
     if (!lastDte) return 1;

@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { FileText, Shield, Zap, Building2, CheckCircle, ArrowRight } from 'lucide-react';
+import { FacturoLogo } from '@/components/brand/FacturoLogo';
 
 export default function Home() {
   return (
@@ -8,12 +8,7 @@ export default function Home() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-0 border-b">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
-              <FileText className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-xl font-bold text-white">Facturador SV</span>
-          </div>
+          <FacturoLogo variant="full" size="md" />
           <div className="flex items-center gap-4">
             <Link href="/login" className="btn-secondary text-sm px-4 py-2">
               Iniciar Sesion
@@ -38,15 +33,15 @@ export default function Home() {
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="text-white">Facturacion Electronica</span>
+            <span className="gradient-text">Facturo</span>
             <br />
-            <span className="gradient-text">para El Salvador</span>
+            <span className="text-white">Facturacion Electronica</span>
           </h1>
 
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            Sistema completo de facturacion electronica DTE.
+            Plataforma de facturacion electronica para El Salvador.
             Emite facturas, creditos fiscales, notas de credito y mas.
-            Todo en cumplimiento con la normativa del MH.
+            100% compatible con el Ministerio de Hacienda.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -289,19 +284,14 @@ export default function Home() {
       <footer className="py-12 border-t border-border">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                <FileText className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-semibold text-white">Facturador SV</span>
-            </div>
+            <FacturoLogo variant="full" size="sm" />
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <Link href="#" className="hover:text-white transition-colors">Terminos</Link>
               <Link href="#" className="hover:text-white transition-colors">Privacidad</Link>
               <Link href="#" className="hover:text-white transition-colors">Soporte</Link>
             </div>
             <div className="text-sm text-muted-foreground">
-              Powered by <span className="gradient-text font-semibold">Republicode</span>
+              by <span className="gradient-text font-semibold">Republicode</span>
             </div>
           </div>
         </div>

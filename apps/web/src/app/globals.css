@@ -110,24 +110,27 @@
 @layer components {
   /* Glass Card Effect */
   .glass-card {
-    @apply bg-card text-card-foreground;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid hsl(var(--border));
+    @apply text-card-foreground;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1rem;
   }
 
-  .dark .glass-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  .light .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.08);
   }
 
   .glass-card:hover {
-    border-color: rgba(139, 92, 246, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(139, 92, 246, 0.4);
   }
 
-  .dark .glass-card:hover {
-    background: rgba(255, 255, 255, 0.08);
+  .light .glass-card:hover {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(139, 92, 246, 0.3);
   }
 
   /* Gradient Text */

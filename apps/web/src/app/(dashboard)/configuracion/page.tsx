@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
 import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle } from 'lucide-react';
@@ -247,7 +248,7 @@ export default function ConfiguracionPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Nombre / Razon Social</label>
+              <Label>Nombre / Razon Social</Label>
               <Input
                 placeholder="Mi Empresa S.A. de C.V."
                 value={formData.nombre || ''}
@@ -256,7 +257,7 @@ export default function ConfiguracionPage() {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium">NIT</label>
+                <Label>NIT</Label>
                 <Input
                   placeholder="0000-000000-000-0"
                   value={formData.nit || ''}
@@ -266,7 +267,7 @@ export default function ConfiguracionPage() {
                 <p className="text-xs text-muted-foreground">El NIT no se puede modificar</p>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">NRC</label>
+                <Label>NRC</Label>
                 <Input
                   placeholder="000000-0"
                   value={formData.nrc || ''}
@@ -275,7 +276,7 @@ export default function ConfiguracionPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Correo Electronico</label>
+              <Label>Correo Electronico</Label>
               <Input
                 type="email"
                 placeholder="facturacion@empresa.com"
@@ -284,7 +285,7 @@ export default function ConfiguracionPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Telefono</label>
+              <Label>Telefono</Label>
               <Input
                 placeholder="0000-0000"
                 value={formData.telefono || ''}
@@ -292,7 +293,7 @@ export default function ConfiguracionPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Direccion</label>
+              <Label>Direccion</Label>
               <Input
                 placeholder="Direccion completa del establecimiento"
                 value={formData.direccion?.complemento || ''}
@@ -315,19 +316,19 @@ export default function ConfiguracionPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">NIT (Usuario)</label>
+              <Label>NIT (Usuario)</Label>
               <Input placeholder="0000000000000" />
               <p className="text-xs text-muted-foreground">NIT sin guiones</p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Password Privado</label>
+              <Label>Password Privado</Label>
               <Input type="password" placeholder="********" />
               <p className="text-xs text-muted-foreground">
                 Contraseña proporcionada por el MH
               </p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Ambiente</label>
+              <Label>Ambiente</Label>
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1">
                   Pruebas
@@ -400,7 +401,7 @@ export default function ConfiguracionPage() {
             </div>
             {certificateStatus === 'not_loaded' && (
               <div className="mt-4 space-y-2">
-                <label className="text-sm font-medium">Contraseña del Certificado</label>
+                <Label>Contraseña del Certificado</Label>
                 <Input type="password" placeholder="********" />
               </div>
             )}

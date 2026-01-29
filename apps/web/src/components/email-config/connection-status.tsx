@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { EmailConfig, HealthStatus, ConnectionTestResult } from '@/types/email-config';
 
 interface ConnectionStatusProps {
@@ -174,9 +175,9 @@ export function ConnectionStatus({
         {showTestForm && (
           <div className="p-4 rounded-lg bg-muted space-y-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium">
+              <Label>
                 Email de destino
-              </label>
+              </Label>
               <input
                 type="email"
                 placeholder="prueba@ejemplo.com"

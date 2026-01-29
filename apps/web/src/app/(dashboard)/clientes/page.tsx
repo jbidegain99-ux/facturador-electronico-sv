@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Search, Pencil, Trash2, User, Loader2, X } from 'lucide-react';
 import { SkeletonTable } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/toast';
 
 interface Cliente {
@@ -416,7 +417,7 @@ export default function ClientesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Tipo Documento</label>
+                <Label>Tipo Documento</Label>
                 <Select
                   value={formData.tipoDocumento}
                   onValueChange={(value) => handleFormChange('tipoDocumento', value)}
@@ -434,7 +435,7 @@ export default function ClientesPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Numero Documento *</label>
+                <Label>Numero Documento *</Label>
                 <Input
                   placeholder="0000-000000-000-0"
                   value={formData.numDocumento}
@@ -444,7 +445,7 @@ export default function ClientesPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Nombre / Razon Social *</label>
+              <Label>Nombre / Razon Social *</Label>
               <Input
                 placeholder="Nombre del cliente"
                 value={formData.nombre}
@@ -454,7 +455,7 @@ export default function ClientesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">NRC</label>
+                <Label>NRC</Label>
                 <Input
                   placeholder="0000000"
                   value={formData.nrc}
@@ -462,7 +463,7 @@ export default function ClientesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Telefono</label>
+                <Label>Telefono</Label>
                 <Input
                   placeholder="0000-0000"
                   value={formData.telefono}
@@ -472,7 +473,7 @@ export default function ClientesPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Correo Electronico</label>
+              <Label>Correo Electronico</Label>
               <Input
                 type="email"
                 placeholder="cliente@ejemplo.com"
@@ -482,7 +483,7 @@ export default function ClientesPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Direccion</label>
+              <Label>Direccion</Label>
               <Input
                 placeholder="Direccion completa"
                 value={formData.direccion.complemento}

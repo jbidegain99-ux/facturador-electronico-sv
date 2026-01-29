@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { HelpCircle, MessageSquare, Loader2 } from 'lucide-react';
 import { EmailRequestType, EmailProvider, EMAIL_PROVIDERS } from '@/types/email-config';
 
@@ -178,9 +179,9 @@ function Step2Details({
 
       {/* Current provider */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">
+        <Label>
           ¿Qué servicio de email usa actualmente? (opcional)
-        </label>
+        </Label>
         <Input
           placeholder="Ej: Gmail, Outlook, ninguno"
           value={formData.currentProvider || ''}
@@ -190,9 +191,9 @@ function Step2Details({
 
       {/* Preferred provider */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">
+        <Label>
           ¿Tiene preferencia de proveedor? (opcional)
-        </label>
+        </Label>
         <select
           className="w-full px-3 py-2 rounded-md border bg-background"
           value={formData.desiredProvider || ''}
@@ -211,9 +212,9 @@ function Step2Details({
 
       {/* Account email */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">
+        <Label>
           Email de contacto (opcional)
-        </label>
+        </Label>
         <Input
           type="email"
           placeholder="contacto@empresa.com"
@@ -224,9 +225,9 @@ function Step2Details({
 
       {/* Notes */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">
+        <Label>
           Notas adicionales (opcional)
-        </label>
+        </Label>
         <textarea
           className="w-full px-3 py-2 rounded-md border bg-background resize-none"
           rows={3}

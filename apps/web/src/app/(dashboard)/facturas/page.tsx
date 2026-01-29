@@ -11,8 +11,9 @@ import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
 import { useConfirm } from '@/components/ui/confirm-dialog';
+import { HaciendaConfigBanner, useHaciendaStatus } from '@/components/HaciendaConfigBanner';
 import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
-import { Plus, Search, Download, Eye, Ban, Loader2, ChevronLeft, ChevronRight, Copy, FileText } from 'lucide-react';
+import { Plus, Search, Download, Eye, Ban, ChevronLeft, ChevronRight, Copy, FileText } from 'lucide-react';
 import { DTEStatus, TipoDte } from '@/types';
 
 interface DTE {
@@ -41,6 +42,11 @@ interface DTEResponse {
 export default function FacturasPage() {
   const toast = useToast();
   const { confirm, ConfirmDialog } = useConfirm();
+  const { isConfigured: isHaciendaConfigured, isLoading: isLoadingHacienda, demoMode } = useHaciendaStatus();
+
+  // Can create invoices if Hacienda is configured OR in demo mode
+  const canCreateInvoice = isHaciendaConfigured || demoMode;
+  const showHaciendaBanner = !isLoadingHacienda && !isHaciendaConfigured && !demoMode;
 
   const [search, setSearch] = React.useState('');
   const [filterTipo, setFilterTipo] = React.useState<string>('all');
@@ -222,6 +228,11 @@ export default function FacturasPage() {
 
   return (
     <div className="space-y-6">
+      {/* Hacienda Configuration Banner */}
+      {showHaciendaBanner && (
+        <HaciendaConfigBanner variant="prominent" className="mb-2" />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -230,12 +241,19 @@ export default function FacturasPage() {
             Gestiona tus documentos tributarios electronicos
           </p>
         </div>
-        <Link href="/facturas/nueva">
-          <Button>
+        {canCreateInvoice ? (
+          <Link href="/facturas/nueva">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nueva Factura
+            </Button>
+          </Link>
+        ) : (
+          <Button disabled title="Configura Hacienda primero">
             <Plus className="mr-2 h-4 w-4" />
             Nueva Factura
           </Button>
-        </Link>
+        )}
       </div>
 
       {/* Error Message */}

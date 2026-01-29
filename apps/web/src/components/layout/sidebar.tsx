@@ -11,10 +11,10 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Receipt,
   BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { FacturoLogo, FacturoIcon } from '@/components/brand';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -37,25 +37,38 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b px-4">
-        {sidebarOpen && (
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Receipt className="h-8 w-8 text-primary" />
-            <span className="text-lg font-bold">Facturador</span>
+        {sidebarOpen ? (
+          <Link href="/dashboard" className="flex items-center">
+            <FacturoLogo variant="full" size="md" />
+          </Link>
+        ) : (
+          <Link href="/dashboard" className="mx-auto">
+            <FacturoIcon size={32} />
           </Link>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className={cn(!sidebarOpen && 'mx-auto')}
+          className={cn(!sidebarOpen && 'hidden')}
         >
-          {sidebarOpen ? (
-            <ChevronLeft className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
+          <ChevronLeft className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Expand button when collapsed */}
+      {!sidebarOpen && (
+        <div className="flex justify-center py-2 border-b">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="h-8 w-8"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex flex-col gap-1 p-2">
@@ -87,8 +100,13 @@ export function Sidebar() {
 
       {/* Version */}
       {sidebarOpen && (
-        <div className="absolute bottom-4 left-4 text-xs text-muted-foreground">
-          v1.0.0 - El Salvador
+        <div className="absolute bottom-4 left-4 right-4">
+          <p className="text-xs text-muted-foreground">
+            v1.0.0 - El Salvador
+          </p>
+          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+            by Republicode
+          </p>
         </div>
       )}
     </aside>

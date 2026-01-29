@@ -172,13 +172,22 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur px-6">
       {/* Company Name */}
-      <div>
-        <h1 className="text-lg font-semibold">
-          {tenant?.nombre || 'Mi Empresa S.A. de C.V.'}
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          NIT: {tenant?.nit || '0000-000000-000-0'}
-        </p>
+      <div className="min-w-0">
+        {tenant?.nombre ? (
+          <>
+            <h1 className="text-lg font-semibold truncate">
+              {tenant.nombre}
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              NIT: {tenant.nit}
+            </p>
+          </>
+        ) : (
+          <div className="space-y-2">
+            <div className="h-5 w-48 bg-muted animate-pulse rounded" />
+            <div className="h-3 w-32 bg-muted animate-pulse rounded" />
+          </div>
+        )}
       </div>
 
       {/* Actions */}

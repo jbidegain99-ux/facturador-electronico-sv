@@ -88,14 +88,14 @@ function OptionCard({
 }: OptionCardProps) {
   return (
     <Card
+      variant="glass"
       className={cn(
-        'relative overflow-hidden transition-all duration-200 hover:border-purple-500/50',
-        'bg-slate-900/50 backdrop-blur-sm border-white/10',
-        highlighted && 'ring-2 ring-purple-500/30'
+        'relative overflow-hidden transition-all duration-200 hover:border-primary/50',
+        highlighted && 'ring-2 ring-primary/30'
       )}
     >
       {highlighted && (
-        <div className="absolute top-0 right-0 px-3 py-1 bg-purple-600 text-xs font-medium rounded-bl-lg">
+        <div className="absolute top-0 right-0 px-3 py-1 bg-primary text-xs font-medium text-primary-foreground rounded-bl-lg">
           Recomendado
         </div>
       )}
@@ -104,7 +104,7 @@ function OptionCard({
         <div
           className={cn(
             'w-14 h-14 rounded-xl flex items-center justify-center',
-            variant === 'primary' ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-700/50 text-slate-400'
+            variant === 'primary' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
           )}
         >
           {icon}
@@ -125,7 +125,7 @@ function OptionCard({
           <span
             className={cn(
               'font-medium',
-              variant === 'primary' ? 'text-green-400' : 'text-amber-400'
+              variant === 'primary' ? 'text-green-500' : 'text-amber-500'
             )}
           >
             {duration}
@@ -135,12 +135,8 @@ function OptionCard({
         {/* Action Button */}
         <Button
           onClick={onClick}
-          className={cn(
-            'w-full',
-            variant === 'primary'
-              ? 'bg-purple-600 hover:bg-purple-700'
-              : 'bg-slate-700 hover:bg-slate-600'
-          )}
+          className="w-full"
+          variant={variant === 'primary' ? 'default' : 'secondary'}
         >
           {buttonText}
           <ChevronRight className="h-4 w-4 ml-2" />

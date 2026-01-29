@@ -7,23 +7,23 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-white/[0.03] dark:bg-white/[0.03] light:bg-white/70 backdrop-blur-xl border-white/[0.08] dark:border-white/[0.08] light:border-black/[0.08] hover:bg-white/[0.06] hover:border-primary/40',
-        glass: 'bg-white/[0.03] backdrop-blur-xl border-white/[0.08] hover:bg-white/[0.06] hover:border-primary/40',
-        elevated: 'bg-white/[0.05] backdrop-blur-xl border-white/[0.1] shadow-lg hover:bg-white/[0.08]',
-        solid: 'bg-card border-border shadow-sm',
-        outline: 'bg-transparent border-border',
+        default: 'bg-[rgba(30,30,45,0.6)] backdrop-blur-md border-white/[0.1] border-l-2 border-l-primary/50 shadow-[0_4px_24px_rgba(0,0,0,0.3)] hover:bg-[rgba(40,40,60,0.7)] hover:border-primary/60 hover:shadow-[0_8px_32px_rgba(139,92,246,0.25)]',
+        glass: 'bg-[rgba(30,30,45,0.5)] backdrop-blur-xl border-white/[0.12] border-l-2 border-l-primary/40 hover:bg-[rgba(40,40,60,0.6)] hover:border-primary/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]',
+        elevated: 'bg-[rgba(35,35,55,0.7)] backdrop-blur-xl border-white/[0.15] border-l-2 border-l-primary/60 shadow-lg hover:bg-[rgba(45,45,65,0.8)] hover:shadow-[0_12px_40px_rgba(139,92,246,0.3)]',
+        solid: 'bg-card border-border shadow-sm border-l-2 border-l-primary/30',
+        outline: 'bg-transparent border-border border-l-2 border-l-primary/20',
         ghost: 'bg-transparent border-transparent',
       },
       hover: {
         none: '',
-        lift: 'hover:-translate-y-1 hover:shadow-lg',
-        glow: 'hover:border-primary/30 hover:shadow-glow',
-        scale: 'hover:scale-[1.02]',
+        lift: 'hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(139,92,246,0.3)]',
+        glow: 'hover:border-primary/50 hover:shadow-[0_0_40px_rgba(139,92,246,0.4)]',
+        scale: 'hover:scale-[1.02] hover:shadow-[0_8px_30px_rgba(139,92,246,0.25)]',
       },
     },
     defaultVariants: {
       variant: 'default',
-      hover: 'none',
+      hover: 'glow',
     },
   }
 );

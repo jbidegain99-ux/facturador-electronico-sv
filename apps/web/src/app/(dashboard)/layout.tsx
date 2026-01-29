@@ -21,10 +21,69 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { sidebarOpen } = useAppStore();
+  const { sidebarOpen, tenant, setTenant, setUser } = useAppStore();
   const router = useRouter();
   const pathname = usePathname();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = React.useState(true);
+
+  // Load tenant data on mount
+  React.useEffect(() => {
+    const loadTenantData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // Only fetch if tenant is not already loaded
+      if (tenant?.nombre) return;
+
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/current`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setTenant(data);
+        }
+      } catch (error) {
+        console.error('Error loading tenant:', error);
+      }
+    };
+
+    loadTenantData();
+  }, [tenant?.nombre, setTenant]);
+
+  // Load user data on mount
+  React.useEffect(() => {
+    const loadUserData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data);
+        }
+      } catch (error) {
+        console.error('Error loading user:', error);
+      }
+    };
+
+    loadUserData();
+  }, [setUser]);
 
   React.useEffect(() => {
     const checkOnboarding = async () => {

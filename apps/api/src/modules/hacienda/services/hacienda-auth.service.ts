@@ -56,15 +56,17 @@ export class HaciendaAuthService {
     const url = `${baseUrl}${HACIENDA_ENDPOINTS.AUTH}`;
 
     try {
+      // Hacienda expects application/x-www-form-urlencoded with 'user' and 'pwd'
+      const formData = new URLSearchParams();
+      formData.append('user', nit.replace(/-/g, '')); // Remove dashes from NIT
+      formData.append('pwd', password);
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({
-          user: nit.replace(/-/g, ''), // Remove dashes from NIT
-          pwd: password,
-        }),
+        body: formData.toString(),
       });
 
       const data: HaciendaAuthResponse = await response.json();

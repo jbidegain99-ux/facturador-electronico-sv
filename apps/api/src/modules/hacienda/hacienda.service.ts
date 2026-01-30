@@ -783,15 +783,39 @@ export class HaciendaService {
 
     try {
       // Sign the DTE
+      this.logger.log(`=== SIGNING DTE ===`);
+      this.logger.log(`Certificate buffer length: ${certificateBuffer.length}`);
+      this.logger.log(`Certificate starts with: ${certificateBuffer.toString('utf8').substring(0, 50)}`);
+
       const jws = await this.certificateService.signPayload(
         certificateBuffer,
         certificatePassword,
         testData,
       );
 
+      // Log JWS details
+      const jwsParts = jws.split('.');
+      const jwsHeader = JSON.parse(Buffer.from(jwsParts[0], 'base64url').toString());
+      this.logger.log(`=== JWS CREATED ===`);
+      this.logger.log(`JWS Header: ${JSON.stringify(jwsHeader)}`);
+      this.logger.log(`JWS Length: ${jws.length}`);
+      this.logger.log(`JWS (first 100 chars): ${jws.substring(0, 100)}`);
+
       // Send to Hacienda
       const baseUrl = HACIENDA_URLS.TEST;
       const url = `${baseUrl}${HACIENDA_ENDPOINTS.RECEPCION_DTE}`;
+
+      const requestBody = {
+        ambiente: '00', // Test
+        idEnvio: Date.now(),
+        version: testData.identificacion.version,
+        tipoDte: dteType,
+        documento: jws,
+      };
+
+      this.logger.log(`=== SENDING TO HACIENDA ===`);
+      this.logger.log(`URL: ${url}`);
+      this.logger.log(`Request body (without documento): ${JSON.stringify({ ...requestBody, documento: '[JWS_OMITTED]' })}`);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -799,17 +823,14 @@ export class HaciendaService {
           'Content-Type': 'application/json',
           Authorization: token,
         },
-        body: JSON.stringify({
-          ambiente: '00', // Test
-          idEnvio: Date.now(),
-          version: testData.identificacion.version,
-          tipoDte: dteType,
-          documento: jws,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();
       responsePayload = JSON.stringify(result);
+
+      this.logger.log(`=== HACIENDA RESPONSE ===`);
+      this.logger.log(`Response: ${responsePayload}`);
 
       if (result.estado === 'PROCESADO') {
         status = 'SUCCESS';

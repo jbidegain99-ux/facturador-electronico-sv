@@ -12,7 +12,7 @@ export class CertificateService {
   private readonly logger = new Logger(CertificateService.name);
 
   /**
-   * Parse and validate a certificate buffer (supports .p12/.pfx and .crt/.cer/.pem)
+   * Parse and validate a certificate buffer (supports .p12/.pfx, .crt/.cer/.pem, and Hacienda XML)
    * @param buffer - The certificate file as a Buffer
    * @param password - The certificate password (required for .p12/.pfx, optional for PEM/DER)
    * @returns Certificate information
@@ -23,10 +23,16 @@ export class CertificateService {
   ): Promise<CertificateInfo> {
     // Try to detect file type
     const content = buffer.toString('utf8');
+
+    this.logger.debug(`Parsing certificate - Size: ${buffer.length} bytes`);
+
+    // Check for Hacienda XML format first (starts with <CertificadoMH>)
+    if (content.includes('<CertificadoMH>')) {
+      this.logger.debug('Detected Hacienda XML format certificate');
+      return this.parseHaciendaXmlCertificate(content);
+    }
+
     const isPem = content.includes('-----BEGIN');
-
-    this.logger.debug(`Parsing certificate - Size: ${buffer.length} bytes, isPEM: ${isPem}`);
-
     if (isPem) {
       this.logger.debug('Detected PEM format certificate');
       return this.parsePemCertificate(buffer);
@@ -56,6 +62,85 @@ export class CertificateService {
 
     // Try PKCS#12 format (.p12, .pfx)
     return this.parsePkcs12Certificate(buffer, password);
+  }
+
+  /**
+   * Parse Hacienda's custom XML certificate format (.crt from MH)
+   */
+  private parseHaciendaXmlCertificate(content: string): CertificateInfo {
+    try {
+      // Extract NIT
+      const nitMatch = content.match(/<nit>(\d+)<\/nit>/);
+      const nit = nitMatch ? this.formatNit(nitMatch[1]) : null;
+
+      // Extract validity dates (Unix timestamps in seconds)
+      const notBeforeMatch = content.match(/<notBefore>(\d+(?:\.\d+)?)<\/notBefore>/);
+      const notAfterMatch = content.match(/<notAfter>(\d+(?:\.\d+)?)<\/notAfter>/);
+
+      const validFrom = notBeforeMatch
+        ? new Date(parseFloat(notBeforeMatch[1]) * 1000)
+        : new Date();
+      const validTo = notAfterMatch
+        ? new Date(parseFloat(notAfterMatch[1]) * 1000)
+        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
+      // Extract subject info
+      const orgNameMatch = content.match(/<organizationName>([^<]+)<\/organizationName>/);
+      const commonNameMatch = content.match(/<subject>.*?<commonName>([^<]*)<\/commonName>/s);
+      const orgUnitMatch = content.match(/<organizationUnitName>([^<]*)<\/organizationUnitName>/);
+
+      // Extract issuer info
+      const issuerOrgMatch = content.match(/<issuer>.*?<organizationalName>([^<]+)<\/organizationalName>/s);
+      const issuerCnMatch = content.match(/<issuer>.*?<commonName>([^<]+)<\/commonName>/s);
+
+      // Extract serial from description or _id
+      const descMatch = content.match(/<description>(\d+)<\/description>/);
+      const idMatch = content.match(/<_id>([^<]+)<\/_id>/);
+      const serialNumber = descMatch?.[1] || idMatch?.[1] || 'N/A';
+
+      // Build subject string
+      const subjectParts: string[] = [];
+      if (orgNameMatch?.[1]) subjectParts.push(`O=${orgNameMatch[1]}`);
+      if (orgUnitMatch?.[1]) subjectParts.push(`OU=${orgUnitMatch[1]}`);
+      if (commonNameMatch?.[1]) subjectParts.push(`CN=${commonNameMatch[1]}`);
+      const subject = subjectParts.join(', ') || 'Certificado MH';
+
+      // Build issuer string
+      const issuerParts: string[] = [];
+      if (issuerOrgMatch?.[1]) issuerParts.push(`O=${issuerOrgMatch[1]}`);
+      if (issuerCnMatch?.[1]) issuerParts.push(`CN=${issuerCnMatch[1]}`);
+      const issuer = issuerParts.join(', ') || 'Ministerio de Hacienda';
+
+      const certInfo: CertificateInfo = {
+        subject,
+        issuer,
+        nit,
+        validFrom,
+        validTo,
+        serialNumber,
+      };
+
+      this.logger.log(
+        `Hacienda XML Certificate parsed successfully: ${certInfo.subject}, NIT: ${certInfo.nit || 'N/A'}`,
+      );
+
+      return certInfo;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(`Failed to parse Hacienda XML certificate: ${message}`);
+      throw new BadRequestException(`Error al procesar el certificado XML de Hacienda: ${message}`);
+    }
+  }
+
+  /**
+   * Format NIT with dashes (XXXX-XXXXXX-XXX-X)
+   */
+  private formatNit(nit: string): string {
+    const cleanNit = nit.replace(/\D/g, '');
+    if (cleanNit.length === 14) {
+      return `${cleanNit.slice(0, 4)}-${cleanNit.slice(4, 10)}-${cleanNit.slice(10, 13)}-${cleanNit.slice(13)}`;
+    }
+    return nit;
   }
 
   /**
@@ -290,8 +375,16 @@ export class CertificateService {
   ): Promise<{
     privateKey: jose.KeyLike;
     publicKey: jose.KeyLike;
-    certificate: forge.pki.Certificate;
+    certificate: forge.pki.Certificate | null;
   }> {
+    const content = buffer.toString('utf8');
+
+    // Check for Hacienda XML format
+    if (content.includes('<CertificadoMH>')) {
+      return this.extractSigningKeysFromHaciendaXml(content);
+    }
+
+    // Try PKCS#12 format
     try {
       const p12Base64 = buffer.toString('base64');
       const p12Der = forge.util.decode64(p12Base64);
@@ -342,9 +435,58 @@ export class CertificateService {
   }
 
   /**
+   * Extract signing keys from Hacienda's custom XML certificate format
+   */
+  private async extractSigningKeysFromHaciendaXml(content: string): Promise<{
+    privateKey: jose.KeyLike;
+    publicKey: jose.KeyLike;
+    certificate: forge.pki.Certificate | null;
+  }> {
+    try {
+      // Extract private key (PKCS#8 format)
+      const privateKeyMatch = content.match(/<privateKey>.*?<encodied>([^<]+)<\/encodied>/s);
+      if (!privateKeyMatch) {
+        throw new BadRequestException('No se encontró llave privada en el certificado XML');
+      }
+
+      // Extract public key (SPKI format)
+      const publicKeyMatch = content.match(/<publicKey>.*?<encodied>([^<]+)<\/encodied>/s);
+      if (!publicKeyMatch) {
+        throw new BadRequestException('No se encontró llave pública en el certificado XML');
+      }
+
+      // Clean base64 and wrap with PEM headers
+      const privateKeyBase64 = privateKeyMatch[1].replace(/\s/g, '');
+      const publicKeyBase64 = publicKeyMatch[1].replace(/\s/g, '');
+
+      const privateKeyPem = `-----BEGIN PRIVATE KEY-----\n${privateKeyBase64}\n-----END PRIVATE KEY-----`;
+      const publicKeyPem = `-----BEGIN PUBLIC KEY-----\n${publicKeyBase64}\n-----END PUBLIC KEY-----`;
+
+      const privateKey = await jose.importPKCS8(privateKeyPem, 'RS256');
+      const publicKey = await jose.importSPKI(publicKeyPem, 'RS256');
+
+      this.logger.log('Successfully extracted signing keys from Hacienda XML certificate');
+
+      return {
+        privateKey,
+        publicKey,
+        certificate: null, // XML format doesn't have a standard X.509 certificate
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(`Failed to extract signing keys from Hacienda XML: ${message}`);
+      throw new BadRequestException(`Error al extraer llaves de firma del XML: ${message}`);
+    }
+  }
+
+  /**
    * Sign a DTE JSON payload using the certificate
-   * @param buffer - The .p12/.pfx file as a Buffer
-   * @param password - The certificate password
+   * @param buffer - The .p12/.pfx file or Hacienda XML as a Buffer
+   * @param password - The certificate password (not needed for XML format)
    * @param payload - The DTE JSON object to sign
    * @returns JWS compact serialization string
    */
@@ -355,10 +497,22 @@ export class CertificateService {
   ): Promise<string> {
     const { privateKey, certificate } = await this.extractSigningKeys(buffer, password);
 
-    // Verify certificate is still valid
-    const now = new Date();
-    if (now < certificate.validity.notBefore || now > certificate.validity.notAfter) {
-      throw new BadRequestException('El certificado ha expirado o aún no es válido');
+    // Verify certificate is still valid (only for PKCS#12 format with X.509 cert)
+    if (certificate) {
+      const now = new Date();
+      if (now < certificate.validity.notBefore || now > certificate.validity.notAfter) {
+        throw new BadRequestException('El certificado ha expirado o aún no es válido');
+      }
+    } else {
+      // For Hacienda XML format, validate using parsed certificate info
+      const content = buffer.toString('utf8');
+      if (content.includes('<CertificadoMH>')) {
+        const certInfo = this.parseHaciendaXmlCertificate(content);
+        const now = new Date();
+        if (now < certInfo.validFrom || now > certInfo.validTo) {
+          throw new BadRequestException('El certificado ha expirado o aún no es válido');
+        }
+      }
     }
 
     const payloadString = JSON.stringify(payload);

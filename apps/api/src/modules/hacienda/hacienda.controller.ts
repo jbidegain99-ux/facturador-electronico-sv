@@ -173,6 +173,70 @@ export class HaciendaController {
     return this.haciendaService.validateConnection(dto);
   }
 
+  // Static routes MUST come before dynamic route config/:environment
+  @Post('config/test-connection')
+  @ApiOperation({ summary: 'Probar conexión con Hacienda' })
+  @ApiResponse({
+    status: 200,
+    description: 'Conexión exitosa',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Error de conexión',
+  })
+  async testConnection(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: TestConnectionDto,
+  ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Usuario no tiene tenant asignado');
+    }
+
+    return this.haciendaService.testConnection(user.tenantId, dto.environment);
+  }
+
+  @Post('config/renew-token')
+  @ApiOperation({ summary: 'Renovar token de autenticación' })
+  @ApiResponse({
+    status: 200,
+    description: 'Token renovado exitosamente',
+  })
+  async renewToken(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: RenewTokenDto,
+  ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Usuario no tiene tenant asignado');
+    }
+
+    return this.haciendaService.renewToken(user.tenantId, dto.environment);
+  }
+
+  @Post('config/switch-environment')
+  @ApiOperation({ summary: 'Cambiar ambiente activo' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ambiente cambiado exitosamente',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'No se puede cambiar al ambiente especificado',
+  })
+  async switchEnvironment(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: SwitchEnvironmentDto,
+  ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Usuario no tiene tenant asignado');
+    }
+
+    return this.haciendaService.switchEnvironment(
+      user.tenantId,
+      dto.environment,
+    );
+  }
+
+  // Dynamic route MUST come after static routes to avoid matching test-connection, renew-token, etc.
   @Post('config/:environment')
   @UseInterceptors(FileInterceptor('certificate'))
   @ApiOperation({ summary: 'Configurar ambiente (TEST o PRODUCTION)' })
@@ -246,68 +310,6 @@ export class HaciendaController {
       dto,
       certificate.buffer,
       certificate.originalname,
-    );
-  }
-
-  @Post('config/test-connection')
-  @ApiOperation({ summary: 'Probar conexión con Hacienda' })
-  @ApiResponse({
-    status: 200,
-    description: 'Conexión exitosa',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Error de conexión',
-  })
-  async testConnection(
-    @CurrentUser() user: CurrentUserData,
-    @Body() dto: TestConnectionDto,
-  ) {
-    if (!user.tenantId) {
-      throw new BadRequestException('Usuario no tiene tenant asignado');
-    }
-
-    return this.haciendaService.testConnection(user.tenantId, dto.environment);
-  }
-
-  @Post('config/renew-token')
-  @ApiOperation({ summary: 'Renovar token de autenticación' })
-  @ApiResponse({
-    status: 200,
-    description: 'Token renovado exitosamente',
-  })
-  async renewToken(
-    @CurrentUser() user: CurrentUserData,
-    @Body() dto: RenewTokenDto,
-  ) {
-    if (!user.tenantId) {
-      throw new BadRequestException('Usuario no tiene tenant asignado');
-    }
-
-    return this.haciendaService.renewToken(user.tenantId, dto.environment);
-  }
-
-  @Post('config/switch-environment')
-  @ApiOperation({ summary: 'Cambiar ambiente activo' })
-  @ApiResponse({
-    status: 200,
-    description: 'Ambiente cambiado exitosamente',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'No se puede cambiar al ambiente especificado',
-  })
-  async switchEnvironment(
-    @CurrentUser() user: CurrentUserData,
-    @Body() dto: SwitchEnvironmentDto,
-  ) {
-    if (!user.tenantId) {
-      throw new BadRequestException('Usuario no tiene tenant asignado');
-    }
-
-    return this.haciendaService.switchEnvironment(
-      user.tenantId,
-      dto.environment,
     );
   }
 

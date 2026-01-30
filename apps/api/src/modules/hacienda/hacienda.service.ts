@@ -4,6 +4,8 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from '../email-config/services/encryption.service';
 import { CertificateService } from './services/certificate.service';
@@ -96,6 +98,47 @@ export class HaciendaService {
   }
 
   /**
+   * Get the certificates directory path
+   */
+  private getCertificatesDir(): string {
+    const certsDir = path.join(process.cwd(), 'certificates');
+    if (!fs.existsSync(certsDir)) {
+      fs.mkdirSync(certsDir, { recursive: true });
+    }
+    return certsDir;
+  }
+
+  /**
+   * Save certificate to file system and return the file path
+   */
+  private saveCertificateFile(
+    tenantId: string,
+    environment: string,
+    buffer: Buffer,
+    originalFileName: string,
+  ): string {
+    const certsDir = this.getCertificatesDir();
+    const ext = path.extname(originalFileName);
+    const filename = `${tenantId}_${environment}_${Date.now()}${ext}`;
+    const filePath = path.join(certsDir, filename);
+
+    fs.writeFileSync(filePath, buffer);
+    this.logger.log(`Certificate saved to: ${filePath}`);
+
+    return filePath;
+  }
+
+  /**
+   * Read certificate from file system
+   */
+  private readCertificateFile(filePath: string): Buffer {
+    if (!fs.existsSync(filePath)) {
+      throw new BadRequestException(`Certificate file not found: ${filePath}`);
+    }
+    return fs.readFileSync(filePath);
+  }
+
+  /**
    * Configure an environment with credentials and certificate
    */
   async configureEnvironment(
@@ -143,13 +186,21 @@ export class HaciendaService {
       });
     }
 
-    // Update environment config with encrypted credentials
+    // Save certificate to file system
+    const certificateFilePath = this.saveCertificateFile(
+      tenantId,
+      environment,
+      certificateBuffer,
+      certificateFileName,
+    );
+
+    // Update environment config with credentials and file path
     await this.prisma.haciendaEnvironmentConfig.update({
       where: { id: envConfig.id },
       data: {
         apiUser: dto.apiUser,
         apiPasswordEncrypted: this.encryptionService.encrypt(dto.apiPassword),
-        certificateP12: certificateBuffer,
+        certificateFilePath,  // Store file path instead of binary
         certificateFileName,
         certificatePasswordEnc: this.encryptionService.encrypt(
           dto.certificatePassword,
@@ -312,13 +363,21 @@ export class HaciendaService {
       });
     }
 
-    // Update environment config with encrypted credentials
+    // Save certificate to file system
+    const certificateFilePath = this.saveCertificateFile(
+      tenantId,
+      dto.environment,
+      certificateBuffer,
+      certificateFileName,
+    );
+
+    // Update environment config with credentials and file path
     await this.prisma.haciendaEnvironmentConfig.update({
       where: { id: envConfig.id },
       data: {
         apiUser: dto.apiUser,
         apiPasswordEncrypted: this.encryptionService.encrypt(dto.apiPassword),
-        certificateP12: certificateBuffer,
+        certificateFilePath,  // Store file path instead of binary
         certificateFileName,
         certificatePasswordEnc: this.encryptionService.encrypt(dto.certificatePassword),
         certificateValidUntil: certValidation.info.validTo,
@@ -672,9 +731,22 @@ export class HaciendaService {
       'TEST',
     );
 
-    // Get certificate for signing
-    if (!testConfig.certificateP12 || !testConfig.certificatePasswordEnc) {
+    // Get certificate for signing - prefer file path, fallback to binary for backwards compatibility
+    if (!testConfig.certificateFilePath && !testConfig.certificateP12) {
       throw new BadRequestException('Certificado no configurado');
+    }
+    if (!testConfig.certificatePasswordEnc) {
+      throw new BadRequestException('Contraseña del certificado no configurada');
+    }
+
+    // Read certificate from file or use binary from DB
+    let certificateBuffer: Buffer;
+    if (testConfig.certificateFilePath) {
+      this.logger.log(`Reading certificate from file: ${testConfig.certificateFilePath}`);
+      certificateBuffer = this.readCertificateFile(testConfig.certificateFilePath);
+    } else {
+      this.logger.log('Using certificate from database (legacy)');
+      certificateBuffer = Buffer.from(testConfig.certificateP12!);
     }
 
     const certificatePassword = this.encryptionService.decrypt(
@@ -707,7 +779,7 @@ export class HaciendaService {
         dto.dteType,
         emisor,
         tokenInfo.token,
-        Buffer.from(testConfig.certificateP12),
+        certificateBuffer,
         certificatePassword,
       );
     } else if (dto.testType === 'CANCELLATION') {
@@ -722,7 +794,7 @@ export class HaciendaService {
         dto.codigoGeneracionToCancel,
         emisor,
         tokenInfo.token,
-        Buffer.from(testConfig.certificateP12),
+        certificateBuffer,
         certificatePassword,
       );
     } else {

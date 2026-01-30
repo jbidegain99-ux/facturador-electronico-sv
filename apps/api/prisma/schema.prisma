@@ -784,6 +784,7 @@ model HaciendaEnvironmentConfig {
 
   // === CERTIFICADO DIGITAL ===
   certificateP12          Bytes?              @db.VarBinary(Max)
+  certificateFilePath     String?             @db.NVarChar(500)  // Path to certificate file on disk
   certificateFileName     String?
   certificatePasswordEnc  String?             @db.NVarChar(500)
   certificateValidUntil   DateTime?

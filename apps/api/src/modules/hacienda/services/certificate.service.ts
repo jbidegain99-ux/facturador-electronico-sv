@@ -417,14 +417,19 @@ export class CertificateService {
       const privateKeyPem = forge.pki.privateKeyToPem(forgePrivateKey);
       const publicKeyPem = forge.pki.publicKeyToPem(certificate.publicKey);
 
-      const privateKey = await jose.importPKCS8(privateKeyPem, 'RS256');
-      const publicKey = await jose.importSPKI(publicKeyPem, 'RS256');
+      // Hacienda requires RS512 (RSA with SHA-512) for all DTE signing
+      const algorithm = 'RS512';
+
+      const privateKey = await jose.importPKCS8(privateKeyPem, algorithm);
+      const publicKey = await jose.importSPKI(publicKeyPem, algorithm);
+
+      this.logger.log(`Extracted signing keys from PKCS#12 certificate (algorithm: ${algorithm})`);
 
       return {
         privateKey,
         publicKey,
         certificate,
-        algorithm: 'RS256', // PKCS#12 typically uses RSA
+        algorithm,
       };
     } catch (error) {
       if (error instanceof BadRequestException) {

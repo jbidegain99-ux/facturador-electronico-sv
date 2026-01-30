@@ -376,6 +376,7 @@ export class CertificateService {
     privateKey: jose.KeyLike;
     publicKey: jose.KeyLike;
     certificate: forge.pki.Certificate | null;
+    algorithm: string;
   }> {
     const content = buffer.toString('utf8');
 
@@ -422,6 +423,7 @@ export class CertificateService {
         privateKey,
         publicKey,
         certificate,
+        algorithm: 'RS256', // PKCS#12 typically uses RSA
       };
     } catch (error) {
       if (error instanceof BadRequestException) {
@@ -441,6 +443,7 @@ export class CertificateService {
     privateKey: jose.KeyLike;
     publicKey: jose.KeyLike;
     certificate: forge.pki.Certificate | null;
+    algorithm: string;
   }> {
     try {
       // Extract private key (PKCS#8 format)
@@ -462,15 +465,50 @@ export class CertificateService {
       const privateKeyPem = `-----BEGIN PRIVATE KEY-----\n${privateKeyBase64}\n-----END PRIVATE KEY-----`;
       const publicKeyPem = `-----BEGIN PUBLIC KEY-----\n${publicKeyBase64}\n-----END PUBLIC KEY-----`;
 
-      const privateKey = await jose.importPKCS8(privateKeyPem, 'RS256');
-      const publicKey = await jose.importSPKI(publicKeyPem, 'RS256');
+      // Detect algorithm from the key
+      // Try RSA first, then EC
+      let privateKey: jose.KeyLike;
+      let publicKey: jose.KeyLike;
+      let algorithm = 'RS256';
 
-      this.logger.log('Successfully extracted signing keys from Hacienda XML certificate');
+      try {
+        // Try importing as RSA
+        privateKey = await jose.importPKCS8(privateKeyPem, 'RS256');
+        publicKey = await jose.importSPKI(publicKeyPem, 'RS256');
+        this.logger.debug('Key imported as RSA (RS256)');
+      } catch (rsaError) {
+        this.logger.debug(`RSA import failed: ${rsaError instanceof Error ? rsaError.message : 'Unknown'}, trying EC...`);
+        try {
+          // Try importing as EC (P-256)
+          privateKey = await jose.importPKCS8(privateKeyPem, 'ES256');
+          publicKey = await jose.importSPKI(publicKeyPem, 'ES256');
+          algorithm = 'ES256';
+          this.logger.debug('Key imported as EC (ES256)');
+        } catch (ecError) {
+          this.logger.debug(`ES256 import failed, trying ES384...`);
+          try {
+            // Try ES384
+            privateKey = await jose.importPKCS8(privateKeyPem, 'ES384');
+            publicKey = await jose.importSPKI(publicKeyPem, 'ES384');
+            algorithm = 'ES384';
+            this.logger.debug('Key imported as EC (ES384)');
+          } catch (ec384Error) {
+            // Try ES512
+            privateKey = await jose.importPKCS8(privateKeyPem, 'ES512');
+            publicKey = await jose.importSPKI(publicKeyPem, 'ES512');
+            algorithm = 'ES512';
+            this.logger.debug('Key imported as EC (ES512)');
+          }
+        }
+      }
+
+      this.logger.log(`Successfully extracted signing keys from Hacienda XML certificate (algorithm: ${algorithm})`);
 
       return {
         privateKey,
         publicKey,
         certificate: null, // XML format doesn't have a standard X.509 certificate
+        algorithm,
       };
     } catch (error) {
       if (error instanceof BadRequestException) {
@@ -495,7 +533,9 @@ export class CertificateService {
     password: string,
     payload: T,
   ): Promise<string> {
-    const { privateKey, certificate } = await this.extractSigningKeys(buffer, password);
+    const { privateKey, certificate, algorithm } = await this.extractSigningKeys(buffer, password);
+
+    this.logger.debug(`Signing payload with algorithm: ${algorithm}`);
 
     // Verify certificate is still valid (only for PKCS#12 format with X.509 cert)
     if (certificate) {
@@ -518,10 +558,10 @@ export class CertificateService {
     const payloadString = JSON.stringify(payload);
 
     const jws = await new jose.CompactSign(new TextEncoder().encode(payloadString))
-      .setProtectedHeader({ alg: 'RS256' })
+      .setProtectedHeader({ alg: algorithm })
       .sign(privateKey);
 
-    this.logger.debug(`Payload signed successfully. JWS length: ${jws.length}`);
+    this.logger.debug(`Payload signed successfully with ${algorithm}. JWS length: ${jws.length}`);
 
     return jws;
   }

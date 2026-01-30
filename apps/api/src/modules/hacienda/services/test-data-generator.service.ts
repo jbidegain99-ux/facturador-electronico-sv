@@ -500,10 +500,14 @@ export class TestDataGeneratorService {
    * NRC keeps its original format (with dash)
    */
   private formatEmisor(emisor: EmisorData): EmisorData {
-    return {
+    const formatted = {
       ...emisor,
       nit: emisor.nit.replace(/-/g, ''), // Remove dashes from NIT only
     };
+    this.logger.log(`=== FORMATTED EMISOR FOR DTE ===`);
+    this.logger.log(`Original NIT: ${emisor.nit} -> Formatted: ${formatted.nit}`);
+    this.logger.log(`NRC (unchanged): ${formatted.nrc}`);
+    return formatted;
   }
 
   /**

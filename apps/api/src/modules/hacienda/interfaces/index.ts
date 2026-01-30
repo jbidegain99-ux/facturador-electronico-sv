@@ -132,6 +132,7 @@ export interface HaciendaAuthResponse {
     roles: string[];
   };
   message?: string;
+  descripcion?: string;
 }
 
 // Hacienda DTE reception response

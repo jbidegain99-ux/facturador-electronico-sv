@@ -25,16 +25,33 @@ export class CertificateService {
     const content = buffer.toString('utf8');
     const isPem = content.includes('-----BEGIN');
 
+    this.logger.debug(`Parsing certificate - Size: ${buffer.length} bytes, isPEM: ${isPem}`);
+
     if (isPem) {
+      this.logger.debug('Detected PEM format certificate');
       return this.parsePemCertificate(buffer);
+    }
+
+    // Check if content is base64-encoded certificate (without PEM headers)
+    const trimmedContent = content.trim();
+    const isBase64 = /^[A-Za-z0-9+/=\s]+$/.test(trimmedContent) && trimmedContent.length > 100;
+
+    if (isBase64) {
+      this.logger.debug('Detected base64-encoded certificate without PEM headers');
+      try {
+        return await this.parseBase64Certificate(trimmedContent);
+      } catch (error) {
+        this.logger.debug(`Base64 certificate parsing failed: ${error instanceof Error ? error.message : 'Unknown'}`);
+      }
     }
 
     // Try DER format (binary X.509 certificate - .crt, .cer)
     try {
+      this.logger.debug('Trying DER format parsing');
       return await this.parseDerCertificate(buffer);
-    } catch {
+    } catch (error) {
       // If DER fails, try PKCS#12 format
-      this.logger.debug('DER parsing failed, trying PKCS#12 format');
+      this.logger.debug(`DER parsing failed: ${error instanceof Error ? error.message : 'Unknown'}, trying PKCS#12 format`);
     }
 
     // Try PKCS#12 format (.p12, .pfx)
@@ -102,6 +119,42 @@ export class CertificateService {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       this.logger.error(`Failed to parse PEM certificate: ${message}`);
       throw new BadRequestException(`Error al procesar el certificado PEM: ${message}`);
+    }
+  }
+
+  /**
+   * Parse base64-encoded certificate (without PEM headers)
+   */
+  private async parseBase64Certificate(base64Content: string): Promise<CertificateInfo> {
+    try {
+      // Remove any whitespace/newlines
+      const cleanBase64 = base64Content.replace(/\s/g, '');
+
+      // Wrap with PEM headers
+      const pemContent = `-----BEGIN CERTIFICATE-----\n${cleanBase64}\n-----END CERTIFICATE-----`;
+
+      const certificate = forge.pki.certificateFromPem(pemContent);
+
+      const nit = this.extractNitFromCertificate(certificate);
+
+      const certInfo: CertificateInfo = {
+        subject: this.formatSubject(certificate.subject.attributes),
+        issuer: this.formatSubject(certificate.issuer.attributes),
+        nit,
+        validFrom: certificate.validity.notBefore,
+        validTo: certificate.validity.notAfter,
+        serialNumber: certificate.serialNumber,
+      };
+
+      this.logger.log(
+        `Base64 Certificate parsed successfully: ${certInfo.subject}, NIT: ${certInfo.nit || 'N/A'}`,
+      );
+
+      return certInfo;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.debug(`Failed to parse base64 certificate: ${message}`);
+      throw new BadRequestException(`Error al procesar el certificado base64: ${message}`);
     }
   }
 

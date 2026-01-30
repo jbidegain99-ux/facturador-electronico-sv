@@ -60,8 +60,9 @@ export function EnvironmentConfig({
     if (file) {
       // Validate file extension
       const ext = file.name.toLowerCase().split('.').pop();
-      if (ext !== 'p12' && ext !== 'pfx') {
-        toast.error('El archivo debe ser .p12 o .pfx');
+      const allowedExtensions = ['p12', 'pfx', 'crt', 'cer', 'pem'];
+      if (!ext || !allowedExtensions.includes(ext)) {
+        toast.error('El archivo debe ser .p12, .pfx, .crt, .cer o .pem');
         return;
       }
       setCertificateFile(file);
@@ -210,7 +211,7 @@ export function EnvironmentConfig({
               Certificado Digital
             </CardTitle>
             <CardDescription>
-              Cargue el certificado .p12 o .pfx proporcionado por Hacienda para el ambiente de {environmentLabel.toLowerCase()}
+              Cargue el certificado .p12, .pfx o .crt proporcionado por Hacienda para el ambiente de {environmentLabel.toLowerCase()}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -240,7 +241,7 @@ export function EnvironmentConfig({
                   ref={fileInputRef}
                   id="certificate"
                   type="file"
-                  accept=".p12,.pfx"
+                  accept=".p12,.pfx,.crt,.cer,.pem"
                   onChange={handleFileSelect}
                   className="hidden"
                 />

@@ -496,13 +496,13 @@ export class TestDataGeneratorService {
   }
 
   /**
-   * Format emisor data - remove dashes from NIT and NRC
+   * Format emisor data - remove dashes from NIT only
+   * NRC keeps its original format (with dash)
    */
   private formatEmisor(emisor: EmisorData): EmisorData {
     return {
       ...emisor,
-      nit: emisor.nit.replace(/-/g, ''), // Remove dashes from NIT
-      nrc: emisor.nrc.replace(/-/g, ''), // Remove dashes from NRC
+      nit: emisor.nit.replace(/-/g, ''), // Remove dashes from NIT only
     };
   }
 

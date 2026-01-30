@@ -55,11 +55,15 @@ export class HaciendaAuthService {
     const baseUrl = HACIENDA_URLS[environment];
     const url = `${baseUrl}${HACIENDA_ENDPOINTS.AUTH}`;
 
+    this.logger.log(`Attempting auth to URL: ${url}`);
+
     try {
       // Hacienda expects application/x-www-form-urlencoded with 'user' and 'pwd'
       const formData = new URLSearchParams();
       formData.append('user', nit.replace(/-/g, '')); // Remove dashes from NIT
       formData.append('pwd', password);
+
+      this.logger.debug(`Auth request body: user=${nit.replace(/-/g, '')}`);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -69,7 +73,16 @@ export class HaciendaAuthService {
         body: formData.toString(),
       });
 
-      const data: HaciendaAuthResponse = await response.json();
+      const responseText = await response.text();
+      this.logger.debug(`MH Response status: ${response.status}, body: ${responseText}`);
+
+      let data: HaciendaAuthResponse;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        this.logger.error(`Failed to parse MH response: ${responseText}`);
+        throw new BadRequestException(`Respuesta inválida de Hacienda: ${responseText.substring(0, 200)}`);
+      }
 
       if (data.status === 'OK' && data.body) {
         const now = new Date();
@@ -90,8 +103,8 @@ export class HaciendaAuthService {
         return tokenInfo;
       }
 
-      const errorMessage = data.message || 'Error de autenticación con Hacienda';
-      this.logger.error(`MH Auth failed: ${errorMessage}`);
+      const errorMessage = data.message || data.descripcion || 'Error de autenticación con Hacienda';
+      this.logger.error(`MH Auth failed - status: ${data.status}, message: ${errorMessage}, full response: ${JSON.stringify(data)}`);
       throw new BadRequestException(errorMessage);
     } catch (error) {
       if (error instanceof BadRequestException) {

@@ -189,8 +189,8 @@ export class TenantsController {
 
     // Validate file extension
     const ext = path.extname(file.originalname).toLowerCase();
-    if (ext !== '.p12' && ext !== '.pfx') {
-      throw new BadRequestException('El archivo debe ser .p12 o .pfx');
+    if (!['.p12', '.pfx', '.crt', '.cer', '.pem'].includes(ext)) {
+      throw new BadRequestException('El archivo debe ser .p12, .pfx, .crt, .cer o .pem');
     }
 
     try {

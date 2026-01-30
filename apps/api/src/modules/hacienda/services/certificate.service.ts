@@ -12,12 +12,62 @@ export class CertificateService {
   private readonly logger = new Logger(CertificateService.name);
 
   /**
-   * Parse and validate a PKCS#12 certificate buffer
-   * @param buffer - The .p12/.pfx file as a Buffer
-   * @param password - The certificate password
+   * Parse and validate a certificate buffer (supports .p12/.pfx and .crt/.cer/.pem)
+   * @param buffer - The certificate file as a Buffer
+   * @param password - The certificate password (required for .p12/.pfx, optional for PEM)
    * @returns Certificate information
    */
   async parseCertificate(
+    buffer: Buffer,
+    password: string,
+  ): Promise<CertificateInfo> {
+    // Try to detect file type
+    const content = buffer.toString('utf8');
+    const isPem = content.includes('-----BEGIN');
+
+    if (isPem) {
+      return this.parsePemCertificate(buffer);
+    }
+
+    // Try PKCS#12 format
+    return this.parsePkcs12Certificate(buffer, password);
+  }
+
+  /**
+   * Parse PEM format certificate (.crt, .cer, .pem)
+   */
+  private async parsePemCertificate(buffer: Buffer): Promise<CertificateInfo> {
+    try {
+      const pemContent = buffer.toString('utf8');
+      const certificate = forge.pki.certificateFromPem(pemContent);
+
+      const nit = this.extractNitFromCertificate(certificate);
+
+      const certInfo: CertificateInfo = {
+        subject: this.formatSubject(certificate.subject.attributes),
+        issuer: this.formatSubject(certificate.issuer.attributes),
+        nit,
+        validFrom: certificate.validity.notBefore,
+        validTo: certificate.validity.notAfter,
+        serialNumber: certificate.serialNumber,
+      };
+
+      this.logger.log(
+        `PEM Certificate parsed successfully: ${certInfo.subject}, NIT: ${certInfo.nit || 'N/A'}`,
+      );
+
+      return certInfo;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(`Failed to parse PEM certificate: ${message}`);
+      throw new BadRequestException(`Error al procesar el certificado PEM: ${message}`);
+    }
+  }
+
+  /**
+   * Parse PKCS#12 format certificate (.p12, .pfx)
+   */
+  private async parsePkcs12Certificate(
     buffer: Buffer,
     password: string,
   ): Promise<CertificateInfo> {
@@ -58,7 +108,7 @@ export class CertificateService {
       };
 
       this.logger.log(
-        `Certificate parsed successfully: ${certInfo.subject}, NIT: ${certInfo.nit || 'N/A'}`,
+        `PKCS#12 Certificate parsed successfully: ${certInfo.subject}, NIT: ${certInfo.nit || 'N/A'}`,
       );
 
       return certInfo;
@@ -75,13 +125,13 @@ export class CertificateService {
         );
       }
 
-      if (message.includes('Invalid PEM formatted message')) {
+      if (message.includes('Invalid PEM formatted message') || message.includes('Too few bytes')) {
         throw new BadRequestException(
-          'Formato de archivo inválido. Debe ser un archivo .p12 o .pfx',
+          'Formato de archivo inválido. Verifique que el archivo sea un certificado válido.',
         );
       }
 
-      this.logger.error(`Failed to parse certificate: ${message}`);
+      this.logger.error(`Failed to parse PKCS#12 certificate: ${message}`);
       throw new BadRequestException(`Error al procesar el certificado: ${message}`);
     }
   }

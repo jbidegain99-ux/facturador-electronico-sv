@@ -125,14 +125,14 @@ export class HaciendaController {
     }
 
     // Validate file extension
-    const allowedExtensions = ['.p12', '.pfx'];
+    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem'];
     const fileExt = certificate.originalname
       .toLowerCase()
       .slice(certificate.originalname.lastIndexOf('.'));
 
     if (!allowedExtensions.includes(fileExt)) {
       throw new BadRequestException(
-        'El archivo debe ser un certificado .p12 o .pfx',
+        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer o .pem',
       );
     }
 
@@ -229,14 +229,14 @@ export class HaciendaController {
     }
 
     // Validate file extension
-    const allowedExtensions = ['.p12', '.pfx'];
+    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem'];
     const fileExt = certificate.originalname
       .toLowerCase()
       .slice(certificate.originalname.lastIndexOf('.'));
 
     if (!allowedExtensions.includes(fileExt)) {
       throw new BadRequestException(
-        'El archivo debe ser un certificado .p12 o .pfx',
+        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer o .pem',
       );
     }
 

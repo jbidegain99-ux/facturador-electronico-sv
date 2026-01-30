@@ -42,6 +42,7 @@ export interface ReceptorData {
 export interface ItemData {
   numItem: number;
   tipoItem: number;
+  numeroDocumento: string | null;
   cantidad: number;
   codigo: string | null;
   codTributo: string | null;
@@ -219,6 +220,7 @@ export class TestDataGeneratorService {
         totalPagar: totals.totalPagar,
         totalLetras: this.numberToWords(totals.totalPagar),
         totalIva: totals.totalIva,
+        saldoFavor: 0,
         condicionOperacion: 1, // Contado
         pagos: [
           {
@@ -308,14 +310,14 @@ export class TestDataGeneratorService {
 
   /**
    * Generate numero de control
+   * Format: DTE-XX-M001P001-000000000000001 (max 31 chars)
    */
   private generateNumeroControl(dteType: string, correlativo: number): string {
     const prefix = 'DTE';
     const tipoDoc = dteType;
-    const establecimiento = '00000001';
-    const puntoVenta = '00000001';
+    const codEstablePuntoVenta = 'M001P001'; // 8 chars: establecimiento + punto de venta
     const correlativoStr = correlativo.toString().padStart(15, '0');
-    return `${prefix}-${tipoDoc}-${establecimiento}-${puntoVenta}-${correlativoStr}`;
+    return `${prefix}-${tipoDoc}-${codEstablePuntoVenta}-${correlativoStr}`;
   }
 
   /**
@@ -343,6 +345,7 @@ export class TestDataGeneratorService {
       items.push({
         numItem: i + 1,
         tipoItem: 2, // Servicio
+        numeroDocumento: null,
         cantidad,
         codigo: `PROD-${(i + 1).toString().padStart(4, '0')}`,
         codTributo: null,
@@ -422,10 +425,10 @@ export class TestDataGeneratorService {
    */
   private generateReceptor(dteType: DteTypeCode): ReceptorData {
     const testReceivers: Record<string, ReceptorData> = {
-      // For Factura (01) - Consumer final
+      // For Factura (01) - Consumer final with DUI
       '01': {
-        tipoDocumento: '36', // DUI
-        numDocumento: '00000000-0',
+        tipoDocumento: '13', // DUI (not 36)
+        numDocumento: '01234567-8', // Valid DUI format: 8 digits + dash + 1 digit
         nrc: null,
         nombre: 'CONSUMIDOR FINAL PRUEBA',
         codActividad: null,
@@ -435,14 +438,14 @@ export class TestDataGeneratorService {
           municipio: '14', // San Salvador
           complemento: 'Dirección de prueba, Col. Test #123',
         },
-        telefono: '2222-2222',
+        telefono: '22222222',
         correo: 'test@example.com',
       },
       // For CCF (03) - Business with NIT/NRC
       '03': {
         tipoDocumento: '36', // NIT
-        numDocumento: '0614-010100-100-0',
-        nrc: '12345-6',
+        numDocumento: '06140101001000', // 14 digits without dashes
+        nrc: '123456',
         nombre: 'EMPRESA DE PRUEBA, S.A. DE C.V.',
         codActividad: '62010',
         descActividad: 'Programación informática',
@@ -451,14 +454,14 @@ export class TestDataGeneratorService {
           municipio: '14',
           complemento: 'Colonia Escalón, Calle La Mascota #123',
         },
-        telefono: '2555-5555',
+        telefono: '25555555',
         correo: 'empresa.prueba@example.com',
       },
       // For Nota de Remisión (04)
       '04': {
         tipoDocumento: '36',
-        numDocumento: '0614-010100-100-0',
-        nrc: '12345-6',
+        numDocumento: '06140101001000', // 14 digits without dashes
+        nrc: '123456',
         nombre: 'EMPRESA RECEPTORA PRUEBA, S.A. DE C.V.',
         codActividad: '46100',
         descActividad: 'Comercio al por mayor',
@@ -467,13 +470,13 @@ export class TestDataGeneratorService {
           municipio: '14',
           complemento: 'Zona Industrial, Blvd. del Ejército Km 5',
         },
-        telefono: '2333-3333',
+        telefono: '23333333',
         correo: 'receptora@example.com',
       },
       // For Sujeto Excluido (14)
       '14': {
         tipoDocumento: '13', // DUI
-        numDocumento: '00000000-0',
+        numDocumento: '01234567-8', // Valid DUI format
         nrc: null,
         nombre: 'PERSONA NATURAL SUJETO EXCLUIDO',
         codActividad: null,
@@ -483,7 +486,7 @@ export class TestDataGeneratorService {
           municipio: '14',
           complemento: 'Dirección de persona natural',
         },
-        telefono: '7777-7777',
+        telefono: '77777777',
         correo: 'excluido@example.com',
       },
     };

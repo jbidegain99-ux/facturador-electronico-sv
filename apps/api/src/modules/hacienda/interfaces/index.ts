@@ -33,12 +33,12 @@ export const TESTS_REQUIRED: Record<DteTypeCode, { emission: number; cancellatio
 
 // Hacienda API URLs
 export const HACIENDA_URLS = {
-  TEST: 'https://apifacturatest.mh.gob.sv',
-  PRODUCTION: 'https://apifactura.mh.gob.sv',
+  TEST: 'https://apitest.dtes.mh.gob.sv',
+  PRODUCTION: 'https://api.dtes.mh.gob.sv',
 } as const;
 
 export const HACIENDA_ENDPOINTS = {
-  AUTH: '/auth',
+  AUTH: '/seguridad/auth',
   RECEPCION_DTE: '/fesv/recepciondte',
   RECEPCION_LOTE: '/fesv/recepcionlote',
   CONTINGENCIA: '/fesv/contingencia',

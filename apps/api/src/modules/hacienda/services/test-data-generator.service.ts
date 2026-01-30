@@ -496,17 +496,18 @@ export class TestDataGeneratorService {
   }
 
   /**
-   * Format emisor data - remove dashes from NIT only
-   * NRC keeps its original format (with dash)
+   * Format emisor data - remove dashes from NIT and NRC
+   * Hacienda requires both without dashes
    */
   private formatEmisor(emisor: EmisorData): EmisorData {
     const formatted = {
       ...emisor,
-      nit: emisor.nit.replace(/-/g, ''), // Remove dashes from NIT only
+      nit: emisor.nit.replace(/-/g, ''), // Remove dashes from NIT
+      nrc: emisor.nrc.replace(/-/g, ''), // Remove dashes from NRC
     };
     this.logger.log(`=== FORMATTED EMISOR FOR DTE ===`);
     this.logger.log(`Original NIT: ${emisor.nit} -> Formatted: ${formatted.nit}`);
-    this.logger.log(`NRC (unchanged): ${formatted.nrc}`);
+    this.logger.log(`Original NRC: ${emisor.nrc} -> Formatted: ${formatted.nrc}`);
     return formatted;
   }
 

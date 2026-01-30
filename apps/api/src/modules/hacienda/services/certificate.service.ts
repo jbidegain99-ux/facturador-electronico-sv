@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import * as forge from 'node-forge';
 import * as jose from 'jose';
+import * as crypto from 'crypto';
 import { CertificateInfo } from '../interfaces';
 
 /**
@@ -382,7 +383,7 @@ export class CertificateService {
 
     // Check for Hacienda XML format
     if (content.includes('<CertificadoMH>')) {
-      return this.extractSigningKeysFromHaciendaXml(content);
+      return this.extractSigningKeysFromHaciendaXml(content, password);
     }
 
     // Try PKCS#12 format
@@ -438,8 +439,12 @@ export class CertificateService {
 
   /**
    * Extract signing keys from Hacienda's custom XML certificate format
+   * Uses RS512 algorithm as required by Hacienda's API
    */
-  private async extractSigningKeysFromHaciendaXml(content: string): Promise<{
+  private async extractSigningKeysFromHaciendaXml(
+    content: string,
+    password?: string,
+  ): Promise<{
     privateKey: jose.KeyLike;
     publicKey: jose.KeyLike;
     certificate: forge.pki.Certificate | null;
@@ -458,6 +463,23 @@ export class CertificateService {
         throw new BadRequestException('No se encontró llave pública en el certificado XML');
       }
 
+      // Extract the private key clave (hash) for password verification
+      const privateKeyClaveMatch = content.match(/<privateKey>.*?<clave>([^<]+)<\/clave>/s);
+
+      // Verify password if provided and clave exists
+      if (password && privateKeyClaveMatch) {
+        const storedHash = privateKeyClaveMatch[1];
+        const computedHash = crypto.createHash('sha512').update(password).digest('hex');
+
+        if (storedHash !== computedHash) {
+          this.logger.warn('Certificate password verification failed');
+          // Note: We don't throw here as some certificates may not require password verification
+          // The signing will fail at Hacienda's end if the key is wrong
+        } else {
+          this.logger.debug('Certificate password verified successfully');
+        }
+      }
+
       // Clean base64 and wrap with PEM headers
       const privateKeyBase64 = privateKeyMatch[1].replace(/\s/g, '');
       const publicKeyBase64 = publicKeyMatch[1].replace(/\s/g, '');
@@ -465,42 +487,11 @@ export class CertificateService {
       const privateKeyPem = `-----BEGIN PRIVATE KEY-----\n${privateKeyBase64}\n-----END PRIVATE KEY-----`;
       const publicKeyPem = `-----BEGIN PUBLIC KEY-----\n${publicKeyBase64}\n-----END PUBLIC KEY-----`;
 
-      // Detect algorithm from the key
-      // Try RSA first, then EC
-      let privateKey: jose.KeyLike;
-      let publicKey: jose.KeyLike;
-      let algorithm = 'RS256';
+      // Hacienda uses RS512 (RSA with SHA-512) as per their Java implementation
+      const algorithm = 'RS512';
 
-      try {
-        // Try importing as RSA
-        privateKey = await jose.importPKCS8(privateKeyPem, 'RS256');
-        publicKey = await jose.importSPKI(publicKeyPem, 'RS256');
-        this.logger.debug('Key imported as RSA (RS256)');
-      } catch (rsaError) {
-        this.logger.debug(`RSA import failed: ${rsaError instanceof Error ? rsaError.message : 'Unknown'}, trying EC...`);
-        try {
-          // Try importing as EC (P-256)
-          privateKey = await jose.importPKCS8(privateKeyPem, 'ES256');
-          publicKey = await jose.importSPKI(publicKeyPem, 'ES256');
-          algorithm = 'ES256';
-          this.logger.debug('Key imported as EC (ES256)');
-        } catch (ecError) {
-          this.logger.debug(`ES256 import failed, trying ES384...`);
-          try {
-            // Try ES384
-            privateKey = await jose.importPKCS8(privateKeyPem, 'ES384');
-            publicKey = await jose.importSPKI(publicKeyPem, 'ES384');
-            algorithm = 'ES384';
-            this.logger.debug('Key imported as EC (ES384)');
-          } catch (ec384Error) {
-            // Try ES512
-            privateKey = await jose.importPKCS8(privateKeyPem, 'ES512');
-            publicKey = await jose.importSPKI(publicKeyPem, 'ES512');
-            algorithm = 'ES512';
-            this.logger.debug('Key imported as EC (ES512)');
-          }
-        }
-      }
+      const privateKey = await jose.importPKCS8(privateKeyPem, algorithm);
+      const publicKey = await jose.importSPKI(publicKeyPem, algorithm);
 
       this.logger.log(`Successfully extracted signing keys from Hacienda XML certificate (algorithm: ${algorithm})`);
 

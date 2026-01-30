@@ -4,7 +4,7 @@ import * as jose from 'jose';
 import { CertificateInfo } from '../interfaces';
 
 /**
- * Service for handling digital certificates (.p12/.pfx files)
+ * Service for handling digital certificates (.p12/.pfx and .crt/.cer/.pem files)
  * Used for signing DTEs for Hacienda
  */
 @Injectable()
@@ -14,7 +14,7 @@ export class CertificateService {
   /**
    * Parse and validate a certificate buffer (supports .p12/.pfx and .crt/.cer/.pem)
    * @param buffer - The certificate file as a Buffer
-   * @param password - The certificate password (required for .p12/.pfx, optional for PEM)
+   * @param password - The certificate password (required for .p12/.pfx, optional for PEM/DER)
    * @returns Certificate information
    */
   async parseCertificate(
@@ -29,12 +29,53 @@ export class CertificateService {
       return this.parsePemCertificate(buffer);
     }
 
-    // Try PKCS#12 format
+    // Try DER format (binary X.509 certificate - .crt, .cer)
+    try {
+      return await this.parseDerCertificate(buffer);
+    } catch {
+      // If DER fails, try PKCS#12 format
+      this.logger.debug('DER parsing failed, trying PKCS#12 format');
+    }
+
+    // Try PKCS#12 format (.p12, .pfx)
     return this.parsePkcs12Certificate(buffer, password);
   }
 
   /**
-   * Parse PEM format certificate (.crt, .cer, .pem)
+   * Parse DER format certificate (.crt, .cer in binary format)
+   */
+  private async parseDerCertificate(buffer: Buffer): Promise<CertificateInfo> {
+    try {
+      // Convert buffer to forge-compatible format
+      const derBytes = forge.util.createBuffer(buffer.toString('binary'));
+      const asn1 = forge.asn1.fromDer(derBytes);
+      const certificate = forge.pki.certificateFromAsn1(asn1);
+
+      const nit = this.extractNitFromCertificate(certificate);
+
+      const certInfo: CertificateInfo = {
+        subject: this.formatSubject(certificate.subject.attributes),
+        issuer: this.formatSubject(certificate.issuer.attributes),
+        nit,
+        validFrom: certificate.validity.notBefore,
+        validTo: certificate.validity.notAfter,
+        serialNumber: certificate.serialNumber,
+      };
+
+      this.logger.log(
+        `DER Certificate parsed successfully: ${certInfo.subject}, NIT: ${certInfo.nit || 'N/A'}`,
+      );
+
+      return certInfo;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.debug(`Failed to parse DER certificate: ${message}`);
+      throw new BadRequestException(`Error al procesar certificado DER: ${message}`);
+    }
+  }
+
+  /**
+   * Parse PEM format certificate (.crt, .cer, .pem in text format)
    */
   private async parsePemCertificate(buffer: Buffer): Promise<CertificateInfo> {
     try {
@@ -138,7 +179,7 @@ export class CertificateService {
 
   /**
    * Validate that a certificate is currently valid (not expired, not before valid date)
-   * @param buffer - The .p12/.pfx file as a Buffer
+   * @param buffer - The certificate file as a Buffer
    * @param password - The certificate password
    */
   async validateCertificate(

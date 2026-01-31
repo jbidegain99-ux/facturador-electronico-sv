@@ -961,7 +961,18 @@ export class HaciendaService {
         }),
       });
 
-      const result = await response.json();
+      // Log raw response for debugging
+      const responseText = await response.text();
+      this.logger.log(`=== CANCELLATION RAW RESPONSE ===`);
+      this.logger.log(`Status: ${response.status}`);
+      this.logger.log(`Response text: ${responseText}`);
+
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error(`Invalid JSON response: ${responseText.substring(0, 500)}`);
+      }
       responsePayload = JSON.stringify(result);
 
       // Log full response for debugging

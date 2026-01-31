@@ -704,6 +704,11 @@ export class HaciendaService {
       codPuntoVenta: null,
     };
 
+    this.logger.log(`=== EMISOR DATA ===`);
+    this.logger.log(`NIT: ${emisor.nit}`);
+    this.logger.log(`NRC: ${emisor.nrc}`);
+    this.logger.log(`Nombre: ${emisor.nombre}`);
+
     let testRecord: any;
 
     if (dto.testType === 'EMISSION') {

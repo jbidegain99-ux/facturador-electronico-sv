@@ -932,6 +932,10 @@ export class HaciendaService {
     let responsePayload: string | null = null;
 
     try {
+      // Log cancellation data for debugging
+      this.logger.log(`=== CANCELLATION DATA ===`);
+      this.logger.log(`Cancellation payload: ${JSON.stringify(cancellationData, null, 2)}`);
+
       // Sign the cancellation document
       const jws = await this.certificateService.signPayload(
         certificateBuffer,
@@ -959,6 +963,10 @@ export class HaciendaService {
 
       const result = await response.json();
       responsePayload = JSON.stringify(result);
+
+      // Log full response for debugging
+      this.logger.log(`=== CANCELLATION RESPONSE ===`);
+      this.logger.log(`Response: ${responsePayload}`);
 
       if (result.estado === 'PROCESADO') {
         status = 'SUCCESS';

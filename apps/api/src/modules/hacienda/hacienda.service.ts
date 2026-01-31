@@ -727,12 +727,17 @@ export class HaciendaService {
           'Se requiere el código de generación del DTE a anular',
         );
       }
+
+      // Force token refresh for cancellation to ensure fresh auth
+      this.logger.log('Refreshing token for cancellation request...');
+      const freshToken = await this.haciendaAuthService.refreshToken(tenantId, 'TEST');
+
       testRecord = await this.executeCancellationTest(
         config.id,
         dto.dteType,
         dto.codigoGeneracionToCancel,
         emisor,
-        tokenInfo.token,
+        freshToken.token,
         certificateBuffer,
         certificatePassword,
       );

@@ -708,6 +708,7 @@ export class HaciendaService {
     this.logger.log(`NIT: ${emisor.nit}`);
     this.logger.log(`NRC: ${emisor.nrc}`);
     this.logger.log(`Nombre: ${emisor.nombre}`);
+    this.logger.log(`codActividad: ${emisor.codActividad}`);
 
     let testRecord: any;
 

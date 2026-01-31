@@ -332,14 +332,15 @@ export class TestDataGeneratorService {
       const cantidad = Math.floor(Math.random() * 3) + 1;
       const precioUni = product.precio;
 
-      // For CCF (03), items are without IVA in ventaGravada
-      // For Factura (01), items include IVA
-      let ventaGravada = precioUni * cantidad;
+      // ventaGravada is the sale amount (price * quantity)
+      const ventaGravada = Number((precioUni * cantidad).toFixed(2));
       let ivaItem: number | undefined;
 
       if (dteType === '01') {
-        // For Factura, IVA is included in ventaGravada
-        ivaItem = Number((ventaGravada * 0.13).toFixed(2));
+        // For Factura (01), IVA is calculated as 13% of ventaGravada
+        // Using precise calculation: ventaGravada / 1.13 * 0.13
+        // This gives the IVA portion when price includes IVA
+        ivaItem = Number((ventaGravada / 1.13 * 0.13).toFixed(2));
       }
 
       items.push({
@@ -355,7 +356,7 @@ export class TestDataGeneratorService {
         montoDescu: 0,
         ventaNoSuj: 0,
         ventaExenta: 0,
-        ventaGravada: Number(ventaGravada.toFixed(2)),
+        ventaGravada,
         tributos: dteType === '03' ? ['20'] : null, // IVA for CCF
         psv: 0,
         noGravado: 0,

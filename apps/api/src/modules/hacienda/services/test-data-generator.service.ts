@@ -293,7 +293,7 @@ export class TestDataGeneratorService {
         numeroControl: originalDte.numeroControl,
         fecEmi: originalDte.fecEmi,
         montoIva: 0,
-        // codigoGeneracionR omitted - only for replacement documents
+        codigoGeneracionR: null, // Required field - null for tipoAnulacion 2
         tipoDocumento: null,
         numDocumento: null,
         nombre: null,
@@ -301,7 +301,7 @@ export class TestDataGeneratorService {
         correo: null,
       },
       motivo: {
-        tipoAnulacion: 2, // 2 = Rescindir de la operación realizada
+        tipoAnulacion: 3, // 3 = Otro
         motivoAnulacion: 'Prueba de anulación para proceso de acreditación',
         nombreResponsable: 'Responsable de Pruebas',
         tipDocResponsable: '36', // NIT

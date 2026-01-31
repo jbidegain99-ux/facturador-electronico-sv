@@ -261,6 +261,11 @@ export class TestDataGeneratorService {
     const fecAnula = now.toISOString().split('T')[0];
     const horAnula = now.toTimeString().split(' ')[0];
 
+    // Format NIT and NRC without dashes
+    const nitFormatted = emisor.nit.replace(/-/g, '');
+    const nrcFormatted = emisor.nrc.replace(/-/g, '');
+    const telefonoFormatted = emisor.telefono.replace(/-/g, '');
+
     return {
       identificacion: {
         version: 2,
@@ -270,15 +275,15 @@ export class TestDataGeneratorService {
         horAnula,
       },
       emisor: {
-        nit: emisor.nit.replace(/-/g, ''),
+        nit: nitFormatted,
         nombre: emisor.nombre,
         tipoEstablecimiento: emisor.tipoEstablecimiento,
-        nomEstablecimiento: emisor.nombreComercial,
-        codEstableMH: emisor.codEstableMH,
-        codEstable: emisor.codEstable,
-        codPuntoVentaMH: emisor.codPuntoVentaMH,
-        codPuntoVenta: emisor.codPuntoVenta,
-        telefono: emisor.telefono,
+        nomEstablecimiento: emisor.nombreComercial || emisor.nombre,
+        codEstableMH: emisor.codEstableMH || null,
+        codEstable: emisor.codEstable || null,
+        codPuntoVentaMH: emisor.codPuntoVentaMH || null,
+        codPuntoVenta: emisor.codPuntoVenta || null,
+        telefono: telefonoFormatted,
         correo: emisor.correo,
       },
       documento: {
@@ -300,10 +305,10 @@ export class TestDataGeneratorService {
         motivoAnulacion: 'Prueba de anulación para proceso de acreditación',
         nombreResponsable: 'Responsable de Pruebas',
         tipDocResponsable: '36', // NIT
-        numDocResponsable: emisor.nit.replace(/-/g, ''),
+        numDocResponsable: nitFormatted,
         nombreSolicita: 'Solicitante de Pruebas',
         tipDocSolicita: '36',
-        numDocSolicita: emisor.nit.replace(/-/g, ''),
+        numDocSolicita: nitFormatted,
       },
     };
   }

@@ -226,7 +226,7 @@ export class HaciendaAuthService {
   }
 
   /**
-   * Refresh token for a tenant
+   * Refresh token for a tenant - forces new authentication
    */
   async refreshToken(
     tenantId: string,
@@ -259,7 +259,19 @@ export class HaciendaAuthService {
     const nit = envConfig.haciendaConfig.tenant.nit;
     this.clearCache(nit, environment);
 
-    // Get fresh token
+    // Clear database token to force new authentication
+    await this.prisma.haciendaEnvironmentConfig.update({
+      where: { id: envConfig.id },
+      data: {
+        currentTokenEncrypted: null,
+        tokenExpiresAt: null,
+        tokenRefreshedAt: null,
+      },
+    });
+
+    this.logger.log(`Forcing fresh token for tenant: ${tenantId}`);
+
+    // Get fresh token (will now authenticate since DB token is cleared)
     return this.getTokenForTenant(tenantId, environment);
   }
 

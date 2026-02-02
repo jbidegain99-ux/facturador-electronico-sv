@@ -709,9 +709,9 @@ export class TestDataGeneratorService {
         codPuntoVentaMH: formattedEmisor.codPuntoVentaMH,
         codPuntoVenta: formattedEmisor.codPuntoVenta,
         // Export specific fields
-        tipoItemExpor: 1, // 1=Bienes, 2=Servicios
-        recintoFiscal: '01', // Recinto fiscal
-        regimen: '01', // Régimen de exportación
+        tipoItemExpor: 2, // 1=Bienes, 2=Servicios
+        recintoFiscal: null, // Not required for services
+        regimen: null, // Not required for services
       },
       receptor: {
         tipoDocumento: '37', // Otro (for foreign entities)
@@ -749,9 +749,9 @@ export class TestDataGeneratorService {
           },
         ],
         numPagoElectronico: null,
-        // Export specific fields
-        codIncoterms: 'FOB', // Free On Board
-        descIncoterms: 'Free On Board',
+        // Export specific fields - null for services export
+        codIncoterms: null,
+        descIncoterms: null,
         flete: 0,
         seguro: 0,
         observaciones: 'Exportación de servicios tecnológicos',
@@ -814,8 +814,8 @@ export class TestDataGeneratorService {
         tipoDocumento: '13', // DUI
         numDocumento: '012345678',
         nombre: 'PERSONA NATURAL SUJETO EXCLUIDO',
-        codActividad: '01610', // Actividades de apoyo a la agricultura
-        descActividad: 'Actividades de apoyo a la agricultura',
+        codActividad: '01111', // Cultivo de cereales (excepto arroz)
+        descActividad: 'Cultivo de cereales (excepto arroz), legumbres y semillas oleaginosas',
         direccion: {
           departamento: '06',
           municipio: '14',

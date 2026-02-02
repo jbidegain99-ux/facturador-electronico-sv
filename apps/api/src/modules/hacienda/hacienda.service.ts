@@ -877,7 +877,7 @@ export class HaciendaService {
         dteType,
         testType: 'EMISSION',
         status,
-        codigoGeneracion: testData.identificacion.codigoGeneracion,
+        codigoGeneracion: testData.identificacion.codigoGeneracion as string,
         selloRecibido,
         requestPayload: JSON.stringify(testData),
         responsePayload,

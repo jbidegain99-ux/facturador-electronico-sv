@@ -468,7 +468,9 @@ export class TestDataGeneratorService {
     const numeroControl = this.generateNumeroControl('05', correlativo);
     const formattedEmisor = this.formatEmisor(emisor);
 
-    const items = this.generateItemsNotaCredito();
+    // Generate the related document UUID first so we can use it in items
+    const relatedDocUUID = uuidv4().toUpperCase();
+    const items = this.generateItemsNotaCreditoDebito(relatedDocUUID);
     const totals = this.calculateTotalsCCF(items);
 
     return {
@@ -490,7 +492,7 @@ export class TestDataGeneratorService {
         {
           tipoDocumento: '03', // Related to a CCF
           tipoGeneracion: 1, // Electrónico
-          numeroDocumento: uuidv4().toUpperCase(), // codigoGeneracion of related doc
+          numeroDocumento: relatedDocUUID,
           fechaEmision: fecEmi,
         },
       ],
@@ -568,7 +570,9 @@ export class TestDataGeneratorService {
     const numeroControl = this.generateNumeroControl('06', correlativo);
     const formattedEmisor = this.formatEmisor(emisor);
 
-    const items = this.generateItemsNotaDebito();
+    // Generate the related document UUID first so we can use it in items
+    const relatedDocUUID = uuidv4().toUpperCase();
+    const items = this.generateItemsNotaCreditoDebito(relatedDocUUID);
     const totals = this.calculateTotalsCCF(items);
 
     return {
@@ -590,7 +594,7 @@ export class TestDataGeneratorService {
         {
           tipoDocumento: '03', // Related to a CCF
           tipoGeneracion: 1, // Electrónico
-          numeroDocumento: uuidv4().toUpperCase(), // codigoGeneracion of related doc
+          numeroDocumento: relatedDocUUID,
           fechaEmision: fecEmi,
         },
       ],
@@ -645,6 +649,7 @@ export class TestDataGeneratorService {
         reteRenta: 0,
         montoTotalOperacion: totals.montoTotalOperacion,
         totalLetras: this.numberToWords(totals.montoTotalOperacion),
+        numPagoElectronico: null,
         condicionOperacion: 1,
       },
       extension: null,
@@ -956,10 +961,13 @@ export class TestDataGeneratorService {
   }
 
   /**
-   * Generate items for Nota de Crédito (05)
+   * Generate items for Nota de Crédito (05) and Nota de Débito (06)
    * No noGravado, psv fields
+   * numeroDocumento must be the UUID of the related document
    */
-  private generateItemsNotaCredito(): Record<string, unknown>[] {
+  private generateItemsNotaCreditoDebito(
+    relatedDocUUID: string,
+  ): Record<string, unknown>[] {
     const numItems = Math.floor(Math.random() * 2) + 1;
     const items: Record<string, unknown>[] = [];
 
@@ -975,45 +983,7 @@ export class TestDataGeneratorService {
       items.push({
         numItem: i + 1,
         tipoItem: 2,
-        numeroDocumento: null,
-        cantidad,
-        codigo: `PROD-${(i + 1).toString().padStart(4, '0')}`,
-        codTributo: null,
-        uniMedida: 99,
-        descripcion: product.descripcion,
-        precioUni,
-        montoDescu: 0,
-        ventaNoSuj: 0,
-        ventaExenta: 0,
-        ventaGravada,
-        tributos: ['20'], // IVA
-      });
-    }
-
-    return items;
-  }
-
-  /**
-   * Generate items for Nota de Débito (06)
-   * No noGravado, psv fields
-   */
-  private generateItemsNotaDebito(): Record<string, unknown>[] {
-    const numItems = Math.floor(Math.random() * 2) + 1;
-    const items: Record<string, unknown>[] = [];
-
-    for (let i = 0; i < numItems; i++) {
-      const product =
-        this.sampleProducts[
-          Math.floor(Math.random() * this.sampleProducts.length)
-        ];
-      const cantidad = Math.floor(Math.random() * 2) + 1;
-      const precioUni = product.precio;
-      const ventaGravada = Number((precioUni * cantidad).toFixed(2));
-
-      items.push({
-        numItem: i + 1,
-        tipoItem: 2,
-        numeroDocumento: null,
+        numeroDocumento: relatedDocUUID,
         cantidad,
         codigo: `PROD-${(i + 1).toString().padStart(4, '0')}`,
         codTributo: null,

@@ -67,7 +67,8 @@ export interface GeneratedTestData {
   identificacion: Record<string, unknown>;
   documentoRelacionado?: unknown;
   emisor: Record<string, unknown>;
-  receptor: Record<string, unknown>;
+  receptor?: Record<string, unknown>;
+  sujetoExcluido?: Record<string, unknown>;
   otrosDocumentos?: unknown;
   ventaTercero?: unknown;
   cuerpoDocumento: Record<string, unknown>[];

@@ -294,11 +294,12 @@ export class TestDataGeneratorService {
         fecEmi: originalDte.fecEmi,
         montoIva: 0,
         codigoGeneracionR: null, // null for tipoAnulacion 2 (rescindir)
-        tipoDocumento: null,
-        numDocumento: null,
-        nombre: null,
-        telefono: null,
-        correo: null,
+        // Receptor data from original invoice (required for cancellation)
+        tipoDocumento: originalDte.tipoDte === '01' ? '13' : '36', // DUI for Factura, NIT for CCF
+        numDocumento: originalDte.tipoDte === '01' ? '012345678' : '06140101001000', // Test receptor
+        nombre: originalDte.tipoDte === '01' ? 'CONSUMIDOR FINAL PRUEBA' : 'EMPRESA DE PRUEBA, S.A. DE C.V.',
+        telefono: '22222222',
+        correo: 'test@example.com',
       },
       motivo: {
         tipoAnulacion: 2, // Number 2 = Rescindir operación (no replacement needed)

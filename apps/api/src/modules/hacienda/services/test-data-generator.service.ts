@@ -369,6 +369,12 @@ export class TestDataGeneratorService {
     const formattedEmisor = this.formatEmisor(emisor);
 
     const items = this.generateItemsNotaRemision();
+    const totalGravada = items.reduce(
+      (sum, item) => sum + (item.ventaGravada as number),
+      0,
+    );
+    const totalIva = Number((totalGravada * 0.13).toFixed(2));
+    const subTotal = Number((totalGravada + totalIva).toFixed(2));
 
     return {
       identificacion: {
@@ -403,7 +409,8 @@ export class TestDataGeneratorService {
         codPuntoVenta: formattedEmisor.codPuntoVenta,
       },
       receptor: {
-        nit: '06140101001000',
+        tipoDocumento: '36', // NIT
+        numDocumento: '06140101001000',
         nrc: '1234567',
         nombre: 'EMPRESA RECEPTORA PRUEBA, S.A. DE C.V.',
         codActividad: '46100',
@@ -416,19 +423,30 @@ export class TestDataGeneratorService {
         },
         telefono: '23333333',
         correo: 'receptora@example.com',
+        bienTitulo: '04', // Remitir a cuenta de terceros
       },
       ventaTercero: null,
       cuerpoDocumento: items,
       resumen: {
-        totalNoGravado: 0,
-        totalGravada: items.reduce(
-          (sum, item) => sum + (item.ventaGravada as number),
-          0,
-        ),
-        totalLetras: this.numberToWords(
-          items.reduce((sum, item) => sum + (item.ventaGravada as number), 0),
-        ),
-        observaciones: null,
+        totalNoSuj: 0,
+        totalExenta: 0,
+        totalGravada,
+        subTotalVentas: totalGravada,
+        descuNoSuj: 0,
+        descuExenta: 0,
+        descuGravada: 0,
+        porcentajeDescuento: 0,
+        totalDescu: 0,
+        tributos: [
+          {
+            codigo: '20',
+            descripcion: 'Impuesto al Valor Agregado 13%',
+            valor: totalIva,
+          },
+        ],
+        subTotal,
+        montoTotalOperacion: subTotal,
+        totalLetras: this.numberToWords(subTotal),
       },
       extension: null,
       apendice: null,
@@ -450,7 +468,7 @@ export class TestDataGeneratorService {
     const numeroControl = this.generateNumeroControl('05', correlativo);
     const formattedEmisor = this.formatEmisor(emisor);
 
-    const items = this.generateItemsCCF();
+    const items = this.generateItemsNotaCredito();
     const totals = this.calculateTotalsCCF(items);
 
     return {
@@ -487,10 +505,6 @@ export class TestDataGeneratorService {
         direccion: formattedEmisor.direccion,
         telefono: formattedEmisor.telefono,
         correo: formattedEmisor.correo,
-        codEstableMH: formattedEmisor.codEstableMH,
-        codEstable: formattedEmisor.codEstable,
-        codPuntoVentaMH: formattedEmisor.codPuntoVentaMH,
-        codPuntoVenta: formattedEmisor.codPuntoVenta,
       },
       receptor: {
         nit: '06140101001000',
@@ -517,7 +531,6 @@ export class TestDataGeneratorService {
         descuNoSuj: 0,
         descuExenta: 0,
         descuGravada: 0,
-        porcentajeDescuento: 0,
         totalDescu: 0,
         tributos: [
           {
@@ -542,6 +555,7 @@ export class TestDataGeneratorService {
   /**
    * Generate Nota de Débito (06) - Debit Note
    * Requires a related document
+   * No codEstable fields in emisor, no porcentajeDescuento in resumen
    */
   private generateNotaDebito(
     emisor: EmisorData,
@@ -554,7 +568,7 @@ export class TestDataGeneratorService {
     const numeroControl = this.generateNumeroControl('06', correlativo);
     const formattedEmisor = this.formatEmisor(emisor);
 
-    const items = this.generateItemsCCF();
+    const items = this.generateItemsNotaDebito();
     const totals = this.calculateTotalsCCF(items);
 
     return {
@@ -591,10 +605,6 @@ export class TestDataGeneratorService {
         direccion: formattedEmisor.direccion,
         telefono: formattedEmisor.telefono,
         correo: formattedEmisor.correo,
-        codEstableMH: formattedEmisor.codEstableMH,
-        codEstable: formattedEmisor.codEstable,
-        codPuntoVentaMH: formattedEmisor.codPuntoVentaMH,
-        codPuntoVenta: formattedEmisor.codPuntoVenta,
       },
       receptor: {
         nit: '06140101001000',
@@ -621,7 +631,6 @@ export class TestDataGeneratorService {
         descuNoSuj: 0,
         descuExenta: 0,
         descuGravada: 0,
-        porcentajeDescuento: 0,
         totalDescu: 0,
         tributos: [
           {
@@ -800,8 +809,8 @@ export class TestDataGeneratorService {
         tipoDocumento: '13', // DUI
         numDocumento: '012345678',
         nombre: 'PERSONA NATURAL SUJETO EXCLUIDO',
-        codActividad: '01110', // Agricultura
-        descActividad: 'Cultivo de cereales',
+        codActividad: '01610', // Actividades de apoyo a la agricultura
+        descActividad: 'Actividades de apoyo a la agricultura',
         direccion: {
           departamento: '06',
           municipio: '14',
@@ -928,14 +937,94 @@ export class TestDataGeneratorService {
       items.push({
         numItem: i + 1,
         tipoItem: 2,
+        numeroDocumento: null,
         cantidad,
         codigo: `PROD-${(i + 1).toString().padStart(4, '0')}`,
+        codTributo: null,
         uniMedida: 99,
         descripcion: product.descripcion,
         precioUni,
         montoDescu: 0,
+        ventaNoSuj: 0,
+        ventaExenta: 0,
         ventaGravada,
         tributos: ['20'],
+      });
+    }
+
+    return items;
+  }
+
+  /**
+   * Generate items for Nota de Crédito (05)
+   * No noGravado, psv fields
+   */
+  private generateItemsNotaCredito(): Record<string, unknown>[] {
+    const numItems = Math.floor(Math.random() * 2) + 1;
+    const items: Record<string, unknown>[] = [];
+
+    for (let i = 0; i < numItems; i++) {
+      const product =
+        this.sampleProducts[
+          Math.floor(Math.random() * this.sampleProducts.length)
+        ];
+      const cantidad = Math.floor(Math.random() * 2) + 1;
+      const precioUni = product.precio;
+      const ventaGravada = Number((precioUni * cantidad).toFixed(2));
+
+      items.push({
+        numItem: i + 1,
+        tipoItem: 2,
+        numeroDocumento: null,
+        cantidad,
+        codigo: `PROD-${(i + 1).toString().padStart(4, '0')}`,
+        codTributo: null,
+        uniMedida: 99,
+        descripcion: product.descripcion,
+        precioUni,
+        montoDescu: 0,
+        ventaNoSuj: 0,
+        ventaExenta: 0,
+        ventaGravada,
+        tributos: ['20'], // IVA
+      });
+    }
+
+    return items;
+  }
+
+  /**
+   * Generate items for Nota de Débito (06)
+   * No noGravado, psv fields
+   */
+  private generateItemsNotaDebito(): Record<string, unknown>[] {
+    const numItems = Math.floor(Math.random() * 2) + 1;
+    const items: Record<string, unknown>[] = [];
+
+    for (let i = 0; i < numItems; i++) {
+      const product =
+        this.sampleProducts[
+          Math.floor(Math.random() * this.sampleProducts.length)
+        ];
+      const cantidad = Math.floor(Math.random() * 2) + 1;
+      const precioUni = product.precio;
+      const ventaGravada = Number((precioUni * cantidad).toFixed(2));
+
+      items.push({
+        numItem: i + 1,
+        tipoItem: 2,
+        numeroDocumento: null,
+        cantidad,
+        codigo: `PROD-${(i + 1).toString().padStart(4, '0')}`,
+        codTributo: null,
+        uniMedida: 99,
+        descripcion: product.descripcion,
+        precioUni,
+        montoDescu: 0,
+        ventaNoSuj: 0,
+        ventaExenta: 0,
+        ventaGravada,
+        tributos: ['20'], // IVA
       });
     }
 
@@ -965,6 +1054,7 @@ export class TestDataGeneratorService {
         montoDescu: 0,
         ventaGravada,
         noGravado: 0,
+        tributos: null, // Required for export invoice
       });
     }
 

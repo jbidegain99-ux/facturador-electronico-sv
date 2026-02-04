@@ -51,8 +51,13 @@ export class DteService {
     };
   }
 
-  async createDte(tenantId: string, tipoDte: string, data: Record<string, unknown>) {
+  async createDte(tenantId: string | null | undefined, tipoDte: string, data: Record<string, unknown>) {
     this.logger.log(`Creating DTE for tenant ${tenantId}, type ${tipoDte}`);
+
+    // Validate tenantId
+    if (!tenantId) {
+      throw new Error('No se puede crear un DTE sin un tenant asignado');
+    }
 
     const codigoGeneracion = uuidv4().toUpperCase();
     const correlativo = await this.getNextCorrelativo(tenantId, tipoDte);
@@ -273,13 +278,25 @@ export class DteService {
   }
 
   async findByTenant(
-    tenantId: string,
+    tenantId: string | null | undefined,
     page = 1,
     limit = 20,
     filters?: { tipoDte?: string; estado?: string; search?: string },
   ) {
     this.logger.log(`Finding DTEs for tenant ${tenantId}, page ${page}, limit ${limit}`);
     this.logger.log(`Filters: ${JSON.stringify(filters)}`);
+
+    // Handle case where user has no tenant assigned
+    if (!tenantId) {
+      this.logger.warn('User has no tenantId assigned, returning empty results');
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
 
     const skip = (page - 1) * limit;
 
@@ -395,7 +412,21 @@ export class DteService {
   // Analytics Methods
   // =====================
 
-  async getSummaryStats(tenantId: string) {
+  async getSummaryStats(tenantId: string | null | undefined) {
+    // Handle case where user has no tenant assigned
+    if (!tenantId) {
+      this.logger.warn('User has no tenantId assigned for getSummaryStats');
+      return {
+        dtesHoy: 0,
+        dtesMes: 0,
+        dtesMesAnterior: 0,
+        dtesMesChange: 0,
+        totalFacturado: 0,
+        totalFacturadoChange: 0,
+        rechazados: 0,
+      };
+    }
+
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -473,11 +504,17 @@ export class DteService {
   }
 
   async getStatsByDate(
-    tenantId: string,
+    tenantId: string | null | undefined,
     startDate?: Date,
     endDate?: Date,
     groupBy: 'day' | 'week' | 'month' = 'day',
   ) {
+    // Handle case where user has no tenant assigned
+    if (!tenantId) {
+      this.logger.warn('User has no tenantId assigned for getStatsByDate');
+      return [];
+    }
+
     const end = endDate || new Date();
     const start = startDate || new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000); // Last 7 days default
 
@@ -556,7 +593,13 @@ export class DteService {
     return result;
   }
 
-  async getStatsByType(tenantId: string, startDate?: Date, endDate?: Date) {
+  async getStatsByType(tenantId: string | null | undefined, startDate?: Date, endDate?: Date) {
+    // Handle case where user has no tenant assigned
+    if (!tenantId) {
+      this.logger.warn('User has no tenantId assigned for getStatsByType');
+      return [];
+    }
+
     const where: any = { tenantId };
 
     if (startDate || endDate) {
@@ -590,7 +633,13 @@ export class DteService {
     }));
   }
 
-  async getStatsByStatus(tenantId: string) {
+  async getStatsByStatus(tenantId: string | null | undefined) {
+    // Handle case where user has no tenant assigned
+    if (!tenantId) {
+      this.logger.warn('User has no tenantId assigned for getStatsByStatus');
+      return [];
+    }
+
     const stats = await this.prisma.dTE.groupBy({
       by: ['estado'],
       where: { tenantId },
@@ -604,11 +653,17 @@ export class DteService {
   }
 
   async getTopClients(
-    tenantId: string,
+    tenantId: string | null | undefined,
     limit = 10,
     startDate?: Date,
     endDate?: Date,
   ) {
+    // Handle case where user has no tenant assigned
+    if (!tenantId) {
+      this.logger.warn('User has no tenantId assigned for getTopClients');
+      return [];
+    }
+
     const where: any = {
       tenantId,
       clienteId: { not: null },
@@ -651,7 +706,13 @@ export class DteService {
     });
   }
 
-  async getRecentDTEs(tenantId: string, limit = 5) {
+  async getRecentDTEs(tenantId: string | null | undefined, limit = 5) {
+    // Handle case where user has no tenant assigned
+    if (!tenantId) {
+      this.logger.warn('User has no tenantId assigned for getRecentDTEs');
+      return [];
+    }
+
     return this.prisma.dTE.findMany({
       where: { tenantId },
       orderBy: { createdAt: 'desc' },

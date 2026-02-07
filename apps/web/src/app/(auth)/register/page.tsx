@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { MaskedInput } from '@/components/ui/masked-input';
 
 // Catálogo de Departamentos de El Salvador
 const DEPARTAMENTOS = [
@@ -381,6 +382,15 @@ const ACTIVIDADES_ECONOMICAS = [
   { codigo: '96091', descripcion: 'Otras actividades de servicios personales n.c.p.' },
 ];
 
+function CharCounter({ length, max }: { length: number; max: number }) {
+  const isNearLimit = length > max * 0.9;
+  return (
+    <span className={`text-xs ${isNearLimit ? 'text-red-500' : 'text-gray-400'}`}>
+      {length}/{max}
+    </span>
+  );
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -442,6 +452,13 @@ export default function RegisterPage() {
 
     if (formData.adminPassword !== formData.adminPasswordConfirm) {
       setError('Las contrasenas no coinciden');
+      setLoading(false);
+      return;
+    }
+
+    // Validate empresa and admin emails are different
+    if (formData.correo.toLowerCase().trim() === formData.adminEmail.toLowerCase().trim()) {
+      setError('El correo de la empresa y el correo del administrador deben ser diferentes');
       setLoading(false);
       return;
     }
@@ -530,14 +547,18 @@ export default function RegisterPage() {
             <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Datos de la Empresa</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
-                  Razon Social *
-                </label>
+                <div className="flex justify-between items-center">
+                  <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
+                    Razon Social *
+                  </label>
+                  <CharCounter length={formData.nombre.length} max={200} />
+                </div>
                 <input
                   type="text"
                   name="nombre"
                   id="nombre"
                   required
+                  maxLength={200}
                   value={formData.nombre}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
@@ -551,6 +572,7 @@ export default function RegisterPage() {
                   type="text"
                   name="nombreComercial"
                   id="nombreComercial"
+                  maxLength={200}
                   value={formData.nombreComercial}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
@@ -560,14 +582,14 @@ export default function RegisterPage() {
                 <label htmlFor="nit" className="block text-sm font-medium text-gray-700">
                   NIT *
                 </label>
-                <input
-                  type="text"
-                  name="nit"
+                <MaskedInput
+                  mask="9999-999999-999-9"
                   id="nit"
+                  name="nit"
                   required
                   placeholder="0000-000000-000-0"
                   value={formData.nit}
-                  onChange={handleChange}
+                  onValueChange={(masked) => setFormData(prev => ({ ...prev, nit: masked }))}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
@@ -575,14 +597,14 @@ export default function RegisterPage() {
                 <label htmlFor="nrc" className="block text-sm font-medium text-gray-700">
                   NRC *
                 </label>
-                <input
-                  type="text"
-                  name="nrc"
+                <MaskedInput
+                  mask="999999-9"
                   id="nrc"
+                  name="nrc"
                   required
                   placeholder="000000-0"
                   value={formData.nrc}
-                  onChange={handleChange}
+                  onValueChange={(masked) => setFormData(prev => ({ ...prev, nrc: masked }))}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
@@ -610,14 +632,14 @@ export default function RegisterPage() {
                 <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
                   Telefono *
                 </label>
-                <input
-                  type="tel"
-                  name="telefono"
+                <MaskedInput
+                  mask="9999-9999"
                   id="telefono"
+                  name="telefono"
                   required
                   placeholder="0000-0000"
                   value={formData.telefono}
-                  onChange={handleChange}
+                  onValueChange={(masked) => setFormData(prev => ({ ...prev, telefono: masked }))}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 />
               </div>
@@ -630,6 +652,7 @@ export default function RegisterPage() {
                   name="correo"
                   id="correo"
                   required
+                  maxLength={100}
                   value={formData.correo}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
@@ -673,7 +696,7 @@ export default function RegisterPage() {
                   value={formData.municipio}
                   onChange={handleChange}
                   disabled={!formData.departamento}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white disabled:bg-gray-100"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900 disabled:bg-gray-100"
                 >
                   <option value="">
                     {formData.departamento ? 'Seleccione un municipio' : 'Primero seleccione departamento'}
@@ -686,14 +709,18 @@ export default function RegisterPage() {
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="complemento" className="block text-sm font-medium text-gray-700">
-                  Direccion Completa *
-                </label>
+                <div className="flex justify-between items-center">
+                  <label htmlFor="complemento" className="block text-sm font-medium text-gray-700">
+                    Direccion Completa *
+                  </label>
+                  <CharCounter length={formData.complemento.length} max={500} />
+                </div>
                 <input
                   type="text"
                   name="complemento"
                   id="complemento"
                   required
+                  maxLength={500}
                   placeholder="Calle, numero, colonia, etc."
                   value={formData.complemento}
                   onChange={handleChange}
@@ -716,6 +743,7 @@ export default function RegisterPage() {
                   name="adminNombre"
                   id="adminNombre"
                   required
+                  maxLength={200}
                   value={formData.adminNombre}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
@@ -730,6 +758,7 @@ export default function RegisterPage() {
                   name="adminEmail"
                   id="adminEmail"
                   required
+                  maxLength={100}
                   value={formData.adminEmail}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
@@ -745,6 +774,7 @@ export default function RegisterPage() {
                   id="adminPassword"
                   required
                   minLength={8}
+                  maxLength={128}
                   value={formData.adminPassword}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
@@ -760,6 +790,7 @@ export default function RegisterPage() {
                   id="adminPasswordConfirm"
                   required
                   minLength={8}
+                  maxLength={128}
                   value={formData.adminPasswordConfirm}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"

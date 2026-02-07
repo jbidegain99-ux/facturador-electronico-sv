@@ -24,11 +24,11 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!res.ok) {
-        throw new Error('Credenciales invalidas');
-      }
-
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Credenciales invalidas');
+      }
       localStorage.setItem('token', data.access_token);
 
       // Redirect based on user role
@@ -60,8 +60,8 @@ export default function LoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-sm">
         <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-destructive/10 p-4 border border-destructive/20">
-              <p className="text-sm text-destructive">{error}</p>
+            <div className={`rounded-md p-4 border ${error.includes('bloqueada') ? 'bg-amber-500/10 border-amber-500/20' : 'bg-destructive/10 border-destructive/20'}`}>
+              <p className={`text-sm ${error.includes('bloqueada') ? 'text-amber-500' : 'text-destructive'}`}>{error}</p>
             </div>
           )}
 

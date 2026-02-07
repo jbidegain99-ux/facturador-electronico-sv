@@ -24,9 +24,64 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales invalidas');
     }
 
+    // Check if account is locked
+    if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
+      const minutesRemaining = Math.ceil(
+        (user.accountLockedUntil.getTime() - Date.now()) / 60000,
+      );
+      throw new UnauthorizedException(
+        `Cuenta bloqueada. Intente nuevamente en ${minutesRemaining} minuto(s)`,
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      const newFailedAttempts = user.failedLoginAttempts + 1;
+      const MAX_ATTEMPTS = 5;
+      const LOCKOUT_MINUTES = 15;
+
+      interface LockoutUpdateData {
+        failedLoginAttempts: number;
+        lastFailedLoginAt: Date;
+        accountLockedUntil: Date | null;
+      }
+
+      const updateData: LockoutUpdateData = {
+        failedLoginAttempts: newFailedAttempts,
+        lastFailedLoginAt: new Date(),
+        accountLockedUntil: null,
+      };
+
+      if (newFailedAttempts >= MAX_ATTEMPTS) {
+        updateData.accountLockedUntil = new Date(
+          Date.now() + LOCKOUT_MINUTES * 60 * 1000,
+        );
+      }
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: updateData,
+      });
+
+      if (newFailedAttempts >= MAX_ATTEMPTS) {
+        throw new UnauthorizedException(
+          `Cuenta bloqueada por ${LOCKOUT_MINUTES} minutos debido a multiples intentos fallidos`,
+        );
+      }
+
       throw new UnauthorizedException('Credenciales invalidas');
+    }
+
+    // Reset failed attempts on successful login
+    if (user.failedLoginAttempts > 0) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: 0,
+          accountLockedUntil: null,
+          lastFailedLoginAt: null,
+        },
+      });
     }
 
     return user;
@@ -98,6 +153,11 @@ export class AuthService {
 
   async register(registerDto: RegisterDto, ipAddress?: string, userAgent?: string) {
     const { tenant, user } = registerDto;
+
+    // Check if empresa and admin emails are the same
+    if (tenant.correo.toLowerCase().trim() === user.email.toLowerCase().trim()) {
+      throw new ConflictException('El correo de la empresa y el correo del administrador deben ser diferentes');
+    }
 
     // Check if NIT already exists
     const existingTenant = await this.prisma.tenant.findUnique({

@@ -1,0 +1,191 @@
+WARNING: Packing source code into tar to upload...
+WARNING: Excluding '.gitignore' based on default ignore rules
+WARNING: Excluding '.git' based on default ignore rules
+WARNING: Uploading archived source code from '/tmp/build_archive_194831a6e4b7461684f591950be7938c.tar.gz'...
+WARNING: Sending context (59.187 MiB) to registry: facturadorsvacr...
+WARNING: Queued a build with ID: cae
+WARNING: Waiting for an agent...
+2026/01/30 21:38:24 Downloading source code...
+2026/01/30 21:38:26 Finished downloading source code
+2026/01/30 21:38:26 Using acb_vol_ae61bdf6-a824-415b-98b8-71edda23878d as the home volume
+2026/01/30 21:38:26 Setting up Docker configuration...
+2026/01/30 21:38:26 Successfully set up Docker configuration
+2026/01/30 21:38:26 Logging in to registry: facturadorsvacr.azurecr.io
+2026/01/30 21:38:27 Successfully logged into facturadorsvacr.azurecr.io
+2026/01/30 21:38:27 Executing step ID: build. Timeout(sec): 28800, Working directory: '', Network: ''
+2026/01/30 21:38:27 Scanning for dependencies...
+2026/01/30 21:38:27 Successfully scanned dependencies
+2026/01/30 21:38:27 Launching container with name: build
+Sending build context to Docker daemon  96.43MB
+Step 1/31 : FROM node:20-alpine AS builder
+20-alpine: Pulling from library/node
+589002ba0eae: Pulling fs layer
+ad6d96c196e3: Pulling fs layer
+eb87f4721c91: Pulling fs layer
+e31b20165522: Pulling fs layer
+e31b20165522: Waiting
+eb87f4721c91: Verifying Checksum
+eb87f4721c91: Download complete
+589002ba0eae: Verifying Checksum
+589002ba0eae: Download complete
+e31b20165522: Verifying Checksum
+e31b20165522: Download complete
+589002ba0eae: Pull complete
+ad6d96c196e3: Verifying Checksum
+ad6d96c196e3: Download complete
+ad6d96c196e3: Pull complete
+eb87f4721c91: Pull complete
+e31b20165522: Pull complete
+Digest: sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8
+Status: Downloaded newer image for node:20-alpine
+ ---> 458b0b7c1c60
+Step 2/31 : RUN apk add --no-cache openssl openssl-dev libc6-compat
+ ---> Running in 150edf2ce1b2
+(1/6) Installing musl-obstack (1.2.3-r2)
+(2/6) Installing libucontext (1.3.3-r0)
+(3/6) Installing gcompat (1.1.0-r4)
+(4/6) Installing openssl (3.5.5-r0)
+(5/6) Installing pkgconf (2.5.1-r0)
+(6/6) Installing openssl-dev (3.5.5-r0)
+Executing busybox-1.37.0-r30.trigger
+OK: 13.8 MiB in 24 packages
+Removing intermediate container 150edf2ce1b2
+ ---> b17164ba745a
+Step 3/31 : WORKDIR /app
+ ---> Running in fed6addcc9f4
+Removing intermediate container fed6addcc9f4
+ ---> 1c722b4fe657
+Step 4/31 : COPY package*.json ./
+ ---> f7398e8a1c37
+Step 5/31 : COPY apps/api ./apps/api
+ ---> 3ecaa6087d82
+Step 6/31 : COPY packages ./packages
+ ---> eb5340051acf
+Step 7/31 : RUN npm install
+ ---> Running in c5e24da17214
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated jpeg-exif@1.1.4: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+
+added 884 packages, and audited 894 packages in 37s
+
+141 packages are looking for funding
+  run `npm fund` for details
+
+37 vulnerabilities (5 low, 10 moderate, 22 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.8.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.8.0
+npm notice To update run: npm install -g npm@11.8.0
+npm notice
+Removing intermediate container c5e24da17214
+ ---> 9f92c9dedf38
+Step 8/31 : WORKDIR /app/apps/api
+ ---> Running in de20cfe0846f
+Removing intermediate container de20cfe0846f
+ ---> 26f59a391dd8
+Step 9/31 : RUN npm install --legacy-peer-deps
+ ---> Running in 25c578019170
+
+up to date, audited 893 packages in 3s
+
+141 packages are looking for funding
+  run `npm fund` for details
+
+30 vulnerabilities (5 low, 6 moderate, 19 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+Removing intermediate container 25c578019170
+ ---> dde485b882c9
+Step 10/31 : WORKDIR /app/packages/mh-client
+ ---> Running in 7ab0b0f73fdf
+Removing intermediate container 7ab0b0f73fdf
+ ---> 765c02afd011
+Step 11/31 : RUN npm run build || echo "mh-client build skipped"
+ ---> Running in dab69f4a8384
+
+> @facturador/mh-client@0.1.0 build
+> tsc
+
+Removing intermediate container dab69f4a8384
+ ---> d7099c6e4979
+Step 12/31 : WORKDIR /app/packages/shared
+ ---> Running in 52c24dbe66ae
+Removing intermediate container 52c24dbe66ae
+ ---> 645a19b61cf4
+Step 13/31 : RUN npm run build || echo "shared build skipped"
+ ---> Running in 5506eef502e3
+
+> @facturador/shared@0.1.0 build
+> tsc
+
+Removing intermediate container 5506eef502e3
+ ---> 73f8ad0febbd
+Step 14/31 : WORKDIR /app/apps/api
+ ---> Running in 8011c9190aff
+Removing intermediate container 8011c9190aff
+ ---> fbf47ee5289f
+Step 15/31 : RUN npx prisma generate
+ ---> Running in 13a52e7ced67
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to ./../../node_modules/@prisma/client in 514ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+Removing intermediate container 13a52e7ced67
+ ---> 169aa26357e2
+Step 16/31 : RUN npm run build
+ ---> Running in caff679ef0f7
+
+> @facturador/api@0.1.0 build
+> nest build
+
+Removing intermediate container caff679ef0f7
+ ---> 662d49a0a849
+Step 17/31 : FROM node:20-alpine AS runner
+20-alpine: Pulling from library/node
+Digest: sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8
+Status: Image is up to date for node:20-alpine
+ ---> 458b0b7c1c60
+Step 18/31 : RUN apk add --no-cache openssl libc6-compat
+ ---> Running in 2191a0127097
+(1/4) Installing musl-obstack (1.2.3-r2)
+(2/4) Installing libucontext (1.3.3-r0)
+(3/4) Installing gcompat (1.1.0-r4)
+(4/4) Installing openssl (3.5.5-r0)
+Executing busybox-1.37.0-r30.trigger
+OK: 11.8 MiB in 22 packages
+Removing intermediate container 2191a0127097
+ ---> ad001f1e1f1c
+Step 19/31 : WORKDIR /app
+ ---> Running in 02994e15dd72
+Removing intermediate container 02994e15dd72
+ ---> a260ce7d8606
+Step 20/31 : COPY --from=builder /app/apps/api/dist ./dist

@@ -218,6 +218,12 @@
     @apply bg-popover text-popover-foreground;
   }
 
+  /* Ensure select options are always visible regardless of theme */
+  select option {
+    background-color: white;
+    color: #111827;
+  }
+
   /* Card Hover Animation */
   .card-hover {
     @apply transition-all duration-300;

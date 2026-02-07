@@ -1,0 +1,355 @@
+2026-01-25T16:19:10.2182745Z Container start method called.
+2026-01-25T16:19:10.2359789Z Establishing network.
+2026-01-25T16:19:10.2366591Z Pulling image: facturadorsvacr.azurecr.io/facturador-web:v3.
+2026-01-25T16:19:11.1620845Z Image facturadorsvacr.azurecr.io/facturador-web:v3 is pulled from registry facturadorsvacr.azurecr.io
+2026-01-25T16:19:11.1730646Z Container is starting.
+2026-01-25T16:19:11.1814208Z Establishing user namespace if not established already.
+2026-01-25T16:19:11.1816068Z Establishing network if not established already.
+2026-01-25T16:19:11.1827039Z Mounting volumes.
+2026-01-25T16:19:11.1922519Z Nested mountpoint volatile/logs
+2026-01-25T16:19:11.2297376Z Nested mountpoint 
+2026-01-25T16:19:11.3266857Z Nested mountpoint 
+2026-01-25T16:19:11.8891811Z Creating container.
+2026-01-25T16:19:11.8892961Z Creating pipes for streaming container io.
+2026-01-25T16:19:11.8902964Z Creating stdout named pipe at /podr/container/pipe/4ea95871d60c_facturador-web-sv/stdout_c49671b2caef4da3be3b423f105d75b8.
+2026-01-25T16:19:11.9395288Z Successfully created stdout named pipe at: /podr/container/pipe/4ea95871d60c_facturador-web-sv/stdout_c49671b2caef4da3be3b423f105d75b8.
+2026-01-25T16:19:11.9409355Z Opening named pipe /podr/container/pipe/4ea95871d60c_facturador-web-sv/stdout_c49671b2caef4da3be3b423f105d75b8 for reading in non-blocking mode.
+2026-01-25T16:19:11.9411428Z Successfully opened named pipe: /podr/container/pipe/4ea95871d60c_facturador-web-sv/stdout_c49671b2caef4da3be3b423f105d75b8.
+2026-01-25T16:19:11.9500721Z Successfully removed non-blocking flag from /podr/container/pipe/4ea95871d60c_facturador-web-sv/stdout_c49671b2caef4da3be3b423f105d75b8.
+2026-01-25T16:19:11.9607598Z Creating stderr named pipe at /podr/container/pipe/4ea95871d60c_facturador-web-sv/stderr_2d411aba96c642f1952ba420f42f75ec.
+2026-01-25T16:19:11.9611056Z Successfully created stderr named pipe at: /podr/container/pipe/4ea95871d60c_facturador-web-sv/stderr_2d411aba96c642f1952ba420f42f75ec.
+2026-01-25T16:19:11.9621693Z Opening named pipe /podr/container/pipe/4ea95871d60c_facturador-web-sv/stderr_2d411aba96c642f1952ba420f42f75ec for reading in non-blocking mode.
+2026-01-25T16:19:11.9623506Z Successfully opened named pipe: /podr/container/pipe/4ea95871d60c_facturador-web-sv/stderr_2d411aba96c642f1952ba420f42f75ec.
+2026-01-25T16:19:11.9624992Z Successfully removed non-blocking flag from /podr/container/pipe/4ea95871d60c_facturador-web-sv/stderr_2d411aba96c642f1952ba420f42f75ec.
+2026-01-25T16:19:11.9626587Z Creating container with image: facturadorsvacr.azurecr.io/facturador-web:v3 from registry: facturadorsvacr.azurecr.io and fully qualified image name: facturadorsvacr.azurecr.io/facturador-web:v3
+2026-01-25T16:19:13.9386409Z Starting container: 4ea95871d60c_facturador-web-sv.
+2026-01-25T16:19:14.2583986Z Starting watchers and probes.
+2026-01-25T16:19:14.2706196Z Starting metrics collection.
+2026-01-25T16:19:14.2725336Z Container is running.
+2026-01-25T16:19:15.3344182Z Container start method finished after 5098 ms.
+2026-01-25T16:19:21.9093999Z Site startup probe succeeded after 6.4154014 seconds.
+2026-01-25T16:19:22.4119620Z Site is running with deployment version: 5f0e4273-7c5c-4ce5-891f-51ba51470576
+2026-01-25T16:19:22.4150189Z Site started.
+2026-01-25T16:19:42.4981059Z Container is terminating. Grace period: 5 seconds.
+2026-01-25T16:19:42.5681461Z Stop and delete container. Retry count = 0
+2026-01-25T16:19:42.5684311Z Stopping container: 5c14686a14b6_facturador-web-sv.
+2026-01-25T16:19:43.4542031Z Deleting container: 5c14686a14b6_facturador-web-sv. Retry count = 0
+2026-01-25T16:19:43.8101628Z Container spec TerminationMessagePolicy  path 
+2026-01-25T16:19:43.8116149Z Container is terminated. Total time elapsed: 1312 ms.
+2026-01-25T16:19:43.8202258Z Site: facturador-web-sv stopped.
+2026-01-25T17:52:43.3811468Z Container start method called.
+2026-01-25T17:52:43.3835866Z Establishing network.
+2026-01-25T17:52:43.3840805Z Pulling image: facturadorsvacr.azurecr.io/facturador-web:v3.
+2026-01-25T17:52:51.2450704Z Image facturadorsvacr.azurecr.io/facturador-web:v3 is pulled from registry facturadorsvacr.azurecr.io
+2026-01-25T17:52:51.2527919Z Container is starting.
+2026-01-25T17:52:51.2759313Z Establishing user namespace if not established already.
+2026-01-25T17:52:51.2760448Z Establishing network if not established already.
+2026-01-25T17:52:51.2765185Z Mounting volumes.
+2026-01-25T17:52:51.2791014Z Nested mountpoint volatile/logs
+2026-01-25T17:52:51.3334619Z Nested mountpoint 
+2026-01-25T17:52:51.3703074Z Nested mountpoint 
+2026-01-25T17:52:51.6272896Z Creating container.
+2026-01-25T17:52:51.6279807Z Creating pipes for streaming container io.
+2026-01-25T17:52:51.6291494Z Creating stdout named pipe at /podr/container/pipe/228cac91181f_facturador-web-sv/stdout_77ef7ad43c39452ca869c13ea9fde169.
+2026-01-25T17:52:51.6395745Z Successfully created stdout named pipe at: /podr/container/pipe/228cac91181f_facturador-web-sv/stdout_77ef7ad43c39452ca869c13ea9fde169.
+2026-01-25T17:52:51.6468223Z Opening named pipe /podr/container/pipe/228cac91181f_facturador-web-sv/stdout_77ef7ad43c39452ca869c13ea9fde169 for reading in non-blocking mode.
+2026-01-25T17:52:51.6476776Z Successfully opened named pipe: /podr/container/pipe/228cac91181f_facturador-web-sv/stdout_77ef7ad43c39452ca869c13ea9fde169.
+2026-01-25T17:52:51.6492828Z Successfully removed non-blocking flag from /podr/container/pipe/228cac91181f_facturador-web-sv/stdout_77ef7ad43c39452ca869c13ea9fde169.
+2026-01-25T17:52:51.6569619Z Creating stderr named pipe at /podr/container/pipe/228cac91181f_facturador-web-sv/stderr_5cd9f7a5bf7f41289969ec97a238ffe1.
+2026-01-25T17:52:51.6574843Z Successfully created stderr named pipe at: /podr/container/pipe/228cac91181f_facturador-web-sv/stderr_5cd9f7a5bf7f41289969ec97a238ffe1.
+2026-01-25T17:52:51.6579884Z Opening named pipe /podr/container/pipe/228cac91181f_facturador-web-sv/stderr_5cd9f7a5bf7f41289969ec97a238ffe1 for reading in non-blocking mode.
+2026-01-25T17:52:51.6586521Z Successfully opened named pipe: /podr/container/pipe/228cac91181f_facturador-web-sv/stderr_5cd9f7a5bf7f41289969ec97a238ffe1.
+2026-01-25T17:52:51.6593907Z Successfully removed non-blocking flag from /podr/container/pipe/228cac91181f_facturador-web-sv/stderr_5cd9f7a5bf7f41289969ec97a238ffe1.
+2026-01-25T17:52:51.6598142Z Creating container with image: facturadorsvacr.azurecr.io/facturador-web:v3 from registry: facturadorsvacr.azurecr.io and fully qualified image name: facturadorsvacr.azurecr.io/facturador-web:v3
+2026-01-25T17:52:52.7807140Z Starting container: 228cac91181f_facturador-web-sv.
+2026-01-25T17:52:52.9891957Z Starting watchers and probes.
+2026-01-25T17:52:52.9982106Z Starting metrics collection.
+2026-01-25T17:52:53.0089581Z Container is running.
+2026-01-25T17:52:53.9919324Z Container start method finished after 10610 ms.
+2026-01-25T17:52:57.3050651Z Site startup probe succeeded after 3.1642933 seconds.
+2026-01-25T17:52:57.7595591Z Site is running with deployment version: 5f0e4273-7c5c-4ce5-891f-51ba51470576
+2026-01-25T17:52:57.7617437Z Site started.
+2026-01-25T17:53:17.8277586Z Container is terminating. Grace period: 5 seconds.
+2026-01-25T17:53:17.8919075Z Stop and delete container. Retry count = 0
+2026-01-25T17:53:17.8937293Z Stopping container: 4ea95871d60c_facturador-web-sv.
+2026-01-25T17:53:18.1913301Z Deleting container: 4ea95871d60c_facturador-web-sv. Retry count = 0
+2026-01-25T17:53:18.5024072Z Container spec TerminationMessagePolicy  path 
+2026-01-25T17:53:18.5074007Z Container is terminated. Total time elapsed: 677 ms.
+2026-01-25T17:53:18.5344900Z Site: facturador-web-sv stopped.
+2026-01-25T18:18:25.9975488Z Site: facturador-web-sv stopped.
+2026-01-25T18:18:47.8594747Z Container is terminating. Grace period: 5 seconds.
+2026-01-25T18:18:47.9082917Z Stop and delete container. Retry count = 0
+2026-01-25T18:18:47.9098176Z Stopping container: 228cac91181f_facturador-web-sv.
+2026-01-25T18:18:48.3086578Z Deleting container: 228cac91181f_facturador-web-sv. Retry count = 0
+2026-01-25T18:18:48.6891335Z Container spec TerminationMessagePolicy  path 
+2026-01-25T18:18:48.6918268Z Container is terminated. Total time elapsed: 831 ms.
+2026-01-25T18:18:48.7017910Z Site: facturador-web-sv stopped.
+2026-01-25T18:21:14.8914017Z Container start method called.
+2026-01-25T18:21:14.8930714Z Establishing network.
+2026-01-25T18:21:14.9119348Z Pulling image: facturadorsvacr.azurecr.io/facturador-web:v4.
+2026-01-25T18:21:19.7227936Z Image facturadorsvacr.azurecr.io/facturador-web:v4 is pulled from registry facturadorsvacr.azurecr.io
+2026-01-25T18:21:19.7329017Z Container is starting.
+2026-01-25T18:21:19.7420672Z Establishing user namespace if not established already.
+2026-01-25T18:21:19.7446015Z Establishing network if not established already.
+2026-01-25T18:21:19.7522415Z Mounting volumes.
+2026-01-25T18:21:19.7531358Z Nested mountpoint volatile/logs
+2026-01-25T18:21:19.7723273Z Nested mountpoint 
+2026-01-25T18:21:19.8122172Z Nested mountpoint 
+2026-01-25T18:21:19.9881110Z Creating container.
+2026-01-25T18:21:19.9882231Z Creating pipes for streaming container io.
+2026-01-25T18:21:19.9883129Z Creating stdout named pipe at /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stdout_d51652f368b64402b21f292418fc7ba2.
+2026-01-25T18:21:20.0571461Z Successfully created stdout named pipe at: /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stdout_d51652f368b64402b21f292418fc7ba2.
+2026-01-25T18:21:20.0644410Z Opening named pipe /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stdout_d51652f368b64402b21f292418fc7ba2 for reading in non-blocking mode.
+2026-01-25T18:21:20.0653355Z Successfully opened named pipe: /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stdout_d51652f368b64402b21f292418fc7ba2.
+2026-01-25T18:21:20.0654303Z Successfully removed non-blocking flag from /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stdout_d51652f368b64402b21f292418fc7ba2.
+2026-01-25T18:21:20.0655152Z Creating stderr named pipe at /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stderr_03725c054bb14d248a03c4c2b2b68cf1.
+2026-01-25T18:21:20.0852958Z Successfully created stderr named pipe at: /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stderr_03725c054bb14d248a03c4c2b2b68cf1.
+2026-01-25T18:21:20.0854992Z Opening named pipe /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stderr_03725c054bb14d248a03c4c2b2b68cf1 for reading in non-blocking mode.
+2026-01-25T18:21:20.0856256Z Successfully opened named pipe: /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stderr_03725c054bb14d248a03c4c2b2b68cf1.
+2026-01-25T18:21:20.0857061Z Successfully removed non-blocking flag from /podr/container/pipe/1d8d2d5d882b_facturador-web-sv/stderr_03725c054bb14d248a03c4c2b2b68cf1.
+2026-01-25T18:21:20.0857873Z Creating container with image: facturadorsvacr.azurecr.io/facturador-web:v4 from registry: facturadorsvacr.azurecr.io and fully qualified image name: facturadorsvacr.azurecr.io/facturador-web:v4
+2026-01-25T18:21:20.8579655Z Starting container: 1d8d2d5d882b_facturador-web-sv.
+2026-01-25T18:21:20.9369761Z Starting watchers and probes.
+2026-01-25T18:21:20.9547783Z Starting metrics collection.
+2026-01-25T18:21:20.9639521Z Container is running.
+2026-01-25T18:21:21.1451916Z Container start method finished after 6245 ms.
+2026-01-25T18:21:24.8704176Z Site startup probe succeeded after 3.723529 seconds.
+2026-01-25T18:21:25.2864139Z Site is running with deployment version: 5f0e4273-7c5c-4ce5-891f-51ba51470576
+2026-01-25T18:21:25.3031218Z Site started.
+2026-01-25T18:33:38.9588148Z Container start method called.
+2026-01-25T18:33:39.0068087Z Establishing network.
+2026-01-25T18:33:39.0071487Z Pulling image: facturadorsvacr.azurecr.io/facturador-web:v5.
+2026-01-25T18:33:43.8232397Z Image facturadorsvacr.azurecr.io/facturador-web:v5 is pulled from registry facturadorsvacr.azurecr.io
+2026-01-25T18:33:43.8239044Z Container is starting.
+2026-01-25T18:33:43.8259712Z Establishing user namespace if not established already.
+2026-01-25T18:33:43.8261326Z Establishing network if not established already.
+2026-01-25T18:33:43.8340105Z Mounting volumes.
+2026-01-25T18:33:43.8365372Z Nested mountpoint volatile/logs
+2026-01-25T18:33:43.8529831Z Nested mountpoint 
+2026-01-25T18:33:43.8637172Z Nested mountpoint 
+2026-01-25T18:33:44.1649558Z Creating container.
+2026-01-25T18:33:44.1658171Z Creating pipes for streaming container io.
+2026-01-25T18:33:44.1664689Z Creating stdout named pipe at /podr/container/pipe/8176c005401d_facturador-web-sv/stdout_a8a9badfae8249d0bddeec927b888dc8.
+2026-01-25T18:33:44.1952294Z Successfully created stdout named pipe at: /podr/container/pipe/8176c005401d_facturador-web-sv/stdout_a8a9badfae8249d0bddeec927b888dc8.
+2026-01-25T18:33:44.2065546Z Opening named pipe /podr/container/pipe/8176c005401d_facturador-web-sv/stdout_a8a9badfae8249d0bddeec927b888dc8 for reading in non-blocking mode.
+2026-01-25T18:33:44.2072023Z Successfully opened named pipe: /podr/container/pipe/8176c005401d_facturador-web-sv/stdout_a8a9badfae8249d0bddeec927b888dc8.
+2026-01-25T18:33:44.2150290Z Successfully removed non-blocking flag from /podr/container/pipe/8176c005401d_facturador-web-sv/stdout_a8a9badfae8249d0bddeec927b888dc8.
+2026-01-25T18:33:44.2161386Z Creating stderr named pipe at /podr/container/pipe/8176c005401d_facturador-web-sv/stderr_7791e0cb23fa482eb435f166e3aceed1.
+2026-01-25T18:33:44.2171592Z Successfully created stderr named pipe at: /podr/container/pipe/8176c005401d_facturador-web-sv/stderr_7791e0cb23fa482eb435f166e3aceed1.
+2026-01-25T18:33:44.2255913Z Opening named pipe /podr/container/pipe/8176c005401d_facturador-web-sv/stderr_7791e0cb23fa482eb435f166e3aceed1 for reading in non-blocking mode.
+2026-01-25T18:33:44.2263598Z Successfully opened named pipe: /podr/container/pipe/8176c005401d_facturador-web-sv/stderr_7791e0cb23fa482eb435f166e3aceed1.
+2026-01-25T18:33:44.2265838Z Successfully removed non-blocking flag from /podr/container/pipe/8176c005401d_facturador-web-sv/stderr_7791e0cb23fa482eb435f166e3aceed1.
+2026-01-25T18:33:44.2277314Z Creating container with image: facturadorsvacr.azurecr.io/facturador-web:v5 from registry: facturadorsvacr.azurecr.io and fully qualified image name: facturadorsvacr.azurecr.io/facturador-web:v5
+2026-01-25T18:33:45.2105272Z Starting container: 8176c005401d_facturador-web-sv.
+2026-01-25T18:33:45.3058978Z Starting watchers and probes.
+2026-01-25T18:33:45.3089669Z Starting metrics collection.
+2026-01-25T18:33:45.3153254Z Container is running.
+2026-01-25T18:33:46.2478956Z Container start method finished after 7288 ms.
+2026-01-25T18:33:47.8509832Z Site startup probe failed after 1.5896601 seconds.
+2026-01-25T18:33:48.6186251Z Failed to start site. Revert by stopping site.
+2026-01-25T18:33:48.6914143Z Container is terminating. Grace period: 5 seconds.
+2026-01-25T18:33:48.9290232Z Stop and delete container. Retry count = 0
+2026-01-25T18:33:48.9297072Z Stopping container: 8176c005401d_facturador-web-sv.
+2026-01-25T18:33:49.6458762Z Deleting container: 8176c005401d_facturador-web-sv. Retry count = 0
+2026-01-25T18:33:49.9486807Z Container spec TerminationMessagePolicy  path 
+2026-01-25T18:33:49.9606766Z Container is terminated. Total time elapsed: 1257 ms.
+2026-01-25T18:33:49.9684778Z Site container: facturador-web-sv terminated during site startup.
+2026-01-25T18:33:49.9772852Z Site: facturador-web-sv stopped.
+2026-01-25T18:34:11.9052480Z Container is terminating. Grace period: 5 seconds.
+2026-01-25T18:34:11.9215414Z Stop and delete container. Retry count = 0
+2026-01-25T18:34:11.9223537Z Stopping container: 1d8d2d5d882b_facturador-web-sv.
+2026-01-25T18:34:12.2922796Z Deleting container: 1d8d2d5d882b_facturador-web-sv. Retry count = 0
+2026-01-25T18:34:12.7963851Z Container spec TerminationMessagePolicy  path 
+2026-01-25T18:34:12.8045990Z Container is terminated. Total time elapsed: 892 ms.
+2026-01-25T18:34:12.8069783Z Site: facturador-web-sv stopped.
+2026-01-25T18:39:58.7867002Z Container start method called.
+2026-01-25T18:39:58.7882718Z Establishing network.
+2026-01-25T18:39:58.7888262Z Pulling image: facturadorsvacr.azurecr.io/facturador-web:v5.
+2026-01-25T18:39:59.2738712Z Container is starting.
+2026-01-25T18:39:59.2935491Z Establishing user namespace if not established already.
+2026-01-25T18:39:59.2958977Z Establishing network if not established already.
+2026-01-25T18:39:59.3039369Z Mounting volumes.
+2026-01-25T18:39:59.3063731Z Nested mountpoint volatile/logs
+2026-01-25T18:39:59.3335467Z Nested mountpoint 
+2026-01-25T18:39:59.3435604Z Nested mountpoint 
+2026-01-25T18:39:59.7750492Z Creating container.
+2026-01-25T18:39:59.7757176Z Creating pipes for streaming container io.
+2026-01-25T18:39:59.7764879Z Creating stdout named pipe at /podr/container/pipe/576bf2f18450_facturador-web-sv/stdout_5682d4d48eeb4749af42785c937ff90c.
+2026-01-25T18:39:59.7788123Z Successfully created stdout named pipe at: /podr/container/pipe/576bf2f18450_facturador-web-sv/stdout_5682d4d48eeb4749af42785c937ff90c.
+2026-01-25T18:39:59.7795064Z Opening named pipe /podr/container/pipe/576bf2f18450_facturador-web-sv/stdout_5682d4d48eeb4749af42785c937ff90c for reading in non-blocking mode.
+2026-01-25T18:39:59.7856991Z Successfully opened named pipe: /podr/container/pipe/576bf2f18450_facturador-web-sv/stdout_5682d4d48eeb4749af42785c937ff90c.
+2026-01-25T18:39:59.7860534Z Successfully removed non-blocking flag from /podr/container/pipe/576bf2f18450_facturador-web-sv/stdout_5682d4d48eeb4749af42785c937ff90c.
+2026-01-25T18:39:59.7866196Z Creating stderr named pipe at /podr/container/pipe/576bf2f18450_facturador-web-sv/stderr_28aa124e740a44b888d560b82fc10ede.
+2026-01-25T18:39:59.7869624Z Successfully created stderr named pipe at: /podr/container/pipe/576bf2f18450_facturador-web-sv/stderr_28aa124e740a44b888d560b82fc10ede.
+2026-01-25T18:39:59.7873775Z Opening named pipe /podr/container/pipe/576bf2f18450_facturador-web-sv/stderr_28aa124e740a44b888d560b82fc10ede for reading in non-blocking mode.
+2026-01-25T18:39:59.7877622Z Successfully opened named pipe: /podr/container/pipe/576bf2f18450_facturador-web-sv/stderr_28aa124e740a44b888d560b82fc10ede.
+2026-01-25T18:39:59.7883038Z Successfully removed non-blocking flag from /podr/container/pipe/576bf2f18450_facturador-web-sv/stderr_28aa124e740a44b888d560b82fc10ede.
+2026-01-25T18:39:59.7890487Z Creating container with image: facturadorsvacr.azurecr.io/facturador-web:v5 from registry: facturadorsvacr.azurecr.io and fully qualified image name: facturadorsvacr.azurecr.io/facturador-web:v5
+2026-01-25T18:40:06.0771984Z Starting container: 576bf2f18450_facturador-web-sv.
+2026-01-25T18:40:06.3654449Z Starting watchers and probes.
+2026-01-25T18:40:06.3753354Z Starting metrics collection.
+2026-01-25T18:40:06.3831888Z Container is running.
+2026-01-25T18:40:07.0177317Z Container start method finished after 7967 ms.
+2026-01-25T18:40:13.9841600Z Site startup probe succeeded after 6.9099328 seconds.
+2026-01-25T18:40:14.4007093Z Site is running with deployment version: 5f0e4273-7c5c-4ce5-891f-51ba51470576
+2026-01-25T18:40:14.4050072Z Site started.
+2026-01-25T20:07:19.7252042Z Site: facturador-web-sv stopped.
+2026-01-25T20:07:42.6152017Z Container is terminating. Grace period: 5 seconds.
+2026-01-25T20:07:42.7292189Z Stop and delete container. Retry count = 0
+2026-01-25T20:07:42.7310953Z Stopping container: 576bf2f18450_facturador-web-sv.
+2026-01-25T20:07:43.2302354Z Deleting container: 576bf2f18450_facturador-web-sv. Retry count = 0
+2026-01-25T20:07:43.5297866Z Container spec TerminationMessagePolicy  path 
+2026-01-25T20:07:43.5311437Z Container is terminated. Total time elapsed: 915 ms.
+2026-01-25T20:07:43.5478152Z Site: facturador-web-sv stopped.
+2026-01-25T20:13:47.1890936Z Container start method called.
+2026-01-25T20:13:47.2480020Z Establishing network.
+2026-01-25T20:13:47.2575474Z Pulling image: facturadorsvacr.azurecr.io/facturador-web:v4.
+2026-01-25T20:13:52.1470273Z Image facturadorsvacr.azurecr.io/facturador-web:v4 is pulled from registry facturadorsvacr.azurecr.io
+2026-01-25T20:13:52.1547696Z Container is starting.
+2026-01-25T20:13:52.1563689Z Establishing user namespace if not established already.
+2026-01-25T20:13:52.1643644Z Establishing network if not established already.
+2026-01-25T20:13:52.1667368Z Mounting volumes.
+2026-01-25T20:13:52.1781344Z Nested mountpoint volatile/logs
+2026-01-25T20:13:52.2040944Z Nested mountpoint 
+2026-01-25T20:13:52.2350766Z Nested mountpoint 
+2026-01-25T20:13:52.4736852Z Creating container.
+2026-01-25T20:13:52.4747217Z Creating pipes for streaming container io.
+2026-01-25T20:13:52.4841818Z Creating stdout named pipe at /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stdout_ed6363408c154a46bb5769307b41a3b6.
+2026-01-25T20:13:52.4951174Z Successfully created stdout named pipe at: /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stdout_ed6363408c154a46bb5769307b41a3b6.
+2026-01-25T20:13:52.5025566Z Opening named pipe /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stdout_ed6363408c154a46bb5769307b41a3b6 for reading in non-blocking mode.
+2026-01-25T20:13:52.5047799Z Successfully opened named pipe: /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stdout_ed6363408c154a46bb5769307b41a3b6.
+2026-01-25T20:13:52.5138681Z Successfully removed non-blocking flag from /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stdout_ed6363408c154a46bb5769307b41a3b6.
+2026-01-25T20:13:52.5219298Z Creating stderr named pipe at /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stderr_5381c34a276d4e79b44cf3f1eaa071ed.
+2026-01-25T20:13:52.5243151Z Successfully created stderr named pipe at: /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stderr_5381c34a276d4e79b44cf3f1eaa071ed.
+2026-01-25T20:13:52.5325093Z Opening named pipe /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stderr_5381c34a276d4e79b44cf3f1eaa071ed for reading in non-blocking mode.
+2026-01-25T20:13:52.5422473Z Successfully opened named pipe: /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stderr_5381c34a276d4e79b44cf3f1eaa071ed.
+2026-01-25T20:13:52.5423562Z Successfully removed non-blocking flag from /podr/container/pipe/83d5dd217ab4_facturador-web-sv/stderr_5381c34a276d4e79b44cf3f1eaa071ed.
+2026-01-25T20:13:52.5424450Z Creating container with image: facturadorsvacr.azurecr.io/facturador-web:v4 from registry: facturadorsvacr.azurecr.io and fully qualified image name: facturadorsvacr.azurecr.io/facturador-web:v4
+2026-01-25T20:13:53.7746377Z Starting container: 83d5dd217ab4_facturador-web-sv.
+2026-01-25T20:13:53.9101215Z Starting watchers and probes.
+2026-01-25T20:13:53.9123040Z Starting metrics collection.
+2026-01-25T20:13:53.9315958Z Container is running.
+2026-01-25T20:13:54.2352261Z Container start method finished after 7037 ms.
+2026-01-25T20:13:57.7273555Z Site startup probe succeeded after 3.3126763 seconds.
+2026-01-25T20:13:58.1167639Z Site is running with deployment version: 5f0e4273-7c5c-4ce5-891f-51ba51470576
+2026-01-25T20:13:58.1188655Z Site started.
+2026-01-25T20:48:01.3412425Z Site: facturador-web-sv stopped.
+2026-01-25T20:48:24.0946732Z Container is terminating. Grace period: 5 seconds.
+2026-01-25T20:48:24.2601804Z Stop and delete container. Retry count = 0
+2026-01-25T20:48:24.2615779Z Stopping container: 83d5dd217ab4_facturador-web-sv.
+2026-01-25T20:48:25.6993398Z Deleting container: 83d5dd217ab4_facturador-web-sv. Retry count = 0
+2026-01-25T20:48:25.9895938Z Container spec TerminationMessagePolicy  path 
+2026-01-25T20:48:25.9935335Z Container is terminated. Total time elapsed: 1895 ms.
+2026-01-25T20:48:25.9970443Z Site: facturador-web-sv stopped.
+2026-01-25T20:49:05.9935407Z Container start method called.
+2026-01-25T20:49:06.0021516Z Establishing network.
+2026-01-25T20:49:06.0025762Z Pulling image: facturadorsvacr.azurecr.io/facturador-web:v5.
+2026-01-25T20:49:12.3556216Z Image facturadorsvacr.azurecr.io/facturador-web:v5 is pulled from registry facturadorsvacr.azurecr.io
+2026-01-25T20:49:12.3659937Z Container is starting.
+2026-01-25T20:49:12.3679673Z Establishing user namespace if not established already.
+2026-01-25T20:49:12.3756750Z Establishing network if not established already.
+2026-01-25T20:49:12.3771413Z Mounting volumes.
+2026-01-25T20:49:12.3854444Z Nested mountpoint volatile/logs
+2026-01-25T20:49:12.3968568Z Nested mountpoint 
+2026-01-25T20:49:12.4363899Z Nested mountpoint 
+2026-01-25T20:49:12.7648637Z Creating container.
+2026-01-25T20:49:12.7662875Z Creating pipes for streaming container io.
+2026-01-25T20:49:12.7833788Z Creating stdout named pipe at /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stdout_7bbfcd4e4f9f4646bc909f1fec692df7.
+2026-01-25T20:49:12.8031846Z Successfully created stdout named pipe at: /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stdout_7bbfcd4e4f9f4646bc909f1fec692df7.
+2026-01-25T20:49:12.8043237Z Opening named pipe /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stdout_7bbfcd4e4f9f4646bc909f1fec692df7 for reading in non-blocking mode.
+2026-01-25T20:49:12.8159422Z Successfully opened named pipe: /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stdout_7bbfcd4e4f9f4646bc909f1fec692df7.
+2026-01-25T20:49:12.8246744Z Successfully removed non-blocking flag from /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stdout_7bbfcd4e4f9f4646bc909f1fec692df7.
+2026-01-25T20:49:12.8323339Z Creating stderr named pipe at /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stderr_485d77e146e44749b455724b3c8f86a2.
+2026-01-25T20:49:12.8418571Z Successfully created stderr named pipe at: /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stderr_485d77e146e44749b455724b3c8f86a2.
+2026-01-25T20:49:12.8430135Z Opening named pipe /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stderr_485d77e146e44749b455724b3c8f86a2 for reading in non-blocking mode.
+2026-01-25T20:49:12.8441107Z Successfully opened named pipe: /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stderr_485d77e146e44749b455724b3c8f86a2.
+2026-01-25T20:49:12.8529946Z Successfully removed non-blocking flag from /podr/container/pipe/54a8339d1e5e_facturador-web-sv/stderr_485d77e146e44749b455724b3c8f86a2.
+2026-01-25T20:49:12.8549131Z Creating container with image: facturadorsvacr.azurecr.io/facturador-web:v5 from registry: facturadorsvacr.azurecr.io and fully qualified image name: facturadorsvacr.azurecr.io/facturador-web:v5
+2026-01-25T20:49:13.5557191Z Starting container: 54a8339d1e5e_facturador-web-sv.
+2026-01-25T20:49:13.7361058Z Starting watchers and probes.
+2026-01-25T20:49:13.7438971Z Starting metrics collection.
+2026-01-25T20:49:13.7450720Z Container is running.
+2026-01-25T20:49:14.1356673Z Container start method finished after 8141 ms.
+2026-01-25T20:49:17.9746109Z Site startup probe succeeded after 3.6700984 seconds.
+2026-01-25T20:49:18.4248201Z Site is running with deployment version: 5f0e4273-7c5c-4ce5-891f-51ba51470576
+2026-01-25T20:49:18.4250854Z Site started.
+2026-01-25T20:55:40.4612239Z Site: facturador-web-sv stopped.
+2026-01-25T20:56:01.9153134Z Container is terminating. Grace period: 5 seconds.
+2026-01-25T20:56:02.0339961Z Stop and delete container. Retry count = 0
+2026-01-25T20:56:02.0451423Z Stopping container: 54a8339d1e5e_facturador-web-sv.
+2026-01-25T20:56:03.1061347Z Deleting container: 54a8339d1e5e_facturador-web-sv. Retry count = 0
+2026-01-25T20:56:03.7193977Z Container spec TerminationMessagePolicy  path 
+2026-01-25T20:56:03.7503321Z Container is terminated. Total time elapsed: 1834 ms.
+2026-01-25T20:56:03.7591763Z Site: facturador-web-sv stopped.
+2026-01-25T21:00:22.9650299Z Container start method called.
+2026-01-25T21:00:22.9659256Z Establishing network.
+2026-01-25T21:00:22.9660489Z Pulling image: facturadorsvacr.azurecr.io/facturador-web:v6.
+2026-01-25T21:00:29.3799409Z Image facturadorsvacr.azurecr.io/facturador-web:v6 is pulled from registry facturadorsvacr.azurecr.io
+2026-01-25T21:00:29.3880896Z Container is starting.
+2026-01-25T21:00:29.3974594Z Establishing user namespace if not established already.
+2026-01-25T21:00:29.3994225Z Establishing network if not established already.
+2026-01-25T21:00:29.4076923Z Mounting volumes.
+2026-01-25T21:00:29.4094191Z Nested mountpoint volatile/logs
+2026-01-25T21:00:29.4541325Z Nested mountpoint 
+2026-01-25T21:00:29.5043299Z Nested mountpoint 
+2026-01-25T21:00:29.8643175Z Creating container.
+2026-01-25T21:00:29.9137570Z Creating pipes for streaming container io.
+2026-01-25T21:00:29.9219689Z Creating stdout named pipe at /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stdout_b9edb4a0e82744068e75b228c90c4f28.
+2026-01-25T21:00:29.9316835Z Successfully created stdout named pipe at: /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stdout_b9edb4a0e82744068e75b228c90c4f28.
+2026-01-25T21:00:29.9324904Z Opening named pipe /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stdout_b9edb4a0e82744068e75b228c90c4f28 for reading in non-blocking mode.
+2026-01-25T21:00:29.9333966Z Successfully opened named pipe: /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stdout_b9edb4a0e82744068e75b228c90c4f28.
+2026-01-25T21:00:29.9504787Z Successfully removed non-blocking flag from /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stdout_b9edb4a0e82744068e75b228c90c4f28.
+2026-01-25T21:00:29.9506007Z Creating stderr named pipe at /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stderr_bfb94c1946ea4286a4b10568f75dcc4d.
+2026-01-25T21:00:29.9507894Z Successfully created stderr named pipe at: /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stderr_bfb94c1946ea4286a4b10568f75dcc4d.
+2026-01-25T21:00:29.9508711Z Opening named pipe /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stderr_bfb94c1946ea4286a4b10568f75dcc4d for reading in non-blocking mode.
+2026-01-25T21:00:29.9509671Z Successfully opened named pipe: /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stderr_bfb94c1946ea4286a4b10568f75dcc4d.
+2026-01-25T21:00:29.9510537Z Successfully removed non-blocking flag from /podr/container/pipe/c05fd97fb4ce_facturador-web-sv/stderr_bfb94c1946ea4286a4b10568f75dcc4d.
+2026-01-25T21:00:29.9512483Z Creating container with image: facturadorsvacr.azurecr.io/facturador-web:v6 from registry: facturadorsvacr.azurecr.io and fully qualified image name: facturadorsvacr.azurecr.io/facturador-web:v6
+2026-01-25T21:00:30.6718825Z Starting container: c05fd97fb4ce_facturador-web-sv.
+2026-01-25T21:00:30.7909827Z Starting watchers and probes.
+2026-01-25T21:00:30.7913063Z Starting metrics collection.
+2026-01-25T21:00:30.7927493Z Container is running.
+2026-01-25T21:00:30.9772717Z Container start method finished after 7957 ms.
+2026-01-25T21:00:35.0128302Z Site startup probe succeeded after 4.0156526 seconds.
+2026-01-25T21:00:35.4341525Z Site is running with deployment version: 5f0e4273-7c5c-4ce5-891f-51ba51470576
+2026-01-25T21:00:35.4407589Z Site started.
+2026-01-25T21:16:46.3849960Z Site: facturador-web-sv stopped.
+2026-01-25T21:17:08.7865402Z Container is terminating. Grace period: 5 seconds.
+2026-01-25T21:17:08.9094013Z Stop and delete container. Retry count = 0
+2026-01-25T21:17:08.9155988Z Stopping container: c05fd97fb4ce_facturador-web-sv.
+2026-01-25T21:17:10.1654455Z Deleting container: c05fd97fb4ce_facturador-web-sv. Retry count = 0
+2026-01-25T21:17:10.7316851Z Container spec TerminationMessagePolicy  path 
+2026-01-25T21:17:10.7487765Z Container is terminated. Total time elapsed: 1937 ms.
+2026-01-25T21:17:10.7722199Z Site: facturador-web-sv stopped.
+2026-01-25T21:17:57.2709366Z Container start method called.
+2026-01-25T21:17:57.3385052Z Establishing network.
+2026-01-25T21:17:57.3489236Z Pulling image: facturadorsvacr.azurecr.io/facturador-web:v7.
+2026-01-25T21:18:08.6796285Z Image facturadorsvacr.azurecr.io/facturador-web:v7 is pulled from registry facturadorsvacr.azurecr.io
+2026-01-25T21:18:08.6879256Z Container is starting.
+2026-01-25T21:18:08.6985385Z Establishing user namespace if not established already.
+2026-01-25T21:18:08.7003474Z Establishing network if not established already.
+2026-01-25T21:18:08.7081678Z Mounting volumes.
+2026-01-25T21:18:08.7112287Z Nested mountpoint volatile/logs
+2026-01-25T21:18:08.7807013Z Nested mountpoint 
+2026-01-25T21:18:08.8209298Z Nested mountpoint 
+2026-01-25T21:18:09.0204075Z Creating container.
+2026-01-25T21:18:09.0223512Z Creating pipes for streaming container io.
+2026-01-25T21:18:09.0226011Z Creating stdout named pipe at /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stdout_cd6100f418e547d382a9104408582053.
+2026-01-25T21:18:09.0519130Z Successfully created stdout named pipe at: /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stdout_cd6100f418e547d382a9104408582053.
+2026-01-25T21:18:09.0520084Z Opening named pipe /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stdout_cd6100f418e547d382a9104408582053 for reading in non-blocking mode.
+2026-01-25T21:18:09.0521312Z Successfully opened named pipe: /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stdout_cd6100f418e547d382a9104408582053.
+2026-01-25T21:18:09.1072204Z Successfully removed non-blocking flag from /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stdout_cd6100f418e547d382a9104408582053.
+2026-01-25T21:18:09.1080385Z Creating stderr named pipe at /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stderr_85edbb076d3246f0ab87010429ddc9e6.
+2026-01-25T21:18:09.1083514Z Successfully created stderr named pipe at: /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stderr_85edbb076d3246f0ab87010429ddc9e6.
+2026-01-25T21:18:09.1084990Z Opening named pipe /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stderr_85edbb076d3246f0ab87010429ddc9e6 for reading in non-blocking mode.
+2026-01-25T21:18:09.1174660Z Successfully opened named pipe: /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stderr_85edbb076d3246f0ab87010429ddc9e6.
+2026-01-25T21:18:09.1175947Z Successfully removed non-blocking flag from /podr/container/pipe/1c725b4c8d0b_facturador-web-sv/stderr_85edbb076d3246f0ab87010429ddc9e6.
+2026-01-25T21:18:09.1176987Z Creating container with image: facturadorsvacr.azurecr.io/facturador-web:v7 from registry: facturadorsvacr.azurecr.io and fully qualified image name: facturadorsvacr.azurecr.io/facturador-web:v7
+2026-01-25T21:18:10.2746774Z Starting container: 1c725b4c8d0b_facturador-web-sv.
+2026-01-25T21:18:10.4210370Z Starting watchers and probes.
+2026-01-25T21:18:10.4507177Z Starting metrics collection.
+2026-01-25T21:18:10.6198417Z Container is running.
+2026-01-25T21:18:10.9271586Z Container start method finished after 13597 ms.
+2026-01-25T21:18:14.8162940Z Site startup probe succeeded after 3.7832841 seconds.
+2026-01-25T21:18:15.3514832Z Site is running with deployment version: 5f0e4273-7c5c-4ce5-891f-51ba51470576
+2026-01-25T21:18:15.3591849Z Site started.

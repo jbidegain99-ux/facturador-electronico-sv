@@ -23,11 +23,30 @@ export class MigrationService {
 
   constructor(private prisma: PrismaService) {}
 
+  private trimField(value: string | undefined | null): string {
+    if (value === null || value === undefined) return '';
+    return String(value).trim();
+  }
+
   async importClientes(
     tenantId: string,
     clientes: ImportClienteItem[],
     fileName?: string,
   ): Promise<ImportResult> {
+    this.logger.log(
+      `=== IMPORT START === tenantId=${tenantId}, totalRows=${clientes.length}, fileName=${fileName || 'N/A'}`,
+    );
+
+    // Log sample of first 3 items for debugging
+    const sample = clientes.slice(0, 3).map((c, i) => ({
+      row: i + 1,
+      tipoDocumento: c.tipoDocumento,
+      numDocumento: c.numDocumento,
+      nombre: c.nombre ? c.nombre.substring(0, 30) : '(empty)',
+      direccion: c.direccion ? 'present' : '(empty)',
+    }));
+    this.logger.log(`Sample data (first 3): ${JSON.stringify(sample)}`);
+
     // Create import job
     const job = await this.prisma.importJob.create({
       data: {
@@ -39,35 +58,51 @@ export class MigrationService {
       },
     });
 
+    this.logger.log(`Import job created: ${job.id}`);
+
     const errors: ImportError[] = [];
     let successful = 0;
     let processed = 0;
+    let validationFails = 0;
+    let dbErrors = 0;
 
     for (let i = 0; i < clientes.length; i++) {
-      const cliente = clientes[i];
+      const raw = clientes[i];
       processed++;
+
+      // Trim all fields to avoid whitespace issues
+      const cliente = {
+        tipoDocumento: this.trimField(raw.tipoDocumento),
+        numDocumento: this.trimField(raw.numDocumento),
+        nombre: this.trimField(raw.nombre),
+        nrc: this.trimField(raw.nrc),
+        correo: this.trimField(raw.correo),
+        telefono: this.trimField(raw.telefono),
+        direccion: this.trimField(raw.direccion),
+      };
 
       try {
         // Validate required fields
-        if (!cliente.tipoDocumento) {
-          errors.push({ row: i + 1, field: 'tipoDocumento', message: 'Campo requerido' });
-          continue;
-        }
-        if (!cliente.numDocumento) {
-          errors.push({ row: i + 1, field: 'numDocumento', message: 'Campo requerido' });
-          continue;
-        }
-        if (!cliente.nombre) {
-          errors.push({ row: i + 1, field: 'nombre', message: 'Campo requerido' });
-          continue;
-        }
-        if (!cliente.direccion) {
-          errors.push({ row: i + 1, field: 'direccion', message: 'Campo requerido' });
+        const missingFields: string[] = [];
+        if (!cliente.tipoDocumento) missingFields.push('tipoDocumento');
+        if (!cliente.numDocumento) missingFields.push('numDocumento');
+        if (!cliente.nombre) missingFields.push('nombre');
+        if (!cliente.direccion) missingFields.push('direccion');
+
+        if (missingFields.length > 0) {
+          validationFails++;
+          const msg = `Campos requeridos vacios: ${missingFields.join(', ')}`;
+          errors.push({ row: i + 1, field: missingFields[0], message: msg });
+          if (validationFails <= 5) {
+            this.logger.warn(
+              `Row ${i + 1} VALIDATION FAIL: ${msg} | data=${JSON.stringify(cliente)}`,
+            );
+          }
           continue;
         }
 
         // Upsert by numDocumento within tenant
-        await this.prisma.cliente.upsert({
+        const result = await this.prisma.cliente.upsert({
           where: {
             tenantId_numDocumento: {
               tenantId,
@@ -95,15 +130,48 @@ export class MigrationService {
         });
 
         successful++;
+        if (successful <= 5 || successful % 50 === 0) {
+          this.logger.log(
+            `Row ${i + 1} OK: clienteId=${result.id}, doc=${cliente.numDocumento}`,
+          );
+        }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-        errors.push({ row: i + 1, field: 'general', message: errorMessage });
-        this.logger.warn(`Error importing client row ${i + 1}: ${errorMessage}`);
+        dbErrors++;
+        const errorMessage =
+          err instanceof Error ? err.message : 'Error desconocido';
+        errors.push({ row: i + 1, field: 'database', message: errorMessage });
+        if (dbErrors <= 10) {
+          this.logger.warn(
+            `Row ${i + 1} DB ERROR: ${errorMessage} | doc=${raw.numDocumento}`,
+          );
+        }
       }
     }
 
+    // Final summary log
+    this.logger.log(
+      `=== IMPORT COMPLETE === jobId=${job.id} | total=${clientes.length} | processed=${processed} | successful=${successful} | validationFails=${validationFails} | dbErrors=${dbErrors}`,
+    );
+
+    if (validationFails > 5) {
+      this.logger.warn(
+        `${validationFails} rows failed validation (showing first 5 in logs above)`,
+      );
+    }
+    if (dbErrors > 10) {
+      this.logger.warn(
+        `${dbErrors} rows failed with DB errors (showing first 10 in logs above)`,
+      );
+    }
+
     // Update job status
-    const estado = errors.length === 0 ? 'COMPLETADO' : (successful > 0 ? 'COMPLETADO' : 'ERROR');
+    const estado =
+      errors.length === 0
+        ? 'COMPLETADO'
+        : successful > 0
+          ? 'COMPLETADO'
+          : 'ERROR';
+
     await this.prisma.importJob.update({
       where: { id: job.id },
       data: {

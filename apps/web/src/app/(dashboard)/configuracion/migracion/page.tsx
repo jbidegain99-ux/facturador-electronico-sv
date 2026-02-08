@@ -49,21 +49,66 @@ const CLIENT_FIELDS = [
   { key: 'telefono', label: 'Telefono', required: false },
 ];
 
+function splitCSVLine(line: string, separator: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < line.length) {
+    const char = line[i];
+
+    if (inQuotes) {
+      if (char === '"') {
+        // Check for escaped quote ""
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i += 2;
+          continue;
+        }
+        // End of quoted field
+        inQuotes = false;
+        i++;
+        continue;
+      }
+      current += char;
+      i++;
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+        i++;
+        continue;
+      }
+      if (char === separator) {
+        fields.push(current.trim());
+        current = '';
+        i++;
+        continue;
+      }
+      current += char;
+      i++;
+    }
+  }
+
+  fields.push(current.trim());
+  return fields;
+}
+
 function parseCSV(text: string): { headers: string[]; rows: ParsedRow[] } {
   const lines = text.split('\n').filter(line => line.trim());
   if (lines.length < 2) return { headers: [], rows: [] };
 
-  // Detect separator (comma, semicolon, tab)
+  // Detect separator (comma, semicolon, tab) from header line
   const firstLine = lines[0];
   let separator = ',';
   if (firstLine.includes(';') && !firstLine.includes(',')) separator = ';';
   if (firstLine.includes('\t') && !firstLine.includes(',') && !firstLine.includes(';')) separator = '\t';
 
-  const headers = lines[0].split(separator).map(h => h.trim().replace(/^["']|["']$/g, ''));
+  const headers = splitCSVLine(lines[0], separator);
   const rows: ParsedRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(separator).map(v => v.trim().replace(/^["']|["']$/g, ''));
+    const values = splitCSVLine(lines[i], separator);
     const row: ParsedRow = {};
     headers.forEach((header, idx) => {
       row[header] = values[idx] || '';

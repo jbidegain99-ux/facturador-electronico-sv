@@ -297,102 +297,113 @@ export default function DashboardPage() {
           </div>
 
           {/* Plan Usage Widget */}
-          {planUsage && planUsage.planNombre && (
+          {planUsage && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Mi Plan: {planUsage.planNombre}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {planUsage.planNombre ? `Mi Plan: ${planUsage.planNombre}` : 'Mi Plan'}
+                </CardTitle>
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {/* DTEs */}
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">DTEs este mes</span>
-                      <span className="font-medium">
-                        {planUsage.usage.dtesThisMonth}
-                        {planUsage.usage.maxDtesPerMonth !== -1 && ` / ${planUsage.usage.maxDtesPerMonth}`}
-                        {planUsage.usage.maxDtesPerMonth === -1 && ' / Ilimitado'}
-                      </span>
+                {!planUsage.planNombre ? (
+                  <div className="text-sm text-muted-foreground">
+                    <p>No tienes un plan asignado actualmente.</p>
+                    <p className="mt-1">Contacta a soporte para obtener un plan.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-3">
+                      {/* DTEs */}
+                      <div>
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-muted-foreground">DTEs este mes</span>
+                          <span className="font-medium">
+                            {planUsage.usage.dtesThisMonth}
+                            {planUsage.usage.maxDtesPerMonth !== -1 && ` / ${planUsage.usage.maxDtesPerMonth}`}
+                            {planUsage.usage.maxDtesPerMonth === -1 && ' / Ilimitado'}
+                          </span>
+                        </div>
+                        {planUsage.usage.maxDtesPerMonth !== -1 && (
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all ${
+                                planUsage.usage.dtesThisMonth / planUsage.usage.maxDtesPerMonth > 0.9
+                                  ? 'bg-destructive'
+                                  : planUsage.usage.dtesThisMonth / planUsage.usage.maxDtesPerMonth > 0.7
+                                  ? 'bg-yellow-500'
+                                  : 'bg-primary'
+                              }`}
+                              style={{
+                                width: `${Math.min(100, (planUsage.usage.dtesThisMonth / planUsage.usage.maxDtesPerMonth) * 100)}%`,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Users */}
+                      <div>
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-muted-foreground">Usuarios</span>
+                          <span className="font-medium">
+                            {planUsage.usage.users}
+                            {planUsage.usage.maxUsers !== -1 && ` / ${planUsage.usage.maxUsers}`}
+                            {planUsage.usage.maxUsers === -1 && ' / Ilimitado'}
+                          </span>
+                        </div>
+                        {planUsage.usage.maxUsers !== -1 && (
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all ${
+                                planUsage.usage.users / planUsage.usage.maxUsers > 0.9
+                                  ? 'bg-destructive'
+                                  : 'bg-primary'
+                              }`}
+                              style={{
+                                width: `${Math.min(100, (planUsage.usage.users / planUsage.usage.maxUsers) * 100)}%`,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Clients */}
+                      <div>
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-muted-foreground">Clientes</span>
+                          <span className="font-medium">
+                            {planUsage.usage.clientes}
+                            {planUsage.usage.maxClientes !== -1 && ` / ${planUsage.usage.maxClientes}`}
+                            {planUsage.usage.maxClientes === -1 && ' / Ilimitado'}
+                          </span>
+                        </div>
+                        {planUsage.usage.maxClientes !== -1 && (
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all ${
+                                planUsage.usage.clientes / planUsage.usage.maxClientes > 0.9
+                                  ? 'bg-destructive'
+                                  : 'bg-primary'
+                              }`}
+                              style={{
+                                width: `${Math.min(100, (planUsage.usage.clientes / planUsage.usage.maxClientes) * 100)}%`,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {planUsage.usage.maxDtesPerMonth !== -1 && (
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            planUsage.usage.dtesThisMonth / planUsage.usage.maxDtesPerMonth > 0.9
-                              ? 'bg-destructive'
-                              : planUsage.usage.dtesThisMonth / planUsage.usage.maxDtesPerMonth > 0.7
-                              ? 'bg-yellow-500'
-                              : 'bg-primary'
-                          }`}
-                          style={{
-                            width: `${Math.min(100, (planUsage.usage.dtesThisMonth / planUsage.usage.maxDtesPerMonth) * 100)}%`,
-                          }}
-                        />
+
+                    {/* Warning if near limits */}
+                    {(!planUsage.limits.canCreateDte || !planUsage.limits.canAddUser || !planUsage.limits.canAddCliente) && (
+                      <div className="mt-3 p-2 rounded-md bg-destructive/10 border border-destructive/20">
+                        <p className="text-xs text-destructive">
+                          Has alcanzado el limite de tu plan. Contacta a soporte para actualizar.
+                        </p>
                       </div>
                     )}
-                  </div>
-
-                  {/* Users */}
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Usuarios</span>
-                      <span className="font-medium">
-                        {planUsage.usage.users}
-                        {planUsage.usage.maxUsers !== -1 && ` / ${planUsage.usage.maxUsers}`}
-                        {planUsage.usage.maxUsers === -1 && ' / Ilimitado'}
-                      </span>
-                    </div>
-                    {planUsage.usage.maxUsers !== -1 && (
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            planUsage.usage.users / planUsage.usage.maxUsers > 0.9
-                              ? 'bg-destructive'
-                              : 'bg-primary'
-                          }`}
-                          style={{
-                            width: `${Math.min(100, (planUsage.usage.users / planUsage.usage.maxUsers) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Clients */}
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Clientes</span>
-                      <span className="font-medium">
-                        {planUsage.usage.clientes}
-                        {planUsage.usage.maxClientes !== -1 && ` / ${planUsage.usage.maxClientes}`}
-                        {planUsage.usage.maxClientes === -1 && ' / Ilimitado'}
-                      </span>
-                    </div>
-                    {planUsage.usage.maxClientes !== -1 && (
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            planUsage.usage.clientes / planUsage.usage.maxClientes > 0.9
-                              ? 'bg-destructive'
-                              : 'bg-primary'
-                          }`}
-                          style={{
-                            width: `${Math.min(100, (planUsage.usage.clientes / planUsage.usage.maxClientes) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Warning if near limits */}
-                {(!planUsage.limits.canCreateDte || !planUsage.limits.canAddUser || !planUsage.limits.canAddCliente) && (
-                  <div className="mt-3 p-2 rounded-md bg-destructive/10 border border-destructive/20">
-                    <p className="text-xs text-destructive">
-                      Has alcanzado el limite de tu plan. Contacta a soporte para actualizar.
-                    </p>
-                  </div>
+                  </>
                 )}
               </CardContent>
             </Card>

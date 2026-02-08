@@ -30,7 +30,10 @@ interface ImportResult {
   totalRows: number;
   processed: number;
   successful: number;
+  created: number;
+  updated: number;
   failed: number;
+  duplicatesInFile: number;
   errors: ImportError[];
 }
 
@@ -157,20 +160,23 @@ export default function MigracionPage() {
       setHeaders(parsed.headers);
       setRows(parsed.rows);
 
-      // Auto-map columns by similarity
+      // Auto-map columns by similarity (each header can only be used once)
+      const usedHeaders = new Set<string>();
       const autoMappings: ColumnMapping[] = CLIENT_FIELDS.map(field => {
         const match = parsed.headers.find(h => {
+          if (usedHeaders.has(h)) return false;
           const lower = h.toLowerCase().replace(/[_\s.-]/g, '');
           const fieldLower = field.key.toLowerCase();
           const labelLower = field.label.toLowerCase().replace(/[_\s.-]/g, '');
           return lower === fieldLower || lower.includes(fieldLower) || lower.includes(labelLower) ||
-            (field.key === 'numDocumento' && (lower.includes('documento') || lower.includes('nit') || lower.includes('dui'))) ||
+            (field.key === 'numDocumento' && !lower.includes('tipo') && (lower.includes('documento') || lower.includes('nit') || lower.includes('dui') || lower.includes('numero'))) ||
             (field.key === 'tipoDocumento' && lower.includes('tipo')) ||
             (field.key === 'nombre' && (lower.includes('nombre') || lower.includes('razon'))) ||
             (field.key === 'direccion' && lower.includes('direccion')) ||
             (field.key === 'correo' && (lower.includes('correo') || lower.includes('email') || lower.includes('mail'))) ||
             (field.key === 'telefono' && (lower.includes('telefono') || lower.includes('tel')));
         });
+        if (match) usedHeaders.add(match);
         return { source: match || '', target: field.key };
       });
 
@@ -456,10 +462,14 @@ export default function MigracionPage() {
               <h2 className="text-2xl font-bold mb-2">
                 {result.failed === 0 ? 'Importacion Exitosa' : 'Importacion Completada con Errores'}
               </h2>
-              <div className="flex justify-center gap-8 mt-4">
+              <div className="flex justify-center gap-6 mt-4 flex-wrap">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-500">{result.successful}</div>
-                  <div className="text-sm text-muted-foreground">Importados</div>
+                  <div className="text-3xl font-bold text-green-500">{result.created}</div>
+                  <div className="text-sm text-muted-foreground">Creados</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-500">{result.updated}</div>
+                  <div className="text-sm text-muted-foreground">Actualizados</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-red-500">{result.failed}</div>
@@ -470,6 +480,14 @@ export default function MigracionPage() {
                   <div className="text-sm text-muted-foreground">Total</div>
                 </div>
               </div>
+              {result.duplicatesInFile > 0 && (
+                <div className="mt-4 p-3 rounded-md bg-yellow-500/10 border border-yellow-500/20">
+                  <p className="text-sm text-yellow-700">
+                    Se detectaron {result.duplicatesInFile} filas con numDocumento duplicado en el archivo.
+                    Las filas duplicadas actualizan el mismo registro en vez de crear uno nuevo.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

@@ -1,0 +1,167 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Registrar Empresa" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Complete los datos de su empresa para comenzar a facturar
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - heading "Datos de la Empresa" [level=3] [ref=e9]
+          - generic [ref=e10]:
+            - generic [ref=e11]:
+              - generic [ref=e12]:
+                - generic [ref=e13]: Razón Social *
+                - generic [ref=e14]: 0/200
+              - textbox "Razón Social *" [ref=e15]
+            - generic [ref=e16]:
+              - generic [ref=e17]: Nombre Comercial
+              - textbox "Nombre Comercial" [ref=e18]
+            - generic [ref=e19]:
+              - generic [ref=e20]: NIT *
+              - textbox "NIT *" [ref=e21]:
+                - /placeholder: 0000-000000-000-0
+            - generic [ref=e22]:
+              - generic [ref=e23]: NRC *
+              - textbox "NRC *" [ref=e24]:
+                - /placeholder: 000000-0
+            - generic [ref=e25]:
+              - generic [ref=e26]:
+                - generic [ref=e27]: Actividad Económica *
+                - button [ref=e28] [cursor=pointer]:
+                  - img [ref=e29]
+              - combobox "Actividad Económica *" [ref=e32]:
+                - option "Seleccione una actividad" [selected]
+                - option "01111 - Cultivo de cereales (excepto arroz), legumbres y semillas oleaginosas"
+                - option "10101 - Elaboración y conservación de carne"
+                - option "41001 - Construcción de edificios"
+                - option "45101 - Venta de vehículos automotores"
+                - option "46101 - Venta al por mayor a cambio de una comisión o por contrato"
+                - option "46201 - Venta al por mayor de materias primas agropecuarias y animales vivos"
+                - option "46311 - Venta al por mayor de frutas y verduras"
+                - option "46321 - Venta al por mayor de carne y productos cárnicos"
+                - option "46391 - Venta al por mayor de alimentos n.c.p."
+                - option "46411 - Venta al por mayor de productos textiles"
+                - option "46491 - Venta al por mayor de otros enseres domésticos"
+                - option "46511 - Venta al por mayor de computadoras y equipo periférico"
+                - option "46521 - Venta al por mayor de equipo electrónico y de telecomunicaciones"
+                - option "46591 - Venta al por mayor de maquinaria y equipo n.c.p."
+                - option "46901 - Venta al por mayor de otros productos"
+                - option "47111 - Venta al por menor en almacenes no especializados"
+                - option "47191 - Otras actividades de venta al por menor en almacenes no especializados"
+                - option "47211 - Venta al por menor de frutas y verduras"
+                - option "47221 - Venta al por menor de carne y productos cárnicos"
+                - option "47301 - Venta al por menor de combustibles"
+                - option "47411 - Venta al por menor de computadoras y equipo periférico"
+                - option "47421 - Venta al por menor de equipo de sonido y video"
+                - option "47511 - Venta al por menor de productos textiles"
+                - option "47521 - Venta al por menor de artículos de ferretería"
+                - option "47591 - Venta al por menor de muebles y equipo de iluminación"
+                - option "47611 - Venta al por menor de libros"
+                - option "47711 - Venta al por menor de prendas de vestir"
+                - option "47721 - Venta al por menor de calzado"
+                - option "47731 - Venta al por menor de productos farmacéuticos"
+                - option "47741 - Venta al por menor de artículos médicos y ortopédicos"
+                - option "47751 - Venta al por menor de cosméticos y artículos de tocador"
+                - option "47911 - Venta al por menor por correo o por internet"
+                - option "49111 - Transporte interurbano de pasajeros por ferrocarril"
+                - option "49211 - Transporte urbano y suburbano de pasajeros"
+                - option "49221 - Otras actividades de transporte de pasajeros"
+                - option "49231 - Transporte de carga por carretera"
+                - option "55101 - Actividades de alojamiento para estancias cortas"
+                - option "56101 - Actividades de restaurantes y de servicio móvil de comidas"
+                - option "56291 - Otras actividades de servicio de comidas"
+                - option "56301 - Actividades de servicio de bebidas"
+                - option "62011 - Actividades de programación informática"
+                - option "62021 - Actividades de consultoría informática"
+                - option "62091 - Otras actividades de tecnología de la información"
+                - option "63111 - Procesamiento de datos, hospedaje y actividades conexas"
+                - option "69101 - Actividades jurídicas"
+                - option "69201 - Actividades de contabilidad, teneduría de libros y auditoría"
+                - option "70101 - Actividades de oficinas principales"
+                - option "70201 - Actividades de consultoría de gestión"
+                - option "71101 - Actividades de arquitectura e ingeniería"
+                - option "73111 - Agencias de publicidad"
+                - option "74101 - Actividades especializadas de diseño"
+                - option "74201 - Actividades de fotografía"
+                - option "82111 - Actividades combinadas de servicios administrativos de oficina"
+                - option "85101 - Enseñanza preescolar y primaria"
+                - option "85211 - Enseñanza secundaria de formación general"
+                - option "85301 - Enseñanza superior"
+                - option "86101 - Actividades de hospitales"
+                - option "86201 - Actividades de médicos y odontólogos"
+                - option "86901 - Otras actividades de atención de la salud humana"
+                - option "96011 - Lavado y limpieza de prendas de tela y de piel"
+                - option "96021 - Peluquería y otros tratamientos de belleza"
+                - option "96091 - Otras actividades de servicios personales n.c.p."
+            - generic [ref=e33]:
+              - generic [ref=e34]: Teléfono *
+              - textbox "Teléfono *" [ref=e35]:
+                - /placeholder: 0000-0000
+            - generic [ref=e36]:
+              - generic [ref=e37]: Correo de la Empresa *
+              - textbox "Correo de la Empresa *" [ref=e38]
+        - generic [ref=e39]:
+          - heading "Dirección" [level=3] [ref=e40]
+          - generic [ref=e41]:
+            - generic [ref=e42]:
+              - generic [ref=e43]: Departamento *
+              - combobox "Departamento *" [ref=e44]:
+                - option "Seleccione un departamento" [selected]
+                - option "Ahuachapán"
+                - option "Santa Ana"
+                - option "Sonsonate"
+                - option "Chalatenango"
+                - option "La Libertad"
+                - option "San Salvador"
+                - option "Cuscatlán"
+                - option "La Paz"
+                - option "Cabañas"
+                - option "San Vicente"
+                - option "Usulután"
+                - option "San Miguel"
+                - option "Morazán"
+                - option "La Unión"
+            - generic [ref=e45]:
+              - generic [ref=e46]: Municipio *
+              - combobox "Municipio *" [disabled] [ref=e47]:
+                - option "Primero seleccione departamento" [selected]
+            - generic [ref=e48]:
+              - generic [ref=e49]:
+                - generic [ref=e50]: Dirección Completa *
+                - generic [ref=e51]: 0/500
+              - textbox "Dirección Completa *" [ref=e52]:
+                - /placeholder: Calle, numero, colonia, etc.
+        - generic [ref=e53]:
+          - heading "Usuario Administrador" [level=3] [ref=e54]
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - generic [ref=e57]: Nombre Completo *
+              - textbox "Nombre Completo *" [ref=e58]
+            - generic [ref=e59]:
+              - generic [ref=e60]: Correo Electrónico *
+              - textbox "Correo Electrónico *" [ref=e61]
+            - generic [ref=e62]:
+              - generic [ref=e63]: Contraseña *
+              - textbox "Contraseña *" [ref=e64]
+            - generic [ref=e65]:
+              - generic [ref=e66]: Confirmar Contraseña *
+              - textbox "Confirmar Contraseña *" [ref=e67]
+        - generic [ref=e68]:
+          - checkbox "Acepto los términos y condiciones y la política de privacidad" [ref=e69]
+          - generic [ref=e70]:
+            - text: Acepto los
+            - link "términos y condiciones" [ref=e71] [cursor=pointer]:
+              - /url: /terminos
+            - text: y la
+            - link "política de privacidad" [ref=e72] [cursor=pointer]:
+              - /url: /privacidad
+        - button "Registrar Empresa" [disabled] [ref=e74]
+      - paragraph [ref=e75]:
+        - text: Ya tienes cuenta?
+        - link "Iniciar Sesión" [ref=e76] [cursor=pointer]:
+          - /url: /login
+  - alert [ref=e77]
+```

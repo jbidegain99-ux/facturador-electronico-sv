@@ -7,12 +7,21 @@ import {
   Body,
   Param,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../super-admin/guards/super-admin.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PlansService } from './plans.service';
 import { CreatePlanDto, UpdatePlanDto, AssignPlanDto } from './dto';
+
+interface CurrentUserData {
+  id: string;
+  email: string;
+  tenantId: string | null;
+  rol: string;
+}
 
 @ApiTags('Plans')
 @ApiBearerAuth()
@@ -96,5 +105,14 @@ export class PlansController {
   @ApiOperation({ summary: 'Listar planes activos (para usuarios)' })
   async findActive() {
     return this.plansService.findActive();
+  }
+
+  @Get('my-usage')
+  @ApiOperation({ summary: 'Obtener uso del plan del tenant actual' })
+  async getMyUsage(@CurrentUser() user: CurrentUserData) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de empresas pueden consultar uso del plan');
+    }
+    return this.plansService.getTenantUsage(user.tenantId);
   }
 }

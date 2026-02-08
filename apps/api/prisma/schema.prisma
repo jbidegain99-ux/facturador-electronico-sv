@@ -57,6 +57,9 @@ model Tenant {
 
   // Hacienda configuration
   haciendaConfig     HaciendaConfig?
+
+  // Import jobs
+  importJobs         ImportJob[]
 }
 
 model User {
@@ -836,4 +839,22 @@ model HaciendaTestRecord {
 
   @@index([haciendaConfigId, dteType])
   @@index([haciendaConfigId, status])
+}
+
+model ImportJob {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tipo        String   // 'clientes' | 'productos'
+  estado      String   @default("PENDIENTE") // PENDIENTE, PROCESANDO, COMPLETADO, ERROR
+  totalRows   Int      @default(0)
+  processed   Int      @default(0)
+  successful  Int      @default(0)
+  failed      Int      @default(0)
+  errors      String?  @db.NVarChar(Max) // JSON array of { row, field, message }
+  fileName    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
 }

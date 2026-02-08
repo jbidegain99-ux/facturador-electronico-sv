@@ -18,6 +18,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { BackupsModule } from './modules/backups/backups.module';
 import { HaciendaModule } from './modules/hacienda/hacienda.module';
+import { MigrationModule } from './modules/migration/migration.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
@@ -45,6 +46,7 @@ const imports: any[] = [
   AuditLogsModule,
   BackupsModule,
   HaciendaModule,
+  MigrationModule,
 ];
 
 if (process.env.REDIS_URL) {

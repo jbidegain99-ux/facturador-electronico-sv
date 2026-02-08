@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
-import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle } from 'lucide-react';
+import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle, FileUp } from 'lucide-react';
 import Link from 'next/link';
 
 interface TenantData {
@@ -492,6 +492,37 @@ export default function ConfiguracionPage() {
                     <p className="font-medium">Wizard de Onboarding</p>
                     <p className="text-sm text-muted-foreground">
                       13 pasos para habilitarse como emisor de documentos electronicos
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* Data Migration Link */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileUp className="h-5 w-5" />
+              Migracion de Datos
+            </CardTitle>
+            <CardDescription>
+              Importa clientes desde archivos CSV para migrar datos de otros sistemas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/configuracion/migracion">
+              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <FileUp className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Importar Datos</p>
+                    <p className="text-sm text-muted-foreground">
+                      Carga clientes desde CSV para comenzar a facturar rapidamente
                     </p>
                   </div>
                 </div>

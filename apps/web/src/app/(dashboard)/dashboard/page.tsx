@@ -15,6 +15,7 @@ import {
   Plus,
   ArrowRight,
   BarChart3,
+  CreditCard,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton, SkeletonCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton';
@@ -48,6 +49,27 @@ interface RecentDTE {
   };
 }
 
+interface PlanUsage {
+  planNombre: string | null;
+  planCodigo: string | null;
+  usage: {
+    dtesThisMonth: number;
+    maxDtesPerMonth: number;
+    dtesRemaining: number;
+    users: number;
+    maxUsers: number;
+    usersRemaining: number;
+    clientes: number;
+    maxClientes: number;
+    clientesRemaining: number;
+  };
+  limits: {
+    canCreateDte: boolean;
+    canAddUser: boolean;
+    canAddCliente: boolean;
+  };
+}
+
 export default function DashboardPage() {
   const { status, isLoading: isLoadingOnboarding } = useOnboardingStatus();
   const { isConfigured: isHaciendaConfigured, isLoading: isLoadingHacienda, demoMode } = useHaciendaStatus();
@@ -55,6 +77,7 @@ export default function DashboardPage() {
   const [summary, setSummary] = React.useState<SummaryStats | null>(null);
   const [chartData, setChartData] = React.useState<ChartData[]>([]);
   const [recentDTEs, setRecentDTEs] = React.useState<RecentDTE[]>([]);
+  const [planUsage, setPlanUsage] = React.useState<PlanUsage | null>(null);
 
   // Check if onboarding is fully complete
   const isOnboardingComplete = status
@@ -77,10 +100,11 @@ export default function DashboardPage() {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
       try {
-        const [summaryRes, chartRes, recentRes] = await Promise.all([
+        const [summaryRes, chartRes, recentRes, planRes] = await Promise.all([
           fetch(`${baseUrl}/dte/stats/summary`, { headers }),
           fetch(`${baseUrl}/dte/stats/by-date?groupBy=day`, { headers }),
           fetch(`${baseUrl}/dte/recent?limit=5`, { headers }),
+          fetch(`${baseUrl}/plans/my-usage`, { headers }),
         ]);
 
         if (summaryRes.ok) {
@@ -95,6 +119,10 @@ export default function DashboardPage() {
 
         if (recentRes.ok) {
           setRecentDTEs(await recentRes.json());
+        }
+
+        if (planRes.ok) {
+          setPlanUsage(await planRes.json());
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -267,6 +295,108 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Plan Usage Widget */}
+          {planUsage && planUsage.planNombre && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Mi Plan: {planUsage.planNombre}</CardTitle>
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {/* DTEs */}
+                  <div>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="text-muted-foreground">DTEs este mes</span>
+                      <span className="font-medium">
+                        {planUsage.usage.dtesThisMonth}
+                        {planUsage.usage.maxDtesPerMonth !== -1 && ` / ${planUsage.usage.maxDtesPerMonth}`}
+                        {planUsage.usage.maxDtesPerMonth === -1 && ' / Ilimitado'}
+                      </span>
+                    </div>
+                    {planUsage.usage.maxDtesPerMonth !== -1 && (
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            planUsage.usage.dtesThisMonth / planUsage.usage.maxDtesPerMonth > 0.9
+                              ? 'bg-destructive'
+                              : planUsage.usage.dtesThisMonth / planUsage.usage.maxDtesPerMonth > 0.7
+                              ? 'bg-yellow-500'
+                              : 'bg-primary'
+                          }`}
+                          style={{
+                            width: `${Math.min(100, (planUsage.usage.dtesThisMonth / planUsage.usage.maxDtesPerMonth) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Users */}
+                  <div>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="text-muted-foreground">Usuarios</span>
+                      <span className="font-medium">
+                        {planUsage.usage.users}
+                        {planUsage.usage.maxUsers !== -1 && ` / ${planUsage.usage.maxUsers}`}
+                        {planUsage.usage.maxUsers === -1 && ' / Ilimitado'}
+                      </span>
+                    </div>
+                    {planUsage.usage.maxUsers !== -1 && (
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            planUsage.usage.users / planUsage.usage.maxUsers > 0.9
+                              ? 'bg-destructive'
+                              : 'bg-primary'
+                          }`}
+                          style={{
+                            width: `${Math.min(100, (planUsage.usage.users / planUsage.usage.maxUsers) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Clients */}
+                  <div>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="text-muted-foreground">Clientes</span>
+                      <span className="font-medium">
+                        {planUsage.usage.clientes}
+                        {planUsage.usage.maxClientes !== -1 && ` / ${planUsage.usage.maxClientes}`}
+                        {planUsage.usage.maxClientes === -1 && ' / Ilimitado'}
+                      </span>
+                    </div>
+                    {planUsage.usage.maxClientes !== -1 && (
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            planUsage.usage.clientes / planUsage.usage.maxClientes > 0.9
+                              ? 'bg-destructive'
+                              : 'bg-primary'
+                          }`}
+                          style={{
+                            width: `${Math.min(100, (planUsage.usage.clientes / planUsage.usage.maxClientes) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Warning if near limits */}
+                {(!planUsage.limits.canCreateDte || !planUsage.limits.canAddUser || !planUsage.limits.canAddCliente) && (
+                  <div className="mt-3 p-2 rounded-md bg-destructive/10 border border-destructive/20">
+                    <p className="text-xs text-destructive">
+                      Has alcanzado el limite de tu plan. Contacta a soporte para actualizar.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Charts and Recent DTEs */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">

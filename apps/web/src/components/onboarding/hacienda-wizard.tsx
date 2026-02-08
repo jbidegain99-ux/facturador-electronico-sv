@@ -56,7 +56,7 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
     body?: object
   ) => {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/onboarding${endpoint}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/onboarding${endpoint}`,
       {
         method,
         headers: {

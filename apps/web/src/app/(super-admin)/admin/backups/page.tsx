@@ -67,9 +67,9 @@ export default function BackupsPage() {
       };
 
       const [statsRes, summaryRes, tenantsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/backups/stats`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/backups/summary`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/tenants?limit=100`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/backups/stats`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/backups/summary`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants?limit=100`, { headers }),
       ]);
 
       if (statsRes.ok) {
@@ -99,7 +99,7 @@ export default function BackupsPage() {
     try {
       const token = getToken();
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/backups/generate/full`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/backups/generate/full`,
         {
           method: 'POST',
           headers: {
@@ -136,7 +136,7 @@ export default function BackupsPage() {
     try {
       const token = getToken();
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/backups/generate/tenant/${tenantId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/backups/generate/tenant/${tenantId}`,
         {
           method: 'POST',
           headers: {

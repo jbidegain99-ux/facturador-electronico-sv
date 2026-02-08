@@ -92,7 +92,7 @@ export default function TenantDetailPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/tenants/${params.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${params.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -121,7 +121,7 @@ export default function TenantDetailPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/support-tickets/tenant/${params.id}?limit=5`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/tenant/${params.id}?limit=5`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -161,7 +161,7 @@ export default function TenantDetailPage() {
       setSaving(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/tenants/${params.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${params.id}`,
         {
           method: 'PUT',
           headers: {

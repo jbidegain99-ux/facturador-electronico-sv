@@ -90,7 +90,7 @@ export default function FacturaDetallePage() {
       }
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dteId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -147,7 +147,7 @@ export default function FacturaDetallePage() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dteId}/pdf`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}/pdf`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -180,7 +180,7 @@ export default function FacturaDetallePage() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dteId}/anular`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}/anular`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

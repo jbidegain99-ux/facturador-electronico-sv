@@ -105,7 +105,7 @@ export default function PlanesPage() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/plans`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -127,7 +127,7 @@ export default function PlanesPage() {
       setSeeding(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/plans/seed`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/seed`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -176,8 +176,8 @@ export default function PlanesPage() {
       setSaving(true);
       const token = localStorage.getItem('token');
       const url = editingPlan
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/plans/${editingPlan.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/plans`;
+        ? `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/${editingPlan.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/admin/plans`;
 
       const res = await fetch(url, {
         method: editingPlan ? 'PUT' : 'POST',
@@ -209,7 +209,7 @@ export default function PlanesPage() {
       setDeleting(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/plans/${deletingPlan.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/${deletingPlan.id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },

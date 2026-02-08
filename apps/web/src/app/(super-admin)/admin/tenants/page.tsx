@@ -84,7 +84,7 @@ export default function TenantsPage() {
       });
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/tenants?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -118,7 +118,7 @@ export default function TenantsPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/tenants/${id}/suspend`,
+        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${id}/suspend`,
         {
           method: 'POST',
           headers: {
@@ -140,7 +140,7 @@ export default function TenantsPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/tenants/${id}/activate`,
+        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${id}/activate`,
         {
           method: 'POST',
           headers: {
@@ -163,7 +163,7 @@ export default function TenantsPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/tenants/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${id}`,
         {
           method: 'DELETE',
           headers: {

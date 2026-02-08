@@ -22,7 +22,7 @@ export default function AdminSetupPage() {
 
   const checkBootstrapStatus = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/bootstrap/status`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/bootstrap/status`);
       const data = await res.json();
       setCanBootstrap(data.canBootstrap);
     } catch (err) {
@@ -39,7 +39,7 @@ export default function AdminSetupPage() {
     setSuccess('');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/bootstrap`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/bootstrap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, nombre }),

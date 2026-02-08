@@ -108,7 +108,7 @@ export function CertificadoUpload({
       formData.append('password', password);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/certificate`,
+        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/certificate`,
         {
           method: 'POST',
           headers: {
@@ -149,7 +149,7 @@ export function CertificadoUpload({
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/certificate`,
+        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/certificate`,
         {
           method: 'DELETE',
           headers: {

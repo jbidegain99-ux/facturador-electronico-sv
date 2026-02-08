@@ -228,7 +228,7 @@ export default function NuevaFacturaPage() {
       if (!token) return;
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dteId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -404,7 +404,7 @@ export default function NuevaFacturaPage() {
       };
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/v1/dte`, {
+      const response = await fetch(`${apiUrl}/dte`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

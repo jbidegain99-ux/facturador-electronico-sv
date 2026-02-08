@@ -52,7 +52,7 @@ export default function EmailConfigPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/email-config`,
+        `${process.env.NEXT_PUBLIC_API_URL}/email-config`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -114,7 +114,7 @@ export default function EmailConfigPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/email-config`,
+        `${process.env.NEXT_PUBLIC_API_URL}/email-config`,
         {
           method: 'POST',
           headers: {
@@ -144,7 +144,7 @@ export default function EmailConfigPage() {
   const handleTestConnection = async (): Promise<ConnectionTestResult> => {
     const token = localStorage.getItem('token');
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/email-config/test-connection`,
+      `${process.env.NEXT_PUBLIC_API_URL}/email-config/test-connection`,
       {
         method: 'POST',
         headers: {
@@ -168,7 +168,7 @@ export default function EmailConfigPage() {
   const handleSendTest = async (email: string) => {
     const token = localStorage.getItem('token');
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/email-config/send-test`,
+      `${process.env.NEXT_PUBLIC_API_URL}/email-config/send-test`,
       {
         method: 'POST',
         headers: {
@@ -194,7 +194,7 @@ export default function EmailConfigPage() {
 
     const token = localStorage.getItem('token');
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/email-config/activate`,
+      `${process.env.NEXT_PUBLIC_API_URL}/email-config/activate`,
       {
         method: 'PATCH',
         headers: {
@@ -218,7 +218,7 @@ export default function EmailConfigPage() {
   const handleAssistanceSubmit = async (data: AssistanceFormData) => {
     const token = localStorage.getItem('token');
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/email-config/request-assistance`,
+      `${process.env.NEXT_PUBLIC_API_URL}/email-config/request-assistance`,
       {
         method: 'POST',
         headers: {

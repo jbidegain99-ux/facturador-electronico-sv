@@ -103,7 +103,7 @@ export default function ClientesPage() {
     try {
       setLoading(true);
       const searchParam = search ? `?search=${encodeURIComponent(search)}` : '';
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/clientes${searchParam}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes${searchParam}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -202,8 +202,8 @@ export default function ClientesPage() {
 
     try {
       const url = editingCliente
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/clientes/${editingCliente.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/clientes`;
+        ? `${process.env.NEXT_PUBLIC_API_URL}/clientes/${editingCliente.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/clientes`;
 
       const res = await fetch(url, {
         method: editingCliente ? 'PUT' : 'POST',
@@ -238,7 +238,7 @@ export default function ClientesPage() {
 
     setDeleting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/clientes/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

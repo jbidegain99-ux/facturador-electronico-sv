@@ -29,7 +29,7 @@ export default function OnboardingHaciendaPage() {
       // Fetch both onboarding status and data in parallel
       const [statusRes, onboardingRes] = await Promise.all([
         fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/onboarding-status`,
+          `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -38,7 +38,7 @@ export default function OnboardingHaciendaPage() {
           }
         ),
         fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/onboarding`,
+          `${process.env.NEXT_PUBLIC_API_URL}/onboarding`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

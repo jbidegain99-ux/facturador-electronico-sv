@@ -82,7 +82,7 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
 
       // Call quick-setup endpoint
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/quick-setup`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/hacienda/quick-setup`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

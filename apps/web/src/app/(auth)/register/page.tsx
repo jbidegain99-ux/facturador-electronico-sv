@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { MaskedInput } from '@/components/ui/masked-input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HelpCircle } from 'lucide-react';
 
 // Catálogo de Departamentos de El Salvador
 const DEPARTAMENTOS = [
@@ -397,6 +399,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [municipiosDisponibles, setMunicipiosDisponibles] = useState<{ codigo: string; nombre: string }[]>([]);
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
   const [formData, setFormData] = useState({
     // Datos de la empresa
@@ -408,7 +411,7 @@ export default function RegisterPage() {
     telefono: '',
     correo: '',
     nombreComercial: '',
-    // Direccion
+    // Dirección
     departamento: '',
     municipio: '',
     complemento: '',
@@ -451,7 +454,7 @@ export default function RegisterPage() {
     setError('');
 
     if (formData.adminPassword !== formData.adminPasswordConfirm) {
-      setError('Las contrasenas no coinciden');
+      setError('Las contraseñas no coinciden');
       setLoading(false);
       return;
     }
@@ -468,7 +471,7 @@ export default function RegisterPage() {
     const municipioObj = municipiosDisponibles.find(m => m.codigo === formData.municipio);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/register`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -526,10 +529,10 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
-        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+        <h2 className="mt-6 text-xl sm:text-2xl font-bold leading-9 tracking-tight text-gray-900 text-center sm:text-left">
           Registrar Empresa
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-sm sm:text-base text-gray-600 text-center sm:text-left">
           Complete los datos de su empresa para comenzar a facturar
         </p>
       </div>
@@ -549,7 +552,7 @@ export default function RegisterPage() {
               <div>
                 <div className="flex justify-between items-center">
                   <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
-                    Razon Social *
+                    Razón Social *
                   </label>
                   <CharCounter length={formData.nombre.length} max={200} />
                 </div>
@@ -609,9 +612,24 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="actividadEcon" className="block text-sm font-medium text-gray-700">
-                  Actividad Economica *
-                </label>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="actividadEcon" className="block text-sm font-medium text-gray-700">
+                    Actividad Económica *
+                  </label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger type="button">
+                        <HelpCircle className="h-4 w-4 text-gray-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">
+                          Seleccione la actividad económica principal de su empresa según
+                          la clasificación del Ministerio de Hacienda de El Salvador.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <select
                   name="actividadEcon"
                   id="actividadEcon"
@@ -630,7 +648,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
-                  Telefono *
+                  Teléfono *
                 </label>
                 <MaskedInput
                   mask="9999-9999"
@@ -663,7 +681,7 @@ export default function RegisterPage() {
 
           {/* Direccion */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Direccion</h3>
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Dirección</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="departamento" className="block text-sm font-medium text-gray-700">
@@ -711,7 +729,7 @@ export default function RegisterPage() {
               <div className="sm:col-span-2">
                 <div className="flex justify-between items-center">
                   <label htmlFor="complemento" className="block text-sm font-medium text-gray-700">
-                    Direccion Completa *
+                    Dirección Completa *
                   </label>
                   <CharCounter length={formData.complemento.length} max={500} />
                 </div>
@@ -751,7 +769,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700">
-                  Correo Electronico *
+                  Correo Electrónico *
                 </label>
                 <input
                   type="email"
@@ -766,7 +784,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700">
-                  Contrasena *
+                  Contraseña *
                 </label>
                 <input
                   type="password"
@@ -782,7 +800,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="adminPasswordConfirm" className="block text-sm font-medium text-gray-700">
-                  Confirmar Contrasena *
+                  Confirmar Contraseña *
                 </label>
                 <input
                   type="password"
@@ -799,10 +817,32 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          {/* Términos y Condiciones */}
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="acceptTerms"
+              checked={acceptTerms}
+              onChange={(e) => setAcceptTerms(e.target.checked)}
+              className="mt-1"
+              required
+            />
+            <label htmlFor="acceptTerms" className="text-sm text-gray-600">
+              Acepto los{' '}
+              <a href="/terminos" target="_blank" className="text-purple-600 hover:underline">
+                términos y condiciones
+              </a>
+              {' '}y la{' '}
+              <a href="/privacidad" target="_blank" className="text-purple-600 hover:underline">
+                política de privacidad
+              </a>
+            </label>
+          </div>
+
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !acceptTerms}
               className="flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
             >
               {loading ? 'Registrando...' : 'Registrar Empresa'}
@@ -813,7 +853,7 @@ export default function RegisterPage() {
         <p className="mt-6 text-center text-sm text-gray-500">
           Ya tienes cuenta?{' '}
           <Link href="/login" className="font-semibold leading-6 text-primary hover:text-primary/80">
-            Iniciar Sesion
+            Iniciar Sesión
           </Link>
         </p>
       </div>

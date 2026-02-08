@@ -172,7 +172,7 @@ export default function NotificacionesPage() {
       setLoadingTenants(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/tenants?limit=100`,
+        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants?limit=100`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -194,7 +194,7 @@ export default function NotificacionesPage() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/notifications?includeInactive=${showInactive}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications?includeInactive=${showInactive}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -270,8 +270,8 @@ export default function NotificacionesPage() {
       setSaving(true);
       const token = localStorage.getItem('token');
       const url = editingNotification
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/notifications/${editingNotification.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/notifications`;
+        ? `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications/${editingNotification.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications`;
 
       const body: any = {
         title: form.title,
@@ -322,7 +322,7 @@ export default function NotificacionesPage() {
       setDeleting(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/notifications/${deletingNotification.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications/${deletingNotification.id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
@@ -345,7 +345,7 @@ export default function NotificacionesPage() {
       const token = localStorage.getItem('token');
       const endpoint = notification.isActive ? 'deactivate' : 'activate';
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/notifications/${notification.id}/${endpoint}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications/${notification.id}/${endpoint}`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },

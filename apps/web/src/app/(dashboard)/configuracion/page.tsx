@@ -58,13 +58,13 @@ export default function ConfiguracionPage() {
       try {
         // Fetch tenant data and onboarding status in parallel
         const [tenantRes, statusRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me`, {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/tenants/me`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
           }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/onboarding-status`, {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
@@ -118,8 +118,8 @@ export default function ConfiguracionPage() {
 
     try {
       const endpoint = demoMode
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/disable-demo`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/onboarding-skip`;
+        ? `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/disable-demo`
+        : `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-skip`;
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -172,7 +172,7 @@ export default function ConfiguracionPage() {
     setSuccess(null);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tenants/me`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

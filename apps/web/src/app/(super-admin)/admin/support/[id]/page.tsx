@@ -147,7 +147,7 @@ export default function TicketDetailPage() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/support-tickets/${params.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/${params.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -174,7 +174,7 @@ export default function TicketDetailPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/support-tickets/admins`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/admins`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -206,7 +206,7 @@ export default function TicketDetailPage() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/support-tickets/${params.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/${params.id}`,
         {
           method: 'PATCH',
           headers: {
@@ -236,7 +236,7 @@ export default function TicketDetailPage() {
       const token = localStorage.getItem('token');
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/support-tickets/${params.id}/comments`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/${params.id}/comments`,
         {
           method: 'POST',
           headers: {

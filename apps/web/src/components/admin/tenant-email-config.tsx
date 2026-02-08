@@ -95,7 +95,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       setLoading(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/email-configs/${tenantId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -122,7 +122,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       setTestResult(null);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/email-configs/${tenantId}/test-connection`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}/test-connection`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -153,7 +153,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       setTestResult(null);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/email-configs/${tenantId}/send-test`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}/send-test`,
         {
           method: 'POST',
           headers: {
@@ -182,7 +182,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       setDeleting(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/email-configs/${tenantId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
@@ -213,7 +213,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       setSaving(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/email-configs/${tenantId}/configure`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}/configure`,
         {
           method: 'POST',
           headers: {

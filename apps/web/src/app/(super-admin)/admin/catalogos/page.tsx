@@ -89,7 +89,7 @@ export default function CatalogosPage() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/catalogos`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -113,7 +113,7 @@ export default function CatalogosPage() {
       setSeeding(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/catalogos/seed`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/seed`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -135,7 +135,7 @@ export default function CatalogosPage() {
       setSeeding(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/catalogos/seed/departamentos`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/seed/departamentos`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -156,7 +156,7 @@ export default function CatalogosPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/catalogos/${codigo}/export`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/${codigo}/export`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -194,7 +194,7 @@ export default function CatalogosPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/catalogos/CAT-012/items?limit=20`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/CAT-012/items?limit=20`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -225,7 +225,7 @@ export default function CatalogosPage() {
       });
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/catalogos/${codigo}/items?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/${codigo}/items?${params}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

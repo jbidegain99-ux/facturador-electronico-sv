@@ -76,7 +76,7 @@ export default function FacturasPage() {
       if (filterStatus !== 'all') params.set('estado', filterStatus);
       if (search) params.set('search', search);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte?${params}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ export default function FacturasPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dteId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -155,7 +155,7 @@ export default function FacturasPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dte.id}/pdf`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dte.id}/pdf`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -194,7 +194,7 @@ export default function FacturasPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dte/${dte.id}/anular`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dte.id}/anular`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

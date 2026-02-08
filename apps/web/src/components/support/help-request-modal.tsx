@@ -70,7 +70,7 @@ export function HelpRequestModal({
       const metadata = contextData ? JSON.stringify(contextData) : null;
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/support-tickets`,
+        `${process.env.NEXT_PUBLIC_API_URL}/support-tickets`,
         {
           method: 'POST',
           headers: {

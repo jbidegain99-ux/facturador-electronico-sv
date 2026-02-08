@@ -121,7 +121,7 @@ export default function SupportTicketsPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/support-tickets/stats`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/stats`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -155,7 +155,7 @@ export default function SupportTicketsPage() {
       });
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/support-tickets?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets?${params}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

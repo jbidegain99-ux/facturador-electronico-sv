@@ -94,7 +94,7 @@ export function ClienteSearch({
         const token = localStorage.getItem('token');
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
         const response = await fetch(
-          `${apiUrl}/api/v1/clientes?search=${encodeURIComponent(search)}&limit=10`,
+          `${apiUrl}/clientes?search=${encodeURIComponent(search)}&limit=10`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

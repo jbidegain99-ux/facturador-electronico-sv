@@ -131,7 +131,7 @@ export function OnboardingWizard({
       formData.append('password', certificatePassword);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/certificate`,
+        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/certificate`,
         {
           method: 'POST',
           headers: {
@@ -163,7 +163,7 @@ export function OnboardingWizard({
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/test-mh`,
+        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/test-mh`,
         {
           method: 'POST',
           headers: {

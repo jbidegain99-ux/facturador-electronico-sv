@@ -121,11 +121,11 @@ export default function ReportesPage() {
 
     try {
       const [summaryRes, chartRes, typeRes, statusRes, clientsRes] = await Promise.all([
-        fetch(`${baseUrl}/api/v1/dte/stats/summary`, { headers }),
-        fetch(`${baseUrl}/api/v1/dte/stats/by-date?${params}`, { headers }),
-        fetch(`${baseUrl}/api/v1/dte/stats/by-type?${params}`, { headers }),
-        fetch(`${baseUrl}/api/v1/dte/stats/by-status`, { headers }),
-        fetch(`${baseUrl}/api/v1/dte/stats/top-clients?${params}&limit=5`, { headers }),
+        fetch(`${baseUrl}/dte/stats/summary`, { headers }),
+        fetch(`${baseUrl}/dte/stats/by-date?${params}`, { headers }),
+        fetch(`${baseUrl}/dte/stats/by-type?${params}`, { headers }),
+        fetch(`${baseUrl}/dte/stats/by-status`, { headers }),
+        fetch(`${baseUrl}/dte/stats/top-clients?${params}&limit=5`, { headers }),
       ]);
 
       if (summaryRes.ok) setSummary(await summaryRes.json());

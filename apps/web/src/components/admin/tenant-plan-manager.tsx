@@ -84,10 +84,10 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
       const token = localStorage.getItem('token');
 
       const [plansRes, usageRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/plans/active`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/plans/active`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/plans/tenant/${tenantId}/usage`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/plans/tenant/${tenantId}/usage`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -116,7 +116,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
       setSaving(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/plans/tenant/${tenantId}/assign`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/tenant/${tenantId}/assign`,
         {
           method: 'POST',
           headers: {
@@ -148,7 +148,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
       setSaving(true);
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/plans/tenant/${tenantId}/plan`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/tenant/${tenantId}/plan`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },

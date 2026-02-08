@@ -533,7 +533,7 @@ export function NuevoClienteModal({
       const nombreFinal = formData.nombre.trim() || 'Clientes varios';
       const numDocFinal = formData.numDocumento.trim() || '00000000-0';
 
-      const response = await fetch(`${apiUrl}/api/v1/clientes`, {
+      const response = await fetch(`${apiUrl}/clientes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

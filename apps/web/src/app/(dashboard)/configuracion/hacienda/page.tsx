@@ -37,7 +37,7 @@ export default function HaciendaConfigPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/config`,
+        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/config`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -79,7 +79,7 @@ export default function HaciendaConfigPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/tests/progress`,
+        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/progress`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -55,7 +55,7 @@ export function CredentialsStep({
     setValidating(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/validate-connection`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/hacienda/validate-connection`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -81,7 +81,7 @@ export function NotificationBell() {
       if (!token) return;
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/count`,
+        `${process.env.NEXT_PUBLIC_API_URL}/notifications/count`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -103,7 +103,7 @@ export function NotificationBell() {
       if (!token) return;
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications`,
+        `${process.env.NEXT_PUBLIC_API_URL}/notifications`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -124,7 +124,7 @@ export function NotificationBell() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/${id}/dismiss`,
+        `${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/dismiss`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -144,7 +144,7 @@ export function NotificationBell() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/dismiss-all`,
+        `${process.env.NEXT_PUBLIC_API_URL}/notifications/dismiss-all`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },

@@ -37,7 +37,7 @@ export default function DashboardLayout({
 
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/current`,
+          `${process.env.NEXT_PUBLIC_API_URL}/tenants/current`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -65,7 +65,7 @@ export default function DashboardLayout({
 
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`,
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -106,7 +106,7 @@ export default function DashboardLayout({
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/onboarding-status`,
+          `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

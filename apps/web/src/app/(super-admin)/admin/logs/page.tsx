@@ -130,7 +130,7 @@ export default function LogsPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/audit-logs/stats`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/audit-logs/stats`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -164,7 +164,7 @@ export default function LogsPage() {
       if (endDate) params.append('endDate', endDate);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/audit-logs?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/audit-logs?${params}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

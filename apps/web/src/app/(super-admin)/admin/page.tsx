@@ -40,7 +40,7 @@ export default function AdminDashboardPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/dashboard`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/dashboard`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

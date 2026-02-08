@@ -25,7 +25,7 @@ export default function AdminsPage() {
   const fetchAdmins = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/admins`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/admins`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -44,7 +44,7 @@ export default function AdminsPage() {
     try {
       setSaving(true);
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/super-admin/admins`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/admins`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

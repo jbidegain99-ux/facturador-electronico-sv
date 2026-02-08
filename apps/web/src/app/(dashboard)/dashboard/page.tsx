@@ -78,9 +78,9 @@ export default function DashboardPage() {
 
       try {
         const [summaryRes, chartRes, recentRes] = await Promise.all([
-          fetch(`${baseUrl}/api/v1/dte/stats/summary`, { headers }),
-          fetch(`${baseUrl}/api/v1/dte/stats/by-date?groupBy=day`, { headers }),
-          fetch(`${baseUrl}/api/v1/dte/recent?limit=5`, { headers }),
+          fetch(`${baseUrl}/dte/stats/summary`, { headers }),
+          fetch(`${baseUrl}/dte/stats/by-date?groupBy=day`, { headers }),
+          fetch(`${baseUrl}/dte/recent?limit=5`, { headers }),
         ]);
 
         if (summaryRes.ok) {

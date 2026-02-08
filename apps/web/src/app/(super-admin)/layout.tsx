@@ -65,7 +65,7 @@ export default function SuperAdminLayout({
       }
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/profile`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

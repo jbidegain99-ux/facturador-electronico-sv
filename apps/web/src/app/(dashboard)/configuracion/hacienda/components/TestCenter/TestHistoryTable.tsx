@@ -51,7 +51,7 @@ export function TestHistoryTable() {
       params.set('limit', '50');
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/hacienda/tests/history?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/history?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

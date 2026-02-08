@@ -206,7 +206,7 @@ export function useHaciendaStatus() {
         }
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tenants/me/onboarding-status`,
+          `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

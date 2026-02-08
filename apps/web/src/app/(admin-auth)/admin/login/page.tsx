@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/profile`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (res.ok) {
@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -59,13 +59,13 @@ export default function AdminLoginPage() {
 
       // Verify it's a super admin
       if (data.user?.rol !== 'SUPER_ADMIN') {
-        throw new Error('Acceso denegado. Esta pagina es solo para Super Administradores.');
+        throw new Error('Acceso denegado. Esta página es solo para Super Administradores.');
       }
 
       localStorage.setItem('token', data.access_token);
       router.push('/admin');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesion');
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex items-center gap-3">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          <span className="text-muted-foreground">Verificando sesion...</span>
+          <span className="text-muted-foreground">Verificando sesión...</span>
         </div>
       </div>
     );
@@ -90,8 +90,8 @@ export default function AdminLoginPage() {
           <div className="mx-auto w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mb-4">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Panel de Administracion</h1>
-          <p className="text-muted-foreground mt-2">Facturador Electronico SV</p>
+          <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
+          <p className="text-muted-foreground mt-2">Facturador Electrónico SV</p>
         </div>
 
         {/* Login Form */}
@@ -106,7 +106,7 @@ export default function AdminLoginPage() {
 
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-medium text-white">
-                Correo electronico
+                Correo electrónico
               </label>
               <input
                 id="email"
@@ -123,7 +123,7 @@ export default function AdminLoginPage() {
 
             <div className="space-y-2">
               <label htmlFor="password" className="block text-sm font-medium text-white">
-                Contrasena
+                Contraseña
               </label>
               <div className="relative">
                 <input

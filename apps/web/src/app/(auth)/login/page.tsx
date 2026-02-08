@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -38,7 +38,7 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesion');
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ export default function LoginPage() {
         </div>
 
         <h2 className="text-center text-2xl font-bold leading-9 tracking-tight text-foreground">
-          Iniciar Sesion
+          Iniciar Sesión
         </h2>
       </div>
 
@@ -67,7 +67,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium leading-6 text-foreground">
-              Correo electronico
+              Correo electrónico
             </label>
             <div className="mt-2">
               <input
@@ -85,9 +85,14 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium leading-6 text-foreground">
-              Contrasena
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="block text-sm font-medium leading-6 text-foreground">
+                Contraseña
+              </label>
+              <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 transition-colors">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <div className="mt-2">
               <input
                 id="password"
@@ -109,7 +114,7 @@ export default function LoginPage() {
               disabled={loading}
               className="flex w-full justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 transition-all hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)]"
             >
-              {loading ? 'Cargando...' : 'Iniciar Sesion'}
+              {loading ? 'Cargando...' : 'Iniciar Sesión'}
             </button>
           </div>
         </form>

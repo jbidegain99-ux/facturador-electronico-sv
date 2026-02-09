@@ -35,6 +35,9 @@ export default function DashboardLayout({
       // Only fetch if tenant is not already loaded
       if (tenant?.nombre) return;
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/tenants/current`,
@@ -42,15 +45,26 @@ export default function DashboardLayout({
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            signal: controller.signal,
           }
         );
 
+        clearTimeout(timeoutId);
+
         if (response.ok) {
-          const data = await response.json();
-          setTenant(data);
+          const text = await response.text();
+          if (text) {
+            const data = JSON.parse(text);
+            setTenant(data);
+          }
         }
       } catch (error) {
-        console.error('Error loading tenant:', error);
+        clearTimeout(timeoutId);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          console.error('Tenant fetch timed out');
+        } else {
+          console.error('Error loading tenant:', error);
+        }
       }
     };
 
@@ -61,7 +75,13 @@ export default function DashboardLayout({
   React.useEffect(() => {
     const loadUserData = async () => {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        setUser(null);
+        return;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
         const response = await fetch(
@@ -70,20 +90,36 @@ export default function DashboardLayout({
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            signal: controller.signal,
           }
         );
 
+        clearTimeout(timeoutId);
+
         if (response.ok) {
-          const data = await response.json();
-          setUser({
-            id: data.id,
-            name: data.nombre,
-            email: data.email,
-            role: data.rol === 'ADMIN' ? 'admin' : 'user',
-          });
+          const text = await response.text();
+          if (text) {
+            const data = JSON.parse(text);
+            setUser({
+              id: data.id,
+              name: data.nombre,
+              email: data.email,
+              role: data.rol === 'ADMIN' ? 'admin' : 'user',
+            });
+          } else {
+            setUser(null);
+          }
+        } else {
+          setUser(null);
         }
       } catch (error) {
-        console.error('Error loading user:', error);
+        clearTimeout(timeoutId);
+        setUser(null);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          console.error('Auth profile fetch timed out');
+        } else {
+          console.error('Error loading user:', error);
+        }
       }
     };
 

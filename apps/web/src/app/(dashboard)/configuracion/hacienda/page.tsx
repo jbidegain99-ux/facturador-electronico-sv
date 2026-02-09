@@ -22,6 +22,8 @@ type ViewMode = 'loading' | 'selector' | 'quick-setup' | 'configured';
 export default function HaciendaConfigPage() {
   const router = useRouter();
   const toast = useToast();
+  const toastRef = React.useRef(toast);
+  toastRef.current = toast;
 
   // State
   const [loading, setLoading] = React.useState(true);
@@ -65,14 +67,14 @@ export default function HaciendaConfigPage() {
         throw new Error(error.message || 'Error al cargar configuracion');
       }
     } catch (error) {
-      toast.error(
+      toastRef.current.error(
         error instanceof Error ? error.message : 'Error al cargar configuracion'
       );
       setViewMode('selector');
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   // Load test progress
   const loadTestProgress = React.useCallback(async () => {

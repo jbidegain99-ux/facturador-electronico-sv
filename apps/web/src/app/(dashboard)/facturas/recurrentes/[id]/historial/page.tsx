@@ -46,6 +46,8 @@ export default function HistorialRecurrentePage() {
   const params = useParams();
   const templateId = params.id as string;
   const toast = useToast();
+  const toastRef = React.useRef(toast);
+  toastRef.current = toast;
 
   const [history, setHistory] = React.useState<HistoryEntry[]>([]);
   const [page, setPage] = React.useState(1);
@@ -53,12 +55,14 @@ export default function HistorialRecurrentePage() {
   const [total, setTotal] = React.useState(0);
   const [totalPages, setTotalPages] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
+  const [fetchError, setFetchError] = React.useState<string | null>(null);
 
   // Stats
   const [stats, setStats] = React.useState({ success: 0, failed: 0, total: 0 });
 
   const fetchHistory = React.useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const token = localStorage.getItem('token');
       const params = new URLSearchParams({
@@ -71,7 +75,13 @@ export default function HistorialRecurrentePage() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      if (!res.ok) throw new Error('Error al cargar historial');
+      if (!res.ok) {
+        if (res.status === 404) {
+          setFetchError('Historial no disponible. El servicio de facturas recurrentes no esta habilitado.');
+          return;
+        }
+        throw new Error(`Error al cargar historial (${res.status})`);
+      }
 
       const data: HistoryResponse = await res.json();
       setHistory(data.data);
@@ -84,12 +94,14 @@ export default function HistorialRecurrentePage() {
         const failed = data.data.filter((h) => h.status === 'FAILED').length;
         setStats({ success, failed, total: data.total });
       }
-    } catch {
-      toast.error('Error al cargar historial');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al cargar historial';
+      setFetchError(message);
+      toastRef.current.error(message);
     } finally {
       setLoading(false);
     }
-  }, [page, limit, templateId, toast]);
+  }, [page, limit, templateId]);
 
   React.useEffect(() => {
     fetchHistory();
@@ -153,6 +165,13 @@ export default function HistorialRecurrentePage() {
         <CardContent className="p-0">
           {loading ? (
             <SkeletonTable rows={5} />
+          ) : fetchError ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">{fetchError}</p>
+              <Button variant="outline" className="mt-4" onClick={fetchHistory}>
+                Reintentar
+              </Button>
+            </div>
           ) : history.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               No hay ejecuciones registradas

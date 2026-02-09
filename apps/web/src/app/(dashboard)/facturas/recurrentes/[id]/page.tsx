@@ -104,10 +104,13 @@ export default function RecurrenteDetallePage() {
   const params = useParams();
   const id = params.id as string;
   const toast = useToast();
+  const toastRef = React.useRef(toast);
+  toastRef.current = toast;
   const { confirm, ConfirmDialog } = useConfirm();
 
   const [template, setTemplate] = React.useState<TemplateDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [fetchError, setFetchError] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
 
@@ -121,13 +124,20 @@ export default function RecurrenteDetallePage() {
   const [endDate, setEndDate] = React.useState('');
 
   const fetchTemplate = React.useCallback(async () => {
+    setFetchError(null);
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices/${id}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      if (!res.ok) throw new Error('Template no encontrado');
+      if (!res.ok) {
+        if (res.status === 404) {
+          setFetchError('Template no encontrado o servicio no disponible.');
+          return;
+        }
+        throw new Error(`Error al cargar template (${res.status})`);
+      }
       const data: TemplateDetail = await res.json();
       setTemplate(data);
 
@@ -143,13 +153,14 @@ export default function RecurrenteDetallePage() {
       } catch {
         setItems([]);
       }
-    } catch {
-      toast.error('Error al cargar template');
-      router.push('/facturas/recurrentes');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al cargar template';
+      setFetchError(message);
+      toastRef.current.error(message);
     } finally {
       setLoading(false);
     }
-  }, [id, router, toast]);
+  }, [id]);
 
   React.useEffect(() => {
     fetchTemplate();
@@ -251,7 +262,25 @@ export default function RecurrenteDetallePage() {
     );
   }
 
-  if (!template) return null;
+  if (fetchError || !template) {
+    return (
+      <div className="space-y-6 max-w-4xl">
+        <div className="flex items-center gap-4">
+          <Link href="/facturas/recurrentes">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">Template no disponible</h1>
+            <p className="text-muted-foreground mt-1">
+              {fetchError || 'No se pudo cargar el template.'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">

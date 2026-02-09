@@ -86,6 +86,8 @@ const TABS = [
 
 export default function RecurrentesPage() {
   const toast = useToast();
+  const toastRef = React.useRef(toast);
+  toastRef.current = toast;
   const { confirm, ConfirmDialog } = useConfirm();
 
   const [search, setSearch] = React.useState('');
@@ -98,9 +100,11 @@ export default function RecurrentesPage() {
   const [total, setTotal] = React.useState(0);
   const [totalPages, setTotalPages] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
+  const [fetchError, setFetchError] = React.useState<string | null>(null);
 
   const fetchTemplates = React.useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const token = localStorage.getItem('token');
       const params = new URLSearchParams({
@@ -117,18 +121,26 @@ export default function RecurrentesPage() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      if (!res.ok) throw new Error('Error al cargar templates');
+      if (!res.ok) {
+        if (res.status === 404) {
+          setFetchError('El servicio de facturas recurrentes no esta disponible aun.');
+          return;
+        }
+        throw new Error(`Error al cargar templates (${res.status})`);
+      }
 
       const data: TemplateResponse = await res.json();
       setTemplates(data.data);
       setTotal(data.total);
       setTotalPages(data.totalPages);
-    } catch {
-      toast.error('Error al cargar facturas recurrentes');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al cargar facturas recurrentes';
+      setFetchError(message);
+      toastRef.current.error(message);
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, statusFilter, sortBy, sortOrder, toast]);
+  }, [page, limit, search, statusFilter, sortBy, sortOrder]);
 
   React.useEffect(() => {
     fetchTemplates();
@@ -257,6 +269,14 @@ export default function RecurrentesPage() {
         <CardContent className="p-0">
           {loading ? (
             <SkeletonTable rows={5} />
+          ) : fetchError ? (
+            <div className="text-center py-12">
+              <Repeat className="mx-auto h-12 w-12 text-muted-foreground/30" />
+              <p className="mt-4 text-muted-foreground">{fetchError}</p>
+              <Button variant="outline" className="mt-4" onClick={fetchTemplates}>
+                Reintentar
+              </Button>
+            </div>
           ) : templates.length === 0 ? (
             <div className="text-center py-12">
               <Repeat className="mx-auto h-12 w-12 text-muted-foreground/30" />

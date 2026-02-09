@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, DynamicModule, Type, ForwardReference } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './modules/auth/auth.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { ClientesModule } from './modules/clientes/clientes.module';
@@ -19,14 +20,18 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { BackupsModule } from './modules/backups/backups.module';
 import { HaciendaModule } from './modules/hacienda/hacienda.module';
 import { MigrationModule } from './modules/migration/migration.module';
+import { RecurringInvoicesModule } from './modules/recurring-invoices/recurring-invoices.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
-const imports: any[] = [
+type NestImport = Type<unknown> | DynamicModule | Promise<DynamicModule> | ForwardReference;
+
+const imports: NestImport[] = [
   ConfigModule.forRoot({
     isGlobal: true,
     envFilePath: ['.env.local', '.env'],
   }),
+  ScheduleModule.forRoot(),
   PrismaModule,
   HealthModule,
   AuthModule,
@@ -47,6 +52,7 @@ const imports: any[] = [
   BackupsModule,
   HaciendaModule,
   MigrationModule,
+  RecurringInvoicesModule,
 ];
 
 if (process.env.REDIS_URL) {

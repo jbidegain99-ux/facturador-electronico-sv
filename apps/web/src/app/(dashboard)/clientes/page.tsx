@@ -144,10 +144,12 @@ export default function ClientesPage() {
         throw new Error(errorData.message || `Error al cargar clientes (${res.status})`);
       }
 
-      const data: ClientesResponse = await res.json();
-      setClientes(data.data);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
+      const data = await res.json();
+      // Defensive: handle both {data: [...], total, ...} and plain array responses
+      const items = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+      setClientes(items);
+      setTotal(typeof data?.total === 'number' ? data.total : items.length);
+      setTotalPages(typeof data?.totalPages === 'number' ? data.totalPages : 1);
       setError(null);
     } catch (err) {
       console.error('Error fetching clientes:', err);
@@ -395,7 +397,7 @@ export default function ClientesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clientes.length === 0 ? (
+                  {(!clientes || clientes.length === 0) ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         {search ? 'No se encontraron clientes con esa busqueda' : 'No hay clientes registrados. Crea el primero.'}
@@ -468,7 +470,7 @@ export default function ClientesPage() {
                 page={page}
                 totalPages={totalPages}
                 total={total}
-                showing={clientes.length}
+                showing={clientes?.length ?? 0}
                 onPageChange={setPage}
               />
             </>

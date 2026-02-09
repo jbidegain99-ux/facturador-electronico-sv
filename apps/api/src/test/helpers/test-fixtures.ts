@@ -11,6 +11,8 @@ export function createMockCliente(overrides?: Partial<Cliente>): Cliente {
     correo: 'cliente@test.com',
     telefono: '2222-3333',
     direccion: JSON.stringify({
+    createdAt: new Date(),
+    updatedAt: new Date(),
       departamento: '06',
       municipio: '14',
       complemento: 'Calle Test #123',
@@ -97,6 +99,8 @@ export interface MockTenant {
   nrc: string;
   actividadEcon: string;
   direccion: string;
+    createdAt: new Date(),
+    updatedAt: new Date(),
   telefono: string;
   correo: string;
   nombreComercial: string | null;
@@ -111,6 +115,8 @@ export function createMockTenant(overrides?: Partial<MockTenant>): MockTenant {
     nrc: '123456-7',
     actividadEcon: '62010',
     direccion: JSON.stringify({
+    createdAt: new Date(),
+    updatedAt: new Date(),
       departamento: '06',
       municipio: '14',
       complemento: 'Col. Escalon, Calle 1',

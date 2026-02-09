@@ -65,7 +65,7 @@ export default function DashboardLayout({
 
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -75,7 +75,12 @@ export default function DashboardLayout({
 
         if (response.ok) {
           const data = await response.json();
-          setUser(data);
+          setUser({
+            id: data.id,
+            name: data.nombre,
+            email: data.email,
+            role: data.rol === 'ADMIN' ? 'admin' : 'user',
+          });
         }
       } catch (error) {
         console.error('Error loading user:', error);

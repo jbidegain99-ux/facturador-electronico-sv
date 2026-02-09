@@ -98,6 +98,8 @@ model Cliente {
   correo        String?
   telefono      String?
   direccion     String  @db.NVarChar(Max)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   dtes          DTE[]
   recurringTemplates RecurringInvoiceTemplate[]
 

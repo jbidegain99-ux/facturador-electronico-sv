@@ -291,3 +291,39 @@ Antes de merge a main:
 
 **Última actualización:** 7 de febrero de 2026  
 **Próxima revisión:** Después de completar FASE 0 (issues de QA)
+
+## Testing Suite - Sprint 1 & 2 (Feb 2026)
+
+### ✅ Logros
+- 88 backend tests implementados (Jest + mocks)
+- 25 E2E tests (Playwright)
+- CI/CD con GitHub Actions
+- Velocidad: 4s backend, ~2min E2E
+
+### 🎓 Lecciones Técnicas
+
+1. **Monorepo tsconfig**: Jest debe usar tsconfig local (apps/api/tsconfig.json), 
+   no el root, para evitar errores de decorators de NestJS.
+
+2. **Multi-tenancy**: SIEMPRE filtrar por tenantId en queries. Validarlo en tests.
+
+3. **Redis opcional**: Scheduler/processor solo se activan si hay REDIS_URL. 
+   API funciona sin ellos para desarrollo.
+
+4. **Playwright auth**: Setup project + storageState evita re-autenticar en cada test.
+
+5. **Mock strategy**: 
+   - Services: mockear PrismaService
+   - Controllers: mockear Services
+   - Processors: mockear DTEService y MHService
+
+### 🐛 Problemas Resueltos
+
+- TS18048 "possibly undefined": Agregar nullish coalescing (??) en calculateNextRunDate
+- NestJS DI failures: tsconfig path en jest.config.ts
+- Flaky E2E tests: Usar locator.waitFor() antes de .click()
+
+### 📈 Métricas
+- Coverage: >70% en módulos core
+- Velocidad: 4s backend (target: <3min) ✅
+- Flakiness: 0% después de ajustes

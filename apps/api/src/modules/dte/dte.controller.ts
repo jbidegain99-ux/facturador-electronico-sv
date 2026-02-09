@@ -46,12 +46,14 @@ export class DteController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar DTEs del tenant' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiOperation({ summary: 'Listar DTEs del tenant con paginacion' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Numero de pagina (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Registros por pagina (default: 20, max: 100)' })
   @ApiQuery({ name: 'tipoDte', required: false, type: String })
   @ApiQuery({ name: 'estado', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'sortBy', required: false, description: 'Campo para ordenar (createdAt, totalPagar, numeroControl)' })
+  @ApiQuery({ name: 'sortOrder', required: false, description: 'Orden: asc o desc (default: desc)' })
   findAll(
     @Request() req: AuthRequest,
     @Query('page') page?: string,
@@ -59,12 +61,17 @@ export class DteController {
     @Query('tipoDte') tipoDte?: string,
     @Query('estado') estado?: string,
     @Query('search') search?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string,
   ) {
+    const parsedLimit = limit ? Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100) : 20;
     return this.dteService.findByTenant(
       req.user.tenantId,
       page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 20,
+      parsedLimit,
       { tipoDte, estado, search },
+      sortBy,
+      sortOrder as 'asc' | 'desc' | undefined,
     );
   }
 

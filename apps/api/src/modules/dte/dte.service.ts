@@ -282,9 +282,11 @@ export class DteService {
     page = 1,
     limit = 20,
     filters?: { tipoDte?: string; estado?: string; search?: string },
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc',
   ) {
     this.logger.log(`Finding DTEs for tenant ${tenantId}, page ${page}, limit ${limit}`);
-    this.logger.log(`Filters: ${JSON.stringify(filters)}`);
+    this.logger.log(`Filters: ${JSON.stringify(filters)}, sort: ${sortBy || 'createdAt'} ${sortOrder || 'desc'}`);
 
     // Handle case where user has no tenant assigned
     if (!tenantId) {
@@ -300,7 +302,18 @@ export class DteService {
 
     const skip = (page - 1) * limit;
 
-    const where: any = { tenantId };
+    const allowedSortFields: Record<string, string> = {
+      createdAt: 'createdAt',
+      totalPagar: 'totalPagar',
+      numeroControl: 'numeroControl',
+      tipoDte: 'tipoDte',
+      estado: 'estado',
+    };
+
+    const resolvedSortBy = sortBy && allowedSortFields[sortBy] ? allowedSortFields[sortBy] : 'createdAt';
+    const resolvedSortOrder = sortOrder === 'asc' ? 'asc' : 'desc';
+
+    const where: Record<string, unknown> = { tenantId };
 
     if (filters?.tipoDte) {
       where.tipoDte = filters.tipoDte;
@@ -311,7 +324,6 @@ export class DteService {
     }
 
     if (filters?.search) {
-      // SQL Server uses collation for case sensitivity, remove 'mode: insensitive'
       where.OR = [
         { numeroControl: { contains: filters.search } },
         { codigoGeneracion: { contains: filters.search } },
@@ -324,7 +336,7 @@ export class DteService {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [resolvedSortBy]: resolvedSortOrder },
         include: { cliente: true },
       }),
       this.prisma.dTE.count({ where }),

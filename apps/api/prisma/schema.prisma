@@ -60,6 +60,9 @@ model Tenant {
 
   // Import jobs
   importJobs         ImportJob[]
+
+  // Recurring invoice templates
+  recurringTemplates RecurringInvoiceTemplate[]
 }
 
 model User {
@@ -96,6 +99,7 @@ model Cliente {
   telefono      String?
   direccion     String  @db.NVarChar(Max)
   dtes          DTE[]
+  recurringTemplates RecurringInvoiceTemplate[]
 
   @@unique([tenantId, numDocumento])
   @@index([tenantId])
@@ -857,4 +861,63 @@ model ImportJob {
   updatedAt   DateTime @updatedAt
 
   @@index([tenantId])
+}
+
+// ============================================================================
+// RECURRING INVOICES
+// ============================================================================
+
+model RecurringInvoiceTemplate {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  nombre              String
+  descripcion         String?  @db.NVarChar(Max)
+  clienteId           String
+  cliente             Cliente  @relation(fields: [clienteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  tipoDte             String   @default("01")
+  interval            String   // DAILY, WEEKLY, MONTHLY, YEARLY
+  anchorDay           Int?     // Dia del mes (1-31) para MONTHLY
+  dayOfWeek           Int?     // 0-6 para WEEKLY (0=Domingo)
+
+  mode                String   @default("AUTO_DRAFT") // AUTO_DRAFT | AUTO_SEND
+  autoTransmit        Boolean  @default(false)
+
+  items               String   @db.NVarChar(Max) // JSON array of invoice items
+  notas               String?  @db.NVarChar(Max)
+
+  status              String   @default("ACTIVE") // ACTIVE, PAUSED, SUSPENDED_ERROR, CANCELLED
+  consecutiveFailures Int      @default(0)
+  lastError           String?  @db.NVarChar(Max)
+
+  nextRunDate         DateTime
+  lastRunDate         DateTime?
+  startDate           DateTime
+  endDate             DateTime?
+
+  history             RecurringInvoiceHistory[]
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([tenantId, status])
+  @@index([status, nextRunDate])
+}
+
+model RecurringInvoiceHistory {
+  id              String   @id @default(cuid())
+  templateId      String
+  template        RecurringInvoiceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  dteId           String?
+  status          String   // SUCCESS, FAILED, SKIPPED
+  error           String?  @db.NVarChar(Max)
+  runDate         DateTime
+
+  createdAt       DateTime @default(now())
+
+  @@index([templateId])
+  @@index([runDate])
 }

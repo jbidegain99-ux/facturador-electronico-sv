@@ -21,9 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Pencil, Trash2, User, Loader2, X } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, User, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
+import { Pagination } from '@/components/ui/pagination';
+import { PageSizeSelector } from '@/components/ui/page-size-selector';
 
 interface Cliente {
   id: string;
@@ -38,6 +40,14 @@ interface Cliente {
     municipio: string;
     complemento: string;
   };
+}
+
+interface ClientesResponse {
+  data: Cliente[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 interface ClienteForm {
@@ -72,6 +82,9 @@ const initialFormState: ClienteForm = {
   direccion: { departamento: '06', municipio: '14', complemento: '' },
 };
 
+type SortField = 'nombre' | 'numDocumento' | 'createdAt';
+type SortOrder = 'asc' | 'desc';
+
 export default function ClientesPage() {
   const toast = useToast();
 
@@ -79,6 +92,16 @@ export default function ClientesPage() {
   const [clientes, setClientes] = React.useState<Cliente[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Pagination state
+  const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(20);
+  const [total, setTotal] = React.useState(0);
+  const [totalPages, setTotalPages] = React.useState(1);
+
+  // Sort state
+  const [sortBy, setSortBy] = React.useState<SortField>('createdAt');
+  const [sortOrder, setSortOrder] = React.useState<SortOrder>('desc');
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -91,7 +114,7 @@ export default function ClientesPage() {
   const [deleteConfirm, setDeleteConfirm] = React.useState<string | null>(null);
   const [deleting, setDeleting] = React.useState(false);
 
-  // Fetch clientes on mount
+  // Fetch clientes
   const fetchClientes = React.useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -102,8 +125,14 @@ export default function ClientesPage() {
 
     try {
       setLoading(true);
-      const searchParam = search ? `?search=${encodeURIComponent(search)}` : '';
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes${searchParam}`, {
+      const params = new URLSearchParams();
+      params.set('page', page.toString());
+      params.set('limit', limit.toString());
+      params.set('sortBy', sortBy);
+      params.set('sortOrder', sortOrder);
+      if (search) params.set('search', search);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -115,8 +144,10 @@ export default function ClientesPage() {
         throw new Error(errorData.message || 'Error al cargar clientes');
       }
 
-      const data = await res.json();
-      setClientes(data);
+      const data: ClientesResponse = await res.json();
+      setClientes(data.data);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
       setError(null);
     } catch (err) {
       console.error('Error fetching clientes:', err);
@@ -124,19 +155,41 @@ export default function ClientesPage() {
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, page, limit, sortBy, sortOrder]);
 
   React.useEffect(() => {
     fetchClientes();
   }, [fetchClientes]);
 
-  // Debounced search
+  // Debounced search - reset to page 1
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      fetchClientes();
+      setPage(1);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, fetchClientes]);
+  }, [search]);
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortBy === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+    setPage(1);
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortBy !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    return sortOrder === 'asc'
+      ? <ArrowUp className="h-3 w-3 ml-1" />
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
 
   const openCreateModal = () => {
     setEditingCliente(null);
@@ -288,17 +341,20 @@ export default function ClientesPage() {
         </div>
       )}
 
-      {/* Search */}
+      {/* Search + Page Size */}
       <Card>
         <CardContent className="pt-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nombre, documento o correo..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nombre, documento o correo..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <PageSizeSelector value={limit} onChange={handleLimitChange} />
           </div>
         </CardContent>
       </Card>
@@ -311,84 +367,111 @@ export default function ClientesPage() {
               <SkeletonTable rows={8} />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Documento</TableHead>
-                  <TableHead>NRC</TableHead>
-                  <TableHead>Contacto</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clientes.length === 0 ? (
+            <>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      {search ? 'No se encontraron clientes con esa busqueda' : 'No hay clientes registrados. Crea el primero.'}
-                    </TableCell>
+                    <TableHead>
+                      <button
+                        className="flex items-center hover:text-foreground transition-colors"
+                        onClick={() => handleSort('nombre')}
+                      >
+                        Cliente
+                        {getSortIcon('nombre')}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        className="flex items-center hover:text-foreground transition-colors"
+                        onClick={() => handleSort('numDocumento')}
+                      >
+                        Documento
+                        {getSortIcon('numDocumento')}
+                      </button>
+                    </TableHead>
+                    <TableHead>NRC</TableHead>
+                    <TableHead>Contacto</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
-                ) : (
-                  clientes.map((cliente) => (
-                    <TableRow key={cliente.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                            <User className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <div className="font-medium">{cliente.nombre}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <Badge variant="outline" className="mb-1">
-                            {tipoDocumentoLabels[cliente.tipoDocumento] || cliente.tipoDocumento}
-                          </Badge>
-                          <div className="font-mono text-sm">{cliente.numDocumento}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {cliente.nrc ? (
-                          <span className="font-mono text-sm">{cliente.nrc}</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {cliente.telefono && <div>{cliente.telefono}</div>}
-                          {cliente.correo && (
-                            <div className="text-muted-foreground">{cliente.correo}</div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => openEditModal(cliente)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => setDeleteConfirm(cliente.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {clientes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        {search ? 'No se encontraron clientes con esa busqueda' : 'No hay clientes registrados. Crea el primero.'}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    clientes.map((cliente) => (
+                      <TableRow key={cliente.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                              <User className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <div className="font-medium">{cliente.nombre}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <Badge variant="outline" className="mb-1">
+                              {tipoDocumentoLabels[cliente.tipoDocumento] || cliente.tipoDocumento}
+                            </Badge>
+                            <div className="font-mono text-sm">{cliente.numDocumento}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {cliente.nrc ? (
+                            <span className="font-mono text-sm">{cliente.nrc}</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {cliente.telefono && <div>{cliente.telefono}</div>}
+                            {cliente.correo && (
+                              <div className="text-muted-foreground">{cliente.correo}</div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => openEditModal(cliente)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => setDeleteConfirm(cliente.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                showing={clientes.length}
+                onPageChange={setPage}
+              />
+            </>
           )}
         </CardContent>
       </Card>

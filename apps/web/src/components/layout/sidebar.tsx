@@ -13,6 +13,7 @@ import {
   ChevronRight,
   BarChart3,
   HelpCircle,
+  Repeat,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
@@ -20,6 +21,7 @@ import { FacturoLogo, FacturoIcon } from '@/components/brand';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Facturas', href: '/facturas', icon: FileText },
+  { name: 'Recurrentes', href: '/facturas/recurrentes', icon: Repeat },
   { name: 'Reportes', href: '/reportes', icon: BarChart3 },
   { name: 'Clientes', href: '/clientes', icon: Users },
   { name: 'Soporte', href: '/soporte', icon: HelpCircle },

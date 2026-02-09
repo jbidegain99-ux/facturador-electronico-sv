@@ -12,15 +12,30 @@ export default defineConfig({
     ['json', { outputFile: 'test-results/results.json' }]
   ],
   use: {
-    baseURL: process.env.TEST_URL || 'https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net',
+    baseURL: process.env.TEST_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   projects: [
     {
+      name: 'setup',
+      testDir: './tests/fixtures',
+      testMatch: /auth\.fixture\.ts/,
+    },
+    {
       name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './tests/.auth/user.json',
+      },
+      dependencies: ['setup'],
+      testDir: './tests/e2e',
+    },
+    {
+      name: 'qa-report',
       use: { ...devices['Desktop Chrome'] },
+      testDir: './tests/qa-report',
     },
   ],
 });

@@ -13,8 +13,10 @@ import { useToast } from '@/components/ui/toast';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { HaciendaConfigBanner, useHaciendaStatus } from '@/components/HaciendaConfigBanner';
 import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
-import { Plus, Search, Download, Eye, Ban, ChevronLeft, ChevronRight, Copy, FileText } from 'lucide-react';
+import { Plus, Search, Download, Eye, Ban, Copy, FileText, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { DTEStatus, TipoDte } from '@/types';
+import { Pagination } from '@/components/ui/pagination';
+import { PageSizeSelector } from '@/components/ui/page-size-selector';
 
 interface DTE {
   id: string;
@@ -52,6 +54,9 @@ export default function FacturasPage() {
   const [filterTipo, setFilterTipo] = React.useState<string>('all');
   const [filterStatus, setFilterStatus] = React.useState<string>('all');
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(20);
+  const [sortBy, setSortBy] = React.useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('desc');
   const [dtes, setDtes] = React.useState<DTE[]>([]);
   const [totalPages, setTotalPages] = React.useState(1);
   const [total, setTotal] = React.useState(0);
@@ -70,7 +75,9 @@ export default function FacturasPage() {
       setLoading(true);
       const params = new URLSearchParams();
       params.set('page', page.toString());
-      params.set('limit', '20');
+      params.set('limit', limit.toString());
+      params.set('sortBy', sortBy);
+      params.set('sortOrder', sortOrder);
 
       if (filterTipo !== 'all') params.set('tipoDte', filterTipo);
       if (filterStatus !== 'all') params.set('estado', filterStatus);
@@ -99,7 +106,7 @@ export default function FacturasPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, filterTipo, filterStatus, search]);
+  }, [page, limit, filterTipo, filterStatus, search, sortBy, sortOrder]);
 
   // Fetch on mount and when filters change
   React.useEffect(() => {
@@ -118,6 +125,28 @@ export default function FacturasPage() {
   React.useEffect(() => {
     setPage(1);
   }, [filterTipo, filterStatus]);
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder(field === 'createdAt' ? 'desc' : 'asc');
+    }
+    setPage(1);
+  };
+
+  const getSortIcon = (field: string) => {
+    if (sortBy !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    return sortOrder === 'asc'
+      ? <ArrowUp className="h-3 w-3 ml-1" />
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
 
   const handleDownload = async (dteId: string) => {
     const token = localStorage.getItem('token');
@@ -309,6 +338,7 @@ export default function FacturasPage() {
                 <SelectItem value="ANULADO">Anulado</SelectItem>
               </SelectContent>
             </Select>
+            <PageSizeSelector value={limit} onChange={handleLimitChange} />
           </div>
         </CardContent>
       </Card>
@@ -325,11 +355,35 @@ export default function FacturasPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Numero Control</TableHead>
+                    <TableHead>
+                      <button
+                        className="flex items-center hover:text-foreground transition-colors"
+                        onClick={() => handleSort('createdAt')}
+                      >
+                        Fecha
+                        {getSortIcon('createdAt')}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        className="flex items-center hover:text-foreground transition-colors"
+                        onClick={() => handleSort('numeroControl')}
+                      >
+                        Numero Control
+                        {getSortIcon('numeroControl')}
+                      </button>
+                    </TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">
+                      <button
+                        className="flex items-center justify-end hover:text-foreground transition-colors ml-auto"
+                        onClick={() => handleSort('totalPagar')}
+                      >
+                        Total
+                        {getSortIcon('totalPagar')}
+                      </button>
+                    </TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -421,36 +475,13 @@ export default function FacturasPage() {
               </Table>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    Mostrando {dtes.length} de {total} documentos
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Anterior
-                    </Button>
-                    <span className="text-sm">
-                      Pagina {page} de {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages}
-                    >
-                      Siguiente
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                showing={dtes.length}
+                onPageChange={setPage}
+              />
             </>
           )}
         </CardContent>

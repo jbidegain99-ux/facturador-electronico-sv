@@ -2,6 +2,21 @@ import { Injectable, NotFoundException, ConflictException, Logger } from '@nestj
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
+import { PaginationQueryDto, PaginatedResponse } from '../../common/dto';
+import { Cliente } from '@prisma/client';
+
+interface ClienteWhereInput {
+  tenantId: string;
+  OR?: Array<Record<string, Record<string, string>>>;
+}
+
+const ALLOWED_SORT_FIELDS: Record<string, string> = {
+  nombre: 'nombre',
+  numDocumento: 'numDocumento',
+  createdAt: 'createdAt',
+  tipoDocumento: 'tipoDocumento',
+  correo: 'correo',
+};
 
 @Injectable()
 export class ClientesService {
@@ -44,13 +59,20 @@ export class ClientesService {
     return cliente;
   }
 
-  async findAll(tenantId: string, search?: string) {
-    this.logger.log(`Finding all clientes for tenant ${tenantId}, search: ${search || 'none'}`);
+  async findAll(tenantId: string, query?: PaginationQueryDto): Promise<PaginatedResponse<Cliente>> {
+    const page = query?.page ?? 1;
+    const limit = query?.limit ?? 20;
+    const search = query?.search;
+    const sortBy = query?.sortBy && ALLOWED_SORT_FIELDS[query.sortBy] ? ALLOWED_SORT_FIELDS[query.sortBy] : 'createdAt';
+    const sortOrder = query?.sortOrder ?? 'desc';
 
-    const where: any = { tenantId };
+    this.logger.log(`Finding clientes for tenant ${tenantId}, page=${page}, limit=${limit}, search=${search || 'none'}, sort=${sortBy} ${sortOrder}`);
+
+    const skip = (page - 1) * limit;
+
+    const where: ClienteWhereInput = { tenantId };
 
     if (search) {
-      // SQL Server uses collation for case sensitivity, remove 'mode: insensitive'
       where.OR = [
         { nombre: { contains: search } },
         { numDocumento: { contains: search } },
@@ -58,13 +80,25 @@ export class ClientesService {
       ];
     }
 
-    const clientes = await this.prisma.cliente.findMany({
-      where,
-      orderBy: { nombre: 'asc' },
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.cliente.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      this.prisma.cliente.count({ where }),
+    ]);
 
-    this.logger.log(`Found ${clientes.length} clientes`);
-    return clientes;
+    this.logger.log(`Found ${total} clientes, returning ${data.length} results (page ${page})`);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(tenantId: string, id: string) {
@@ -104,7 +138,7 @@ export class ClientesService {
       }
     }
 
-    const updateData: any = { ...updateClienteDto };
+    const updateData: Record<string, unknown> = { ...updateClienteDto };
     if (updateClienteDto.direccion) {
       updateData.direccion = JSON.stringify(updateClienteDto.direccion);
     }

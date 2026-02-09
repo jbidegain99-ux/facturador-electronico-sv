@@ -16,6 +16,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ClientesService } from './clientes.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
+import { PaginationQueryDto } from '../../common/dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('clientes')
@@ -47,21 +48,25 @@ export class ClientesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar clientes del tenant' })
+  @ApiOperation({ summary: 'Listar clientes del tenant con paginacion' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Numero de pagina (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Registros por pagina (default: 20, max: 100)' })
   @ApiQuery({ name: 'search', required: false, description: 'Buscar por nombre, documento o correo' })
-  @ApiResponse({ status: 200, description: 'Lista de clientes' })
+  @ApiQuery({ name: 'sortBy', required: false, description: 'Campo para ordenar (nombre, numDocumento, createdAt)' })
+  @ApiQuery({ name: 'sortOrder', required: false, description: 'Orden: asc o desc (default: desc)' })
+  @ApiResponse({ status: 200, description: 'Lista paginada de clientes' })
   @ApiResponse({ status: 401, description: 'No autenticado' })
   async findAll(
     @CurrentUser() user: CurrentUserData,
-    @Query('search') search?: string,
+    @Query() query: PaginationQueryDto,
   ) {
-    this.logger.log(`User ${user.email} listing clientes, search: ${search || 'none'}`);
+    this.logger.log(`User ${user.email} listing clientes, page=${query.page}, limit=${query.limit}, search=${query.search || 'none'}`);
 
     if (!user.tenantId) {
       throw new ForbiddenException('Usuario no tiene tenant asignado');
     }
 
-    return this.clientesService.findAll(user.tenantId, search);
+    return this.clientesService.findAll(user.tenantId, query);
   }
 
   @Get(':id')

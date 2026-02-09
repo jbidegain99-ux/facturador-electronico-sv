@@ -147,9 +147,11 @@ export default function ClientesPage() {
       const data = await res.json();
       // Defensive: handle both {data: [...], total, ...} and plain array responses
       const items = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+      const parsedTotal = Number(data?.total);
+      const parsedTotalPages = Number(data?.totalPages);
       setClientes(items);
-      setTotal(typeof data?.total === 'number' ? data.total : items.length);
-      setTotalPages(typeof data?.totalPages === 'number' ? data.totalPages : 1);
+      setTotal(!isNaN(parsedTotal) ? parsedTotal : items.length);
+      setTotalPages(!isNaN(parsedTotalPages) && parsedTotalPages >= 1 ? parsedTotalPages : 1);
       setError(null);
     } catch (err) {
       console.error('Error fetching clientes:', err);

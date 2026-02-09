@@ -13,8 +13,6 @@ interface PaginationProps {
 }
 
 export function Pagination({ page, totalPages, total, showing, onPageChange }: PaginationProps) {
-  if (totalPages <= 1) return null;
-
   const getVisiblePages = (): number[] => {
     const pages: number[] = [];
     const maxVisible = 5;
@@ -40,69 +38,71 @@ export function Pagination({ page, totalPages, total, showing, onPageChange }: P
       <p className="text-sm text-muted-foreground">
         Mostrando {showing} de {total} registros
       </p>
-      <div className="flex items-center gap-1">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => onPageChange(1)}
-          disabled={page === 1}
-          title="Primera pagina"
-        >
-          <ChevronsLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => onPageChange(page - 1)}
-          disabled={page === 1}
-          title="Pagina anterior"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-
-        {visiblePages[0] > 1 && (
-          <span className="px-1 text-sm text-muted-foreground">...</span>
-        )}
-
-        {visiblePages.map((p) => (
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1">
           <Button
-            key={p}
-            variant={p === page ? 'default' : 'outline'}
+            variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={() => onPageChange(p)}
+            onClick={() => onPageChange(1)}
+            disabled={page === 1}
+            title="Primera pagina"
           >
-            {p}
+            <ChevronsLeft className="h-4 w-4" />
           </Button>
-        ))}
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+            title="Pagina anterior"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
 
-        {visiblePages[visiblePages.length - 1] < totalPages && (
-          <span className="px-1 text-sm text-muted-foreground">...</span>
-        )}
+          {visiblePages[0] > 1 && (
+            <span className="px-1 text-sm text-muted-foreground">...</span>
+          )}
 
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => onPageChange(page + 1)}
-          disabled={page === totalPages}
-          title="Pagina siguiente"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => onPageChange(totalPages)}
-          disabled={page === totalPages}
-          title="Ultima pagina"
-        >
-          <ChevronsRight className="h-4 w-4" />
-        </Button>
-      </div>
+          {visiblePages.map((p) => (
+            <Button
+              key={p}
+              variant={p === page ? 'default' : 'outline'}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onPageChange(p)}
+            >
+              {p}
+            </Button>
+          ))}
+
+          {visiblePages[visiblePages.length - 1] < totalPages && (
+            <span className="px-1 text-sm text-muted-foreground">...</span>
+          )}
+
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onPageChange(page + 1)}
+            disabled={page === totalPages}
+            title="Pagina siguiente"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onPageChange(totalPages)}
+            disabled={page === totalPages}
+            title="Ultima pagina"
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

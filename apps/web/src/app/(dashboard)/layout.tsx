@@ -51,7 +51,7 @@ export default function DashboardLayout({
       try {
         console.log('[Tenant] Fetching tenant data...');
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/tenants/current`,
+          `${process.env.NEXT_PUBLIC_API_URL}/tenants/me`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -292,38 +292,106 @@ Antes de merge a main:
 **Última actualización:** 7 de febrero de 2026  
 **Próxima revisión:** Después de completar FASE 0 (issues de QA)
 
-## Testing Suite - Sprint 1 & 2 (Feb 2026)
+## 🧪 Testing Suite - Sprint 1 & 2 (Febrero 2026)
 
 ### ✅ Logros
-- 88 backend tests implementados (Jest + mocks)
-- 25 E2E tests (Playwright)
-- CI/CD con GitHub Actions
-- Velocidad: 4s backend, ~2min E2E
+- **88 backend tests** implementados (Jest + mocks)
+- **25 E2E tests** (Playwright con Page Objects)
+- **Coverage**: 84% clientes, 77% recurring-invoices, 96% processors
+- **Velocidad**: 18.6s backend (9.6x mas rapido que objetivo)
+- **CI/CD**: GitHub Actions workflows configurados
 
-### 🎓 Lecciones Técnicas
+### 🎓 Lecciones Tecnicas Criticas
 
-1. **Monorepo tsconfig**: Jest debe usar tsconfig local (apps/api/tsconfig.json), 
-   no el root, para evitar errores de decorators de NestJS.
+#### 1. Monorepo tsconfig Resolution
+**Problema**: NestJS DI fallaba con errores TS18048 al ejecutar tests desde root.
+**Causa**: `jest.config.ts` usaba root `tsconfig.json` que no tiene `emitDecoratorMetadata: true`
+**Solucion**:
+```typescript
+// apps/api/jest.config.ts
+import { join } from 'path';
+export default {
+  transform: {
+    '^.+\\.ts$': ['ts-jest', {
+      tsconfig: join(__dirname, 'tsconfig.json'), // ← Usar tsconfig local
+    }],
+  },
+};
+```
+**Leccion**: En monorepos, tests deben usar tsconfig de la app especifica.
 
-2. **Multi-tenancy**: SIEMPRE filtrar por tenantId en queries. Validarlo en tests.
+#### 2. Multi-tenancy en Tests
+**Pattern**: SIEMPRE incluir `tenantId` en mocks y validar filtrado.
+```typescript
+// ✅ Correcto
+mockUser = { id: 'user-1', tenantId: 'tenant-1' };
+await service.findAll('tenant-1', query);
 
-3. **Redis opcional**: Scheduler/processor solo se activan si hay REDIS_URL. 
-   API funciona sin ellos para desarrollo.
+// ❌ Incorrecto (security issue)
+await service.findAll({});  // Retornaria datos de todos los tenants
+```
 
-4. **Playwright auth**: Setup project + storageState evita re-autenticar en cada test.
+#### 3. Redis Condicional (BullMQ)
+**Pattern**: Scheduler/processor solo se activan si existe `REDIS_URL`.
+```typescript
+// recurring-invoices.module.ts
+@Module({
+  imports: [
+    ...(process.env.REDIS_URL ? [BullModule.registerQueue(...)] : []),
+  ]
+})
+```
+**Beneficio**: API funciona sin Redis en desarrollo, scheduler solo en produccion.
 
-5. **Mock strategy**: 
-   - Services: mockear PrismaService
-   - Controllers: mockear Services
-   - Processors: mockear DTEService y MHService
+#### 4. Playwright Setup Project Pattern
+**Pattern**: Autenticar una vez, reusar sesion en todos los tests.
+```typescript
+// tests/fixtures/auth.fixture.ts
+test('authenticate', async ({ page }) => {
+  await page.goto('/login');
+  // ... login
+  await page.context().storageState({ path: '.auth/user.json' });
+});
+
+// playwright.config.ts - projects: setup -> chromium (con storageState)
+```
+**Beneficio**: 25 tests E2E sin re-autenticar → ahorro de ~2min.
+
+#### 5. Mock Strategy por Capa
+- **Services**: Mockear `PrismaService`
+- **Controllers**: Mockear `Services`
+- **Processors**: Mockear `DTEService` y `MHService`
+- **Nunca**: Mockear dependencias internas del modulo testeado
 
 ### 🐛 Problemas Resueltos
 
-- TS18048 "possibly undefined": Agregar nullish coalescing (??) en calculateNextRunDate
-- NestJS DI failures: tsconfig path en jest.config.ts
-- Flaky E2E tests: Usar locator.waitFor() antes de .click()
+1. **TS18048 "possibly undefined"**
+   - Error: `Record<string, jest.Mock>` con `noUncheckedIndexedAccess` del root tsconfig
+   - Fix: Usar `join(__dirname, 'tsconfig.json')` en jest.config.ts
 
-### 📈 Métricas
-- Coverage: >70% en módulos core
-- Velocidad: 4s backend (target: <3min) ✅
-- Flakiness: 0% después de ajustes
+2. **NestJS DI injection failure**
+   - Error: `this.prisma.cliente` era `undefined` en tests
+   - Causa: Root tsconfig sin `emitDecoratorMetadata` → NestJS no resuelve constructor params
+   - Fix: Mismo fix de tsconfig path
+
+3. **Coverage inconsistente**
+   - Error: `jest --coverage` no incluia todos los archivos
+   - Fix: `collectCoverageFrom` en jest.config con paths correctos
+
+### 📈 Metricas Finales
+
+| Metrica | Objetivo | Logrado | Status |
+|---------|----------|---------|--------|
+| Tests backend | 34 | 88 | ✅ 2.6x |
+| Tests E2E | 21 | 25 | ✅ 1.2x |
+| Coverage Sprint 1 | >70% | 84% | ✅ |
+| Coverage Sprint 2 | >70% | 77% | ✅ |
+| Velocidad backend | <3min | ~4s | ✅ |
+| Velocidad E2E | <5min | ~2min | ✅ |
+
+### 🔮 Mejoras Futuras
+- [ ] Agregar mutation testing (Stryker)
+- [ ] E2E tests con diferentes roles (admin, usuario, contador)
+- [ ] Performance tests con Artillery
+- [ ] Visual regression tests con Percy
+- [ ] Contract testing con Pact (API ↔ Frontend)

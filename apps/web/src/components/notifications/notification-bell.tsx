@@ -87,12 +87,17 @@ export function NotificationBell() {
         }
       );
 
-      if (res.ok) {
-        const data = await res.json();
+      if (!res.ok) {
+        if (res.status !== 404) console.warn(`[NotificationBell] /notifications/count returned ${res.status}`);
+        return;
+      }
+
+      const data = await res.json().catch(() => null);
+      if (data && typeof data.count === 'number') {
         setUnreadCount(data.count);
       }
     } catch (err) {
-      console.error('Error fetching notification count:', err);
+      console.warn('[NotificationBell] Error fetching notification count:', err);
     }
   };
 
@@ -109,12 +114,17 @@ export function NotificationBell() {
         }
       );
 
-      if (res.ok) {
-        const data = await res.json();
+      if (!res.ok) {
+        if (res.status !== 404) console.warn(`[NotificationBell] /notifications returned ${res.status}`);
+        return;
+      }
+
+      const data = await res.json().catch(() => null);
+      if (Array.isArray(data)) {
         setNotifications(data);
       }
     } catch (err) {
-      console.error('Error fetching notifications:', err);
+      console.warn('[NotificationBell] Error fetching notifications:', err);
     } finally {
       setLoading(false);
     }
@@ -123,6 +133,7 @@ export function NotificationBell() {
   const dismissNotification = async (id: string) => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) return;
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/dismiss`,
         {
@@ -136,13 +147,14 @@ export function NotificationBell() {
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (err) {
-      console.error('Error dismissing notification:', err);
+      console.warn('[NotificationBell] Error dismissing notification:', err);
     }
   };
 
   const dismissAll = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) return;
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/notifications/dismiss-all`,
         {
@@ -156,7 +168,7 @@ export function NotificationBell() {
         setUnreadCount(0);
       }
     } catch (err) {
-      console.error('Error dismissing all notifications:', err);
+      console.warn('[NotificationBell] Error dismissing all notifications:', err);
     }
   };
 

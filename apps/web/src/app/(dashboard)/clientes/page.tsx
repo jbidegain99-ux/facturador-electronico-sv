@@ -140,8 +140,8 @@ export default function ClientesPage() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Error al cargar clientes');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error al cargar clientes (${res.status})`);
       }
 
       const data: ClientesResponse = await res.json();
@@ -268,7 +268,7 @@ export default function ClientesPage() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || 'Error al guardar cliente');
       }
 
@@ -300,7 +300,7 @@ export default function ClientesPage() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || 'Error al eliminar cliente');
       }
 

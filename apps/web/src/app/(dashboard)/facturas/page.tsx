@@ -91,8 +91,8 @@ export default function FacturasPage() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Error al cargar facturas');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error al cargar facturas (${res.status})`);
       }
 
       const data: DTEResponse = await res.json();

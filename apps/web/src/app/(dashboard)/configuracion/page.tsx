@@ -73,7 +73,7 @@ export default function ConfiguracionPage() {
         ]);
 
         if (!tenantRes.ok) {
-          const errorData = await tenantRes.json();
+          const errorData = await tenantRes.json().catch(() => ({}));
           throw new Error(errorData.message || 'Error al cargar datos');
         }
 
@@ -130,7 +130,7 @@ export default function ConfiguracionPage() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || 'Error al cambiar modo demo');
       }
 
@@ -188,7 +188,7 @@ export default function ConfiguracionPage() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || 'Error al guardar');
       }
 

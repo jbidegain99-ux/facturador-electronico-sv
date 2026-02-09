@@ -190,7 +190,7 @@ export default function FacturaDetallePage() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || 'Error al anular');
       }
 

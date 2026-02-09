@@ -175,7 +175,7 @@ export default function RecurrentesPage() {
       );
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         throw new Error(err.message || `Error al ${labels[action]}`);
       }
 

@@ -74,12 +74,17 @@ export function Header() {
         }
       );
 
-      if (res.ok) {
-        const data = await res.json();
+      if (!res.ok) {
+        if (res.status !== 404) console.warn(`[Header] /notifications/count returned ${res.status}`);
+        return;
+      }
+
+      const data = await res.json().catch(() => null);
+      if (data && typeof data.count === 'number') {
         setUnreadCount(data.count);
       }
     } catch (err) {
-      console.error('Error fetching notification count:', err);
+      console.warn('[Header] Error fetching notification count:', err);
     }
   };
 
@@ -95,12 +100,17 @@ export function Header() {
         }
       );
 
-      if (res.ok) {
-        const data = await res.json();
+      if (!res.ok) {
+        if (res.status !== 404) console.warn(`[Header] /notifications returned ${res.status}`);
+        return;
+      }
+
+      const data = await res.json().catch(() => null);
+      if (Array.isArray(data)) {
         setNotifications(data);
       }
     } catch (err) {
-      console.error('Error fetching notifications:', err);
+      console.warn('[Header] Error fetching notifications:', err);
     }
   };
 
@@ -108,6 +118,7 @@ export function Header() {
     e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
+      if (!token) return;
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/dismiss`,
         {
@@ -121,13 +132,14 @@ export function Header() {
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (err) {
-      console.error('Error dismissing notification:', err);
+      console.warn('[Header] Error dismissing notification:', err);
     }
   };
 
   const dismissAll = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) return;
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/notifications/dismiss-all`,
         {
@@ -141,7 +153,7 @@ export function Header() {
         setUnreadCount(0);
       }
     } catch (err) {
-      console.error('Error dismissing all notifications:', err);
+      console.warn('[Header] Error dismissing all notifications:', err);
     }
   };
 

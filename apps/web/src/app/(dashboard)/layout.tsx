@@ -194,8 +194,8 @@ export default function DashboardLayout({
           return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const status: OnboardingStatus = await response.json();
+        // Parse response safely - non-JSON responses shouldn't crash the app
+        await response.json().catch(() => null);
 
         // No forced redirect - allow users to navigate freely
         // Individual pages will show HaciendaConfigBanner when needed

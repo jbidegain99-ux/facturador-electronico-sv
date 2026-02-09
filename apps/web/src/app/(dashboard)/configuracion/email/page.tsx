@@ -126,7 +126,7 @@ export default function EmailConfigPage() {
       );
 
       if (!res.ok) {
-        const error = await res.json();
+        const error = await res.json().catch(() => ({}));
         throw new Error(error.message || 'Error al guardar');
       }
 

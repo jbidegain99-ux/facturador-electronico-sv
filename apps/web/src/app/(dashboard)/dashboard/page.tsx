@@ -87,7 +87,7 @@ export default function DashboardPage() {
   // Show Hacienda banner if not configured and not in demo mode
   const showHaciendaBanner = !isLoadingHacienda && !isHaciendaConfigured && !demoMode;
 
-  // Fetch dashboard data
+  // Fetch dashboard data - each call is independent so one failure doesn't block others
   React.useEffect(() => {
     const fetchDashboardData = async () => {
       const token = localStorage.getItem('token');
@@ -99,33 +99,48 @@ export default function DashboardPage() {
       const headers = { Authorization: `Bearer ${token}` };
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
+      const safeFetch = async (url: string): Promise<Response | null> => {
+        try {
+          return await fetch(url, { headers });
+        } catch (err) {
+          console.warn(`[Dashboard] Failed to fetch ${url}:`, err);
+          return null;
+        }
+      };
+
       try {
         const [summaryRes, chartRes, recentRes, planRes] = await Promise.all([
-          fetch(`${baseUrl}/dte/stats/summary`, { headers }),
-          fetch(`${baseUrl}/dte/stats/by-date?groupBy=day`, { headers }),
-          fetch(`${baseUrl}/dte/recent?limit=5`, { headers }),
-          fetch(`${baseUrl}/plans/my-usage`, { headers }),
+          safeFetch(`${baseUrl}/dte/stats/summary`),
+          safeFetch(`${baseUrl}/dte/stats/by-date?groupBy=day`),
+          safeFetch(`${baseUrl}/dte/recent?limit=5`),
+          safeFetch(`${baseUrl}/plans/my-usage`),
         ]);
 
-        if (summaryRes.ok) {
-          setSummary(await summaryRes.json());
+        if (summaryRes?.ok) {
+          const data = await summaryRes.json().catch(() => null);
+          if (data) setSummary(data);
         }
 
-        if (chartRes.ok) {
-          const data = await chartRes.json();
-          // Take only last 7 days
-          setChartData(data.slice(-7));
+        if (chartRes?.ok) {
+          const data = await chartRes.json().catch(() => null);
+          if (Array.isArray(data)) {
+            setChartData(data.slice(-7));
+          }
         }
 
-        if (recentRes.ok) {
-          setRecentDTEs(await recentRes.json());
+        if (recentRes?.ok) {
+          const data = await recentRes.json().catch(() => null);
+          if (Array.isArray(data)) {
+            setRecentDTEs(data);
+          }
         }
 
-        if (planRes.ok) {
-          setPlanUsage(await planRes.json());
+        if (planRes?.ok) {
+          const data = await planRes.json().catch(() => null);
+          if (data) setPlanUsage(data);
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('[Dashboard] Error fetching dashboard data:', error);
       } finally {
         setIsLoading(false);
       }

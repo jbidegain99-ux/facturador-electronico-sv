@@ -184,8 +184,8 @@ export default function RecurrenteDetallePage() {
         { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
       );
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message);
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al ejecutar accion');
       }
       toast.success(`Accion ejecutada`);
       fetchTemplate();
@@ -221,8 +221,8 @@ export default function RecurrenteDetallePage() {
       );
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message);
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al guardar');
       }
 
       toast.success('Template actualizado');

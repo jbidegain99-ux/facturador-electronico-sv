@@ -24,11 +24,12 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.message || 'Credenciales invalidas');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Credenciales invalidas');
       }
+
+      const data = await res.json();
       localStorage.setItem('token', data.access_token);
 
       // Redirect based on user role

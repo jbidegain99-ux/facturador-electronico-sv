@@ -7,3 +7,8 @@ certs/
 dist/
 .next/
 .turbo/
+
+# Playwright
+tests/.auth/
+playwright-report/
+test-results/

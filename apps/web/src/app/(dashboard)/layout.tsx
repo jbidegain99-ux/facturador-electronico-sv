@@ -25,20 +25,31 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = React.useState(true);
+  const [isTenantReady, setIsTenantReady] = React.useState(false);
+  const [isUserReady, setIsUserReady] = React.useState(false);
 
   // Load tenant data on mount
   React.useEffect(() => {
     const loadTenantData = async () => {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        console.log('[Tenant] No token, skipping fetch');
+        setIsTenantReady(true);
+        return;
+      }
 
       // Only fetch if tenant is not already loaded
-      if (tenant?.nombre) return;
+      if (tenant?.nombre) {
+        console.log('[Tenant] Already loaded:', tenant.nombre);
+        setIsTenantReady(true);
+        return;
+      }
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
+        console.log('[Tenant] Fetching tenant data...');
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/tenants/current`,
           {
@@ -50,21 +61,25 @@ export default function DashboardLayout({
         );
 
         clearTimeout(timeoutId);
+        console.log('[Tenant] Response status:', response.status);
 
         if (response.ok) {
           const text = await response.text();
           if (text) {
             const data = JSON.parse(text);
+            console.log('[Tenant] Loaded:', data.nombre);
             setTenant(data);
           }
         }
       } catch (error) {
         clearTimeout(timeoutId);
         if (error instanceof DOMException && error.name === 'AbortError') {
-          console.error('Tenant fetch timed out');
+          console.error('[Tenant] Fetch timed out');
         } else {
-          console.error('Error loading tenant:', error);
+          console.error('[Tenant] Error:', error);
         }
+      } finally {
+        setIsTenantReady(true);
       }
     };
 
@@ -76,7 +91,9 @@ export default function DashboardLayout({
     const loadUserData = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
+        console.log('[Auth] No token, setting user to null');
         setUser(null);
+        setIsUserReady(true);
         return;
       }
 
@@ -84,6 +101,7 @@ export default function DashboardLayout({
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
+        console.log('[Auth] Fetching user profile...');
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
           {
@@ -95,11 +113,13 @@ export default function DashboardLayout({
         );
 
         clearTimeout(timeoutId);
+        console.log('[Auth] Response status:', response.status);
 
         if (response.ok) {
           const text = await response.text();
           if (text) {
             const data = JSON.parse(text);
+            console.log('[Auth] User loaded:', data.email);
             setUser({
               id: data.id,
               name: data.nombre,
@@ -107,19 +127,23 @@ export default function DashboardLayout({
               role: data.rol === 'ADMIN' ? 'admin' : 'user',
             });
           } else {
+            console.log('[Auth] Empty response body, setting user to null');
             setUser(null);
           }
         } else {
+          console.log('[Auth] Not authenticated (status:', response.status, ')');
           setUser(null);
         }
       } catch (error) {
         clearTimeout(timeoutId);
         setUser(null);
         if (error instanceof DOMException && error.name === 'AbortError') {
-          console.error('Auth profile fetch timed out');
+          console.error('[Auth] Profile fetch timed out');
         } else {
-          console.error('Error loading user:', error);
+          console.error('[Auth] Error:', error);
         }
+      } finally {
+        setIsUserReady(true);
       }
     };
 
@@ -188,8 +212,11 @@ export default function DashboardLayout({
     checkOnboarding();
   }, [pathname, router]);
 
-  // Show loading while checking onboarding status
-  if (isCheckingOnboarding && pathname !== '/onboarding' && pathname !== '/onboarding-hacienda') {
+  const isLoading = !isUserReady || !isTenantReady ||
+    (isCheckingOnboarding && pathname !== '/onboarding' && pathname !== '/onboarding-hacienda');
+
+  // Show loading while data is being fetched
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

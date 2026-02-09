@@ -1,0 +1,43 @@
+Hola Claude Code! Comenzamos Fase 2 COMPLETA del Facturador Electrónico SV.
+
+CONTEXTO:
+✅ Fase 0 y Fase 1 completadas (v0.3.0)
+✅ Sistema en producción con 350+ clientes
+✅ Frontend v22, Backend v4
+✅ Branch: feature/fase-2 (ya creado)
+
+SCOPE FASE 2 (3 sprints, 7 días):
+1. PAGINACIÓN en /clientes y /facturas (Día 1)
+2. FACTURACIÓN RECURRENTE con BullMQ (Día 2-4)
+3. MÓDULO CONTABLE BÁSICO (Día 5-6)
+4. TESTING COMPLETO (Día 7)
+
+INSTRUCCIONES:
+1. Lee tasks/prompt-fase-2-completo.md COMPLETO (es largo pero crítico)
+2. Lee tasks/architecture.md
+3. Lee tasks/session-2026-02-08-completa.md
+4. Lee tasks/lessons.md
+
+5. Genera plan detallado de Sprint 1 (Paginación):
+   - Cambios en backend (controller, service, dto)
+   - Cambios en frontend (components, hooks)
+   - Orden de implementación
+   - Tests a realizar
+
+6. ESPERA mi aprobación del plan Sprint 1
+
+7. Una vez aprobado, implementa Sprint 1 completo
+
+8. Después de Sprint 1, planea Sprint 2 (Recurrencia)
+
+METODOLOGÍA:
+- Plan first (SIEMPRE)
+- Subagent strategy
+- Self-improvement loop
+- Verification before done
+- Autonomous bug fixing
+
+PRIORIDAD SPRINT 1:
+CRÍTICA - Paginación en /clientes (10, 20, 50, 100 por página)
+
+¿Listo? Lee tasks/prompt-fase-2-completo.md y genera el plan de Sprint 1 (Paginación).

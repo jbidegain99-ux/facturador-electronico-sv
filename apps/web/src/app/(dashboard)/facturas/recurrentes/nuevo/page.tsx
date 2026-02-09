@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toast';
 import { ClienteSearch } from '@/components/facturas/cliente-search';
-import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Loader2, AlertCircle } from 'lucide-react';
 import type { Cliente } from '@/types';
 import Link from 'next/link';
 
@@ -34,6 +34,8 @@ export default function NuevoRecurrentePage() {
   const router = useRouter();
   const toast = useToast();
 
+  const [checkingApi, setCheckingApi] = React.useState(true);
+  const [apiUnavailable, setApiUnavailable] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [nombre, setNombre] = React.useState('');
   const [descripcion, setDescripcion] = React.useState('');
@@ -52,6 +54,27 @@ export default function NuevoRecurrentePage() {
   const [items, setItems] = React.useState<TemplateItem[]>([
     { descripcion: '', cantidad: 1, precioUnitario: 0, descuento: 0 },
   ]);
+
+  // Check if recurring invoices API is available
+  React.useEffect(() => {
+    const checkApi = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices?page=1&limit=1`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (res.status === 404) {
+          setApiUnavailable(true);
+        }
+      } catch {
+        setApiUnavailable(true);
+      } finally {
+        setCheckingApi(false);
+      }
+    };
+    checkApi();
+  }, []);
 
   const addItem = () => {
     setItems([...items, { descripcion: '', cantidad: 1, precioUnitario: 0, descuento: 0 }]);
@@ -143,6 +166,45 @@ export default function NuevoRecurrentePage() {
       setSaving(false);
     }
   };
+
+  if (checkingApi) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (apiUnavailable) {
+    return (
+      <div className="space-y-6 max-w-4xl">
+        <div className="flex items-center gap-4">
+          <Link href="/facturas/recurrentes">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">Nuevo Template Recurrente</h1>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <AlertCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
+            <p className="text-muted-foreground text-center">
+              El servicio de facturas recurrentes no esta disponible aun.
+            </p>
+            <Link href="/facturas/recurrentes" className="mt-4">
+              <Button variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">

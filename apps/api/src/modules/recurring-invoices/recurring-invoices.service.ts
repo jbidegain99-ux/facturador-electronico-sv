@@ -60,8 +60,8 @@ export class RecurringInvoicesService {
     tenantId: string,
     query: PaginationQueryDto & { status?: string },
   ): Promise<PaginatedResponse<TemplateWithRelations>> {
-    const page = query.page || 1;
-    const limit = query.limit || 20;
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(Math.max(1, Number(query.limit) || 20), 100);
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = { tenantId };
@@ -260,8 +260,8 @@ export class RecurringInvoicesService {
       throw new NotFoundException('Template no encontrado');
     }
 
-    const page = query.page || 1;
-    const limit = query.limit || 20;
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(Math.max(1, Number(query.limit) || 20), 100);
     const skip = (page - 1) * limit;
 
     const where = { templateId };

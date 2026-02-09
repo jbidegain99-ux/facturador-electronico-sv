@@ -1,0 +1,28 @@
+'use client';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MaskedInput = MaskedInput;
+const react_1 = require("react");
+function MaskedInput({ mask, value, onValueChange, id, name, required, placeholder, className, }) {
+    const applyMask = (0, react_1.useCallback)((raw) => {
+        const digits = raw.replace(/\D/g, '');
+        let result = '';
+        let digitIndex = 0;
+        for (let i = 0; i < mask.length && digitIndex < digits.length; i++) {
+            if (mask[i] === '9') {
+                result += digits[digitIndex];
+                digitIndex++;
+            }
+            else {
+                result += mask[i];
+                // If the current digit matches a separator position, skip
+            }
+        }
+        return result;
+    }, [mask]);
+    const handleChange = (e) => {
+        const masked = applyMask(e.target.value);
+        onValueChange(masked);
+    };
+    return (<input type="text" id={id} name={name} required={required} placeholder={placeholder} value={value} onChange={handleChange} className={className}/>);
+}

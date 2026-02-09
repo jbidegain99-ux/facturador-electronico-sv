@@ -9,6 +9,36 @@ import { useAppStore } from '@/store';
 import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle, FileUp } from 'lucide-react';
 import Link from 'next/link';
 
+const NRC_PATTERN = /^\d{1,7}(-\d)?$/;
+const PHONE_PATTERN = /^\d{4}-\d{4}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateConfigField(field: string, value: string): string {
+  switch (field) {
+    case 'nombre':
+      if (!value.trim()) return 'Este campo es requerido';
+      if (value.trim().length < 3) return 'El nombre debe tener al menos 3 caracteres';
+      return '';
+    case 'nrc':
+      if (!value) return '';
+      if (!NRC_PATTERN.test(value)) return 'NRC invalido (formato: 000000-0)';
+      return '';
+    case 'telefono':
+      if (!value) return '';
+      if (!PHONE_PATTERN.test(value)) return 'Formato invalido (debe ser 0000-0000)';
+      return '';
+    case 'correo':
+      if (!value) return '';
+      if (!EMAIL_PATTERN.test(value)) return 'El correo electronico no es valido';
+      return '';
+    case 'complemento':
+      if (value.length > 500) return 'La direccion no puede exceder 500 caracteres';
+      return '';
+    default:
+      return '';
+  }
+}
+
 interface TenantData {
   id: string;
   nombre: string;
@@ -36,6 +66,7 @@ export default function ConfiguracionPage() {
   const [togglingDemo, setTogglingDemo] = React.useState(false);
 
   // Form state
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
   const [formData, setFormData] = React.useState<Partial<TenantData>>({
     nombre: '',
     nit: '',
@@ -149,6 +180,8 @@ export default function ConfiguracionPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError(null);
     setSuccess(null);
+    const err = validateConfigField(field, value);
+    setFieldErrors(prev => ({ ...prev, [field]: err }));
   };
 
   const handleDireccionChange = (field: string, value: string) => {
@@ -158,12 +191,29 @@ export default function ConfiguracionPage() {
     }));
     setError(null);
     setSuccess(null);
+    const err = validateConfigField(field, value);
+    setFieldErrors(prev => ({ ...prev, [field]: err }));
   };
 
   const handleSave = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
       setError('No hay sesion activa');
+      return;
+    }
+
+    // Validate all editable fields
+    const errors: Record<string, string> = {};
+    errors.nombre = validateConfigField('nombre', formData.nombre || '');
+    errors.nrc = validateConfigField('nrc', formData.nrc || '');
+    errors.correo = validateConfigField('correo', formData.correo || '');
+    errors.telefono = validateConfigField('telefono', formData.telefono || '');
+    errors.complemento = validateConfigField('complemento', formData.direccion?.complemento || '');
+
+    const activeErrors = Object.entries(errors).filter(([, v]) => v);
+    if (activeErrors.length > 0) {
+      setFieldErrors(errors);
+      setError('Corrija los errores en el formulario');
       return;
     }
 
@@ -246,13 +296,17 @@ export default function ConfiguracionPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nombre / Razon Social</label>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Nombre / Razon Social *</label>
               <Input
                 placeholder="Mi Empresa S.A. de C.V."
                 value={formData.nombre || ''}
                 onChange={(e) => handleInputChange('nombre', e.target.value)}
+                className={fieldErrors.nombre ? 'border-red-500' : ''}
               />
+              {fieldErrors.nombre && (
+                <p className="text-xs text-red-500">{fieldErrors.nombre}</p>
+              )}
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -265,39 +319,55 @@ export default function ConfiguracionPage() {
                 />
                 <p className="text-xs text-muted-foreground">El NIT no se puede modificar</p>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-sm font-medium">NRC</label>
                 <Input
                   placeholder="000000-0"
                   value={formData.nrc || ''}
                   onChange={(e) => handleInputChange('nrc', e.target.value)}
+                  className={fieldErrors.nrc ? 'border-red-500' : ''}
                 />
+                {fieldErrors.nrc && (
+                  <p className="text-xs text-red-500">{fieldErrors.nrc}</p>
+                )}
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-sm font-medium">Correo Electronico</label>
               <Input
                 type="email"
                 placeholder="facturacion@empresa.com"
                 value={formData.correo || ''}
                 onChange={(e) => handleInputChange('correo', e.target.value)}
+                className={fieldErrors.correo ? 'border-red-500' : ''}
               />
+              {fieldErrors.correo && (
+                <p className="text-xs text-red-500">{fieldErrors.correo}</p>
+              )}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-sm font-medium">Telefono</label>
               <Input
                 placeholder="0000-0000"
                 value={formData.telefono || ''}
                 onChange={(e) => handleInputChange('telefono', e.target.value)}
+                className={fieldErrors.telefono ? 'border-red-500' : ''}
               />
+              {fieldErrors.telefono && (
+                <p className="text-xs text-red-500">{fieldErrors.telefono}</p>
+              )}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-sm font-medium">Direccion</label>
               <Input
                 placeholder="Direccion completa del establecimiento"
                 value={formData.direccion?.complemento || ''}
                 onChange={(e) => handleDireccionChange('complemento', e.target.value)}
+                className={fieldErrors.complemento ? 'border-red-500' : ''}
               />
+              {fieldErrors.complemento && (
+                <p className="text-xs text-red-500">{fieldErrors.complemento}</p>
+              )}
             </div>
           </CardContent>
         </Card>

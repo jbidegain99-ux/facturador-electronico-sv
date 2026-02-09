@@ -60,8 +60,8 @@ export class ClientesService {
   }
 
   async findAll(tenantId: string, query?: PaginationQueryDto): Promise<PaginatedResponse<Cliente>> {
-    const page = query?.page ?? 1;
-    const limit = query?.limit ?? 20;
+    const page = Math.max(1, Number(query?.page) || 1);
+    const limit = Math.min(Math.max(1, Number(query?.limit) || 20), 100);
     const search = query?.search;
     const sortBy = query?.sortBy && ALLOWED_SORT_FIELDS[query.sortBy] ? ALLOWED_SORT_FIELDS[query.sortBy] : 'createdAt';
     const sortOrder = query?.sortOrder ?? 'desc';

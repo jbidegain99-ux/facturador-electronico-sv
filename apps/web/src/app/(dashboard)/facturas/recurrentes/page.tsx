@@ -223,12 +223,14 @@ export default function RecurrentesPage() {
             Templates automaticos para generacion periodica de facturas
           </p>
         </div>
-        <Link href="/facturas/recurrentes/nuevo">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Template
-          </Button>
-        </Link>
+        {!fetchError && (
+          <Link href="/facturas/recurrentes/nuevo">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Template
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Tabs */}

@@ -82,6 +82,64 @@ const initialFormState: ClienteForm = {
   direccion: { departamento: '06', municipio: '14', complemento: '' },
 };
 
+// Validation patterns
+const NIT_PATTERN = /^\d{4}-\d{6}-\d{3}-\d{1}$/;
+const DUI_PATTERN = /^\d{8}-\d{1}$/;
+const NRC_PATTERN = /^\d{1,7}(-\d)?$/;
+const PHONE_PATTERN = /^\d{4}-\d{4}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateField(field: string, value: string, formData: ClienteForm): string {
+  switch (field) {
+    case 'numDocumento': {
+      if (!value.trim()) return 'Este campo es requerido';
+      const tipo = formData.tipoDocumento;
+      if (tipo === '36' && !NIT_PATTERN.test(value)) {
+        return 'Formato de NIT invalido (debe ser 0000-000000-000-0)';
+      }
+      if (tipo === '13' && !DUI_PATTERN.test(value)) {
+        return 'Formato de DUI invalido (debe ser 00000000-0)';
+      }
+      if (tipo === '03' && (value.length < 6 || value.length > 15)) {
+        return 'El pasaporte debe tener entre 6 y 15 caracteres';
+      }
+      return '';
+    }
+    case 'nombre':
+      if (!value.trim()) return 'Este campo es requerido';
+      if (value.trim().length < 3) return 'El nombre debe tener al menos 3 caracteres';
+      if (value.trim().length > 200) return 'El nombre no puede exceder 200 caracteres';
+      return '';
+    case 'nrc':
+      if (!value) return '';
+      if (!NRC_PATTERN.test(value)) return 'NRC invalido (maximo 7 digitos, formato: 000000-0)';
+      return '';
+    case 'telefono':
+      if (!value) return '';
+      if (!PHONE_PATTERN.test(value)) return 'Formato invalido (debe ser 0000-0000)';
+      return '';
+    case 'correo':
+      if (!value) return '';
+      if (!EMAIL_PATTERN.test(value)) return 'El correo electronico no es valido';
+      return '';
+    case 'complemento':
+      if (value.length > 500) return 'La direccion no puede exceder 500 caracteres';
+      return '';
+    default:
+      return '';
+  }
+}
+
+function isFormValid(formData: ClienteForm): boolean {
+  if (!formData.numDocumento.trim()) return false;
+  if (!formData.nombre.trim() || formData.nombre.trim().length < 3) return false;
+  if (validateField('numDocumento', formData.numDocumento, formData)) return false;
+  if (formData.nrc && validateField('nrc', formData.nrc, formData)) return false;
+  if (formData.telefono && validateField('telefono', formData.telefono, formData)) return false;
+  if (formData.correo && validateField('correo', formData.correo, formData)) return false;
+  return true;
+}
+
 type SortField = 'nombre' | 'numDocumento' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
 
@@ -107,6 +165,7 @@ export default function ClientesPage() {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingCliente, setEditingCliente] = React.useState<Cliente | null>(null);
   const [formData, setFormData] = React.useState<ClienteForm>(initialFormState);
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
   const [saving, setSaving] = React.useState(false);
   const [formError, setFormError] = React.useState<string | null>(null);
 
@@ -198,6 +257,7 @@ export default function ClientesPage() {
   const openCreateModal = () => {
     setEditingCliente(null);
     setFormData(initialFormState);
+    setFieldErrors({});
     setFormError(null);
     setIsModalOpen(true);
   };
@@ -221,12 +281,22 @@ export default function ClientesPage() {
     setIsModalOpen(false);
     setEditingCliente(null);
     setFormData(initialFormState);
+    setFieldErrors({});
     setFormError(null);
   };
 
   const handleFormChange = (field: keyof ClienteForm, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
     setFormError(null);
+    // Validate changed field
+    const error = validateField(field, value, newFormData);
+    setFieldErrors(prev => ({ ...prev, [field]: error }));
+    // Re-validate numDocumento when tipoDocumento changes
+    if (field === 'tipoDocumento' && newFormData.numDocumento) {
+      const docError = validateField('numDocumento', newFormData.numDocumento, newFormData);
+      setFieldErrors(prev => ({ ...prev, numDocumento: docError }));
+    }
   };
 
   const handleDireccionChange = (field: string, value: string) => {
@@ -234,6 +304,8 @@ export default function ClientesPage() {
       ...prev,
       direccion: { ...prev.direccion, [field]: value },
     }));
+    const error = validateField(field, value, formData);
+    setFieldErrors(prev => ({ ...prev, [field]: error }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -244,13 +316,20 @@ export default function ClientesPage() {
       return;
     }
 
-    // Validation
-    if (!formData.numDocumento.trim()) {
-      setFormError('El numero de documento es requerido');
-      return;
-    }
-    if (!formData.nombre.trim()) {
-      setFormError('El nombre es requerido');
+    // Validate all fields
+    const errors: Record<string, string> = {};
+    errors.numDocumento = validateField('numDocumento', formData.numDocumento, formData);
+    errors.nombre = validateField('nombre', formData.nombre, formData);
+    errors.nrc = validateField('nrc', formData.nrc, formData);
+    errors.telefono = validateField('telefono', formData.telefono, formData);
+    errors.correo = validateField('correo', formData.correo, formData);
+    errors.complemento = validateField('complemento', formData.direccion.complemento, formData);
+
+    // Filter out empty errors
+    const activeErrors = Object.entries(errors).filter(([, v]) => v);
+    if (activeErrors.length > 0) {
+      setFieldErrors(errors);
+      setFormError('Corrija los errores en el formulario');
       return;
     }
 
@@ -520,68 +599,92 @@ export default function ClientesPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-sm font-medium">Numero Documento *</label>
                 <Input
-                  placeholder="0000-000000-000-0"
+                  placeholder={formData.tipoDocumento === '36' ? '0000-000000-000-0' : formData.tipoDocumento === '13' ? '00000000-0' : 'Numero de documento'}
                   value={formData.numDocumento}
                   onChange={(e) => handleFormChange('numDocumento', e.target.value)}
+                  className={fieldErrors.numDocumento ? 'border-red-500' : ''}
                 />
+                {fieldErrors.numDocumento && (
+                  <p className="text-xs text-red-500">{fieldErrors.numDocumento}</p>
+                )}
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-sm font-medium">Nombre / Razon Social *</label>
               <Input
                 placeholder="Nombre del cliente"
                 value={formData.nombre}
                 onChange={(e) => handleFormChange('nombre', e.target.value)}
+                className={fieldErrors.nombre ? 'border-red-500' : ''}
               />
+              {fieldErrors.nombre && (
+                <p className="text-xs text-red-500">{fieldErrors.nombre}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-sm font-medium">NRC</label>
                 <Input
-                  placeholder="0000000"
+                  placeholder="000000-0"
                   value={formData.nrc}
                   onChange={(e) => handleFormChange('nrc', e.target.value)}
+                  className={fieldErrors.nrc ? 'border-red-500' : ''}
                 />
+                {fieldErrors.nrc && (
+                  <p className="text-xs text-red-500">{fieldErrors.nrc}</p>
+                )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-sm font-medium">Telefono</label>
                 <Input
                   placeholder="0000-0000"
                   value={formData.telefono}
                   onChange={(e) => handleFormChange('telefono', e.target.value)}
+                  className={fieldErrors.telefono ? 'border-red-500' : ''}
                 />
+                {fieldErrors.telefono && (
+                  <p className="text-xs text-red-500">{fieldErrors.telefono}</p>
+                )}
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-sm font-medium">Correo Electronico</label>
               <Input
                 type="email"
                 placeholder="cliente@ejemplo.com"
                 value={formData.correo}
                 onChange={(e) => handleFormChange('correo', e.target.value)}
+                className={fieldErrors.correo ? 'border-red-500' : ''}
               />
+              {fieldErrors.correo && (
+                <p className="text-xs text-red-500">{fieldErrors.correo}</p>
+              )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-sm font-medium">Direccion</label>
               <Input
                 placeholder="Direccion completa"
                 value={formData.direccion.complemento}
                 onChange={(e) => handleDireccionChange('complemento', e.target.value)}
+                className={fieldErrors.complemento ? 'border-red-500' : ''}
               />
+              {fieldErrors.complemento && (
+                <p className="text-xs text-red-500">{fieldErrors.complemento}</p>
+              )}
             </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeModal}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving || !isFormValid(formData)}>
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

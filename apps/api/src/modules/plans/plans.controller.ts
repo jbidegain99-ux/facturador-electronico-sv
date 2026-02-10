@@ -115,4 +115,13 @@ export class PlansController {
     }
     return this.plansService.getTenantUsage(user.tenantId);
   }
+
+  @Get('features')
+  @ApiOperation({ summary: 'Obtener features del plan actual del tenant' })
+  async getFeatures(@CurrentUser() user: CurrentUserData) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de empresas pueden consultar features del plan');
+    }
+    return this.plansService.getTenantFeatures(user.tenantId);
+  }
 }

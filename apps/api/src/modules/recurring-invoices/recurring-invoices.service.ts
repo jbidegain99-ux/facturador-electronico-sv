@@ -18,6 +18,17 @@ export class RecurringInvoicesService {
 
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Get the plan code for a tenant (used for feature gating)
+   */
+  async getTenantPlanCode(tenantId: string): Promise<string> {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { plan: true },
+    });
+    return tenant?.plan ?? 'DEMO';
+  }
+
   async create(tenantId: string, dto: CreateTemplateDto): Promise<RecurringInvoiceTemplate> {
     // Verify client belongs to tenant
     const cliente = await this.prisma.cliente.findFirst({

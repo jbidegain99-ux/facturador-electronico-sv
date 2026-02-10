@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePlanDto, UpdatePlanDto } from './dto';
+import { getPlanFeatures, PlanFeatures } from '../../common/plan-features';
 
 @Injectable()
 export class PlansService {
@@ -221,6 +222,15 @@ export class PlansService {
     };
   }
 
+  async getTenantFeatures(tenantId: string): Promise<PlanFeatures & { planCode: string }> {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { plan: true },
+    });
+    const planCode = tenant?.plan ?? 'DEMO';
+    return { ...getPlanFeatures(planCode), planCode };
+  }
+
   async checkLimit(tenantId: string, type: 'dte' | 'user' | 'cliente'): Promise<boolean> {
     const usage = await this.getTenantUsage(tenantId);
 
@@ -316,6 +326,7 @@ export class PlansService {
           'soporte_prioritario',
           'api_access',
           'multi_sucursal',
+          'recurring_invoices',
         ]),
         precioMensual: 79.99,
         precioAnual: 799.99,
@@ -337,6 +348,7 @@ export class PlansService {
           'multi_sucursal',
           'integraciones',
           'white_label',
+          'recurring_invoices',
         ]),
         precioMensual: 199.99,
         precioAnual: 1999.99,

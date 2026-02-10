@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
   ForbiddenException,
+  ServiceUnavailableException,
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
@@ -16,6 +17,7 @@ import { RecurringInvoicesService } from './recurring-invoices.service';
 import { CreateTemplateDto, UpdateTemplateDto } from './dto';
 import { PaginationQueryDto } from '../../common/dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { getPlanFeatures } from '../../common/plan-features';
 
 @ApiTags('recurring-invoices')
 @Controller('recurring-invoices')
@@ -33,14 +35,26 @@ export class RecurringInvoicesController {
     return user.tenantId;
   }
 
+  private async ensureRecurringAccess(tenantId: string): Promise<void> {
+    const planCode = await this.service.getTenantPlanCode(tenantId);
+    const features = getPlanFeatures(planCode);
+    if (!features.recurringInvoices) {
+      throw new ForbiddenException(
+        'Las facturas recurrentes requieren el plan Pro. Actualiza tu plan para acceder a esta funcionalidad.',
+      );
+    }
+  }
+
   @Post()
   @ApiOperation({ summary: 'Crear template de factura recurrente' })
   @ApiResponse({ status: 201, description: 'Template creado' })
+  @ApiResponse({ status: 403, description: 'Plan no permite facturas recurrentes' })
   async create(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: CreateTemplateDto,
   ) {
     const tenantId = this.ensureTenant(user);
+    await this.ensureRecurringAccess(tenantId);
     this.logger.log(`User ${user.email} creating recurring template`);
     return this.service.create(tenantId, dto);
   }
@@ -77,6 +91,7 @@ export class RecurringInvoicesController {
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar template' })
   @ApiResponse({ status: 200, description: 'Template actualizado' })
+  @ApiResponse({ status: 403, description: 'Plan no permite facturas recurrentes' })
   @ApiResponse({ status: 404, description: 'Template no encontrado' })
   async update(
     @CurrentUser() user: CurrentUserData,
@@ -84,6 +99,7 @@ export class RecurringInvoicesController {
     @Body() dto: UpdateTemplateDto,
   ) {
     const tenantId = this.ensureTenant(user);
+    await this.ensureRecurringAccess(tenantId);
     this.logger.log(`User ${user.email} updating recurring template ${id}`);
     return this.service.update(tenantId, id, dto);
   }
@@ -127,16 +143,22 @@ export class RecurringInvoicesController {
   @Post(':id/trigger')
   @ApiOperation({ summary: 'Ejecutar template manualmente' })
   @ApiResponse({ status: 200, description: 'Ejecucion encolada' })
+  @ApiResponse({ status: 503, description: 'Redis no configurado' })
   async trigger(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
   ) {
     const tenantId = this.ensureTenant(user);
+    await this.ensureRecurringAccess(tenantId);
+
+    if (!process.env.REDIS_URL) {
+      throw new ServiceUnavailableException(
+        'Generacion automatica no disponible. Redis no configurado.',
+      );
+    }
+
     this.logger.log(`User ${user.email} manually triggering template ${id}`);
-    // Verify template exists and belongs to tenant
     const template = await this.service.findOne(tenantId, id);
-    // Import InjectQueue at module level would add complexity;
-    // Instead, delegate to service which can handle queue or direct execution
     return { message: 'Template encolado para ejecucion', templateId: template.id };
   }
 

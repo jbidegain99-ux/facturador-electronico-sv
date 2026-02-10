@@ -18,21 +18,24 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
+import { usePlanFeatures } from '@/hooks/use-plan-features';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Facturas', href: '/facturas', icon: FileText },
-  { name: 'Recurrentes', href: '/facturas/recurrentes', icon: Repeat },
-  { name: 'Reportes', href: '/reportes', icon: BarChart3 },
-  { name: 'Clientes', href: '/clientes', icon: Users },
-  { name: 'Catalogo', href: '/catalogo', icon: Package },
-  { name: 'Soporte', href: '/soporte', icon: HelpCircle },
-  { name: 'Configuracion', href: '/configuracion', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, proBadge: false },
+  { name: 'Facturas', href: '/facturas', icon: FileText, proBadge: false },
+  { name: 'Recurrentes', href: '/facturas/recurrentes', icon: Repeat, proBadge: true },
+  { name: 'Reportes', href: '/reportes', icon: BarChart3, proBadge: false },
+  { name: 'Clientes', href: '/clientes', icon: Users, proBadge: false },
+  { name: 'Catalogo', href: '/catalogo', icon: Package, proBadge: false },
+  { name: 'Soporte', href: '/soporte', icon: HelpCircle, proBadge: false },
+  { name: 'Configuracion', href: '/configuracion', icon: Settings, proBadge: false },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useAppStore();
+  const { features } = usePlanFeatures();
+  const showProBadge = !features.recurringInvoices;
 
   return (
     <aside
@@ -98,7 +101,16 @@ export function Sidebar() {
               )}
             >
               <item.icon className="h-5 w-5 shrink-0" />
-              {sidebarOpen && <span>{item.name}</span>}
+              {sidebarOpen && (
+                <span className="flex items-center gap-2">
+                  {item.name}
+                  {item.proBadge && showProBadge && (
+                    <span className="text-[10px] font-bold bg-purple-600 text-white px-1.5 py-0.5 rounded-full leading-none">
+                      PRO
+                    </span>
+                  )}
+                </span>
+              )}
             </Link>
           );
         })}

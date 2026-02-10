@@ -12,6 +12,7 @@ import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
 import { formatDate } from '@/lib/utils';
+import { usePlanFeatures } from '@/hooks/use-plan-features';
 import {
   Plus,
   Search,
@@ -24,6 +25,9 @@ import {
   ArrowUp,
   ArrowDown,
   Repeat,
+  Star,
+  Check,
+  Rocket,
 } from 'lucide-react';
 
 interface RecurringTemplate {
@@ -84,11 +88,70 @@ const TABS = [
   { key: 'CANCELLED', label: 'Canceladas' },
 ];
 
+function UpsellBanner() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Repeat className="h-6 w-6" />
+          Facturas Recurrentes
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Templates automaticos para generacion periodica de facturas
+        </p>
+      </div>
+
+      <Card className="max-w-2xl mx-auto border-purple-500/30">
+        <CardContent className="p-8 text-center space-y-6">
+          <div className="mx-auto w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center">
+            <Star className="h-8 w-8 text-purple-400" />
+          </div>
+
+          <div>
+            <h2 className="text-xl font-bold">
+              Facturas Recurrentes — Plan Pro
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              Automatiza tu facturacion con templates recurrentes que se generan automaticamente.
+            </p>
+          </div>
+
+          <div className="text-left max-w-md mx-auto space-y-3">
+            {[
+              'Crea templates de factura reutilizables',
+              'Generacion automatica (diaria, semanal, mensual)',
+              'Historial completo de ejecuciones',
+              'Pausar y reanudar en cualquier momento',
+            ].map((feature) => (
+              <div key={feature} className="flex items-center gap-3">
+                <Check className="h-5 w-5 text-green-400 shrink-0" />
+                <span className="text-sm">{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          <Link href="/configuracion">
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Rocket className="mr-2 h-5 w-5" />
+              Actualizar a Plan Pro
+            </Button>
+          </Link>
+
+          <p className="text-xs text-muted-foreground">
+            Contacta a soporte para mas informacion sobre planes y precios.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function RecurrentesPage() {
   const toast = useToast();
   const toastRef = React.useRef(toast);
   toastRef.current = toast;
   const { confirm, ConfirmDialog } = useConfirm();
+  const { features, loading: planLoading } = usePlanFeatures();
 
   const [search, setSearch] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('');
@@ -207,6 +270,11 @@ export default function RecurrentesPage() {
     setLimit(newLimit);
     setPage(1);
   };
+
+  // Show upsell banner if plan doesn't support recurring invoices
+  if (!planLoading && !features.recurringInvoices) {
+    return <UpsellBanner />;
+  }
 
   return (
     <div className="space-y-6">

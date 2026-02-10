@@ -12,3 +12,18 @@ dist/
 tests/.auth/
 playwright-report/
 test-results/
+
+# Coverage reports
+apps/api/coverage/
+coverage/
+
+# Temporary prompt files (Claude Code)
+CLAUDE_CODE_*.md
+
+# Logs
+web-logs.zip
+*.log
+
+# IDE
+.vscode/
+.idea/

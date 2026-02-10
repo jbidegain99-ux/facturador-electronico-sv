@@ -289,8 +289,8 @@ Antes de merge a main:
 
 ---
 
-**Última actualización:** 7 de febrero de 2026  
-**Próxima revisión:** Después de completar FASE 0 (issues de QA)
+**Última actualización:** 9 de febrero de 2026
+**Próxima revisión:** Después de completar FASE 1 (Catálogo de Inventarios)
 
 ## 🧪 Testing Suite - Sprint 1 & 2 (Febrero 2026)
 
@@ -395,3 +395,36 @@ test('authenticate', async ({ page }) => {
 - [ ] Performance tests con Artillery
 - [ ] Visual regression tests con Percy
 - [ ] Contract testing con Pact (API ↔ Frontend)
+
+---
+
+## Session 2026-02-09 — Production Stabilization
+
+### Lesson 6: React useCallback + Toast = Infinite Loop
+**Problem**: Including `toast` from useToast() in useCallback dependency arrays creates infinite loops when toast changes context state.
+**Solution**: Use toastRef pattern — `const toastRef = useRef(toast); toastRef.current = toast;`
+**Files affected**: Any component using useToast() + useCallback/useEffect
+
+### Lesson 7: Always Handle 404 as "Endpoint Not Available"
+**Problem**: SaaS apps evolve — not all API versions have all endpoints. Unhandled 404s crash the entire app.
+**Solution**: Every fetch must handle 404 gracefully with empty/error state. Use `.json().catch(() => ({}))` for safe parsing.
+
+### Lesson 8: Defensive API Response Parsing
+**Problem**: `data.data.length` crashes if API response shape is unexpected.
+**Solution**: `const items = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];`
+
+### Lesson 9: Query Params Are Strings
+**Problem**: URL params arrive as strings to NestJS services, causing Prisma take/skip to malfunction.
+**Solution**: Always `Number()` convert with `Math.max/Math.min` clamping before passing to ORM.
+
+### Lesson 10: Audit Shared Components When Fixing Crashes
+**Problem**: A crash in layout.tsx breaks ALL pages, not just the one visibly broken.
+**Solution**: When debugging crashes, check every fetch in layout, sidebar, header, and providers — not just the page component.
+
+### Lesson 11: Deploy API Before Web
+**Problem**: Web v22-v23 deployed before API had the endpoints they needed, causing cascading failures.
+**Solution**: Always deploy API first, verify endpoints with curl, then deploy web.
+
+### Lesson 12: Don't Commit Coverage/Temp Files
+**Problem**: `git add -A` committed coverage/, .md prompts, and .zip files to repo (71,542 lines of junk).
+**Solution**: Update .gitignore BEFORE committing. Use `git add -p` or explicit paths for commits.

@@ -35,12 +35,13 @@ describe('DteController', () => {
   });
 
   describe('findAll', () => {
-    it('should parse page and limit from query strings', async () => {
+    it('should parse page and limit from query via PaginationQueryDto', async () => {
       const mockReq = { user: { tenantId: 'tenant-1' } };
 
       await controller.findAll(
         mockReq as Parameters<typeof controller.findAll>[0],
-        '2', '10', undefined, undefined, undefined, undefined, undefined,
+        { page: 2, limit: 10 },
+        undefined, undefined,
       );
 
       expect(mockDteService.findByTenant).toHaveBeenCalledWith(
@@ -54,7 +55,8 @@ describe('DteController', () => {
 
       await controller.findAll(
         mockReq as Parameters<typeof controller.findAll>[0],
-        '1', '500', undefined, undefined, undefined, undefined, undefined,
+        { page: 1, limit: 500 },
+        undefined, undefined,
       );
 
       expect(mockDteService.findByTenant).toHaveBeenCalledWith(
@@ -68,7 +70,8 @@ describe('DteController', () => {
 
       await controller.findAll(
         mockReq as Parameters<typeof controller.findAll>[0],
-        undefined, undefined, '01', 'PROCESADO', 'test', undefined, undefined,
+        { search: 'test' },
+        '01', 'PROCESADO',
       );
 
       expect(mockDteService.findByTenant).toHaveBeenCalledWith(
@@ -83,7 +86,8 @@ describe('DteController', () => {
 
       await controller.findAll(
         mockReq as Parameters<typeof controller.findAll>[0],
-        undefined, undefined, undefined, undefined, undefined, 'totalPagar', 'asc',
+        { sortBy: 'totalPagar', sortOrder: 'asc' },
+        undefined, undefined,
       );
 
       expect(mockDteService.findByTenant).toHaveBeenCalledWith(
@@ -92,16 +96,33 @@ describe('DteController', () => {
       );
     });
 
-    it('should default limit to 20 when not provided', async () => {
+    it('should default page to 1 and limit to 20 when not provided', async () => {
       const mockReq = { user: { tenantId: 'tenant-1' } };
 
       await controller.findAll(
         mockReq as Parameters<typeof controller.findAll>[0],
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        {},
+        undefined, undefined,
       );
 
       expect(mockDteService.findByTenant).toHaveBeenCalledWith(
         'tenant-1', 1, 20,
+        expect.anything(), undefined, undefined,
+      );
+    });
+
+    it('should handle Number() conversion for string page/limit values', async () => {
+      const mockReq = { user: { tenantId: 'tenant-1' } };
+
+      // Simulate raw string values that might bypass class-transformer
+      await controller.findAll(
+        mockReq as Parameters<typeof controller.findAll>[0],
+        { page: '3' as unknown as number, limit: '15' as unknown as number },
+        undefined, undefined,
+      );
+
+      expect(mockDteService.findByTenant).toHaveBeenCalledWith(
+        'tenant-1', 3, 15,
         expect.anything(), undefined, undefined,
       );
     });

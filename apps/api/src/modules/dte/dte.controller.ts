@@ -4,6 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { DteService } from './dte.service';
 import { PdfService } from './pdf.service';
+import { PaginationQueryDto } from '../../common/dto';
 
 interface AuthRequest extends Request {
   user: {
@@ -56,22 +57,19 @@ export class DteController {
   @ApiQuery({ name: 'sortOrder', required: false, description: 'Orden: asc o desc (default: desc)' })
   findAll(
     @Request() req: AuthRequest,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: PaginationQueryDto,
     @Query('tipoDte') tipoDte?: string,
     @Query('estado') estado?: string,
-    @Query('search') search?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: string,
   ) {
-    const parsedLimit = limit ? Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100) : 20;
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(Math.max(1, Number(query.limit) || 20), 100);
     return this.dteService.findByTenant(
       req.user.tenantId,
-      page ? parseInt(page, 10) : 1,
-      parsedLimit,
-      { tipoDte, estado, search },
-      sortBy,
-      sortOrder as 'asc' | 'desc' | undefined,
+      page,
+      limit,
+      { tipoDte, estado, search: query.search },
+      query.sortBy,
+      query.sortOrder,
     );
   }
 

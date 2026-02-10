@@ -95,10 +95,14 @@ export default function FacturasPage() {
         throw new Error(errorData.message || `Error al cargar facturas (${res.status})`);
       }
 
-      const data: DTEResponse = await res.json();
-      setDtes(data.data);
-      setTotalPages(data.totalPages);
-      setTotal(data.total);
+      const data = await res.json();
+      // Defensive: handle both {data: [...], total, ...} and plain array responses
+      const items = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+      const parsedTotal = Number(data?.total);
+      const parsedTotalPages = Number(data?.totalPages);
+      setDtes(items);
+      setTotal(!isNaN(parsedTotal) ? parsedTotal : items.length);
+      setTotalPages(!isNaN(parsedTotalPages) && parsedTotalPages >= 1 ? parsedTotalPages : 1);
       setError(null);
     } catch (err) {
       console.error('Error fetching DTEs:', err);

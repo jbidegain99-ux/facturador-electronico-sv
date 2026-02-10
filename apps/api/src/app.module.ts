@@ -21,6 +21,7 @@ import { BackupsModule } from './modules/backups/backups.module';
 import { HaciendaModule } from './modules/hacienda/hacienda.module';
 import { MigrationModule } from './modules/migration/migration.module';
 import { RecurringInvoicesModule } from './modules/recurring-invoices/recurring-invoices.module';
+import { CatalogItemsModule } from './modules/catalog-items/catalog-items.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
@@ -53,6 +54,7 @@ const imports: NestImport[] = [
   HaciendaModule,
   MigrationModule,
   RecurringInvoicesModule,
+  CatalogItemsModule,
 ];
 
 if (process.env.REDIS_URL) {

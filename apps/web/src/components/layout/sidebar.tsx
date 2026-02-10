@@ -14,6 +14,7 @@ import {
   BarChart3,
   HelpCircle,
   Repeat,
+  Package,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Recurrentes', href: '/facturas/recurrentes', icon: Repeat },
   { name: 'Reportes', href: '/reportes', icon: BarChart3 },
   { name: 'Clientes', href: '/clientes', icon: Users },
+  { name: 'Catalogo', href: '/catalogo', icon: Package },
   { name: 'Soporte', href: '/soporte', icon: HelpCircle },
   { name: 'Configuracion', href: '/configuracion', icon: Settings },
 ];

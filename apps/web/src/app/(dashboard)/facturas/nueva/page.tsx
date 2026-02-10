@@ -10,10 +10,9 @@ import {
   Send,
   Loader2,
   CheckCircle2,
-  Keyboard,
   Sparkles,
   Files,
-  Star,
+  Calculator,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,26 +26,38 @@ import { ClienteSearch } from '@/components/facturas/cliente-search';
 import { CatalogSearch } from '@/components/facturas/catalog-search';
 import type { CatalogItem } from '@/components/facturas/catalog-search';
 import { ItemsTable } from '@/components/facturas/items-table';
-import { TotalesCard } from '@/components/facturas/totales-card';
 import { FacturaPreview } from '@/components/facturas/factura-preview';
 import { NuevoClienteModal } from '@/components/facturas/nuevo-cliente-modal';
 import { PlantillasPanel, GuardarPlantillaModal } from '@/components/facturas/plantillas-panel';
-import { FavoritosPanel, AddToFavoritesButton } from '@/components/facturas/favoritos-panel';
+import { FavoritosPanel } from '@/components/facturas/favoritos-panel';
 import { useTemplatesStore, InvoiceTemplate, FavoriteItem } from '@/store/templates';
 import { useKeyboardShortcuts, getShortcutDisplay } from '@/hooks/use-keyboard-shortcuts';
 import { useToast } from '@/components/ui/toast';
-import { cn, getTipoDteName } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import type { Cliente, ItemFactura } from '@/types';
 
-// Auto-save key
+// ── Constants ──────────────────────────────────────────────────────
 const DRAFT_KEY = 'factura-draft';
 const AUTOSAVE_INTERVAL = 30000; // 30 seconds
 
+const CONDICIONES_PAGO = [
+  { value: '01', label: 'Contado' },
+  { value: '02', label: 'A credito' },
+  { value: '03', label: 'Otro' },
+];
+
+// ── Types ──────────────────────────────────────────────────────────
 interface FacturaFormState {
   tipoDte: '01' | '03';
   cliente: Cliente | null;
   items: ItemFactura[];
   condicionPago: string;
+}
+
+/** Tracks which invoice items came from the catalog for usage tracking */
+interface CatalogItemRef {
+  itemId: string;
+  catalogId: string;
 }
 
 const initialState: FacturaFormState = {
@@ -56,28 +67,68 @@ const initialState: FacturaFormState = {
   condicionPago: '01',
 };
 
+// ── Helper: track catalog usage after successful emission ──────────
+async function trackCatalogUsage(catalogIds: string[]) {
+  if (catalogIds.length === 0) return;
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    // Fire-and-forget PATCH for each catalog item used
+    await Promise.allSettled(
+      catalogIds.map((id) =>
+        fetch(`${apiUrl}/catalog-items/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ lastUsedAt: new Date().toISOString() }),
+        })
+      )
+    );
+  } catch {
+    // Usage tracking is non-critical
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Component
+// ════════════════════════════════════════════════════════════════════
 export default function NuevaFacturaPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { useTemplate, useFavorite } = useTemplatesStore();
   const toast = useToast();
+  const toastRef = React.useRef(toast);
+  toastRef.current = toast;
 
-  // Form state
+  // ── Form state ───────────────────────────────────────────────────
   const [formState, setFormState] = React.useState<FacturaFormState>(initialState);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [catalogRefs, setCatalogRefs] = React.useState<CatalogItemRef[]>([]);
 
-  // UI state
+  // ── UI state ─────────────────────────────────────────────────────
   const [isEmitting, setIsEmitting] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
   const [showNuevoCliente, setShowNuevoCliente] = React.useState(false);
   const [showSuccess, setShowSuccess] = React.useState(false);
-  const [successData, setSuccessData] = React.useState<{ id: string; numeroControl: string } | null>(null);
+  const [successData, setSuccessData] = React.useState<{
+    id: string;
+    numeroControl: string;
+  } | null>(null);
   const [hasDraft, setHasDraft] = React.useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = React.useState(false);
 
   const { tipoDte, cliente, items, condicionPago } = formState;
 
-  // Load draft on mount
+  // ── Computed totals ──────────────────────────────────────────────
+  const subtotalGravado = items.reduce((sum, i) => sum + i.subtotal, 0);
+  const totalDescuentos = items.reduce((sum, i) => sum + i.descuento, 0);
+  const totalIva = items.reduce((sum, i) => sum + i.iva, 0);
+  const totalPagar = items.reduce((sum, i) => sum + i.total, 0);
+
+  // ── Draft: load on mount ─────────────────────────────────────────
   React.useEffect(() => {
     const savedDraft = localStorage.getItem(DRAFT_KEY);
     if (savedDraft) {
@@ -92,7 +143,7 @@ export default function NuevaFacturaPage() {
     }
   }, []);
 
-  // Auto-save draft
+  // ── Draft: auto-save ─────────────────────────────────────────────
   React.useEffect(() => {
     const hasContent = items.length > 0 || cliente !== null;
     if (!hasContent) return;
@@ -104,7 +155,7 @@ export default function NuevaFacturaPage() {
     return () => clearInterval(interval);
   }, [formState, items.length, cliente]);
 
-  // Keyboard shortcuts
+  // ── Keyboard shortcuts ───────────────────────────────────────────
   useKeyboardShortcuts(
     {
       'mod+enter': () => {
@@ -115,7 +166,7 @@ export default function NuevaFacturaPage() {
       'mod+t': () => {
         if (items.length > 0) setShowSaveTemplate(true);
       },
-      'escape': () => {
+      escape: () => {
         setShowPreview(false);
         setShowNuevoCliente(false);
         setShowSaveTemplate(false);
@@ -124,23 +175,22 @@ export default function NuevaFacturaPage() {
     { enabled: !isEmitting }
   );
 
-  // Update form state helpers
+  // ── Form helpers ─────────────────────────────────────────────────
   const updateForm = <K extends keyof FacturaFormState>(
     key: K,
     value: FacturaFormState[K]
   ) => {
     setFormState((prev) => ({ ...prev, [key]: value }));
-    // Clear related errors
     if (errors[key]) {
       setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[key];
-        return newErrors;
+        const next = { ...prev };
+        delete next[key];
+        return next;
       });
     }
   };
 
-  // Load draft
+  // ── Draft handlers ───────────────────────────────────────────────
   const handleLoadDraft = () => {
     const savedDraft = localStorage.getItem(DRAFT_KEY);
     if (savedDraft) {
@@ -148,32 +198,29 @@ export default function NuevaFacturaPage() {
         const draft = JSON.parse(savedDraft);
         setFormState(draft);
         setHasDraft(false);
-        toast.success('Borrador recuperado correctamente');
+        toastRef.current.success('Borrador recuperado correctamente');
       } catch {
-        toast.error('Error al recuperar el borrador');
+        toastRef.current.error('Error al recuperar el borrador');
       }
     }
   };
 
-  // Discard draft
   const handleDiscardDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
     setHasDraft(false);
-    toast.info('Borrador descartado');
+    toastRef.current.info('Borrador descartado');
   };
 
-  // Save draft manually
   const handleSaveDraft = () => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(formState));
-    toast.success('Borrador guardado correctamente');
+    toastRef.current.success('Borrador guardado correctamente');
   };
 
-  // Handle template selection
+  // ── Template handler ─────────────────────────────────────────────
   const handleSelectTemplate = (template: InvoiceTemplate) => {
     const usedTemplate = useTemplate(template.id);
     if (!usedTemplate) return;
 
-    // Generate IDs for items
     const newItems: ItemFactura[] = usedTemplate.items.map((item, index) => ({
       ...item,
       id: `item-${Date.now()}-${index}`,
@@ -186,10 +233,10 @@ export default function NuevaFacturaPage() {
       condicionPago: usedTemplate.condicionPago,
     });
 
-    toast.success(`Plantilla "${template.name}" aplicada`);
+    toastRef.current.success(`Plantilla "${template.name}" aplicada`);
   };
 
-  // Handle favorite selection - adds item to the invoice
+  // ── Favorite handler ─────────────────────────────────────────────
   const handleSelectFavorite = (favorite: FavoriteItem) => {
     useFavorite(favorite.id);
 
@@ -213,19 +260,20 @@ export default function NuevaFacturaPage() {
     };
 
     updateForm('items', [...items, newItem]);
-    toast.success(`"${favorite.descripcion}" agregado a la factura`);
+    toastRef.current.success(`"${favorite.descripcion}" agregado a la factura`);
   };
 
-  // Handle catalog item selection
+  // ── Catalog item handler ─────────────────────────────────────────
   const handleCatalogSelect = (catalogItem: CatalogItem) => {
     const cantidad = 1;
     const precioUnitario = Number(catalogItem.basePrice);
     const subtotal = cantidad * precioUnitario;
-    const esGravado = catalogItem.tipoItem !== 2; // 2 = exempt services
+    const esGravado = catalogItem.tipoItem !== 2;
     const iva = esGravado ? subtotal * 0.13 : 0;
+    const itemId = `item-${Date.now()}`;
 
     const newItem: ItemFactura = {
-      id: `item-${Date.now()}`,
+      id: itemId,
       codigo: catalogItem.code,
       descripcion: catalogItem.name,
       cantidad,
@@ -239,15 +287,17 @@ export default function NuevaFacturaPage() {
     };
 
     updateForm('items', [...items, newItem]);
-    toast.success(`"${catalogItem.name}" agregado a la factura`);
+    setCatalogRefs((prev) => [...prev, { itemId, catalogId: catalogItem.id }]);
+    toastRef.current.success(`"${catalogItem.name}" agregado a la factura`);
   };
 
-  // Handle duplicate from URL params (coming from invoice list)
+  // ── Duplicate from URL params ────────────────────────────────────
   React.useEffect(() => {
     const duplicateId = searchParams.get('duplicate');
     if (duplicateId) {
       loadInvoiceForDuplicate(duplicateId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const loadInvoiceForDuplicate = async (dteId: string) => {
@@ -257,70 +307,73 @@ export default function NuevaFacturaPage() {
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (!response.ok) return;
 
       const dte = await response.json();
 
-      // Parse the original JSON to extract items and other data
       if (dte.jsonOriginal) {
         try {
           const originalData = JSON.parse(dte.jsonOriginal);
           const cuerpo = originalData.cuerpoDocumento || [];
 
-          const duplicatedItems: ItemFactura[] = cuerpo.map((item: Record<string, unknown>, index: number) => ({
-            id: `item-${Date.now()}-${index}`,
-            codigo: item.codigo || '',
-            descripcion: item.descripcion as string,
-            cantidad: item.cantidad as number,
-            precioUnitario: item.precioUni as number,
-            esGravado: (item.ventaGravada as number) > 0,
-            esExento: (item.ventaExenta as number) > 0,
-            descuento: (item.montoDescu as number) || 0,
-            subtotal: (item.ventaGravada as number) || (item.ventaExenta as number) || 0,
-            iva: (item.ivaItem as number) || 0,
-            total: ((item.ventaGravada as number) || 0) + ((item.ivaItem as number) || 0),
-          }));
+          const duplicatedItems: ItemFactura[] = cuerpo.map(
+            (item: Record<string, unknown>, index: number) => ({
+              id: `item-${Date.now()}-${index}`,
+              codigo: item.codigo || '',
+              descripcion: item.descripcion as string,
+              cantidad: item.cantidad as number,
+              precioUnitario: item.precioUni as number,
+              esGravado: (item.ventaGravada as number) > 0,
+              esExento: (item.ventaExenta as number) > 0,
+              descuento: (item.montoDescu as number) || 0,
+              subtotal:
+                (item.ventaGravada as number) ||
+                (item.ventaExenta as number) ||
+                0,
+              iva: (item.ivaItem as number) || 0,
+              total:
+                ((item.ventaGravada as number) || 0) +
+                ((item.ivaItem as number) || 0),
+            })
+          );
 
           setFormState({
             tipoDte: dte.tipoDte as '01' | '03',
-            cliente: null, // Don't copy client for duplicates (they should select)
+            cliente: null,
             items: duplicatedItems,
             condicionPago: '01',
           });
-          toast.success('Factura duplicada - selecciona un cliente para continuar');
+          toastRef.current.success(
+            'Factura duplicada - selecciona un cliente para continuar'
+          );
         } catch {
-          toast.error('Error al cargar los datos de la factura');
+          toastRef.current.error('Error al cargar los datos de la factura');
         }
       }
     } catch {
-      toast.error('No se pudo cargar la factura para duplicar');
+      toastRef.current.error('No se pudo cargar la factura para duplicar');
     }
   };
 
-  // Validation
+  // ── Validation ───────────────────────────────────────────────────
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // CCF requires cliente with NIT and NRC
     if (tipoDte === '03') {
       if (!cliente) {
-        newErrors.cliente = 'Selecciona un cliente para Crédito Fiscal';
+        newErrors.cliente = 'Selecciona un cliente para Credito Fiscal';
       } else if (!cliente.nrc) {
-        newErrors.cliente = 'El cliente debe tener NRC para Crédito Fiscal';
+        newErrors.cliente = 'El cliente debe tener NRC para Credito Fiscal';
       }
     }
 
-    // Must have at least one item
     if (items.length === 0) {
       newErrors.items = 'Agrega al menos un item a la factura';
     }
 
-    // Check for items with zero price
     const invalidItems = items.filter((i) => i.precioUnitario <= 0);
     if (invalidItems.length > 0) {
       newErrors.items = 'Todos los items deben tener precio mayor a 0';
@@ -336,17 +389,9 @@ export default function NuevaFacturaPage() {
     return true;
   };
 
-  // Calculate totals
-  const getSubtotal = () => items.reduce((sum, i) => sum + i.subtotal, 0);
-  const getTotalIva = () => items.reduce((sum, i) => sum + i.iva, 0);
-  const getTotal = () => items.reduce((sum, i) => sum + i.total, 0);
-
-  // Emit invoice
+  // ── Emit invoice ─────────────────────────────────────────────────
   const handleEmit = async () => {
-    if (!validateForm()) {
-      // Shake animation could be added here
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsEmitting(true);
     setErrors({});
@@ -354,16 +399,22 @@ export default function NuevaFacturaPage() {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('No hay sesión activa. Por favor inicia sesión nuevamente.');
+        throw new Error(
+          'No hay sesion activa. Por favor inicia sesion nuevamente.'
+        );
       }
 
-      // Build DTE data structure
+      const getSubtotal = () => items.reduce((sum, i) => sum + i.subtotal, 0);
+      const getTotalIvaCalc = () => items.reduce((sum, i) => sum + i.iva, 0);
+      const getTotal = () => items.reduce((sum, i) => sum + i.total, 0);
+
+      // Build DTE data — IDENTICAL structure to original
       const dteData = {
         tipoDte,
         data: {
           identificacion: {
             version: tipoDte === '01' ? 1 : 3,
-            ambiente: '00', // Test environment
+            ambiente: '00',
             tipoDte,
             numeroControl: null,
             codigoGeneracion: null,
@@ -422,7 +473,7 @@ export default function NuevaFacturaPage() {
             totalNoGravado: 0,
             totalPagar: getTotal(),
             totalLetras: '',
-            totalIva: getTotalIva(),
+            totalIva: getTotalIvaCalc(),
             saldoFavor: 0,
             condicionOperacion: parseInt(condicionPago),
             pagos: null,
@@ -443,23 +494,30 @@ export default function NuevaFacturaPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al crear el DTE');
+        throw new Error(
+          (errorData as { message?: string }).message || 'Error al crear el DTE'
+        );
       }
 
       const createdDte = await response.json();
 
-      // Success!
+      // Track catalog usage (fire-and-forget)
+      const usedCatalogIds = catalogRefs
+        .filter((ref) => items.some((i) => i.id === ref.itemId))
+        .map((ref) => ref.catalogId);
+      trackCatalogUsage(usedCatalogIds);
+
+      // Success
       setSuccessData({
         id: createdDte.id,
-        numeroControl: createdDte.numeroControl || createdDte.codigoGeneracion,
+        numeroControl:
+          createdDte.numeroControl || createdDte.codigoGeneracion,
       });
       setShowSuccess(true);
       setShowPreview(false);
-
-      // Clear draft
       localStorage.removeItem(DRAFT_KEY);
 
-      // Confetti effect
+      // Confetti
       try {
         const confetti = (await import('canvas-confetti')).default;
         confetti({
@@ -472,37 +530,44 @@ export default function NuevaFacturaPage() {
         // Confetti not critical
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al emitir la factura';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Error desconocido al emitir la factura';
       setErrors({ submit: errorMessage });
-      toast.error(errorMessage);
+      toastRef.current.error(errorMessage);
     } finally {
       setIsEmitting(false);
     }
   };
 
-  // Handle cliente created
+  // ── Client created handler ───────────────────────────────────────
   const handleClienteCreated = (newCliente: Cliente) => {
     updateForm('cliente', newCliente);
     setShowNuevoCliente(false);
-    toast.success(`Cliente "${newCliente.nombre}" creado y seleccionado`);
+    toastRef.current.success(
+      `Cliente "${newCliente.nombre}" creado y seleccionado`
+    );
   };
 
-  // Reset form for new invoice
+  // ── Post-success handlers ────────────────────────────────────────
   const handleNewInvoice = () => {
     setFormState(initialState);
+    setCatalogRefs([]);
     setShowSuccess(false);
     setSuccessData(null);
     setErrors({});
   };
 
-  // Go to invoice detail
   const handleViewInvoice = () => {
     if (successData?.id) {
       router.push(`/facturas/${successData.id}`);
     }
   };
 
-  // Success view
+  // ══════════════════════════════════════════════════════════════════
+  // RENDER: Success view
+  // ══════════════════════════════════════════════════════════════════
   if (showSuccess && successData) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -512,19 +577,29 @@ export default function NuevaFacturaPage() {
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold text-white mb-2">Factura Emitida</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">
+              Factura Emitida
+            </h1>
             <p className="text-muted-foreground">
               Tu documento ha sido procesado exitosamente
             </p>
           </div>
 
           <div className="glass-card p-4 text-left">
-            <div className="text-sm text-muted-foreground mb-1">Numero de Control</div>
-            <code className="text-xs text-primary break-all">{successData.numeroControl}</code>
+            <div className="text-sm text-muted-foreground mb-1">
+              Numero de Control
+            </div>
+            <code className="text-xs text-primary break-all">
+              {successData.numeroControl}
+            </code>
           </div>
 
           <div className="flex gap-3 justify-center">
-            <Button variant="ghost" onClick={handleNewInvoice} className="btn-secondary">
+            <Button
+              variant="ghost"
+              onClick={handleNewInvoice}
+              className="btn-secondary"
+            >
               <Sparkles className="w-4 h-4 mr-2" />
               Nueva Factura
             </Button>
@@ -537,9 +612,12 @@ export default function NuevaFacturaPage() {
     );
   }
 
+  // ══════════════════════════════════════════════════════════════════
+  // RENDER: Main form
+  // ══════════════════════════════════════════════════════════════════
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-4">
+      {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
@@ -562,45 +640,96 @@ export default function NuevaFacturaPage() {
           </div>
         </div>
 
-        {/* Quick actions */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowPreview(true)}
-            disabled={items.length === 0}
-            className="hidden sm:flex"
-          >
-            <Eye className="w-4 h-4 mr-1" />
-            Preview
-          </Button>
-          <Button
-            onClick={handleEmit}
-            disabled={!canEmit() || isEmitting}
-            className="btn-primary"
-          >
-            {isEmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Emitiendo...
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4 mr-2" />
-                Emitir
-              </>
-            )}
-          </Button>
+        {/* Quick emit button (header) */}
+        <Button
+          onClick={handleEmit}
+          disabled={!canEmit() || isEmitting}
+          className="btn-primary hidden sm:flex"
+        >
+          {isEmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Emitiendo...
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4 mr-2" />
+              Emitir
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* ── Top row: Tipo DTE + Condicion de pago ───────────────── */}
+      <div className="glass-card p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          {/* Tipo DTE */}
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+              Tipo:
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => updateForm('tipoDte', '01')}
+                className={cn(
+                  'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                  tipoDte === '01'
+                    ? 'bg-primary text-white'
+                    : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+                )}
+              >
+                Factura (01)
+              </button>
+              <button
+                onClick={() => updateForm('tipoDte', '03')}
+                className={cn(
+                  'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                  tipoDte === '03'
+                    ? 'bg-secondary text-white'
+                    : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+                )}
+              >
+                Credito Fiscal (03)
+              </button>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="hidden sm:block h-8 w-px bg-border" />
+
+          {/* Condicion de pago */}
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+              Condicion:
+            </label>
+            <Select
+              value={condicionPago}
+              onValueChange={(v) => updateForm('condicionPago', v)}
+            >
+              <SelectTrigger className="w-[140px] input-rc">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CONDICIONES_PAGO.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      {/* Draft recovery */}
+      {/* ── Draft recovery ──────────────────────────────────────── */}
       {hasDraft && (
         <div className="glass-card p-4 flex items-center justify-between animate-in slide-in-from-top-2">
           <div className="flex items-center gap-3">
             <Save className="w-5 h-5 text-warning" />
             <div>
-              <p className="text-sm font-medium text-white">Tienes un borrador guardado</p>
+              <p className="text-sm font-medium text-white">
+                Tienes un borrador guardado
+              </p>
               <p className="text-xs text-muted-foreground">
                 Se guardo automaticamente antes de salir
               </p>
@@ -610,65 +739,38 @@ export default function NuevaFacturaPage() {
             <Button variant="ghost" size="sm" onClick={handleDiscardDraft}>
               Descartar
             </Button>
-            <Button size="sm" onClick={handleLoadDraft} className="btn-primary">
+            <Button
+              size="sm"
+              onClick={handleLoadDraft}
+              className="btn-primary"
+            >
               Recuperar
             </Button>
           </div>
         </div>
       )}
 
-      {/* Error banner */}
+      {/* ── Error banner ────────────────────────────────────────── */}
       {errors.submit && (
         <div className="glass-card p-4 border-destructive/50 animate-in shake">
           <p className="text-sm text-destructive">{errors.submit}</p>
         </div>
       )}
 
-      {/* Main layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column - Main form */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Tipo DTE selector */}
-          <div className="glass-card p-4">
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                Tipo de Documento:
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => updateForm('tipoDte', '01')}
-                  className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                    tipoDte === '01'
-                      ? 'bg-primary text-white'
-                      : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
-                  )}
-                >
-                  Factura (01)
-                </button>
-                <button
-                  onClick={() => updateForm('tipoDte', '03')}
-                  className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                    tipoDte === '03'
-                      ? 'bg-secondary text-white'
-                      : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
-                  )}
-                >
-                  Credito Fiscal (03)
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Cliente section */}
+      {/* ── Two-column layout ───────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* ════ Left column (3/5) ════════════════════════════════ */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Client section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                 Cliente / Receptor
               </h2>
               {tipoDte === '03' && !cliente && (
-                <span className="text-xs text-destructive">* Requerido para CCF</span>
+                <span className="text-xs text-destructive">
+                  * Requerido para CCF
+                </span>
               )}
             </div>
 
@@ -703,127 +805,147 @@ export default function NuevaFacturaPage() {
           </div>
         </div>
 
-        {/* Right column - Summary */}
-        <div className="space-y-6">
-          {/* Templates Panel */}
-          <PlantillasPanel onSelectTemplate={handleSelectTemplate} />
+        {/* ════ Right column (2/5) — sticky ══════════════════════ */}
+        <div className="lg:col-span-2">
+          <div className="lg:sticky lg:top-20 space-y-4">
+            {/* ── Summary panel ──────────────────────────────────── */}
+            <div className="glass-card p-5 space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-border">
+                <Calculator className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Resumen</h3>
+                {items.length > 0 && (
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {items.length} {items.length === 1 ? 'item' : 'items'}
+                  </span>
+                )}
+              </div>
 
-          {/* Favorites Panel */}
-          <FavoritosPanel onSelectFavorite={handleSelectFavorite} />
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="text-foreground font-medium">
+                    {formatCurrency(subtotalGravado)}
+                  </span>
+                </div>
 
-          {/* Totales */}
-          <TotalesCard
-            items={items}
-            condicionPago={condicionPago}
-            onCondicionPagoChange={(value) => updateForm('condicionPago', value)}
-          />
+                {totalDescuentos > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Descuentos:</span>
+                    <span className="text-warning font-medium">
+                      -{formatCurrency(totalDescuentos)}
+                    </span>
+                  </div>
+                )}
 
-          {/* Actions */}
-          <div className="glass-card p-4 space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Acciones
-            </h3>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">IVA (13%):</span>
+                  <span className="text-foreground font-medium">
+                    {formatCurrency(totalIva)}
+                  </span>
+                </div>
 
-            <div className="space-y-2">
+                <div className="h-px bg-primary/30" />
+
+                <div className="flex justify-between items-center pt-1">
+                  <span className="text-lg font-semibold text-foreground">
+                    TOTAL:
+                  </span>
+                  <span className="text-2xl font-bold text-primary">
+                    {formatCurrency(totalPagar)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Actions panel ──────────────────────────────────── */}
+            <div className="glass-card p-4 space-y-2">
               <Button
-                variant="ghost"
-                className="w-full justify-start text-left"
-                onClick={() => setShowPreview(true)}
-                disabled={items.length === 0}
-              >
-                <Eye className="w-4 h-4 mr-3" />
-                Vista previa
-              </Button>
-
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left"
-                onClick={handleSaveDraft}
-                disabled={items.length === 0 && !cliente}
-              >
-                <Save className="w-4 h-4 mr-3" />
-                Guardar borrador
-              </Button>
-
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left"
-                onClick={() => setShowSaveTemplate(true)}
-                disabled={items.length === 0}
-              >
-                <Files className="w-4 h-4 mr-3" />
-                Guardar como plantilla
-              </Button>
-
-              <Button
-                className="w-full btn-primary justify-start"
+                className="w-full btn-primary justify-center"
                 onClick={handleEmit}
                 disabled={!canEmit() || isEmitting}
               >
                 {isEmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-3 animate-spin" />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Emitiendo...
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4 mr-3" />
-                    Emitir factura
+                    <Send className="w-4 h-4 mr-2" />
+                    Emitir Factura
                   </>
                 )}
               </Button>
-            </div>
-          </div>
 
-          {/* Keyboard shortcuts */}
-          <div className="glass-card p-4 hidden lg:block">
-            <div className="flex items-center gap-2 mb-3">
-              <Keyboard className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">
-                Atajos de teclado
-              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  className="flex-1 justify-center"
+                  onClick={() => setShowPreview(true)}
+                  disabled={items.length === 0}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex-1 justify-center"
+                  onClick={handleSaveDraft}
+                  disabled={items.length === 0 && !cliente}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Borrador
+                </Button>
+              </div>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-center text-muted-foreground"
+                onClick={() => setShowSaveTemplate(true)}
+                disabled={items.length === 0}
+              >
+                <Files className="w-4 h-4 mr-2" />
+                Guardar como plantilla
+              </Button>
             </div>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between text-muted-foreground">
-                <span>Emitir factura</span>
+
+            {/* ── Templates ──────────────────────────────────────── */}
+            <PlantillasPanel onSelectTemplate={handleSelectTemplate} />
+
+            {/* ── Favorites ──────────────────────────────────────── */}
+            <FavoritosPanel onSelectFavorite={handleSelectFavorite} />
+
+            {/* ── Keyboard hint ──────────────────────────────────── */}
+            <div className="hidden lg:flex items-center justify-center gap-4 text-xs text-muted-foreground py-2">
+              <span>
                 <kbd className="px-1.5 py-0.5 rounded bg-white/5 font-mono">
                   {getShortcutDisplay('mod+enter')}
-                </kbd>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Guardar borrador</span>
+                </kbd>{' '}
+                Emitir
+              </span>
+              <span>
                 <kbd className="px-1.5 py-0.5 rounded bg-white/5 font-mono">
                   {getShortcutDisplay('mod+s')}
-                </kbd>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Vista previa</span>
+                </kbd>{' '}
+                Borrador
+              </span>
+              <span>
                 <kbd className="px-1.5 py-0.5 rounded bg-white/5 font-mono">
                   {getShortcutDisplay('mod+p')}
-                </kbd>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Guardar plantilla</span>
-                <kbd className="px-1.5 py-0.5 rounded bg-white/5 font-mono">
-                  {getShortcutDisplay('mod+t')}
-                </kbd>
-              </div>
+                </kbd>{' '}
+                Preview
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modals */}
+      {/* ── Modals ──────────────────────────────────────────────── */}
       <FacturaPreview
         open={showPreview}
         onClose={() => setShowPreview(false)}
         onEmit={handleEmit}
-        data={{
-          tipoDte,
-          cliente,
-          items,
-          condicionPago,
-        }}
+        data={{ tipoDte, cliente, items, condicionPago }}
         isEmitting={isEmitting}
       />
 

@@ -1,1 +1,0 @@
-{"version":3,"file":"page-size-selector.d.ts","sourceRoot":"","sources":["page-size-selector.tsx"],"names":[],"mappings":"AAEA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAS/B,UAAU,qBAAqB;IAC7B,KAAK,EAAE,MAAM,CAAC;IACd,QAAQ,EAAE,CAAC,KAAK,EAAE,MAAM,KAAK,IAAI,CAAC;IAClC,OAAO,CAAC,EAAE,MAAM,EAAE,CAAC;CACpB;AAED,wBAAgB,gBAAgB,CAAC,EAC/B,KAAK,EACL,QAAQ,EACR,OAA2B,GAC5B,EAAE,qBAAqB,qBAqBvB"}

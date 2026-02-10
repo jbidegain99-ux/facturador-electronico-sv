@@ -1,1 +1,0 @@
-{"version":3,"file":"welcome-step.d.ts","sourceRoot":"","sources":["welcome-step.tsx"],"names":[],"mappings":"AAEA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAkB/B,OAAO,EAAE,eAAe,EAAE,MAAM,oBAAoB,CAAC;AAErD,UAAU,gBAAgB;IACxB,OAAO,EAAE,CAAC,KAAK,EAAE,eAAe,KAAK,IAAI,CAAC;IAC1C,OAAO,CAAC,EAAE,OAAO,CAAC;CACnB;AAsCD,wBAAgB,WAAW,CAAC,EAAE,OAAO,EAAE,OAAO,EAAE,EAAE,gBAAgB,qBAwIjE"}

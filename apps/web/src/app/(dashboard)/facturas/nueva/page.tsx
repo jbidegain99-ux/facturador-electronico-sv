@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ClienteSearch } from '@/components/facturas/cliente-search';
+import { CatalogSearch } from '@/components/facturas/catalog-search';
+import type { CatalogItem } from '@/components/facturas/catalog-search';
 import { ItemsTable } from '@/components/facturas/items-table';
 import { TotalesCard } from '@/components/facturas/totales-card';
 import { FacturaPreview } from '@/components/facturas/factura-preview';
@@ -212,6 +214,32 @@ export default function NuevaFacturaPage() {
 
     updateForm('items', [...items, newItem]);
     toast.success(`"${favorite.descripcion}" agregado a la factura`);
+  };
+
+  // Handle catalog item selection
+  const handleCatalogSelect = (catalogItem: CatalogItem) => {
+    const cantidad = 1;
+    const precioUnitario = Number(catalogItem.basePrice);
+    const subtotal = cantidad * precioUnitario;
+    const esGravado = catalogItem.tipoItem !== 2; // 2 = exempt services
+    const iva = esGravado ? subtotal * 0.13 : 0;
+
+    const newItem: ItemFactura = {
+      id: `item-${Date.now()}`,
+      codigo: catalogItem.code,
+      descripcion: catalogItem.name,
+      cantidad,
+      precioUnitario,
+      esGravado,
+      esExento: !esGravado,
+      descuento: 0,
+      subtotal,
+      iva,
+      total: subtotal + iva,
+    };
+
+    updateForm('items', [...items, newItem]);
+    toast.success(`"${catalogItem.name}" agregado a la factura`);
   };
 
   // Handle duplicate from URL params (coming from invoice list)
@@ -661,6 +689,8 @@ export default function NuevaFacturaPage() {
             <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
               Items de la Factura
             </h2>
+
+            <CatalogSearch onSelect={handleCatalogSelect} />
 
             <ItemsTable
               items={items}

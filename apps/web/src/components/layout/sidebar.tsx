@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Repeat,
   Package,
+  ClipboardList,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
@@ -23,6 +24,7 @@ import { usePlanFeatures } from '@/hooks/use-plan-features';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, proBadge: false },
   { name: 'Facturas', href: '/facturas', icon: FileText, proBadge: false },
+  { name: 'Cotizaciones', href: '/cotizaciones', icon: ClipboardList, proBadge: false },
   { name: 'Recurrentes', href: '/facturas/recurrentes', icon: Repeat, proBadge: true },
   { name: 'Reportes', href: '/reportes', icon: BarChart3, proBadge: false },
   { name: 'Clientes', href: '/clientes', icon: Users, proBadge: false },

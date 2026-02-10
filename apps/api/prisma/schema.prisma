@@ -66,6 +66,9 @@ model Tenant {
 
   // Product/service catalog
   catalogItems       CatalogItem[]
+
+  // Quotes / Cotizaciones
+  quotes             Quote[]
 }
 
 model User {
@@ -965,4 +968,55 @@ model CatalogItem {
   @@index([tenantId, isActive])
   @@index([tenantId, type, isActive])
   @@index([tenantId, isFavorite])
+}
+
+// ============================================================================
+// QUOTES / COTIZACIONES
+// ============================================================================
+
+model Quote {
+  id              String      @id @default(cuid())
+  tenantId        String
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Numbering
+  quoteNumber     String      // "COT-2026-0001"
+
+  // Client
+  clienteId       String
+
+  // Dates
+  issueDate       DateTime    @default(now())
+  validUntil      DateTime    // Expiration date
+
+  // Status: DRAFT, SENT, APPROVED, REJECTED, EXPIRED, CONVERTED, CANCELLED
+  status          String      @default("DRAFT")
+
+  // Totals (calculated)
+  subtotal        Decimal     @db.Decimal(12, 2) @default(0)
+  taxAmount       Decimal     @db.Decimal(12, 2) @default(0)
+  total           Decimal     @db.Decimal(12, 2) @default(0)
+
+  // Content
+  items           String      @db.NVarChar(Max)   // JSON array of line items
+  terms           String?     @db.NVarChar(2000)  // Terms & conditions
+  notes           String?     @db.NVarChar(1000)  // Internal notes
+
+  // Conversion
+  convertedToInvoiceId  String?
+  convertedAt           DateTime?
+
+  // Rejection
+  rejectionReason String?     @db.NVarChar(500)
+
+  // Audit
+  createdBy       String      // userId
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([tenantId, quoteNumber])
+  @@index([tenantId, status])
+  @@index([tenantId, clienteId])
+  @@map("quotes")
 }

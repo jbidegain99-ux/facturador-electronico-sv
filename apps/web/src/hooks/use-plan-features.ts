@@ -11,6 +11,8 @@ export interface PlanFeatures {
   templates: boolean;
   reports: boolean;
   apiAccess: boolean;
+  accounting: boolean;
+  advancedQuotes: boolean;
 }
 
 const DEFAULT_FEATURES: PlanFeatures = {
@@ -22,6 +24,8 @@ const DEFAULT_FEATURES: PlanFeatures = {
   templates: false,
   reports: false,
   apiAccess: false,
+  accounting: false,
+  advancedQuotes: false,
 };
 
 // Module-level cache to avoid re-fetching across components
@@ -52,10 +56,18 @@ export function usePlanFeatures() {
       return;
     }
 
+    let wasAuthError = false;
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/plans/features`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
+        if (res.status === 401 || res.status === 403) {
+          // Auth issue — don't fall through to DEMO defaults.
+          // The dashboard layout handles 401 redirect to /login.
+          wasAuthError = true;
+          return null;
+        }
         if (!res.ok) return null;
         return res.json() as Promise<PlanFeatures>;
       })
@@ -69,7 +81,13 @@ export function usePlanFeatures() {
       .catch(() => {
         // Non-critical — use defaults
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        // On auth errors, keep loading=true so gating components
+        // don't flash the upgrade banner while the layout redirects to /login.
+        if (!wasAuthError) {
+          setLoading(false);
+        }
+      });
   }, []);
 
   return { features, loading };

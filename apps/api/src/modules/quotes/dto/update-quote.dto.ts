@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsArray,
   IsDateString,
+  IsEmail,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -30,4 +31,8 @@ export class UpdateQuoteDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsEmail()
+  clienteEmail?: string;
 }

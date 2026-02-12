@@ -62,6 +62,7 @@ interface Quote {
   taxAmount: number;
   total: number;
   convertedToInvoiceId?: string | null;
+  version?: number;
 }
 
 interface QuotesResponse {
@@ -79,6 +80,7 @@ const STATUS_TABS = [
   { value: 'DRAFT', label: 'Borrador' },
   { value: 'SENT', label: 'Enviadas' },
   { value: 'APPROVED', label: 'Aprobadas' },
+  { value: 'PARTIALLY_APPROVED', label: 'Parciales' },
   { value: 'CONVERTED', label: 'Convertidas' },
 ];
 
@@ -91,7 +93,9 @@ interface StatusConfig {
 const STATUS_MAP: Record<string, StatusConfig> = {
   DRAFT: { label: 'Borrador', variant: 'secondary', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
   SENT: { label: 'Enviada', variant: 'default', className: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
+  PENDING_APPROVAL: { label: 'Pendiente', variant: 'default', className: 'bg-teal-600/20 text-teal-400 border-teal-600/30' },
   APPROVED: { label: 'Aprobada', variant: 'default', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
+  PARTIALLY_APPROVED: { label: 'Parcial', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
   REJECTED: { label: 'Rechazada', variant: 'destructive', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
   EXPIRED: { label: 'Expirada', variant: 'outline', className: 'bg-amber-600/20 text-amber-400 border-amber-600/30' },
   CONVERTED: { label: 'Convertida', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
@@ -491,7 +495,14 @@ export default function CotizacionesPage() {
                     onClick={() => router.push(`/cotizaciones/${quote.id}`)}
                   >
                     <TableCell className="font-medium text-primary">
-                      {quote.quoteNumber}
+                      <span className="inline-flex items-center gap-1.5">
+                        {quote.quoteNumber}
+                        {quote.version != null && quote.version > 1 && (
+                          <span className="inline-flex items-center rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground leading-none">
+                            v{quote.version}
+                          </span>
+                        )}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {quote.client?.nombre || 'Sin cliente'}
@@ -564,7 +575,8 @@ export default function CotizacionesPage() {
                             <Eye className="h-4 w-4" />
                           </Button>
                         )}
-                        {quote.status === 'APPROVED' && (
+                        {(quote.status === 'APPROVED' ||
+                          quote.status === 'PARTIALLY_APPROVED') && (
                           <Button
                             variant="ghost"
                             size="sm"

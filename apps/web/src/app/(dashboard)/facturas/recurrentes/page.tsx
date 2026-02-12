@@ -13,6 +13,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
 import { formatDate } from '@/lib/utils';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
+import { UpsellBanner } from '@/components/ui/upsell-banner';
 import {
   Plus,
   Search,
@@ -25,9 +26,6 @@ import {
   ArrowUp,
   ArrowDown,
   Repeat,
-  Star,
-  Check,
-  Rocket,
 } from 'lucide-react';
 
 interface RecurringTemplate {
@@ -88,7 +86,7 @@ const TABS = [
   { key: 'CANCELLED', label: 'Canceladas' },
 ];
 
-function UpsellBanner() {
+function RecurrentesUpsell() {
   return (
     <div className="space-y-6">
       <div>
@@ -101,47 +99,16 @@ function UpsellBanner() {
         </p>
       </div>
 
-      <Card className="max-w-2xl mx-auto border-purple-500/30">
-        <CardContent className="p-8 text-center space-y-6">
-          <div className="mx-auto w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center">
-            <Star className="h-8 w-8 text-purple-400" />
-          </div>
-
-          <div>
-            <h2 className="text-xl font-bold">
-              Facturas Recurrentes — Plan Pro
-            </h2>
-            <p className="text-muted-foreground mt-2">
-              Automatiza tu facturacion con templates recurrentes que se generan automaticamente.
-            </p>
-          </div>
-
-          <div className="text-left max-w-md mx-auto space-y-3">
-            {[
-              'Crea templates de factura reutilizables',
-              'Generacion automatica (diaria, semanal, mensual)',
-              'Historial completo de ejecuciones',
-              'Pausar y reanudar en cualquier momento',
-            ].map((feature) => (
-              <div key={feature} className="flex items-center gap-3">
-                <Check className="h-5 w-5 text-green-400 shrink-0" />
-                <span className="text-sm">{feature}</span>
-              </div>
-            ))}
-          </div>
-
-          <Link href="/configuracion">
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white">
-              <Rocket className="mr-2 h-5 w-5" />
-              Actualizar a Plan Pro
-            </Button>
-          </Link>
-
-          <p className="text-xs text-muted-foreground">
-            Contacta a soporte para mas informacion sobre planes y precios.
-          </p>
-        </CardContent>
-      </Card>
+      <UpsellBanner
+        title="Facturas Recurrentes — Plan Pro"
+        description="Automatiza tu facturacion con templates recurrentes que se generan automaticamente."
+        features={[
+          'Crea templates de factura reutilizables',
+          'Generacion automatica (diaria, semanal, mensual)',
+          'Historial completo de ejecuciones',
+          'Pausar y reanudar en cualquier momento',
+        ]}
+      />
     </div>
   );
 }
@@ -273,7 +240,7 @@ export default function RecurrentesPage() {
 
   // Show upsell banner if plan doesn't support recurring invoices
   if (!planLoading && !features.recurringInvoices) {
-    return <UpsellBanner />;
+    return <RecurrentesUpsell />;
   }
 
   return (

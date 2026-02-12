@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   ForbiddenException,
+  Ip,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -21,14 +22,51 @@ import {
   CurrentUser,
   CurrentUserData,
 } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { QuotesService } from './quotes.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QueryQuoteDto } from './dto/query-quote.dto';
+import { ClientApprovalDto, ClientRejectionDto } from './dto/approval.dto';
+
+// ── Public endpoints (no auth) ────────────────────────────────────────
+@Public()
+@ApiTags('quotes-public')
+@Controller('quotes/public')
+export class QuotesPublicController {
+  constructor(private readonly quotesService: QuotesService) {}
+
+  @Get('approve/:token')
+  @ApiOperation({ summary: 'Get quote details by approval token (public)' })
+  getQuoteForApproval(@Param('token') token: string) {
+    return this.quotesService.getQuoteByToken(token);
+  }
+
+  @Post('approve/:token')
+  @ApiOperation({ summary: 'Approve a quote via public link' })
+  approveQuote(
+    @Param('token') token: string,
+    @Body() dto: ClientApprovalDto,
+    @Ip() clientIp: string,
+  ) {
+    return this.quotesService.approveByClient(token, dto, clientIp);
+  }
+
+  @Post('reject/:token')
+  @ApiOperation({ summary: 'Reject a quote via public link' })
+  rejectQuote(
+    @Param('token') token: string,
+    @Body() dto: ClientRejectionDto,
+    @Ip() clientIp: string,
+  ) {
+    return this.quotesService.rejectByClient(token, dto, clientIp);
+  }
+}
+
+// ── Authenticated endpoints ───────────────────────────────────────────
 
 @ApiTags('quotes')
 @Controller('quotes')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
@@ -39,6 +77,8 @@ export class QuotesController {
     }
     return user.tenantId;
   }
+
+  // ── CRUD ────────────────────────────────────────────────────────────
 
   @Get('next-number')
   @ApiOperation({ summary: 'Obtener siguiente numero de cotizacion' })
@@ -73,6 +113,17 @@ export class QuotesController {
     return this.quotesService.findAll(tenantId, query);
   }
 
+  // NOTE: group/:groupId MUST be before :id to avoid being shadowed
+  @Get('group/:groupId')
+  @ApiOperation({ summary: 'Ver todas las versiones de un grupo de cotizacion' })
+  getQuoteVersions(
+    @CurrentUser() user: CurrentUserData,
+    @Param('groupId') groupId: string,
+  ) {
+    const tenantId = this.ensureTenant(user);
+    return this.quotesService.getQuoteVersions(tenantId, groupId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener cotizacion por ID' })
   findOne(
@@ -91,7 +142,7 @@ export class QuotesController {
     @Body() dto: UpdateQuoteDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    return this.quotesService.update(tenantId, id, dto);
+    return this.quotesService.update(tenantId, id, dto, user.id);
   }
 
   @Delete(':id')
@@ -113,17 +164,17 @@ export class QuotesController {
     @Param('id') id: string,
   ) {
     const tenantId = this.ensureTenant(user);
-    return this.quotesService.send(tenantId, id);
+    return this.quotesService.send(tenantId, id, user.id);
   }
 
   @Post(':id/approve')
-  @ApiOperation({ summary: 'Aprobar cotizacion (Enviada -> Aprobada)' })
+  @ApiOperation({ summary: 'Aprobar cotizacion manualmente (admin)' })
   approve(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
   ) {
     const tenantId = this.ensureTenant(user);
-    return this.quotesService.approve(tenantId, id);
+    return this.quotesService.approve(tenantId, id, user.id);
   }
 
   @Post(':id/reject')
@@ -134,7 +185,7 @@ export class QuotesController {
     @Body() body: { reason: string },
   ) {
     const tenantId = this.ensureTenant(user);
-    return this.quotesService.reject(tenantId, id, body.reason);
+    return this.quotesService.reject(tenantId, id, body.reason, user.id);
   }
 
   @Post(':id/cancel')
@@ -144,18 +195,42 @@ export class QuotesController {
     @Param('id') id: string,
   ) {
     const tenantId = this.ensureTenant(user);
-    return this.quotesService.cancel(tenantId, id);
+    return this.quotesService.cancel(tenantId, id, user.id);
   }
 
   // ── Conversion ────────────────────────────────────────────────────
 
   @Post(':id/convert')
-  @ApiOperation({ summary: 'Convertir cotizacion a factura (Aprobada -> Convertida)' })
+  @ApiOperation({ summary: 'Convertir cotizacion a factura' })
   convertToInvoice(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
   ) {
     const tenantId = this.ensureTenant(user);
-    return this.quotesService.convertToInvoice(tenantId, id);
+    return this.quotesService.convertToInvoice(tenantId, id, user.id);
+  }
+
+  // ── Versioning ────────────────────────────────────────────────────
+
+  @Post(':id/create-version')
+  @ApiOperation({ summary: 'Crear nueva version de cotizacion (PRO)' })
+  createNewVersion(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+  ) {
+    const tenantId = this.ensureTenant(user);
+    return this.quotesService.createNewVersion(tenantId, id, user.id);
+  }
+
+  // ── Audit Trail ───────────────────────────────────────────────────
+
+  @Get(':id/status-history')
+  @ApiOperation({ summary: 'Obtener historial de estados de cotizacion' })
+  getStatusHistory(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+  ) {
+    const tenantId = this.ensureTenant(user);
+    return this.quotesService.getStatusHistory(tenantId, id);
   }
 }

@@ -8,12 +8,12 @@ import {
   Query,
   UseGuards,
   ForbiddenException,
-  ServiceUnavailableException,
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RecurringInvoicesService } from './recurring-invoices.service';
+import { RecurringInvoiceCronService } from './recurring-invoice-cron.service';
 import { CreateTemplateDto, UpdateTemplateDto } from './dto';
 import { PaginationQueryDto } from '../../common/dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
@@ -26,7 +26,10 @@ import { getPlanFeatures } from '../../common/plan-features';
 export class RecurringInvoicesController {
   private readonly logger = new Logger(RecurringInvoicesController.name);
 
-  constructor(private service: RecurringInvoicesService) {}
+  constructor(
+    private service: RecurringInvoicesService,
+    private cronService: RecurringInvoiceCronService,
+  ) {}
 
   private ensureTenant(user: CurrentUserData): string {
     if (!user.tenantId) {
@@ -142,8 +145,7 @@ export class RecurringInvoicesController {
 
   @Post(':id/trigger')
   @ApiOperation({ summary: 'Ejecutar template manualmente' })
-  @ApiResponse({ status: 200, description: 'Ejecucion encolada' })
-  @ApiResponse({ status: 503, description: 'Redis no configurado' })
+  @ApiResponse({ status: 200, description: 'Template ejecutado' })
   async trigger(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -151,15 +153,11 @@ export class RecurringInvoicesController {
     const tenantId = this.ensureTenant(user);
     await this.ensureRecurringAccess(tenantId);
 
-    if (!process.env.REDIS_URL) {
-      throw new ServiceUnavailableException(
-        'Generacion automatica no disponible. Redis no configurado.',
-      );
-    }
-
     this.logger.log(`User ${user.email} manually triggering template ${id}`);
-    const template = await this.service.findOne(tenantId, id);
-    return { message: 'Template encolado para ejecucion', templateId: template.id };
+    // Verify template belongs to tenant
+    await this.service.findOne(tenantId, id);
+    const result = await this.cronService.processTemplate(id);
+    return { message: 'Template ejecutado exitosamente', dteId: result.dteId };
   }
 
   @Get(':id/history')

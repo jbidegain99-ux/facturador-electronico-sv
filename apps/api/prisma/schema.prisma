@@ -69,6 +69,11 @@ model Tenant {
 
   // Quotes / Cotizaciones
   quotes             Quote[]
+
+  // Accounting
+  accountingAccounts  AccountingAccount[]
+  journalEntries      JournalEntry[]
+  accountMappingRules AccountMappingRule[]
 }
 
 model User {
@@ -961,6 +966,9 @@ model CatalogItem {
   usageCount      Int       @default(0)
   lastUsedAt      DateTime?
 
+  // Quote line item references
+  quoteLineItems  QuoteLineItem[]
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -971,7 +979,7 @@ model CatalogItem {
 }
 
 // ============================================================================
-// QUOTES / COTIZACIONES
+// QUOTES / COTIZACIONES (Advanced)
 // ============================================================================
 
 model Quote {
@@ -979,38 +987,76 @@ model Quote {
   tenantId        String
   tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  // Numbering
+  // Numbering with versioning
   quoteNumber     String      // "COT-2026-0001"
+  quoteGroupId    String?     // Groups all versions together
+  version         Int         @default(1)
+  isLatestVersion Boolean     @default(true)
 
-  // Client
+  // Previous version reference
+  previousVersionId String?
+  previousVersion   Quote?    @relation("QuoteVersions", fields: [previousVersionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  nextVersions      Quote[]   @relation("QuoteVersions")
+
+  // Client information (snapshots for portal)
   clienteId       String
+  clienteNit      String?     @db.NVarChar(20)
+  clienteNombre   String?     @db.NVarChar(255)
+  clienteEmail    String?     @db.NVarChar(255)
+  clienteDireccion String?    @db.NVarChar(500)
+  clienteTelefono String?     @db.NVarChar(20)
 
   // Dates
   issueDate       DateTime    @default(now())
-  validUntil      DateTime    // Expiration date
+  validUntil      DateTime
+  sentAt          DateTime?
 
-  // Status: DRAFT, SENT, APPROVED, REJECTED, EXPIRED, CONVERTED, CANCELLED
+  // Status: DRAFT, SENT, PENDING_APPROVAL, PARTIALLY_APPROVED, APPROVED, REJECTED, EXPIRED, CONVERTED, CANCELLED
   status          String      @default("DRAFT")
 
-  // Totals (calculated)
+  // Totals (calculated from line items)
   subtotal        Decimal     @db.Decimal(12, 2) @default(0)
   taxAmount       Decimal     @db.Decimal(12, 2) @default(0)
   total           Decimal     @db.Decimal(12, 2) @default(0)
 
-  // Content
-  items           String      @db.NVarChar(Max)   // JSON array of line items
-  terms           String?     @db.NVarChar(2000)  // Terms & conditions
-  notes           String?     @db.NVarChar(1000)  // Internal notes
+  // Approved totals (for partial approval)
+  approvedSubtotal  Decimal?  @db.Decimal(12, 2)
+  approvedTaxAmount Decimal?  @db.Decimal(12, 2)
+  approvedTotal     Decimal?  @db.Decimal(12, 2)
 
-  // Conversion
+  // Content — lineItems relation is primary, items kept for backward compat
+  items           String?     @db.NVarChar(Max)   // Legacy JSON array
+  lineItems       QuoteLineItem[]
+  terms           String?     @db.NVarChar(2000)
+  notes           String?     @db.NVarChar(1000)
+  clientNotes     String?     @db.NVarChar(1000)  // Client feedback/comments
+
+  // Approval portal
+  approvalToken   String?     @unique
+  approvalUrl     String?     @db.NVarChar(500)
+
+  // Client approval
+  approvedAt      DateTime?
+  approvedBy      String?     @db.NVarChar(255)
+  rejectedAt      DateTime?
+  rejectionReason String?     @db.NVarChar(1000)
+
+  // Conversion tracking
   convertedToInvoiceId  String?
   convertedAt           DateTime?
 
-  // Rejection
-  rejectionReason String?     @db.NVarChar(500)
+  // Email tracking
+  emailSentAt     DateTime?
+  emailDelivered  Boolean?    @default(false)
+  remindersSent   Int?        @default(0)
+  lastReminderAt  DateTime?
 
-  // Audit
-  createdBy       String      // userId
+  // Audit trail
+  statusHistory   QuoteStatusHistory[]
+
+  // Metadata
+  createdBy       String
+  updatedBy       String?
 
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -1018,5 +1064,194 @@ model Quote {
   @@unique([tenantId, quoteNumber])
   @@index([tenantId, status])
   @@index([tenantId, clienteId])
+  @@index([tenantId, quoteGroupId])
+  @@index([approvalToken])
+  @@index([validUntil])
   @@map("quotes")
+}
+
+model QuoteLineItem {
+  id              String       @id @default(cuid())
+  quoteId         String
+  quote           Quote        @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  // Line order
+  lineNumber      Int
+
+  // Product reference
+  catalogItemId   String?
+  catalogItem     CatalogItem? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  // Item data (snapshot)
+  itemCode        String?      @db.NVarChar(100)
+  description     String       @db.NVarChar(500)
+  quantity        Decimal      @db.Decimal(12, 4)
+  unitPrice       Decimal      @db.Decimal(12, 2)
+  discount        Decimal      @db.Decimal(12, 2) @default(0)
+  taxRate         Decimal      @db.Decimal(5, 2)  @default(13)
+  tipoItem        Int          @default(1) // 1=Bien, 2=Servicio
+
+  // Calculated totals
+  lineSubtotal    Decimal      @db.Decimal(12, 2)
+  lineTax         Decimal      @db.Decimal(12, 2)
+  lineTotal       Decimal      @db.Decimal(12, 2)
+
+  // Partial approval
+  approvalStatus  String       @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedQuantity Decimal?    @db.Decimal(12, 4)
+  rejectionReason String?      @db.NVarChar(500)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([quoteId, lineNumber])
+  @@map("quote_line_items")
+}
+
+model QuoteStatusHistory {
+  id              String      @id @default(cuid())
+  quoteId         String
+  quote           Quote       @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  // State change
+  fromStatus      String?
+  toStatus        String
+
+  // Actor information
+  actorType       String      // ADMIN, CLIENT, SYSTEM
+  actorId         String?
+  actorName       String?     @db.NVarChar(255)
+  actorIp         String?     @db.NVarChar(45)
+
+  // Change details
+  reason          String?     @db.NVarChar(500)
+  metadata        String?     @db.NVarChar(Max) // JSON
+
+  createdAt       DateTime    @default(now())
+
+  @@index([quoteId, createdAt])
+  @@map("quote_status_history")
+}
+
+// ============================================================================
+// ACCOUNTING MODULE - DOUBLE ENTRY BOOKKEEPING
+// ============================================================================
+
+model AccountingAccount {
+  id             String    @id @default(cuid())
+  tenantId       String
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  code           String    @db.NVarChar(20)
+  name           String    @db.NVarChar(200)
+
+  parentId       String?
+  parent         AccountingAccount?  @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children       AccountingAccount[] @relation("AccountHierarchy")
+  level          Int       @default(1)
+
+  accountType    String    @db.NVarChar(20)
+  normalBalance  String    @db.NVarChar(10)
+
+  isActive       Boolean   @default(true)
+  isSystem       Boolean   @default(false)
+  allowsPosting  Boolean   @default(true)
+  description    String?   @db.NVarChar(500)
+  currentBalance Decimal   @default(0) @db.Decimal(15, 2)
+
+  journalLines   JournalEntryLine[]
+  debitRules     AccountMappingRule[] @relation("DebitRules")
+  creditRules    AccountMappingRule[] @relation("CreditRules")
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([tenantId, code])
+  @@index([tenantId, accountType])
+  @@index([tenantId, isActive])
+  @@index([tenantId, level])
+  @@map("accounting_accounts")
+}
+
+model JournalEntry {
+  id               String              @id @default(cuid())
+  tenantId         String
+  tenant           Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  entryNumber      String              @db.NVarChar(50)
+  entryDate        DateTime
+  description      String              @db.NVarChar(1000)
+
+  entryType        String              @default("MANUAL") @db.NVarChar(20)
+  sourceType       String?             @db.NVarChar(30)
+  sourceDocumentId String?
+
+  status           String              @default("DRAFT") @db.NVarChar(20)
+  postedAt         DateTime?
+  postedBy         String?
+  voidedAt         DateTime?
+  voidedBy         String?
+  voidReason       String?             @db.NVarChar(500)
+
+  lines            JournalEntryLine[]
+
+  totalDebit       Decimal             @default(0) @db.Decimal(15, 2)
+  totalCredit      Decimal             @default(0) @db.Decimal(15, 2)
+
+  fiscalYear       Int
+  fiscalMonth      Int
+
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@unique([tenantId, entryNumber])
+  @@index([tenantId, entryDate])
+  @@index([tenantId, status])
+  @@index([tenantId, fiscalYear, fiscalMonth])
+  @@index([sourceType, sourceDocumentId])
+  @@map("journal_entries")
+}
+
+model JournalEntryLine {
+  id          String            @id @default(cuid())
+  entryId     String
+  entry       JournalEntry      @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  accountId   String
+  account     AccountingAccount @relation(fields: [accountId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  description String            @db.NVarChar(500)
+  debit       Decimal           @default(0) @db.Decimal(15, 2)
+  credit      Decimal           @default(0) @db.Decimal(15, 2)
+
+  lineNumber  Int
+
+  createdAt   DateTime          @default(now())
+
+  @@index([entryId])
+  @@index([accountId])
+  @@map("journal_entry_lines")
+}
+
+model AccountMappingRule {
+  id              String            @id @default(cuid())
+  tenantId        String
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  operation       String            @db.NVarChar(50)
+  description     String?           @db.NVarChar(200)
+
+  debitAccountId  String
+  debitAccount    AccountingAccount @relation("DebitRules", fields: [debitAccountId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  creditAccountId String
+  creditAccount   AccountingAccount @relation("CreditRules", fields: [creditAccountId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  isActive        Boolean           @default(true)
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([tenantId, operation])
+  @@index([tenantId, isActive])
+  @@map("account_mapping_rules")
 }

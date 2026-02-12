@@ -5,6 +5,7 @@ import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { Public } from '../../common/decorators/public.decorator';
 
 interface AuthRequest extends Request {
   user: {
@@ -20,6 +21,7 @@ interface AuthRequest extends Request {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Public()
   @Post('login')
   @ApiOperation({ summary: 'Iniciar sesion' })
   @ApiResponse({ status: 200, description: 'Login exitoso' })
@@ -30,6 +32,7 @@ export class AuthController {
     return this.authService.login(loginDto.email, loginDto.password, ipAddress, userAgent);
   }
 
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Registrar nueva empresa y usuario administrador' })
   @ApiResponse({ status: 201, description: 'Empresa registrada exitosamente' })
@@ -41,7 +44,6 @@ export class AuthController {
   }
 
   @Get('profile')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
   @ApiResponse({ status: 200, description: 'Perfil del usuario' })

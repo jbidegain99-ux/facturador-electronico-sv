@@ -10,8 +10,10 @@ import {
   Loader2,
   Calculator,
   Calendar,
+  Mail,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ClienteSearch } from '@/components/facturas/cliente-search';
 import { CatalogSearch } from '@/components/facturas/catalog-search';
@@ -43,6 +45,7 @@ export default function NuevaCotizacionPage() {
 
   // ── Form state ─────────────────────────────────────────────────────
   const [cliente, setCliente] = React.useState<Cliente | null>(null);
+  const [clienteEmail, setClienteEmail] = React.useState('');
   const [items, setItems] = React.useState<ItemFactura[]>([]);
   const [validUntil, setValidUntil] = React.useState(defaultValidUntil());
   const [terms, setTerms] = React.useState('');
@@ -86,29 +89,37 @@ export default function NuevaCotizacionPage() {
         // Set client
         if (quote.client) {
           setCliente(quote.client as Cliente);
+          const c = quote.client as Cliente;
+          if (c.correo) setClienteEmail(c.correo);
         }
 
-        // Parse items from JSON
-        const rawItems = typeof quote.items === 'string'
-          ? JSON.parse(quote.items)
-          : quote.items;
+        // Set clienteEmail override if stored on quote
+        if (typeof quote.clienteEmail === 'string' && quote.clienteEmail) {
+          setClienteEmail(quote.clienteEmail as string);
+        }
 
-        if (Array.isArray(rawItems)) {
-          const parsedItems: ItemFactura[] = rawItems.map(
+        // Prefer structured lineItems, fall back to legacy JSON
+        const rawLineItems = Array.isArray(quote.lineItems) && quote.lineItems.length > 0
+          ? quote.lineItems
+          : null;
+
+        if (rawLineItems) {
+          // Map from API lineItem format to frontend ItemFactura format
+          const parsedItems: ItemFactura[] = rawLineItems.map(
             (item: Record<string, unknown>, index: number) => {
-              const cantidad = Number(item.cantidad) || 1;
-              const precioUnitario = Number(item.precioUnitario) || 0;
-              const descuento = Number(item.descuento) || 0;
+              const cantidad = Number(item.quantity) || 1;
+              const precioUnitario = Number(item.unitPrice) || 0;
+              const descuento = Number(item.discount) || 0;
               const sub = cantidad * precioUnitario - descuento;
               const iva = sub * 0.13;
               return {
                 id: `item-${Date.now()}-${index}`,
-                codigo: (item.codigo as string) || '',
-                descripcion: (item.descripcion as string) || '',
+                codigo: (item.itemCode as string) || '',
+                descripcion: (item.description as string) || '',
                 cantidad,
                 precioUnitario,
-                esGravado: true,
-                esExento: false,
+                esGravado: (item.tipoItem as number) !== 2,
+                esExento: (item.tipoItem as number) === 2,
                 descuento,
                 subtotal: sub,
                 iva,
@@ -117,6 +128,37 @@ export default function NuevaCotizacionPage() {
             },
           );
           setItems(parsedItems);
+        } else {
+          // Legacy JSON path
+          const rawItems = typeof quote.items === 'string'
+            ? JSON.parse(quote.items)
+            : quote.items;
+
+          if (Array.isArray(rawItems)) {
+            const parsedItems: ItemFactura[] = rawItems.map(
+              (item: Record<string, unknown>, index: number) => {
+                const cantidad = Number(item.cantidad) || 1;
+                const precioUnitario = Number(item.precioUnitario) || 0;
+                const descuento = Number(item.descuento) || 0;
+                const sub = cantidad * precioUnitario - descuento;
+                const iva = sub * 0.13;
+                return {
+                  id: `item-${Date.now()}-${index}`,
+                  codigo: (item.codigo as string) || '',
+                  descripcion: (item.descripcion as string) || '',
+                  cantidad,
+                  precioUnitario,
+                  esGravado: true,
+                  esExento: false,
+                  descuento,
+                  subtotal: sub,
+                  iva,
+                  total: sub + iva,
+                };
+              },
+            );
+            setItems(parsedItems);
+          }
         }
 
         // Set other fields
@@ -140,6 +182,16 @@ export default function NuevaCotizacionPage() {
     loadQuote();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
+
+  // ── Client selection handler (auto-populates email) ───────────────
+  const handleClienteChange = (c: Cliente | null) => {
+    setCliente(c);
+    if (c?.correo) {
+      setClienteEmail(c.correo);
+    } else if (!c) {
+      setClienteEmail('');
+    }
+  };
 
   // ── Catalog item handler ───────────────────────────────────────────
   const handleCatalogSelect = (catalogItem: CatalogItem) => {
@@ -198,14 +250,15 @@ export default function NuevaCotizacionPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const payload = {
         clienteId: cliente!.id,
+        clienteEmail: clienteEmail || undefined,
         validUntil: new Date(validUntil).toISOString(),
         items: items.map((i) => ({
-          descripcion: i.descripcion,
-          cantidad: i.cantidad,
-          precioUnitario: i.precioUnitario,
-          descuento: i.descuento,
+          description: i.descripcion,
+          quantity: i.cantidad,
+          unitPrice: i.precioUnitario,
+          discount: i.descuento,
           tipoItem: i.esGravado ? 1 : 2,
-          codigo: i.codigo || undefined,
+          itemCode: i.codigo || undefined,
         })),
         terms: terms || undefined,
         notes: notes || undefined,
@@ -291,6 +344,7 @@ export default function NuevaCotizacionPage() {
   // ── Client created handler ─────────────────────────────────────────
   const handleClienteCreated = (newCliente: Cliente) => {
     setCliente(newCliente);
+    if (newCliente.correo) setClienteEmail(newCliente.correo);
     setShowNuevoCliente(false);
     toastRef.current.success(
       `Cliente "${newCliente.nombre}" creado y seleccionado`,
@@ -374,12 +428,29 @@ export default function NuevaCotizacionPage() {
             </h2>
             <ClienteSearch
               value={cliente}
-              onChange={setCliente}
+              onChange={handleClienteChange}
               onCreateNew={() => setShowNuevoCliente(true)}
               tipoDte="01"
             />
             {errors.cliente && (
               <p className="text-xs text-destructive">{errors.cliente}</p>
+            )}
+
+            {/* Client email (auto-populated, overridable) */}
+            {cliente && (
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                <Input
+                  type="email"
+                  value={clienteEmail}
+                  onChange={(e) => setClienteEmail(e.target.value)}
+                  placeholder="correo@ejemplo.com"
+                  className="text-sm"
+                />
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  Email para aprobacion
+                </span>
+              </div>
             )}
           </div>
 

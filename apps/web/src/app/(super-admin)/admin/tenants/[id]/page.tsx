@@ -305,7 +305,7 @@ export default function TenantDetailPage() {
                 >
                   <option value="TRIAL">Prueba</option>
                   <option value="BASIC">Basico</option>
-                  <option value="PROFESSIONAL">Profesional</option>
+                  <option value="PRO">Profesional</option>
                   <option value="ENTERPRISE">Empresa</option>
                 </select>
               </div>

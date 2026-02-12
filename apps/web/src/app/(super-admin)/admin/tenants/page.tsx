@@ -183,7 +183,7 @@ export default function TenantsPage() {
     const badges: Record<string, string> = {
       TRIAL: 'badge-info',
       BASIC: 'badge-warning',
-      PROFESSIONAL: 'badge-success',
+      PRO: 'badge-success',
       ENTERPRISE: 'bg-purple-500/20 text-purple-400',
     };
     return badges[plan] || 'badge-info';
@@ -238,7 +238,7 @@ export default function TenantsPage() {
               <SelectItem value="ALL">Todos los planes</SelectItem>
               <SelectItem value="TRIAL">Prueba</SelectItem>
               <SelectItem value="BASIC">Basico</SelectItem>
-              <SelectItem value="PROFESSIONAL">Profesional</SelectItem>
+              <SelectItem value="PRO">Profesional</SelectItem>
               <SelectItem value="ENTERPRISE">Empresa</SelectItem>
             </SelectContent>
           </Select>

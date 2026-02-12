@@ -16,6 +16,7 @@ import {
   Repeat,
   Package,
   ClipboardList,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Recurrentes', href: '/facturas/recurrentes', icon: Repeat, proBadge: true },
   { name: 'Reportes', href: '/reportes', icon: BarChart3, proBadge: false },
   { name: 'Clientes', href: '/clientes', icon: Users, proBadge: false },
+  { name: 'Contabilidad', href: '/contabilidad', icon: BookOpen, proBadge: true },
   { name: 'Catalogo', href: '/catalogo', icon: Package, proBadge: false },
   { name: 'Soporte', href: '/soporte', icon: HelpCircle, proBadge: false },
   { name: 'Configuracion', href: '/configuracion', icon: Settings, proBadge: false },

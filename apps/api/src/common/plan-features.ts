@@ -1,6 +1,7 @@
 /**
  * Plan feature definitions for feature gating.
- * Maps plan codes (DEMO, TRIAL, BASIC, PRO, ENTERPRISE) to their feature flags.
+ * Canonical codes: DEMO, TRIAL, BASIC, PRO, ENTERPRISE
+ * Legacy aliases: PROFESIONAL -> PRO, EMPRESARIAL -> ENTERPRISE, PROFESSIONAL -> PRO
  */
 
 export interface PlanFeatures {
@@ -11,6 +12,8 @@ export interface PlanFeatures {
   templates: boolean;
   reports: boolean;
   apiAccess: boolean;
+  accounting: boolean;
+  advancedQuotes: boolean;
 }
 
 export const PLAN_FEATURES: Record<string, PlanFeatures> = {
@@ -22,6 +25,8 @@ export const PLAN_FEATURES: Record<string, PlanFeatures> = {
     templates: false,
     reports: false,
     apiAccess: false,
+    accounting: false,
+    advancedQuotes: false,
   },
   TRIAL: {
     maxDtesPerMonth: 50,
@@ -31,6 +36,8 @@ export const PLAN_FEATURES: Record<string, PlanFeatures> = {
     templates: false,
     reports: true,
     apiAccess: false,
+    accounting: false,
+    advancedQuotes: false,
   },
   BASIC: {
     maxDtesPerMonth: 100,
@@ -40,6 +47,8 @@ export const PLAN_FEATURES: Record<string, PlanFeatures> = {
     templates: false,
     reports: true,
     apiAccess: false,
+    accounting: false,
+    advancedQuotes: false,
   },
   PRO: {
     maxDtesPerMonth: 500,
@@ -49,6 +58,8 @@ export const PLAN_FEATURES: Record<string, PlanFeatures> = {
     templates: true,
     reports: true,
     apiAccess: false,
+    accounting: true,
+    advancedQuotes: true,
   },
   ENTERPRISE: {
     maxDtesPerMonth: -1,
@@ -58,9 +69,28 @@ export const PLAN_FEATURES: Record<string, PlanFeatures> = {
     templates: true,
     reports: true,
     apiAccess: true,
+    accounting: true,
+    advancedQuotes: true,
   },
 };
 
+/**
+ * Maps legacy/alternate plan codes to canonical codes.
+ * Handles: PROFESIONAL->PRO, PROFESSIONAL->PRO, EMPRESARIAL->ENTERPRISE
+ */
+const PLAN_ALIASES: Record<string, string> = {
+  PROFESIONAL: 'PRO',
+  PROFESSIONAL: 'PRO',
+  EMPRESARIAL: 'ENTERPRISE',
+};
+
+/** Normalize a plan code to its canonical form. */
+export function normalizePlanCode(planCode: string): string {
+  const upper = planCode.toUpperCase();
+  return PLAN_ALIASES[upper] || upper;
+}
+
 export function getPlanFeatures(planCode: string): PlanFeatures {
-  return PLAN_FEATURES[planCode] || PLAN_FEATURES['DEMO'];
+  const normalized = normalizePlanCode(planCode);
+  return PLAN_FEATURES[normalized] || PLAN_FEATURES['DEMO'];
 }

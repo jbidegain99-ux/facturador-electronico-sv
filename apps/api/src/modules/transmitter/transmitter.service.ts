@@ -1,6 +1,4 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   sendDTE,
   consultarDTE,
@@ -73,7 +71,6 @@ export class TransmitterService {
   private dteLogs: Map<string, DTELog[]> = new Map();
 
   constructor(
-    @Optional() @InjectQueue('dte-transmission') private transmissionQueue: Queue | undefined,
     private mhAuthService: MhAuthService,
     private signerService: SignerService,
   ) {}
@@ -270,68 +267,21 @@ export class TransmitterService {
   }
 
   /**
-   * Encola un DTE para transmisión con reintentos
+   * Transmite un DTE (calls transmitSync directly)
    */
   async transmitAsync(
     dteId: string,
-    tenantId: string,
+    _tenantId: string,
     nit: string,
     password: string,
     env: MHEnvironment = 'test'
   ): Promise<{ jobId: string; message: string }> {
-    if (!this.transmissionQueue) {
-      this.logger.warn('Redis not configured, executing synchronously');
-      const result = await this.transmitSync(dteId, nit, password, env);
-      return {
-        jobId: 'sync',
-        message: result.success
-          ? `DTE transmitido síncronamente: ${result.selloRecibido}`
-          : `Error: ${result.error}`,
-      };
-    }
-
-    const record = this.getDTE(dteId);
-
-    if (!record) {
-      throw new Error(`DTE not found: ${dteId}`);
-    }
-
-    if (record.status === 'PROCESADO') {
-      throw new Error(`DTE already processed: ${dteId}`);
-    }
-
-    const jobData: TransmitJobData = {
-      dteId,
-      tenantId,
-      nit,
-      password,
-      env,
-    };
-
-    const job = await this.transmissionQueue.add('transmit', jobData, {
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 1000, // 1s, 2s, 4s
-      },
-      removeOnComplete: 100,
-      removeOnFail: 100,
-    });
-
-    this.updateDTE(dteId, { status: 'PROCESANDO' });
-
-    this.addLog({
-      dteId,
-      action: 'TRANSMIT',
-      status: 'SUCCESS',
-      message: `Job encolado: ${job.id}`,
-    });
-
-    this.logger.log(`DTE queued for transmission: ${dteId} - Job: ${job.id}`);
-
+    const result = await this.transmitSync(dteId, nit, password, env);
     return {
-      jobId: job.id || '',
-      message: `DTE encolado para transmisión. Job ID: ${job.id}`,
+      jobId: 'sync',
+      message: result.success
+        ? `DTE transmitido: ${result.selloRecibido}`
+        : `Error: ${result.error}`,
     };
   }
 
@@ -473,33 +423,15 @@ export class TransmitterService {
   }
 
   /**
-   * Obtiene el estado de un job de transmisión
+   * Obtiene el estado de un job de transmisión (no-op, queue removed)
    */
-  async getJobStatus(jobId: string): Promise<{
+  async getJobStatus(_jobId: string): Promise<{
     id: string;
     state: string;
     progress: number;
     attemptsMade: number;
     failedReason?: string;
   } | null> {
-    if (!this.transmissionQueue) {
-      return null;
-    }
-
-    const job = await this.transmissionQueue.getJob(jobId);
-
-    if (!job) {
-      return null;
-    }
-
-    const state = await job.getState();
-
-    return {
-      id: job.id || '',
-      state,
-      progress: job.progress as number,
-      attemptsMade: job.attemptsMade,
-      failedReason: job.failedReason,
-    };
+    return null;
   }
 }

@@ -42,13 +42,33 @@ export interface MockPrismaClient {
   user: {
     findUnique: jest.Mock;
   };
+  accountingAccount: {
+    findMany: jest.Mock;
+    findFirst: jest.Mock;
+    findUnique: jest.Mock;
+    count: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+  };
+  journalEntry: {
+    findMany: jest.Mock;
+    findFirst: jest.Mock;
+    findUnique: jest.Mock;
+    count: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+  };
+  journalEntryLine: {
+    findMany: jest.Mock;
+    count: jest.Mock;
+  };
   $transaction: jest.Mock;
   $connect: jest.Mock;
   $disconnect: jest.Mock;
 }
 
 export function createMockPrismaService(): MockPrismaClient {
-  return {
+  const mock: MockPrismaClient = {
     cliente: {
       findMany: jest.fn().mockResolvedValue([]),
       findFirst: jest.fn().mockResolvedValue(null),
@@ -90,12 +110,43 @@ export function createMockPrismaService(): MockPrismaClient {
     user: {
       findUnique: jest.fn().mockResolvedValue(null),
     },
-    $transaction: jest.fn().mockImplementation((operations: unknown[]) =>
-      Promise.all(operations),
-    ),
+    accountingAccount: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findFirst: jest.fn().mockResolvedValue(null),
+      findUnique: jest.fn().mockResolvedValue(null),
+      count: jest.fn().mockResolvedValue(0),
+      create: jest.fn().mockResolvedValue({}),
+      update: jest.fn().mockResolvedValue({}),
+    },
+    journalEntry: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findFirst: jest.fn().mockResolvedValue(null),
+      findUnique: jest.fn().mockResolvedValue(null),
+      count: jest.fn().mockResolvedValue(0),
+      create: jest.fn().mockResolvedValue({}),
+      update: jest.fn().mockResolvedValue({}),
+    },
+    journalEntryLine: {
+      findMany: jest.fn().mockResolvedValue([]),
+      count: jest.fn().mockResolvedValue(0),
+    },
+    $transaction: jest.fn(),
     $connect: jest.fn(),
     $disconnect: jest.fn(),
   };
+
+  // Set up $transaction to support both batched (array) and interactive (callback) patterns.
+  // For interactive transactions, pass the mock itself as the `tx` client.
+  mock.$transaction.mockImplementation(
+    (operationsOrFn: unknown[] | ((tx: MockPrismaClient) => Promise<unknown>)) => {
+      if (typeof operationsOrFn === 'function') {
+        return operationsOrFn(mock);
+      }
+      return Promise.all(operationsOrFn);
+    },
+  );
+
+  return mock;
 }
 
 /**

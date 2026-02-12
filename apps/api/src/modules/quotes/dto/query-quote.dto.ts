@@ -15,7 +15,17 @@ export class QueryQuoteDto {
   search?: string;
 
   @IsOptional()
-  @IsIn(['DRAFT', 'SENT', 'APPROVED', 'REJECTED', 'EXPIRED', 'CONVERTED', 'CANCELLED'])
+  @IsIn([
+    'DRAFT',
+    'SENT',
+    'PENDING_APPROVAL',
+    'APPROVED',
+    'PARTIALLY_APPROVED',
+    'REJECTED',
+    'EXPIRED',
+    'CONVERTED',
+    'CANCELLED',
+  ])
   status?: string;
 
   @IsOptional()

@@ -6,28 +6,34 @@ import {
   ValidateNested,
   IsNumber,
   Min,
+  IsEmail,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class QuoteLineItemDto {
   @IsString()
-  descripcion: string;
+  description: string;
 
   @IsNumber()
   @Min(0.01)
-  cantidad: number;
+  quantity: number;
 
   @IsNumber()
   @Min(0)
-  precioUnitario: number;
+  unitPrice: number;
 
   @IsNumber()
   @Min(0)
-  descuento: number;
+  discount: number;
 
   @IsNumber()
   @Min(1)
   tipoItem: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  taxRate?: number;
 
   @IsOptional()
   @IsString()
@@ -35,7 +41,7 @@ export class QuoteLineItemDto {
 
   @IsOptional()
   @IsString()
-  codigo?: string;
+  itemCode?: string;
 }
 
 export class CreateQuoteDto {
@@ -57,4 +63,8 @@ export class CreateQuoteDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsEmail()
+  clienteEmail?: string;
 }

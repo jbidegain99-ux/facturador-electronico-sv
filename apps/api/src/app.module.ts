@@ -1,7 +1,8 @@
-import { Module, DynamicModule, Type, ForwardReference } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { ClientesModule } from './modules/clientes/clientes.module';
@@ -24,12 +25,11 @@ import { RecurringInvoicesModule } from './modules/recurring-invoices/recurring-
 import { CatalogItemsModule } from './modules/catalog-items/catalog-items.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { QuotesModule } from './modules/quotes/quotes.module';
+import { AccountingModule } from './modules/accounting/accounting.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
-type NestImport = Type<unknown> | DynamicModule | Promise<DynamicModule> | ForwardReference;
-
-const imports: NestImport[] = [
+const imports = [
   ConfigModule.forRoot({
     isGlobal: true,
     envFilePath: ['.env.local', '.env'],
@@ -59,15 +59,16 @@ const imports: NestImport[] = [
   CatalogItemsModule,
   DashboardModule,
   QuotesModule,
+  AccountingModule,
 ];
 
-if (process.env.REDIS_URL) {
-  imports.push(
-    BullModule.forRoot({
-      connection: { url: process.env.REDIS_URL },
-    }),
-  );
-}
-
-@Module({ imports })
+@Module({
+  imports,
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
+})
 export class AppModule {}

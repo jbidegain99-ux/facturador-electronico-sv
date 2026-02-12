@@ -1,13 +1,8 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
-import { PrismaService } from '../../../prisma/prisma.service';
-import { DteService } from '../../dte/dte.service';
-import { RecurringInvoicesService } from '../recurring-invoices.service';
-
-interface RecurringInvoiceJobData {
-  templateId: string;
-}
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+import { PrismaService } from '../../prisma/prisma.service';
+import { DteService } from '../dte/dte.service';
+import { RecurringInvoicesService } from './recurring-invoices.service';
 
 interface TemplateItem {
   descripcion: string;
@@ -16,59 +11,125 @@ interface TemplateItem {
   descuento: number;
 }
 
-@Processor('recurring-invoices')
-export class RecurringInvoiceProcessor extends WorkerHost {
-  private readonly logger = new Logger(RecurringInvoiceProcessor.name);
+interface TemplateForProcessing {
+  id: string;
+  tenantId: string;
+  tipoDte: string;
+  mode: string;
+  autoTransmit: boolean;
+  status: string;
+  items: string;
+  notas: string | null;
+  cliente: {
+    nombre: string;
+    numDocumento: string;
+    tipoDocumento: string;
+    nrc: string | null;
+    correo: string | null;
+    telefono: string | null;
+    direccion: string | null;
+  };
+  tenant: {
+    nombre: string;
+    nit: string;
+    nrc: string;
+    telefono: string;
+    correo: string;
+    direccion: string;
+    actividadEcon: string;
+  };
+}
+
+@Injectable()
+export class RecurringInvoiceCronService {
+  private readonly logger = new Logger(RecurringInvoiceCronService.name);
 
   constructor(
     private prisma: PrismaService,
     private dteService: DteService,
     private recurringService: RecurringInvoicesService,
-  ) {
-    super();
-  }
+  ) {}
 
-  async process(job: Job<RecurringInvoiceJobData>): Promise<void> {
-    const { templateId } = job.data;
-    this.logger.log(`Processing recurring invoice template: ${templateId}`);
+  /**
+   * Runs daily at 00:01 AM El Salvador time.
+   * Finds all ACTIVE templates with nextRunDate <= now and processes them directly.
+   */
+  @Cron('0 1 0 * * *', {
+    name: 'processRecurringInvoices',
+    timeZone: 'America/El_Salvador',
+  })
+  async handleRecurringInvoices(): Promise<void> {
+    this.logger.log('Starting recurring invoices processing...');
 
     try {
-      const template = await this.prisma.recurringInvoiceTemplate.findUnique({
-        where: { id: templateId },
-        include: {
-          cliente: true,
-          tenant: true,
-        },
-      });
+      const dueTemplates = await this.recurringService.getDueTemplates();
+      this.logger.log(`Found ${dueTemplates.length} due templates`);
 
-      if (!template) {
-        this.logger.warn(`Template ${templateId} not found, skipping`);
-        return;
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const template of dueTemplates) {
+        try {
+          await this.processTemplate(template.id);
+          successCount++;
+        } catch (error) {
+          failCount++;
+          this.logger.error(
+            `Failed to process template ${template.id}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
       }
 
-      if (template.status !== 'ACTIVE') {
-        this.logger.warn(`Template ${templateId} is ${template.status}, skipping`);
-        return;
-      }
+      this.logger.log(
+        `Recurring invoices processing completed: ${successCount} success, ${failCount} failed`,
+      );
+    } catch (error) {
+      this.logger.error(
+        'Fatal error in recurring invoices cron:',
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
 
-      // Parse items from JSON
+  /**
+   * Process a single template: load it, generate a DTE, record result.
+   * Can be called from the cron job or manually via the trigger endpoint.
+   */
+  async processTemplate(templateId: string): Promise<{ dteId: string }> {
+    this.logger.log(`Processing recurring invoice template: ${templateId}`);
+
+    const template = await this.prisma.recurringInvoiceTemplate.findUnique({
+      where: { id: templateId },
+      include: {
+        cliente: true,
+        tenant: true,
+      },
+    }) as TemplateForProcessing | null;
+
+    if (!template) {
+      this.logger.warn(`Template ${templateId} not found, skipping`);
+      throw new Error(`Template ${templateId} not found`);
+    }
+
+    if (template.status !== 'ACTIVE') {
+      this.logger.warn(`Template ${templateId} is ${template.status}, skipping`);
+      throw new Error(`Template ${templateId} is ${template.status}, not ACTIVE`);
+    }
+
+    try {
       const items: TemplateItem[] = JSON.parse(template.items);
-
-      // Build DTE body data matching the structure DteService.createDte expects
       const dteData = this.buildDteData(template, items);
 
-      // Create the DTE
       const dte = await this.dteService.createDte(
         template.tenantId,
         template.tipoDte,
         dteData,
       );
 
-      // If mode is AUTO_SEND and autoTransmit, sign and transmit
+      // If mode is AUTO_SEND and autoTransmit, sign the DTE
       if (template.mode === 'AUTO_SEND' && template.autoTransmit) {
         try {
           await this.dteService.signDte(dte.id);
-          // Transmit needs nit and password from tenant config - skip if not available
           this.logger.log(`DTE ${dte.id} created and signed for template ${templateId}`);
         } catch (signError) {
           this.logger.warn(`DTE ${dte.id} created but signing failed: ${signError}`);
@@ -77,37 +138,18 @@ export class RecurringInvoiceProcessor extends WorkerHost {
 
       await this.recurringService.recordSuccess(templateId, dte.id);
       this.logger.log(`Successfully processed template ${templateId}, DTE ${dte.id}`);
+
+      return { dteId: dte.id };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to process template ${templateId}: ${errorMessage}`);
       await this.recurringService.recordFailure(templateId, errorMessage);
-      throw error; // Let BullMQ handle retries
+      throw error;
     }
   }
 
   private buildDteData(
-    template: {
-      tipoDte: string;
-      notas: string | null;
-      cliente: {
-        nombre: string;
-        numDocumento: string;
-        tipoDocumento: string;
-        nrc: string | null;
-        correo: string | null;
-        telefono: string | null;
-        direccion: string | null;
-      };
-      tenant: {
-        nombre: string;
-        nit: string;
-        nrc: string;
-        telefono: string;
-        correo: string;
-        direccion: string;
-        actividadEcon: string;
-      };
-    },
+    template: TemplateForProcessing,
     items: TemplateItem[],
   ): Record<string, unknown> {
     const now = new Date();

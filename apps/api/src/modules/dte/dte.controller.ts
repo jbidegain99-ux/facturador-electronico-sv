@@ -14,7 +14,6 @@ interface AuthRequest extends Request {
 
 @ApiTags('dte')
 @Controller('dte')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class DteController {
   constructor(
@@ -33,17 +32,18 @@ export class DteController {
 
   @Post(':id/sign')
   @ApiOperation({ summary: 'Firmar DTE' })
-  sign(@Param('id') id: string) {
-    return this.dteService.signDte(id);
+  sign(@Request() req: AuthRequest, @Param('id') id: string) {
+    return this.dteService.signDte(id, req.user.tenantId);
   }
 
   @Post(':id/transmit')
   @ApiOperation({ summary: 'Transmitir DTE al MH' })
   transmit(
+    @Request() req: AuthRequest,
     @Param('id') id: string,
     @Body() credentials: { nit: string; password: string },
   ) {
-    return this.dteService.transmitDte(id, credentials.nit, credentials.password);
+    return this.dteService.transmitDte(id, credentials.nit, credentials.password, req.user.tenantId);
   }
 
   @Get()
@@ -154,18 +154,19 @@ export class DteController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener DTE por ID' })
-  findOne(@Param('id') id: string) {
-    return this.dteService.findOne(id);
+  findOne(@Request() req: AuthRequest, @Param('id') id: string) {
+    return this.dteService.findOne(id, req.user.tenantId);
   }
 
   @Get(':id/pdf')
   @ApiOperation({ summary: 'Descargar DTE como PDF' })
   @ApiProduces('application/pdf')
   async downloadPdf(
+    @Request() req: AuthRequest,
     @Param('id') id: string,
     @Res() res: Response,
   ) {
-    const dte = await this.dteService.findOneWithTenant(id);
+    const dte = await this.dteService.findOneWithTenant(id, req.user.tenantId);
 
     if (!dte) {
       throw new NotFoundException('DTE no encontrado');
@@ -190,9 +191,10 @@ export class DteController {
   @Post(':id/anular')
   @ApiOperation({ summary: 'Anular DTE' })
   anular(
+    @Request() req: AuthRequest,
     @Param('id') id: string,
     @Body() body: { motivo: string },
   ) {
-    return this.dteService.anularDte(id, body.motivo);
+    return this.dteService.anularDte(id, body.motivo, req.user.tenantId);
   }
 }

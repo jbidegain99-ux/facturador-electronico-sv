@@ -142,11 +142,16 @@ export class DteService {
     }
   }
 
-  async signDte(dteId: string) {
-    const dte = await this.prisma.dTE.findUnique({
-      where: { id: dteId },
-      include: { tenant: true },
-    });
+  async signDte(dteId: string, tenantId?: string) {
+    const dte = tenantId
+      ? await this.prisma.dTE.findFirst({
+          where: { id: dteId, tenantId },
+          include: { tenant: true },
+        })
+      : await this.prisma.dTE.findUnique({
+          where: { id: dteId },
+          include: { tenant: true },
+        });
 
     if (!dte) {
       throw new Error('DTE no encontrado');
@@ -190,11 +195,16 @@ export class DteService {
     return updated;
   }
 
-  async transmitDte(dteId: string, nit: string, password: string) {
-    const dte = await this.prisma.dTE.findUnique({
-      where: { id: dteId },
-      include: { tenant: true },
-    });
+  async transmitDte(dteId: string, nit: string, password: string, tenantId?: string) {
+    const dte = tenantId
+      ? await this.prisma.dTE.findFirst({
+          where: { id: dteId, tenantId },
+          include: { tenant: true },
+        })
+      : await this.prisma.dTE.findUnique({
+          where: { id: dteId },
+          include: { tenant: true },
+        });
 
     if (!dte || !dte.jsonFirmado) {
       throw new Error('DTE no encontrado o no firmado');
@@ -353,24 +363,40 @@ export class DteService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, tenantId?: string) {
+    if (tenantId) {
+      return this.prisma.dTE.findFirst({
+        where: { id, tenantId },
+        include: { cliente: true, logs: true },
+      });
+    }
     return this.prisma.dTE.findUnique({
       where: { id },
       include: { cliente: true, logs: true },
     });
   }
 
-  async findOneWithTenant(id: string) {
+  async findOneWithTenant(id: string, tenantId?: string) {
+    if (tenantId) {
+      return this.prisma.dTE.findFirst({
+        where: { id, tenantId },
+        include: { cliente: true, logs: true, tenant: true },
+      });
+    }
     return this.prisma.dTE.findUnique({
       where: { id },
       include: { cliente: true, logs: true, tenant: true },
     });
   }
 
-  async anularDte(dteId: string, motivo: string) {
-    const dte = await this.prisma.dTE.findUnique({
-      where: { id: dteId },
-    });
+  async anularDte(dteId: string, motivo: string, tenantId?: string) {
+    const dte = tenantId
+      ? await this.prisma.dTE.findFirst({
+          where: { id: dteId, tenantId },
+        })
+      : await this.prisma.dTE.findUnique({
+          where: { id: dteId },
+        });
 
     if (!dte) {
       throw new Error('DTE no encontrado');
@@ -612,12 +638,13 @@ export class DteService {
       return [];
     }
 
-    const where: any = { tenantId };
+    const where: Record<string, unknown> = { tenantId };
 
     if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = startDate;
-      if (endDate) where.createdAt.lte = endDate;
+      const dateFilter: Record<string, Date> = {};
+      if (startDate) dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+      where.createdAt = dateFilter;
     }
 
     const stats = await this.prisma.dTE.groupBy({
@@ -676,16 +703,17 @@ export class DteService {
       return [];
     }
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       tenantId,
       clienteId: { not: null },
       estado: { in: [DTEStatus.PROCESADO, DTEStatus.FIRMADO] },
     };
 
     if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = startDate;
-      if (endDate) where.createdAt.lte = endDate;
+      const dateFilter: Record<string, Date> = {};
+      if (startDate) dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+      where.createdAt = dateFilter;
     }
 
     const stats = await this.prisma.dTE.groupBy({

@@ -1,14 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, ServiceUnavailableException } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RecurringInvoicesController } from './recurring-invoices.controller';
 import { RecurringInvoicesService } from './recurring-invoices.service';
+import { RecurringInvoiceCronService } from './recurring-invoice-cron.service';
 import { createMockUser, createMockUserWithoutTenant, createMockAuthGuard } from '../../test/helpers/mock-user';
 import { createMockTemplate } from '../../test/helpers/test-fixtures';
 
 describe('RecurringInvoicesController', () => {
   let controller: RecurringInvoicesController;
   let mockService: Record<string, jest.Mock>;
+  let mockCronService: Record<string, jest.Mock>;
   const mockUser = createMockUser();
 
   beforeEach(async () => {
@@ -23,10 +25,16 @@ describe('RecurringInvoicesController', () => {
       getHistory: jest.fn().mockResolvedValue({ data: [], total: 0, page: 1, limit: 20, totalPages: 0 }),
       getTenantPlanCode: jest.fn().mockResolvedValue('PRO'),
     };
+    mockCronService = {
+      processTemplate: jest.fn().mockResolvedValue({ dteId: 'dte-1' }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RecurringInvoicesController],
-      providers: [{ provide: RecurringInvoicesService, useValue: mockService }],
+      providers: [
+        { provide: RecurringInvoicesService, useValue: mockService },
+        { provide: RecurringInvoiceCronService, useValue: mockCronService },
+      ],
     })
       .overrideGuard(AuthGuard('jwt'))
       .useValue(createMockAuthGuard(mockUser))
@@ -146,33 +154,17 @@ describe('RecurringInvoicesController', () => {
   });
 
   describe('trigger', () => {
-    it('should throw ServiceUnavailableException when REDIS_URL is not set', async () => {
+    it('should process template and return result', async () => {
       const template = createMockTemplate();
       mockService.findOne.mockResolvedValue(template);
 
-      // REDIS_URL is not set in test env
-      delete process.env.REDIS_URL;
-
-      await expect(
-        controller.trigger(mockUser, 'template-1'),
-      ).rejects.toThrow(ServiceUnavailableException);
-    });
-
-    it('should return confirmation when REDIS_URL is set', async () => {
-      const template = createMockTemplate();
-      mockService.findOne.mockResolvedValue(template);
-
-      process.env.REDIS_URL = 'redis://localhost:6379';
-      try {
-        const result = await controller.trigger(mockUser, 'template-1');
-        expect(result).toEqual({
-          message: 'Template encolado para ejecucion',
-          templateId: template.id,
-        });
-        expect(mockService.findOne).toHaveBeenCalledWith('tenant-1', 'template-1');
-      } finally {
-        delete process.env.REDIS_URL;
-      }
+      const result = await controller.trigger(mockUser, 'template-1');
+      expect(result).toEqual({
+        message: 'Template ejecutado exitosamente',
+        dteId: 'dte-1',
+      });
+      expect(mockService.findOne).toHaveBeenCalledWith('tenant-1', 'template-1');
+      expect(mockCronService.processTemplate).toHaveBeenCalledWith('template-1');
     });
 
     it('should throw ForbiddenException when user has no tenantId', async () => {

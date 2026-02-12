@@ -35,19 +35,35 @@ import {
   User,
   Calendar,
   FileText,
+  Copy,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Shield,
+  Link as LinkIcon,
+  RefreshCw,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { formatCurrency } from '@/lib/utils';
 
-// ── Types ────────────────────────────────────────────────────────────
+// -- Types ------------------------------------------------------------------
 
 interface QuoteLineItem {
-  descripcion: string;
-  cantidad: number;
-  precioUnitario: number;
-  descuento: number;
+  id: string;
+  lineNumber: number;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  taxRate: number;
   tipoItem: number;
-  codigo?: string;
+  itemCode: string | null;
+  lineSubtotal: number;
+  lineTax: number;
+  lineTotal: number;
+  approvalStatus: string; // PENDING, APPROVED, REJECTED
+  approvedQuantity: number | null;
+  rejectionReason: string | null;
 }
 
 interface QuoteClient {
@@ -70,16 +86,39 @@ interface QuoteDetail {
   subtotal: number;
   taxAmount: number;
   total: number;
-  items: string | QuoteLineItem[];
+  items: string | null;
+  lineItems: QuoteLineItem[];
   terms?: string | null;
   notes?: string | null;
   convertedToInvoiceId?: string | null;
   convertedAt?: string | null;
   rejectionReason?: string | null;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  approvedSubtotal?: number | null;
+  approvedTaxAmount?: number | null;
+  approvedTotal?: number | null;
+  approvalUrl?: string | null;
+  version: number;
+  quoteGroupId?: string | null;
+  clienteNombre?: string | null;
+  clienteEmail?: string | null;
+  sentAt?: string | null;
+  clientNotes?: string | null;
   createdAt: string;
 }
 
-// ── Status config ────────────────────────────────────────────────────
+interface StatusHistoryEntry {
+  id: string;
+  fromStatus: string | null;
+  toStatus: string;
+  actorType: string;
+  actorId: string | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+// -- Status config ----------------------------------------------------------
 
 interface StatusConfig {
   label: string;
@@ -90,11 +129,19 @@ interface StatusConfig {
 const STATUS_MAP: Record<string, StatusConfig> = {
   DRAFT: { label: 'Borrador', variant: 'secondary', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
   SENT: { label: 'Enviada', variant: 'default', className: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
+  PENDING_APPROVAL: { label: 'Pendiente Aprobacion', variant: 'default', className: 'bg-teal-600/20 text-teal-400 border-teal-600/30' },
   APPROVED: { label: 'Aprobada', variant: 'default', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
+  PARTIALLY_APPROVED: { label: 'Parcialmente Aprobada', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
   REJECTED: { label: 'Rechazada', variant: 'destructive', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
   EXPIRED: { label: 'Expirada', variant: 'outline', className: 'bg-amber-600/20 text-amber-400 border-amber-600/30' },
   CONVERTED: { label: 'Convertida', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
   CANCELLED: { label: 'Cancelada', variant: 'secondary', className: 'bg-gray-700/20 text-gray-500 border-gray-700/30' },
+};
+
+const APPROVAL_STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  APPROVED: { label: 'Aprobado', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
+  REJECTED: { label: 'Rechazado', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
+  PENDING: { label: 'Pendiente', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
 };
 
 function formatDate(dateStr: string): string {
@@ -109,7 +156,21 @@ function formatDate(dateStr: string): string {
   }
 }
 
-// ── Component ────────────────────────────────────────────────────────
+function formatDateTime(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString('es-SV', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+// -- Component --------------------------------------------------------------
 
 export default function CotizacionDetailPage() {
   const router = useRouter();
@@ -122,6 +183,9 @@ export default function CotizacionDetailPage() {
   const [quote, setQuote] = React.useState<QuoteDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [actionLoading, setActionLoading] = React.useState(false);
+  const [statusHistory, setStatusHistory] = React.useState<StatusHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = React.useState(false);
+  const [showVersions, setShowVersions] = React.useState(false);
 
   // Dialogs
   const [showRejectDialog, setShowRejectDialog] = React.useState(false);
@@ -130,7 +194,7 @@ export default function CotizacionDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [showCancelDialog, setShowCancelDialog] = React.useState(false);
 
-  // ── Fetch ──────────────────────────────────────────────────────────
+  // -- Fetch ----------------------------------------------------------------
 
   const fetchQuote = React.useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -159,11 +223,36 @@ export default function CotizacionDetailPage() {
     }
   }, [id, router]);
 
+  const fetchStatusHistory = React.useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setHistoryLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/quotes/${id}/status-history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setStatusHistory(data as StatusHistoryEntry[]);
+      }
+    } catch (err) {
+      console.error('Error fetching status history:', err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [id]);
+
   React.useEffect(() => {
     fetchQuote();
-  }, [fetchQuote]);
+    fetchStatusHistory();
+  }, [fetchQuote, fetchStatusHistory]);
 
-  // ── Actions ────────────────────────────────────────────────────────
+  // -- Actions --------------------------------------------------------------
 
   const handleAction = async (
     action: string,
@@ -194,6 +283,7 @@ export default function CotizacionDetailPage() {
 
       toastRef.current.success('Accion realizada correctamente');
       fetchQuote();
+      fetchStatusHistory();
     } catch (err) {
       toastRef.current.error(
         err instanceof Error ? err.message : 'Error desconocido',
@@ -277,21 +367,64 @@ export default function CotizacionDetailPage() {
     }
   };
 
-  // ── Parse items ────────────────────────────────────────────────────
-  const parsedItems: QuoteLineItem[] = React.useMemo(() => {
-    if (!quote) return [];
-    try {
-      const raw =
-        typeof quote.items === 'string'
-          ? JSON.parse(quote.items)
-          : quote.items;
-      return Array.isArray(raw) ? raw : [];
-    } catch {
-      return [];
-    }
-  }, [quote]);
+  const handleCreateNewVersion = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
-  // ── Loading ────────────────────────────────────────────────────────
+    setActionLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/quotes/${id}/create-version`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(
+          (errData as { message?: string }).message ||
+            'Error al crear nueva version',
+        );
+      }
+
+      const result = await res.json();
+      toastRef.current.success('Nueva version creada');
+
+      const newQuote = result as { id?: string };
+      if (newQuote.id) {
+        router.push(`/cotizaciones/${newQuote.id}`);
+      } else {
+        router.push('/cotizaciones');
+      }
+    } catch (err) {
+      toastRef.current.error(
+        err instanceof Error ? err.message : 'Error desconocido',
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCopyApprovalUrl = () => {
+    if (!quote?.approvalUrl) return;
+    navigator.clipboard.writeText(quote.approvalUrl).then(
+      () => toastRef.current.success('Enlace copiado al portapapeles'),
+      () => toastRef.current.error('No se pudo copiar el enlace'),
+    );
+  };
+
+  // -- Helpers --------------------------------------------------------------
+
+  const showApprovalBadges =
+    quote?.status === 'PARTIALLY_APPROVED' ||
+    quote?.status === 'APPROVED' ||
+    quote?.status === 'PENDING_APPROVAL';
+
+  const hasApprovedTotals =
+    quote?.approvedTotal != null &&
+    quote.approvedTotal !== quote.total;
+
+  // -- Loading --------------------------------------------------------------
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -317,8 +450,9 @@ export default function CotizacionDetailPage() {
   }
 
   const statusConfig = STATUS_MAP[quote.status] || STATUS_MAP.DRAFT;
+  const lineItems = Array.isArray(quote.lineItems) ? quote.lineItems : [];
 
-  // ── Render ─────────────────────────────────────────────────────────
+  // -- Render ---------------------------------------------------------------
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -337,6 +471,11 @@ export default function CotizacionDetailPage() {
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <ClipboardList className="w-6 h-6 text-primary" />
               {quote.quoteNumber}
+              {quote.version > 1 && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  v{quote.version}
+                </span>
+              )}
             </h1>
             <div className="flex items-center gap-3 mt-1">
               <Badge
@@ -389,6 +528,16 @@ export default function CotizacionDetailPage() {
           )}
           {quote.status === 'SENT' && (
             <>
+              {quote.approvalUrl && (
+                <Button
+                  variant="ghost"
+                  className="text-teal-400 hover:text-teal-300"
+                  onClick={handleCopyApprovalUrl}
+                >
+                  <LinkIcon className="w-4 h-4 mr-2" />
+                  Copiar enlace de aprobacion
+                </Button>
+              )}
               <Button
                 className="bg-green-600 hover:bg-green-700 text-white"
                 onClick={() => handleAction('approve')}
@@ -419,7 +568,7 @@ export default function CotizacionDetailPage() {
               </Button>
             </>
           )}
-          {quote.status === 'APPROVED' && (
+          {(quote.status === 'APPROVED' || quote.status === 'PARTIALLY_APPROVED') && (
             <>
               <Button
                 className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -442,6 +591,20 @@ export default function CotizacionDetailPage() {
                 Cancelar
               </Button>
             </>
+          )}
+          {(quote.status === 'REJECTED' || quote.status === 'EXPIRED' || quote.status === 'CANCELLED') && (
+            <Button
+              className="btn-primary"
+              onClick={handleCreateNewVersion}
+              disabled={actionLoading}
+            >
+              {actionLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
+              Crear Nueva Version
+            </Button>
           )}
           {quote.status === 'CONVERTED' &&
             quote.convertedToInvoiceId && (
@@ -479,6 +642,91 @@ export default function CotizacionDetailPage() {
         </div>
       )}
 
+      {/* Approval info */}
+      {quote.approvedBy && (
+        <div className="glass-card p-5 border-green-600/30">
+          <div className="flex items-center gap-2 mb-4">
+            <Shield className="w-5 h-5 text-green-400" />
+            <h2 className="font-semibold text-foreground">Informacion de Aprobacion</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Aprobado por</p>
+              <p className="text-foreground font-medium">{quote.approvedBy}</p>
+            </div>
+            {quote.approvedAt && (
+              <div>
+                <p className="text-sm text-muted-foreground">Fecha de aprobacion</p>
+                <p className="text-foreground">{formatDateTime(quote.approvedAt)}</p>
+              </div>
+            )}
+            {quote.clientNotes && (
+              <div className="sm:col-span-2">
+                <p className="text-sm text-muted-foreground">Notas del cliente</p>
+                <p className="text-foreground text-sm whitespace-pre-wrap">{quote.clientNotes}</p>
+              </div>
+            )}
+          </div>
+          {quote.approvalUrl && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground mb-2">Enlace de aprobacion</p>
+              <div className="flex items-center gap-2">
+                <code className="text-xs text-foreground bg-background/50 px-3 py-1.5 rounded-md border border-border flex-1 truncate">
+                  {quote.approvalUrl}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopyApprovalUrl}
+                  className="shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Version info */}
+      {quote.version > 1 && (
+        <div className="glass-card p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold text-foreground">Version {quote.version}</h3>
+            </div>
+            {quote.quoteGroupId && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowVersions(!showVersions)}
+                className="text-muted-foreground hover:text-white"
+              >
+                {showVersions ? (
+                  <ChevronUp className="w-4 h-4 mr-1" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 mr-1" />
+                )}
+                Ver versiones
+              </Button>
+            )}
+          </div>
+          {showVersions && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                Esta es la version {quote.version} de esta cotizacion.
+                {quote.quoteGroupId && (
+                  <span className="ml-1">
+                    Grupo: <code className="text-xs bg-background/50 px-1.5 py-0.5 rounded">{quote.quoteGroupId}</code>
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Client info */}
       <div className="glass-card p-5">
         <div className="flex items-center gap-2 mb-4">
@@ -507,9 +755,25 @@ export default function CotizacionDetailPage() {
             )}
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            Cliente no encontrado
-          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {quote.clienteNombre && (
+              <div>
+                <p className="text-sm text-muted-foreground">Nombre</p>
+                <p className="text-foreground font-medium">{quote.clienteNombre}</p>
+              </div>
+            )}
+            {quote.clienteEmail && (
+              <div>
+                <p className="text-sm text-muted-foreground">Correo</p>
+                <p className="text-foreground">{quote.clienteEmail}</p>
+              </div>
+            )}
+            {!quote.clienteNombre && !quote.clienteEmail && (
+              <p className="text-muted-foreground text-sm">
+                Cliente no encontrado
+              </p>
+            )}
+          </div>
         )}
       </div>
 
@@ -518,7 +782,7 @@ export default function CotizacionDetailPage() {
         <div className="p-5 border-b border-border">
           <h2 className="font-semibold text-foreground flex items-center gap-2">
             <ClipboardList className="w-5 h-5 text-primary" />
-            Items ({parsedItems.length})
+            Items ({lineItems.length})
           </h2>
         </div>
         <Table>
@@ -529,45 +793,74 @@ export default function CotizacionDetailPage() {
               <TableHead className="text-right">Cant.</TableHead>
               <TableHead className="text-right">Precio</TableHead>
               <TableHead className="text-right">Desc.</TableHead>
+              <TableHead className="text-right">Impuesto</TableHead>
               <TableHead className="text-right">Total</TableHead>
+              {showApprovalBadges && (
+                <TableHead className="text-center">Estado</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {parsedItems.map((item, index) => {
-              const lineTotal =
-                item.cantidad * item.precioUnitario -
-                (item.descuento || 0);
+            {lineItems.map((item) => {
+              const approvalBadge = APPROVAL_STATUS_BADGE[item.approvalStatus] || APPROVAL_STATUS_BADGE.PENDING;
+              const quantityDiffers =
+                item.approvedQuantity != null &&
+                item.approvedQuantity !== item.quantity;
+
               return (
-                <TableRow key={index}>
+                <TableRow key={item.id}>
                   <TableCell className="text-muted-foreground">
-                    {index + 1}
+                    {item.lineNumber}
                   </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-medium text-foreground">
-                        {item.descripcion}
+                        {item.description}
                       </p>
-                      {item.codigo && (
+                      {item.itemCode && (
                         <p className="text-xs text-muted-foreground">
-                          {item.codigo}
+                          {item.itemCode}
+                        </p>
+                      )}
+                      {item.approvalStatus === 'REJECTED' && item.rejectionReason && (
+                        <p className="text-xs text-red-400 mt-1">
+                          Motivo: {item.rejectionReason}
                         </p>
                       )}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    {item.cantidad}
+                    <span>{item.quantity}</span>
+                    {quantityDiffers && (
+                      <span className="block text-xs text-green-400">
+                        Aprobada: {item.approvedQuantity}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(item.precioUnitario)}
+                    {formatCurrency(item.unitPrice)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {item.descuento > 0
-                      ? formatCurrency(item.descuento)
+                    {item.discount > 0
+                      ? formatCurrency(item.discount)
                       : '-'}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {formatCurrency(lineTotal)}
+                  <TableCell className="text-right">
+                    {formatCurrency(item.lineTax)}
                   </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {formatCurrency(item.lineTotal)}
+                  </TableCell>
+                  {showApprovalBadges && (
+                    <TableCell className="text-center">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${approvalBadge.className}`}
+                      >
+                        {approvalBadge.label}
+                      </Badge>
+                    </TableCell>
+                  )}
                 </TableRow>
               );
             })}
@@ -598,6 +891,40 @@ export default function CotizacionDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Approved totals */}
+        {hasApprovedTotals && (
+          <div className="border-t border-green-600/30 p-5 bg-green-600/5">
+            <h3 className="text-sm font-medium text-green-400 uppercase tracking-wider mb-3">
+              Totales Aprobados
+            </h3>
+            <div className="flex flex-col items-end space-y-2">
+              {quote.approvedSubtotal != null && (
+                <div className="flex justify-between w-60">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="font-medium text-green-400">
+                    {formatCurrency(Number(quote.approvedSubtotal))}
+                  </span>
+                </div>
+              )}
+              {quote.approvedTaxAmount != null && (
+                <div className="flex justify-between w-60">
+                  <span className="text-muted-foreground">IVA (13%):</span>
+                  <span className="font-medium text-green-400">
+                    {formatCurrency(Number(quote.approvedTaxAmount))}
+                  </span>
+                </div>
+              )}
+              <div className="h-px bg-green-600/30 w-60" />
+              <div className="flex justify-between w-60">
+                <span className="text-lg font-semibold text-green-400">TOTAL APROBADO:</span>
+                <span className="text-2xl font-bold text-green-400">
+                  {formatCurrency(Number(quote.approvedTotal))}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Terms & Notes */}
@@ -649,6 +976,14 @@ export default function CotizacionDetailPage() {
               {formatDate(quote.validUntil)}
             </p>
           </div>
+          {quote.sentAt && (
+            <div>
+              <p className="text-muted-foreground">Enviada</p>
+              <p className="text-foreground">
+                {formatDate(quote.sentAt)}
+              </p>
+            </div>
+          )}
           {quote.convertedAt && (
             <div>
               <p className="text-muted-foreground">Convertida</p>
@@ -660,7 +995,73 @@ export default function CotizacionDetailPage() {
         </div>
       </div>
 
-      {/* ── Dialogs ─────────────────────────────────────────────────── */}
+      {/* Status history timeline */}
+      <div className="glass-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Clock className="w-5 h-5 text-primary" />
+          <h3 className="font-semibold text-foreground">Historial de Estados</h3>
+        </div>
+        {historyLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : statusHistory.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No hay historial de estados disponible.</p>
+        ) : (
+          <div className="relative">
+            {/* Timeline line */}
+            <div className="absolute left-3 top-2 bottom-2 w-px bg-border" />
+            <div className="space-y-4">
+              {statusHistory.map((entry) => {
+                const toConfig = STATUS_MAP[entry.toStatus];
+                return (
+                  <div key={entry.id} className="relative flex items-start gap-4 pl-8">
+                    {/* Timeline dot */}
+                    <div className="absolute left-1.5 top-1.5 w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {entry.fromStatus && (
+                          <>
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${(STATUS_MAP[entry.fromStatus] || STATUS_MAP.DRAFT).className}`}
+                            >
+                              {(STATUS_MAP[entry.fromStatus] || STATUS_MAP.DRAFT).label}
+                            </Badge>
+                            <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                          </>
+                        )}
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${(toConfig || STATUS_MAP.DRAFT).className}`}
+                        >
+                          {(toConfig || STATUS_MAP.DRAFT).label}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <span>{formatDateTime(entry.createdAt)}</span>
+                        {entry.actorType && (
+                          <span>
+                            {entry.actorType === 'CLIENT' ? 'Cliente' : 'Usuario'}
+                            {entry.actorId ? `: ${entry.actorId}` : ''}
+                          </span>
+                        )}
+                      </div>
+                      {entry.reason && (
+                        <p className="text-xs text-muted-foreground mt-1 italic">
+                          {entry.reason}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* -- Dialogs --------------------------------------------------------- */}
 
       {/* Reject dialog */}
       <Dialog

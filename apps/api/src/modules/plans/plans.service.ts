@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePlanDto, UpdatePlanDto } from './dto';
-import { getPlanFeatures, PlanFeatures } from '../../common/plan-features';
+import { getPlanFeatures, normalizePlanCode, PlanFeatures } from '../../common/plan-features';
 
 @Injectable()
 export class PlansService {
@@ -227,7 +227,8 @@ export class PlansService {
       where: { id: tenantId },
       select: { plan: true },
     });
-    const planCode = tenant?.plan ?? 'DEMO';
+    const rawPlanCode = tenant?.plan ?? 'DEMO';
+    const planCode = normalizePlanCode(rawPlanCode);
     return { ...getPlanFeatures(planCode), planCode };
   }
 

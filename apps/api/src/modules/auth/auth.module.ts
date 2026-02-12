@@ -15,7 +15,7 @@ import { MhAuthService } from './mh-auth.service';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '365d' },
+        signOptions: { expiresIn: '8h' },
       }),
       inject: [ConfigService],
     }),

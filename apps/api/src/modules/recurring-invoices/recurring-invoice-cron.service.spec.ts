@@ -69,9 +69,22 @@ describe('RecurringInvoiceCronService', () => {
   });
 
   describe('processTemplate', () => {
-    it('should create DTE from template and record success', async () => {
+    beforeEach(() => {
+      // Default: updateMany claims successfully, findUnique returns template
+      prisma.recurringInvoiceTemplate.updateMany.mockResolvedValue({ count: 1 });
       prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(templateWithRelations);
+    });
 
+    it('should atomically claim template before processing', async () => {
+      await cronService.processTemplate('template-1');
+
+      expect(prisma.recurringInvoiceTemplate.updateMany).toHaveBeenCalledWith({
+        where: { id: 'template-1', status: 'ACTIVE' },
+        data: { status: 'PROCESSING' },
+      });
+    });
+
+    it('should create DTE from template and record success', async () => {
       const result = await cronService.processTemplate('template-1');
 
       expect(result).toEqual({ dteId: 'dte-1' });
@@ -88,23 +101,20 @@ describe('RecurringInvoiceCronService', () => {
       expect(mockRecurringService.recordSuccess).toHaveBeenCalledWith('template-1', 'dte-1');
     });
 
-    it('should throw if template not found', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(null);
+    it('should throw if template could not be claimed (already processing)', async () => {
+      prisma.recurringInvoiceTemplate.updateMany.mockResolvedValue({ count: 0 });
 
-      await expect(cronService.processTemplate('nonexistent')).rejects.toThrow(
-        'Template nonexistent not found',
+      await expect(cronService.processTemplate('template-1')).rejects.toThrow(
+        'Template template-1 is not available for processing',
       );
       expect(mockDteService.createDte).not.toHaveBeenCalled();
     });
 
-    it('should throw if template is not ACTIVE', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue({
-        ...templateWithRelations,
-        status: 'PAUSED',
-      });
+    it('should throw if template not found after claiming', async () => {
+      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(null);
 
-      await expect(cronService.processTemplate('template-1')).rejects.toThrow(
-        'Template template-1 is PAUSED, not ACTIVE',
+      await expect(cronService.processTemplate('nonexistent')).rejects.toThrow(
+        'Template nonexistent not found',
       );
       expect(mockDteService.createDte).not.toHaveBeenCalled();
     });
@@ -134,8 +144,6 @@ describe('RecurringInvoiceCronService', () => {
     });
 
     it('should calculate totals with IVA 13%', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(templateWithRelations);
-
       await cronService.processTemplate('template-1');
 
       expect(mockDteService.createDte).toHaveBeenCalledWith(
@@ -165,8 +173,6 @@ describe('RecurringInvoiceCronService', () => {
     });
 
     it('should not sign DTE when mode is AUTO_DRAFT', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(templateWithRelations);
-
       await cronService.processTemplate('template-1');
 
       expect(mockDteService.signDte).not.toHaveBeenCalled();
@@ -174,7 +180,6 @@ describe('RecurringInvoiceCronService', () => {
     });
 
     it('should record failure on DTE creation error', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(templateWithRelations);
       mockDteService.createDte.mockRejectedValue(new Error('API error'));
 
       await expect(cronService.processTemplate('template-1')).rejects.toThrow('API error');
@@ -196,6 +201,10 @@ describe('RecurringInvoiceCronService', () => {
   });
 
   describe('handleRecurringInvoices (cron)', () => {
+    beforeEach(() => {
+      prisma.recurringInvoiceTemplate.updateMany.mockResolvedValue({ count: 1 });
+    });
+
     it('should process all due templates', async () => {
       const templates = [
         { id: 'tmpl-1', nombre: 'Template 1' },
@@ -207,7 +216,8 @@ describe('RecurringInvoiceCronService', () => {
       await cronService.handleRecurringInvoices();
 
       expect(mockRecurringService.getDueTemplates).toHaveBeenCalled();
-      // processTemplate is called for each due template
+      // processTemplate atomically claims then loads each template
+      expect(prisma.recurringInvoiceTemplate.updateMany).toHaveBeenCalledTimes(2);
       expect(prisma.recurringInvoiceTemplate.findUnique).toHaveBeenCalledTimes(2);
     });
 
@@ -223,7 +233,7 @@ describe('RecurringInvoiceCronService', () => {
       await cronService.handleRecurringInvoices();
 
       expect(mockRecurringService.getDueTemplates).toHaveBeenCalled();
-      expect(prisma.recurringInvoiceTemplate.findUnique).not.toHaveBeenCalled();
+      expect(prisma.recurringInvoiceTemplate.updateMany).not.toHaveBeenCalled();
     });
 
     it('should continue processing remaining templates when one fails', async () => {
@@ -233,7 +243,8 @@ describe('RecurringInvoiceCronService', () => {
       ];
       mockRecurringService.getDueTemplates.mockResolvedValue(templates);
 
-      // First template fails (not found), second succeeds
+      // First template: claim succeeds but findUnique returns null
+      // Second template: both succeed
       prisma.recurringInvoiceTemplate.findUnique
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({ ...templateWithRelations, id: 'tmpl-2' });
@@ -241,7 +252,7 @@ describe('RecurringInvoiceCronService', () => {
       await cronService.handleRecurringInvoices();
 
       // Both templates were attempted
-      expect(prisma.recurringInvoiceTemplate.findUnique).toHaveBeenCalledTimes(2);
+      expect(prisma.recurringInvoiceTemplate.updateMany).toHaveBeenCalledTimes(2);
       // Second one succeeded
       expect(mockRecurringService.recordSuccess).toHaveBeenCalledTimes(1);
     });

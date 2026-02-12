@@ -7,11 +7,15 @@ import {
   MHRecepcionResponse,
   MHConsultaResponse,
   MHReceptionError,
+  MHAuthError,
   MHEnvironment,
 } from '@facturador/mh-client';
 import { MhAuthService } from '../mh-auth/mh-auth.service';
 import { SignerService } from '../signer/signer.service';
 import { DTE, TipoDte, DTE_VERSIONS } from '@facturador/shared';
+
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 1000;
 
 export type DTEStatus = 'PENDIENTE' | 'PROCESANDO' | 'PROCESADO' | 'RECHAZADO' | 'ANULADO' | 'ERROR';
 
@@ -140,7 +144,52 @@ export class TransmitterService {
   }
 
   /**
-   * Transmite un DTE de forma síncrona (sin cola)
+   * Classify whether an error is transient (retryable) or permanent.
+   */
+  private isTransientError(error: unknown): boolean {
+    if (error instanceof MHAuthError) {
+      // Auth errors with 5xx or timeout are transient
+      const code = error.statusCode;
+      return code !== undefined && (code >= 500 || code === 408 || code === 429);
+    }
+    if (error instanceof MHReceptionError) {
+      const code = error.statusCode;
+      // 5xx, 408 timeout, 429 rate limit are transient
+      if (code !== undefined && (code >= 500 || code === 408 || code === 429)) return true;
+      // Explicit rejection by MH (validation errors) is permanent
+      if (error.message.includes('timeout') || error.message.includes('Timeout')) return true;
+      return false;
+    }
+    if (error instanceof Error) {
+      const msg = error.message.toLowerCase();
+      return msg.includes('timeout') || msg.includes('econnreset')
+        || msg.includes('econnrefused') || msg.includes('socket hang up')
+        || msg.includes('network') || msg.includes('fetch failed');
+    }
+    return false;
+  }
+
+  /**
+   * Check if the error indicates an expired/invalid auth token.
+   */
+  private isAuthTokenError(error: unknown): boolean {
+    if (error instanceof MHAuthError) return true;
+    if (error instanceof MHReceptionError) {
+      return error.statusCode === 401 || error.statusCode === 403;
+    }
+    return false;
+  }
+
+  /**
+   * Sleep for a given number of milliseconds.
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Transmite un DTE de forma síncrona con reintentos automáticos
+   * para errores transitorios.
    */
   async transmitSync(
     dteId: string,
@@ -162,108 +211,141 @@ export class TransmitterService {
       message: 'Iniciando transmisión',
     });
 
-    try {
-      // 1. Obtener token de autenticación
-      this.logger.log(`Getting auth token for NIT: ${nit}`);
-      const tokenInfo = await this.mhAuthService.getToken(nit, password, env);
+    let lastError: unknown = null;
 
-      this.addLog({
-        dteId,
-        action: 'TRANSMIT',
-        status: 'SUCCESS',
-        message: 'Token obtenido',
-      });
-
-      // 2. Firmar el DTE si no está firmado
-      let jwsFirmado = record.jwsFirmado;
-      if (!jwsFirmado) {
-        if (!this.signerService.isCertificateLoaded()) {
-          throw new Error('No certificate loaded for signing');
-        }
-
-        this.logger.log(`Signing DTE: ${dteId}`);
-        jwsFirmado = await this.signerService.signDTE(record.jsonDte);
-        this.updateDTE(dteId, { jwsFirmado });
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        // 1. Obtener token de autenticación
+        this.logger.log(`Getting auth token for NIT: ${nit} (attempt ${attempt + 1})`);
+        const tokenInfo = await this.mhAuthService.getToken(nit, password, env);
 
         this.addLog({
           dteId,
-          action: 'SIGN',
+          action: 'TRANSMIT',
           status: 'SUCCESS',
-          message: 'DTE firmado',
+          message: `Token obtenido (intento ${attempt + 1})`,
         });
+
+        // 2. Firmar el DTE si no está firmado
+        let jwsFirmado = record.jwsFirmado;
+        if (!jwsFirmado) {
+          if (!this.signerService.isCertificateLoaded()) {
+            throw new Error('No certificate loaded for signing');
+          }
+
+          this.logger.log(`Signing DTE: ${dteId}`);
+          jwsFirmado = await this.signerService.signDTE(record.jsonDte);
+          this.updateDTE(dteId, { jwsFirmado });
+
+          this.addLog({
+            dteId,
+            action: 'SIGN',
+            status: 'SUCCESS',
+            message: 'DTE firmado',
+          });
+        }
+
+        // 3. Preparar request para MH
+        const request: SendDTERequest = {
+          ambiente: record.ambiente,
+          idEnvio: Date.now(),
+          version: DTE_VERSIONS[record.tipoDte],
+          tipoDte: record.tipoDte,
+          documento: jwsFirmado,
+          codigoGeneracion: record.codigoGeneracion,
+        };
+
+        // 4. Enviar al MH
+        this.logger.log(`Sending DTE to MH: ${record.codigoGeneracion}`);
+        const response = await sendDTE(tokenInfo.token, request, { env });
+
+        // 5. Procesar respuesta exitosa
+        this.updateDTE(dteId, {
+          status: 'PROCESADO',
+          selloRecibido: response.selloRecibido || undefined,
+          fhProcesamiento: response.fhProcesamiento,
+          observaciones: response.observaciones,
+        });
+
+        this.addLog({
+          dteId,
+          action: 'RESPONSE',
+          status: 'SUCCESS',
+          message: `DTE procesado: ${response.selloRecibido}`,
+          data: response as unknown as Record<string, unknown>,
+        });
+
+        this.logger.log(`DTE transmitted successfully: ${record.codigoGeneracion} - Sello: ${response.selloRecibido}`);
+
+        return {
+          success: true,
+          dteId,
+          codigoGeneracion: record.codigoGeneracion,
+          status: 'PROCESADO',
+          selloRecibido: response.selloRecibido || undefined,
+          fhProcesamiento: response.fhProcesamiento,
+          observaciones: response.observaciones,
+        };
+
+      } catch (error) {
+        lastError = error;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+        // On auth token error, invalidate cache and retry
+        if (this.isAuthTokenError(error)) {
+          this.logger.warn(`Auth token error on attempt ${attempt + 1}, invalidating cache: ${errorMessage}`);
+          this.mhAuthService.clearCache(nit, env);
+        }
+
+        // If transient and we have retries left, wait and retry
+        if (this.isTransientError(error) && attempt < MAX_RETRIES) {
+          const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+          this.logger.warn(
+            `Transient error on attempt ${attempt + 1}/${MAX_RETRIES + 1}, retrying in ${delay}ms: ${errorMessage}`,
+          );
+          this.addLog({
+            dteId,
+            action: 'RETRY',
+            status: 'FAILURE',
+            message: `Intento ${attempt + 1} falló (transitorio): ${errorMessage}. Reintentando...`,
+          });
+          await this.sleep(delay);
+          continue;
+        }
+
+        // Permanent error or retries exhausted
+        break;
       }
-
-      // 3. Preparar request para MH
-      const request: SendDTERequest = {
-        ambiente: record.ambiente,
-        idEnvio: Date.now(),
-        version: DTE_VERSIONS[record.tipoDte],
-        tipoDte: record.tipoDte,
-        documento: jwsFirmado,
-        codigoGeneracion: record.codigoGeneracion,
-      };
-
-      // 4. Enviar al MH
-      this.logger.log(`Sending DTE to MH: ${record.codigoGeneracion}`);
-      const response = await sendDTE(tokenInfo.token, request, { env });
-
-      // 5. Procesar respuesta exitosa
-      this.updateDTE(dteId, {
-        status: 'PROCESADO',
-        selloRecibido: response.selloRecibido || undefined,
-        fhProcesamiento: response.fhProcesamiento,
-        observaciones: response.observaciones,
-      });
-
-      this.addLog({
-        dteId,
-        action: 'RESPONSE',
-        status: 'SUCCESS',
-        message: `DTE procesado: ${response.selloRecibido}`,
-        data: response as unknown as Record<string, unknown>,
-      });
-
-      this.logger.log(`DTE transmitted successfully: ${record.codigoGeneracion} - Sello: ${response.selloRecibido}`);
-
-      return {
-        success: true,
-        dteId,
-        codigoGeneracion: record.codigoGeneracion,
-        status: 'PROCESADO',
-        selloRecibido: response.selloRecibido || undefined,
-        fhProcesamiento: response.fhProcesamiento,
-        observaciones: response.observaciones,
-      };
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const observaciones = error instanceof MHReceptionError ? error.observaciones : undefined;
-
-      this.updateDTE(dteId, {
-        status: 'RECHAZADO',
-        observaciones,
-        intentos: (record.intentos || 0) + 1,
-      });
-
-      this.addLog({
-        dteId,
-        action: 'ERROR',
-        status: 'FAILURE',
-        message: errorMessage,
-        data: { observaciones },
-      });
-
-      this.logger.error(`DTE transmission failed: ${record.codigoGeneracion} - ${errorMessage}`);
-
-      return {
-        success: false,
-        dteId,
-        codigoGeneracion: record.codigoGeneracion,
-        status: 'RECHAZADO',
-        observaciones,
-        error: errorMessage,
-      };
     }
+
+    // All attempts failed
+    const errorMessage = lastError instanceof Error ? lastError.message : 'Unknown error';
+    const observaciones = lastError instanceof MHReceptionError ? lastError.observaciones : undefined;
+
+    this.updateDTE(dteId, {
+      status: 'RECHAZADO',
+      observaciones,
+      intentos: (record.intentos || 0) + 1,
+    });
+
+    this.addLog({
+      dteId,
+      action: 'ERROR',
+      status: 'FAILURE',
+      message: errorMessage,
+      data: { observaciones },
+    });
+
+    this.logger.error(`DTE transmission failed: ${record.codigoGeneracion} - ${errorMessage}`);
+
+    return {
+      success: false,
+      dteId,
+      codigoGeneracion: record.codigoGeneracion,
+      status: 'RECHAZADO',
+      observaciones,
+      error: errorMessage,
+    };
   }
 
   /**

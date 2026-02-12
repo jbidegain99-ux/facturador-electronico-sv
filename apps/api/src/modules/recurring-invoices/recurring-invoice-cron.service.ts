@@ -93,10 +93,28 @@ export class RecurringInvoiceCronService {
 
   /**
    * Process a single template: load it, generate a DTE, record result.
+   * Uses atomic status transition to prevent duplicate execution.
    * Can be called from the cron job or manually via the trigger endpoint.
    */
   async processTemplate(templateId: string): Promise<{ dteId: string }> {
     this.logger.log(`Processing recurring invoice template: ${templateId}`);
+
+    // Atomically claim the template by setting status to PROCESSING.
+    // If another process already claimed it, updateMany returns count=0.
+    const claimed = await this.prisma.recurringInvoiceTemplate.updateMany({
+      where: {
+        id: templateId,
+        status: 'ACTIVE',
+      },
+      data: {
+        status: 'PROCESSING',
+      },
+    });
+
+    if (claimed.count === 0) {
+      this.logger.warn(`Template ${templateId} could not be claimed (already processing or not active)`);
+      throw new Error(`Template ${templateId} is not available for processing`);
+    }
 
     const template = await this.prisma.recurringInvoiceTemplate.findUnique({
       where: { id: templateId },
@@ -107,13 +125,8 @@ export class RecurringInvoiceCronService {
     }) as TemplateForProcessing | null;
 
     if (!template) {
-      this.logger.warn(`Template ${templateId} not found, skipping`);
+      this.logger.warn(`Template ${templateId} not found after claiming`);
       throw new Error(`Template ${templateId} not found`);
-    }
-
-    if (template.status !== 'ACTIVE') {
-      this.logger.warn(`Template ${templateId} is ${template.status}, skipping`);
-      throw new Error(`Template ${templateId} is ${template.status}, not ACTIVE`);
     }
 
     try {

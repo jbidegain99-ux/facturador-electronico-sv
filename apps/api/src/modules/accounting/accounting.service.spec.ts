@@ -587,16 +587,22 @@ describe('AccountingService', () => {
   });
 
   describe('getDashboardSummary', () => {
-    it('should aggregate balances by account type', async () => {
+    it('should aggregate balances by account type with monthly income/expenses', async () => {
       prisma.accountingAccount.findMany.mockResolvedValue([
-        { accountType: 'ASSET', currentBalance: 1000 },
-        { accountType: 'ASSET', currentBalance: 500 },
-        { accountType: 'LIABILITY', currentBalance: 300 },
-        { accountType: 'EQUITY', currentBalance: 200 },
-        { accountType: 'INCOME', currentBalance: 800 },
-        { accountType: 'EXPENSE', currentBalance: 400 },
+        { id: 'acc-asset1', accountType: 'ASSET', currentBalance: 1000 },
+        { id: 'acc-asset2', accountType: 'ASSET', currentBalance: 500 },
+        { id: 'acc-liab', accountType: 'LIABILITY', currentBalance: 300 },
+        { id: 'acc-eq', accountType: 'EQUITY', currentBalance: 200 },
+        { id: 'acc-income', accountType: 'INCOME', currentBalance: 800 },
+        { id: 'acc-expense', accountType: 'EXPENSE', currentBalance: 400 },
       ]);
       prisma.journalEntry.count.mockResolvedValue(15);
+
+      // Monthly income/expenses are computed from journal entry lines
+      prisma.journalEntryLine.findMany.mockResolvedValue([
+        { accountId: 'acc-income', debit: 0, credit: 800, account: { id: 'acc-income', normalBalance: 'CREDIT' } },
+        { accountId: 'acc-expense', debit: 400, credit: 0, account: { id: 'acc-expense', normalBalance: 'DEBIT' } },
+      ]);
 
       const result = await service.getDashboardSummary(tenantId);
 

@@ -6,12 +6,11 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
   ForbiddenException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { RecurringInvoicesService } from './recurring-invoices.service';
 import { RecurringInvoiceCronService } from './recurring-invoice-cron.service';
 import { CreateTemplateDto, UpdateTemplateDto } from './dto';
@@ -21,7 +20,6 @@ import { getPlanFeatures } from '../../common/plan-features';
 
 @ApiTags('recurring-invoices')
 @Controller('recurring-invoices')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class RecurringInvoicesController {
   private readonly logger = new Logger(RecurringInvoicesController.name);
@@ -146,6 +144,7 @@ export class RecurringInvoicesController {
   @Post(':id/trigger')
   @ApiOperation({ summary: 'Ejecutar template manualmente' })
   @ApiResponse({ status: 200, description: 'Template ejecutado' })
+  @ApiResponse({ status: 400, description: 'Cooldown activo - esperar antes de re-ejecutar' })
   async trigger(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -153,9 +152,20 @@ export class RecurringInvoicesController {
     const tenantId = this.ensureTenant(user);
     await this.ensureRecurringAccess(tenantId);
 
+    // Verify template belongs to tenant and check cooldown
+    const template = await this.service.findOne(tenantId, id);
+    const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+    if (template.lastRunDate) {
+      const elapsed = Date.now() - new Date(template.lastRunDate).getTime();
+      if (elapsed < COOLDOWN_MS) {
+        const minutesLeft = Math.ceil((COOLDOWN_MS - elapsed) / 60000);
+        throw new BadRequestException(
+          `Template fue ejecutado recientemente. Espera ${minutesLeft} minuto(s) antes de re-ejecutar.`,
+        );
+      }
+    }
+
     this.logger.log(`User ${user.email} manually triggering template ${id}`);
-    // Verify template belongs to tenant
-    await this.service.findOne(tenantId, id);
     const result = await this.cronService.processTemplate(id);
     return { message: 'Template ejecutado exitosamente', dteId: result.dteId };
   }

@@ -67,6 +67,17 @@ export class AccountingService {
 
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Get the plan code for a tenant (used for feature gating).
+   */
+  async getTenantPlanCode(tenantId: string): Promise<string> {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { plan: true },
+    });
+    return tenant?.plan ?? 'DEMO';
+  }
+
   // ================================================================
   // PLAN DE CUENTAS (Chart of Accounts)
   // ================================================================
@@ -570,18 +581,24 @@ export class AccountingService {
     totalDebits: number;
     totalCredits: number;
   }> {
-    // Get all active accounts with balances
     const accounts = await this.prisma.accountingAccount.findMany({
       where: { tenantId, isActive: true, allowsPosting: true },
       orderBy: { code: 'asc' },
     });
+
+    // If asOfDate is provided, compute balances from journal entry lines
+    const balanceMap = asOfDate
+      ? await this.computeAccountBalances(tenantId, undefined, asOfDate)
+      : null;
 
     const rows: TrialBalanceRow[] = [];
     let totalDebits = 0;
     let totalCredits = 0;
 
     for (const account of accounts) {
-      const balance = Number(account.currentBalance);
+      const balance = balanceMap
+        ? (balanceMap.get(account.id) ?? 0)
+        : Number(account.currentBalance);
       if (balance === 0) continue;
 
       let debitBalance = 0;
@@ -615,23 +632,32 @@ export class AccountingService {
     };
   }
 
-  async getBalanceSheet(tenantId: string): Promise<{
+  async getBalanceSheet(tenantId: string, asOfDate?: string): Promise<{
     assets: BalanceSheetSection[];
     liabilities: BalanceSheetSection[];
     equity: BalanceSheetSection[];
     totalAssets: number;
     totalLiabilities: number;
     totalEquity: number;
+    netIncome: number;
   }> {
     const accounts = await this.prisma.accountingAccount.findMany({
       where: {
         tenantId,
         isActive: true,
         allowsPosting: true,
-        accountType: { in: ['ASSET', 'LIABILITY', 'EQUITY'] },
+        accountType: { in: ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'] },
       },
       orderBy: { code: 'asc' },
     });
+
+    // If asOfDate is provided, compute from journal entries
+    const balanceMap = asOfDate
+      ? await this.computeAccountBalances(tenantId, undefined, asOfDate)
+      : null;
+
+    const getBalance = (account: AccountingAccount): number =>
+      balanceMap ? (balanceMap.get(account.id) ?? 0) : Number(account.currentBalance);
 
     const buildSection = (type: string): BalanceSheetSection[] => {
       const typeAccounts = accounts.filter(a => a.accountType === type);
@@ -641,7 +667,7 @@ export class AccountingService {
         .map(a => ({
           code: a.code,
           name: a.name,
-          balance: Number(a.currentBalance),
+          balance: getBalance(a),
         }))
         .filter(a => a.balance !== 0);
 
@@ -657,9 +683,19 @@ export class AccountingService {
       return [{ title: titles[type] || type, accounts: entries, total: Math.round(total * 100) / 100 }];
     };
 
+    // Calculate net income (Income - Expenses) to include in equity
+    const incomeAccounts = accounts.filter(a => a.accountType === 'INCOME');
+    const expenseAccounts = accounts.filter(a => a.accountType === 'EXPENSE');
+    const totalIncome = incomeAccounts.reduce((s, a) => s + getBalance(a), 0);
+    const totalExpenses = expenseAccounts.reduce((s, a) => s + getBalance(a), 0);
+    const netIncome = Math.round((totalIncome - totalExpenses) * 100) / 100;
+
     const assets = buildSection('ASSET');
     const liabilities = buildSection('LIABILITY');
     const equity = buildSection('EQUITY');
+
+    // Add net income to equity total (retained earnings for the period)
+    const totalEquity = equity.reduce((s, sec) => s + sec.total, 0) + netIncome;
 
     return {
       assets,
@@ -667,7 +703,8 @@ export class AccountingService {
       equity,
       totalAssets: assets.reduce((s, sec) => s + sec.total, 0),
       totalLiabilities: liabilities.reduce((s, sec) => s + sec.total, 0),
-      totalEquity: equity.reduce((s, sec) => s + sec.total, 0),
+      totalEquity: Math.round(totalEquity * 100) / 100,
+      netIncome,
     };
   }
 
@@ -692,6 +729,11 @@ export class AccountingService {
       orderBy: { code: 'asc' },
     });
 
+    // If date range is provided, compute balances from journal entry lines
+    const balanceMap = (dateFrom || dateTo)
+      ? await this.computeAccountBalances(tenantId, dateFrom, dateTo)
+      : null;
+
     const buildSection = (type: string): IncomeStatementSection[] => {
       const typeAccounts = accounts.filter(a => a.accountType === type);
       if (typeAccounts.length === 0) return [];
@@ -700,7 +742,9 @@ export class AccountingService {
         .map(a => ({
           code: a.code,
           name: a.name,
-          balance: Number(a.currentBalance),
+          balance: balanceMap
+            ? (balanceMap.get(a.id) ?? 0)
+            : Number(a.currentBalance),
         }))
         .filter(a => a.balance !== 0);
 
@@ -813,30 +857,42 @@ export class AccountingService {
     accountCount: number;
     journalEntryCount: number;
   }> {
-    const [accounts, journalEntryCount] = await Promise.all([
+    // Compute current month date range for monthly income/expenses
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const [accounts, journalEntryCount, monthlyBalances] = await Promise.all([
       this.prisma.accountingAccount.findMany({
         where: { tenantId, isActive: true, allowsPosting: true },
-        select: { accountType: true, currentBalance: true },
+        select: { id: true, accountType: true, currentBalance: true },
       }),
       this.prisma.journalEntry.count({
         where: { tenantId, status: 'POSTED' },
       }),
+      this.computeAccountBalances(
+        tenantId,
+        monthStart.toISOString().split('T')[0],
+        monthEnd.toISOString().split('T')[0],
+      ),
     ]);
 
     let totalAssets = 0;
     let totalLiabilities = 0;
     let totalEquity = 0;
-    let totalIncome = 0;
-    let totalExpenses = 0;
+    let monthlyIncome = 0;
+    let monthlyExpenses = 0;
 
     for (const account of accounts) {
       const balance = Number(account.currentBalance);
+      const monthBalance = monthlyBalances.get(account.id) ?? 0;
+
       switch (account.accountType) {
         case 'ASSET': totalAssets += balance; break;
         case 'LIABILITY': totalLiabilities += balance; break;
         case 'EQUITY': totalEquity += balance; break;
-        case 'INCOME': totalIncome += balance; break;
-        case 'EXPENSE': totalExpenses += balance; break;
+        case 'INCOME': monthlyIncome += monthBalance; break;
+        case 'EXPENSE': monthlyExpenses += monthBalance; break;
       }
     }
 
@@ -844,9 +900,9 @@ export class AccountingService {
       totalAssets: Math.round(totalAssets * 100) / 100,
       totalLiabilities: Math.round(totalLiabilities * 100) / 100,
       totalEquity: Math.round(totalEquity * 100) / 100,
-      monthlyIncome: Math.round(totalIncome * 100) / 100,
-      monthlyExpenses: Math.round(totalExpenses * 100) / 100,
-      netIncome: Math.round((totalIncome - totalExpenses) * 100) / 100,
+      monthlyIncome: Math.round(monthlyIncome * 100) / 100,
+      monthlyExpenses: Math.round(monthlyExpenses * 100) / 100,
+      netIncome: Math.round((monthlyIncome - monthlyExpenses) * 100) / 100,
       accountCount: accounts.length,
       journalEntryCount,
     };
@@ -855,6 +911,49 @@ export class AccountingService {
   // ================================================================
   // HELPERS
   // ================================================================
+
+  /**
+   * Compute account balances from journal entry lines within a date range.
+   * Returns a map of accountId -> balance (positive = normal direction).
+   */
+  private async computeAccountBalances(
+    tenantId: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<Map<string, number>> {
+    const entryDateFilter: Record<string, Date> = {};
+    if (dateFrom) entryDateFilter.gte = new Date(dateFrom);
+    if (dateTo) entryDateFilter.lte = new Date(dateTo);
+
+    const lines = await this.prisma.journalEntryLine.findMany({
+      where: {
+        entry: {
+          tenantId,
+          status: 'POSTED',
+          ...(Object.keys(entryDateFilter).length > 0 ? { entryDate: entryDateFilter } : {}),
+        },
+      },
+      include: {
+        account: { select: { id: true, normalBalance: true } },
+      },
+    });
+
+    const balanceMap = new Map<string, number>();
+    for (const line of lines) {
+      const debit = Number(line.debit);
+      const credit = Number(line.credit);
+      const change = line.account.normalBalance === 'DEBIT'
+        ? debit - credit
+        : credit - debit;
+
+      balanceMap.set(
+        line.accountId,
+        (balanceMap.get(line.accountId) ?? 0) + change,
+      );
+    }
+
+    return balanceMap;
+  }
 
   private async generateEntryNumber(tenantId: string, date: Date): Promise<string> {
     const year = date.getFullYear();

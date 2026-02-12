@@ -340,6 +340,7 @@ export class RecurringInvoicesService {
       this.prisma.recurringInvoiceTemplate.update({
         where: { id: templateId },
         data: {
+          status: 'ACTIVE',
           lastRunDate: new Date(),
           nextRunDate,
           consecutiveFailures: 0,

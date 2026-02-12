@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RecurringInvoicesController } from './recurring-invoices.controller';
 import { RecurringInvoicesService } from './recurring-invoices.service';
@@ -173,6 +173,30 @@ describe('RecurringInvoicesController', () => {
       await expect(
         controller.trigger(userWithoutTenant, 'template-1'),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException when template was recently executed (cooldown)', async () => {
+      const recentTemplate = createMockTemplate({
+        lastRunDate: new Date(), // just now
+      });
+      mockService.findOne.mockResolvedValue(recentTemplate);
+
+      await expect(
+        controller.trigger(mockUser, 'template-1'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should allow trigger when cooldown has elapsed', async () => {
+      const oldTemplate = createMockTemplate({
+        lastRunDate: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+      });
+      mockService.findOne.mockResolvedValue(oldTemplate);
+
+      const result = await controller.trigger(mockUser, 'template-1');
+      expect(result).toEqual({
+        message: 'Template ejecutado exitosamente',
+        dteId: 'dte-1',
+      });
     });
   });
 

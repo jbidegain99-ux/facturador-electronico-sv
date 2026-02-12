@@ -30,6 +30,7 @@ export interface MockPrismaClient {
     count: jest.Mock;
     create: jest.Mock;
     update: jest.Mock;
+    updateMany: jest.Mock;
   };
   recurringInvoiceHistory: {
     findMany: jest.Mock;
@@ -98,6 +99,7 @@ export function createMockPrismaService(): MockPrismaClient {
       count: jest.fn().mockResolvedValue(0),
       create: jest.fn().mockResolvedValue({}),
       update: jest.fn().mockResolvedValue({}),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     recurringInvoiceHistory: {
       findMany: jest.fn().mockResolvedValue([]),

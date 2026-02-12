@@ -6,12 +6,10 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { AccountingService } from './accounting.service';
 import {
   CreateAccountDto,
@@ -25,7 +23,6 @@ import { getPlanFeatures } from '../../common/plan-features';
 
 @ApiTags('accounting')
 @Controller('accounting')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class AccountingController {
   private readonly logger = new Logger(AccountingController.name);
@@ -40,11 +37,7 @@ export class AccountingController {
   }
 
   private async ensureAccountingAccess(tenantId: string): Promise<void> {
-    const tenant = await this.service['prisma'].tenant.findUnique({
-      where: { id: tenantId },
-      select: { plan: true },
-    });
-    const planCode = tenant?.plan ?? 'DEMO';
+    const planCode = await this.service.getTenantPlanCode(tenantId);
     const features = getPlanFeatures(planCode);
     if (!features.accounting) {
       throw new ForbiddenException(
@@ -210,10 +203,14 @@ export class AccountingController {
 
   @Get('reports/balance-sheet')
   @ApiOperation({ summary: 'Balance general' })
-  async getBalanceSheet(@CurrentUser() user: CurrentUserData) {
+  @ApiQuery({ name: 'dateTo', required: false, description: 'Fecha corte (asOfDate)' })
+  async getBalanceSheet(
+    @CurrentUser() user: CurrentUserData,
+    @Query() query: ReportQueryDto,
+  ) {
     const tenantId = this.ensureTenant(user);
     await this.ensureAccountingAccess(tenantId);
-    return this.service.getBalanceSheet(tenantId);
+    return this.service.getBalanceSheet(tenantId, query.dateTo);
   }
 
   @Get('reports/income-statement')

@@ -1,4 +1,19 @@
 import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+declare global {
+  interface String {
+    hashCode(): number;
+  }
+}
+
+String.prototype.hashCode = function() {
+  let hash = 0;
+  for (let i = 0; i < this.length; i++) {
+    const char = this.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash;
+};
 import { PrismaService } from '../../prisma/prisma.service';
 import { SignerService } from '../signer/signer.service';
 import { MhAuthService } from '../mh-auth/mh-auth.service';
@@ -66,7 +81,7 @@ export class DteService {
 
     const codigoGeneracion = uuidv4().toUpperCase();
     const correlativo = await this.getNextCorrelativo(tenantId, tipoDte);
-    const numeroControl = this.generateNumeroControl(tipoDte, correlativo);
+    const numeroControl = this.generateNumeroControl(tenantId, tipoDte, correlativo);
 
     const identificacionData = (data.identificacion as Record<string, unknown>) || {};
     const jsonOriginal = {
@@ -482,8 +497,8 @@ export class DteService {
     return match ? parseInt(match[1], 10) + 1 : 1;
   }
 
-  private generateNumeroControl(tipoDte: string, correlativo: number): string {
-    const establecimiento = 'M001P001'; // TODO: Get from tenant config
+  private generateNumeroControl(tenantId: string, tipoDte: string, correlativo: number): string {
+    const establecimiento = `M${String(Math.abs(tenantId.hashCode() % 999) + 1).padStart(3, '0')}P001`; // TODO: Get from tenant config
     return `DTE-${tipoDte}-${establecimiento}-${correlativo.toString().padStart(15, '0')}`;
   }
 

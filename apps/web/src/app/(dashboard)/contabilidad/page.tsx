@@ -19,6 +19,9 @@ import {
   Zap,
   Calculator,
   ChevronRight,
+  FlaskConical,
+  AlertTriangle,
+  Check,
 } from 'lucide-react';
 
 interface DashboardData {
@@ -30,6 +33,24 @@ interface DashboardData {
   netIncome: number;
   accountCount: number;
   journalEntryCount: number;
+}
+
+interface SimulatedLine {
+  accountCode: string;
+  accountName: string;
+  description: string;
+  debit: number;
+  credit: number;
+}
+
+interface SimulationResult {
+  description: string;
+  lines: SimulatedLine[];
+  totalDebit: number;
+  totalCredit: number;
+  balanced: boolean;
+  accountsFound: boolean;
+  missingAccounts: string[];
 }
 
 function formatCurrency(amount: number): string {
@@ -45,6 +66,10 @@ export default function ContabilidadPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [simOpen, setSimOpen] = useState(false);
+  const [simAmount, setSimAmount] = useState('');
+  const [simulating, setSimulating] = useState(false);
+  const [simResult, setSimResult] = useState<SimulationResult | null>(null);
   const toast = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
@@ -89,6 +114,48 @@ export default function ContabilidadPage() {
       toastRef.current.error('Error', 'Error de conexión');
     } finally {
       setSeeding(false);
+    }
+  };
+
+  const handleSimulate = async () => {
+    const amount = parseFloat(simAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toastRef.current.error('Ingrese un monto válido mayor a cero');
+      return;
+    }
+
+    setSimulating(true);
+    setSimResult(null);
+    try {
+      const token = localStorage.getItem('token');
+      const totalGravada = Math.round((amount / 1.13) * 100) / 100;
+      const totalIva = Math.round((amount - totalGravada) * 100) / 100;
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/simulate-invoice`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          totalGravada,
+          totalIva,
+          totalPagar: amount,
+          tipoDte: '01',
+          description: `Simulación: Factura por $${amount.toFixed(2)}`,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setSimResult(json as SimulationResult);
+      } else {
+        toastRef.current.error((json as { message?: string }).message || 'Error al simular');
+      }
+    } catch {
+      toastRef.current.error('Error de conexión');
+    } finally {
+      setSimulating(false);
     }
   };
 
@@ -192,6 +259,118 @@ export default function ContabilidadPage() {
                 {formatCurrency(data.netIncome)}
               </p>
             </div>
+          </div>
+
+          {/* Simulation Card */}
+          <div className="rounded-lg border border-yellow-500/30 bg-card p-6">
+            <button
+              onClick={() => setSimOpen(!simOpen)}
+              className="flex items-center gap-2 w-full text-left"
+            >
+              <FlaskConical className="h-5 w-5 text-yellow-500" />
+              <h3 className="font-semibold flex-1">Simulador Contable</h3>
+              <span className="text-xs px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-600 dark:text-yellow-400">
+                MODO PRUEBA
+              </span>
+              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${simOpen ? 'rotate-90' : ''}`} />
+            </button>
+
+            {simOpen && (
+              <div className="mt-4 space-y-4">
+                <div className="flex items-start gap-2 p-3 rounded-md bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
+                  <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                    El simulador muestra las partidas contables que se generarían al emitir una factura.
+                    No se crean registros ni se envía nada al Ministerio de Hacienda.
+                  </p>
+                </div>
+
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium mb-1 block">Monto total (con IVA)</label>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      placeholder="Ej: 113.00"
+                      value={simAmount}
+                      onChange={(e) => { setSimAmount(e.target.value); setSimResult(null); }}
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-mono"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSimulate}
+                    disabled={simulating || !simAmount}
+                    className="inline-flex items-center gap-2 rounded-md bg-yellow-600 px-4 h-9 text-sm font-medium text-white hover:bg-yellow-700 disabled:opacity-50"
+                  >
+                    {simulating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />}
+                    Simular
+                  </button>
+                </div>
+
+                {simResult && (
+                  <div className="rounded-md border bg-muted/30 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      {simResult.balanced ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="text-sm font-medium">{simResult.description}</span>
+                    </div>
+
+                    {!simResult.accountsFound && (
+                      <div className="text-xs text-red-600 dark:text-red-400 p-2 rounded bg-red-50 dark:bg-red-900/10">
+                        Cuentas faltantes: {simResult.missingAccounts.join(', ')}.
+                        Siembre el plan de cuentas para usar el simulador completamente.
+                      </div>
+                    )}
+
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-muted-foreground">
+                          <th className="text-left py-1 font-medium">Cuenta</th>
+                          <th className="text-left py-1 font-medium">Descripción</th>
+                          <th className="text-right py-1 font-medium">Débito</th>
+                          <th className="text-right py-1 font-medium">Crédito</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {simResult.lines.map((line, i) => (
+                          <tr key={i} className="border-b border-muted/50">
+                            <td className="py-1.5">
+                              <span className="font-mono text-xs">{line.accountCode}</span>
+                              <span className="ml-2 text-muted-foreground">{line.accountName}</span>
+                            </td>
+                            <td className="py-1.5 text-muted-foreground">{line.description}</td>
+                            <td className="py-1.5 text-right font-mono">
+                              {line.debit > 0 ? formatCurrency(line.debit) : ''}
+                            </td>
+                            <td className="py-1.5 text-right font-mono">
+                              {line.credit > 0 ? formatCurrency(line.credit) : ''}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="font-semibold">
+                          <td colSpan={2} className="py-1.5">TOTALES</td>
+                          <td className="py-1.5 text-right font-mono">{formatCurrency(simResult.totalDebit)}</td>
+                          <td className="py-1.5 text-right font-mono">{formatCurrency(simResult.totalCredit)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+
+                    {simResult.balanced && (
+                      <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        Partida cuadrada — débitos iguales a créditos
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Quick stats */}

@@ -577,7 +577,7 @@ export default function NuevaFacturaPage() {
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold text-white mb-2">
+            <h1 className="text-2xl font-bold text-foreground mb-2">
               Factura Emitida
             </h1>
             <p className="text-muted-foreground">
@@ -624,13 +624,13 @@ export default function NuevaFacturaPage() {
             variant="ghost"
             size="sm"
             onClick={() => router.push('/facturas')}
-            className="text-muted-foreground hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Volver
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <FileText className="w-6 h-6 text-primary" />
               Nueva Factura
             </h1>
@@ -674,8 +674,8 @@ export default function NuevaFacturaPage() {
                 className={cn(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-all',
                   tipoDte === '01'
-                    ? 'bg-primary text-white'
-                    : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                 )}
               >
                 Factura (01)
@@ -685,8 +685,8 @@ export default function NuevaFacturaPage() {
                 className={cn(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-all',
                   tipoDte === '03'
-                    ? 'bg-secondary text-white'
-                    : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+                    ? 'bg-secondary text-secondary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                 )}
               >
                 Credito Fiscal (03)
@@ -727,7 +727,7 @@ export default function NuevaFacturaPage() {
           <div className="flex items-center gap-3">
             <Save className="w-5 h-5 text-warning" />
             <div>
-              <p className="text-sm font-medium text-white">
+              <p className="text-sm font-medium text-foreground">
                 Tienes un borrador guardado
               </p>
               <p className="text-xs text-muted-foreground">

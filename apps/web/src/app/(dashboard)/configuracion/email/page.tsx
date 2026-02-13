@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Mail, Loader2, Power, PowerOff } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, Save, Mail, Loader2, Power, PowerOff, HelpCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,9 +18,6 @@ import {
   ProviderForm,
   ConnectionStatus,
   StatusBadge,
-  AssistanceModal,
-  AssistanceButton,
-  AssistanceFormData,
 } from '@/components/email-config';
 import {
   EmailConfig,
@@ -39,7 +37,6 @@ export default function EmailConfigPage() {
   const [config, setConfig] = React.useState<EmailConfig | null>(null);
   const [selectedProvider, setSelectedProvider] = React.useState<EmailProvider | null>(null);
   const [formData, setFormData] = React.useState<Partial<EmailConfigForm>>({});
-  const [showAssistance, setShowAssistance] = React.useState(false);
   const [hasChanges, setHasChanges] = React.useState(false);
 
   // Load existing config
@@ -215,29 +212,6 @@ export default function EmailConfigPage() {
     }
   };
 
-  const handleAssistanceSubmit = async (data: AssistanceFormData) => {
-    const token = localStorage.getItem('token');
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/email-config/request-assistance`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      }
-    );
-
-    const result = await res.json();
-
-    if (res.ok) {
-      toast.success(result.message);
-    } else {
-      toast.error(result.message || 'Error al enviar solicitud');
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -356,7 +330,7 @@ export default function EmailConfigPage() {
             loading={saving}
           />
 
-          {/* Assistance */}
+          {/* Assistance - links to unified support */}
           <Card>
             <CardHeader>
               <CardTitle>¿Necesita Ayuda?</CardTitle>
@@ -365,18 +339,25 @@ export default function EmailConfigPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AssistanceButton onClick={() => setShowAssistance(true)} />
+              <Link
+                href="/soporte?tipo=EMAIL_CONFIG&asunto=Ayuda con configuración de correos"
+                className="w-full p-4 rounded-xl border border-dashed border-primary/50 bg-primary/5 hover:bg-primary/10 transition-colors flex items-center justify-center gap-3"
+              >
+                <div className="p-2 rounded-full bg-primary/20">
+                  <HelpCircle className="h-5 w-5 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-foreground">Crear ticket de soporte</p>
+                  <p className="text-sm text-muted-foreground">
+                    Solicite asistencia del equipo de Republicode
+                  </p>
+                </div>
+                <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+              </Link>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Assistance Modal */}
-      <AssistanceModal
-        open={showAssistance}
-        onOpenChange={setShowAssistance}
-        onSubmit={handleAssistanceSubmit}
-      />
     </div>
   );
 }

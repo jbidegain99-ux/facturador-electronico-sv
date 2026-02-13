@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Ticket,
   Search,
@@ -82,6 +82,7 @@ const priorityLabels: Record<string, string> = {
 
 export default function SoportePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -97,6 +98,19 @@ export default function SoportePage() {
   const [newTicketSubject, setNewTicketSubject] = useState('');
   const [newTicketDescription, setNewTicketDescription] = useState('');
   const [creating, setCreating] = useState(false);
+
+  // Pre-fill from query params (e.g. ?tipo=EMAIL_CONFIG&asunto=...)
+  useEffect(() => {
+    const tipo = searchParams.get('tipo');
+    const asunto = searchParams.get('asunto');
+    const descripcion = searchParams.get('descripcion');
+    if (tipo || asunto) {
+      if (tipo) setNewTicketType(tipo);
+      if (asunto) setNewTicketSubject(asunto);
+      if (descripcion) setNewTicketDescription(descripcion);
+      setShowNewTicket(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchTickets();
@@ -191,24 +205,24 @@ export default function SoportePage() {
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, string> = {
-      PENDING: 'bg-yellow-500/20 text-yellow-400',
-      ASSIGNED: 'bg-blue-500/20 text-blue-400',
-      IN_PROGRESS: 'bg-purple-500/20 text-purple-400',
-      WAITING_CUSTOMER: 'bg-orange-500/20 text-orange-400',
-      RESOLVED: 'bg-green-500/20 text-green-400',
-      CLOSED: 'bg-gray-500/20 text-gray-400',
+      PENDING: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
+      ASSIGNED: 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
+      IN_PROGRESS: 'bg-purple-500/20 text-purple-600 dark:text-purple-400',
+      WAITING_CUSTOMER: 'bg-orange-500/20 text-orange-600 dark:text-orange-400',
+      RESOLVED: 'bg-green-500/20 text-green-600 dark:text-green-400',
+      CLOSED: 'bg-gray-500/20 text-gray-600 dark:text-gray-400',
     };
-    return badges[status] || 'bg-gray-500/20 text-gray-400';
+    return badges[status] || 'bg-gray-500/20 text-gray-600 dark:text-gray-400';
   };
 
   const getPriorityBadge = (priority: string) => {
     const badges: Record<string, string> = {
-      LOW: 'bg-gray-500/20 text-gray-400',
-      MEDIUM: 'bg-blue-500/20 text-blue-400',
-      HIGH: 'bg-orange-500/20 text-orange-400',
-      URGENT: 'bg-red-500/20 text-red-400',
+      LOW: 'bg-gray-500/20 text-gray-600 dark:text-gray-400',
+      MEDIUM: 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
+      HIGH: 'bg-orange-500/20 text-orange-600 dark:text-orange-400',
+      URGENT: 'bg-red-500/20 text-red-600 dark:text-red-400',
     };
-    return badges[priority] || 'bg-gray-500/20 text-gray-400';
+    return badges[priority] || 'bg-gray-500/20 text-gray-600 dark:text-gray-400';
   };
 
   const getStatusIcon = (status: string) => {

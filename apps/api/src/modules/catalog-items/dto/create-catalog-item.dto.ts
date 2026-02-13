@@ -59,4 +59,8 @@ export class CreateCatalogItemDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   taxRate?: number;
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 }

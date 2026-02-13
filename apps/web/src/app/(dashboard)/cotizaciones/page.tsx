@@ -357,7 +357,7 @@ export default function CotizacionesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <ClipboardList className="w-6 h-6 text-primary" />
             Cotizaciones
           </h1>
@@ -382,8 +382,8 @@ export default function CotizacionesPage() {
             onClick={() => setStatusFilter(tab.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               statusFilter === tab.value
-                ? 'bg-primary text-white'
-                : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
             }`}
           >
             {tab.label}

@@ -3,3 +3,4 @@ export { UpdateAccountDto } from './update-account.dto';
 export { CreateJournalEntryDto, JournalEntryLineDto } from './create-journal-entry.dto';
 export { QueryJournalDto } from './query-journal.dto';
 export { ReportQueryDto } from './report-query.dto';
+export { SimulateInvoiceDto } from './simulate-invoice.dto';

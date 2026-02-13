@@ -17,6 +17,7 @@ import {
   CreateJournalEntryDto,
   QueryJournalDto,
   ReportQueryDto,
+  SimulateInvoiceDto,
 } from './dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { getPlanFeatures } from '../../common/plan-features';
@@ -241,6 +242,22 @@ export class AccountingController {
     }
 
     return this.service.getGeneralLedger(tenantId, query.accountId, query.dateFrom, query.dateTo);
+  }
+
+  // ================================================================
+  // SIMULATION (Test Mode)
+  // ================================================================
+
+  @Post('simulate-invoice')
+  @ApiOperation({ summary: 'Simular impacto contable de una factura sin emitir' })
+  @ApiResponse({ status: 200, description: 'Simulación de partida contable' })
+  async simulateInvoice(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: SimulateInvoiceDto,
+  ) {
+    const tenantId = this.ensureTenant(user);
+    await this.ensureAccountingAccess(tenantId);
+    return this.service.simulateInvoiceImpact(tenantId, dto);
   }
 
   @Get('dashboard')

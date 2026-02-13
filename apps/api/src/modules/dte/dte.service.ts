@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SignerService } from '../signer/signer.service';
 import { MhAuthService } from '../mh-auth/mh-auth.service';
@@ -56,17 +56,23 @@ export class DteService {
 
     // Validate tenantId
     if (!tenantId) {
-      throw new Error('No se puede crear un DTE sin un tenant asignado');
+      throw new BadRequestException('No se puede crear un DTE sin un tenant asignado');
+    }
+
+    // Validate required data fields
+    if (!data || typeof data !== 'object') {
+      throw new BadRequestException('Datos del DTE son requeridos');
     }
 
     const codigoGeneracion = uuidv4().toUpperCase();
     const correlativo = await this.getNextCorrelativo(tenantId, tipoDte);
     const numeroControl = this.generateNumeroControl(tipoDte, correlativo);
 
+    const identificacionData = (data.identificacion as Record<string, unknown>) || {};
     const jsonOriginal = {
       ...data,
       identificacion: {
-        ...(data.identificacion as Record<string, unknown>),
+        ...identificacionData,
         codigoGeneracion,
         numeroControl,
       },
@@ -95,20 +101,37 @@ export class DteService {
       if (existingCliente) {
         clienteId = existingCliente.id;
       } else {
-        // Create new client from receptor data
-        const newCliente = await this.prisma.cliente.create({
-          data: {
-            tenantId,
-            tipoDocumento: (receptor.tipoDocumento as string) || '13',
-            numDocumento: (receptor.numDocumento as string) || '',
-            nombre: receptor.nombre as string,
-            nrc: (receptor.nrc as string) || null,
-            telefono: (receptor.telefono as string) || null,
-            correo: (receptor.correo as string) || null,
-            direccion: JSON.stringify(receptor.direccion || {}),
-          },
-        });
-        clienteId = newCliente.id;
+        // Create new client from receptor data, handling unique constraint violations
+        try {
+          const newCliente = await this.prisma.cliente.create({
+            data: {
+              tenantId,
+              tipoDocumento: (receptor.tipoDocumento as string) || '13',
+              numDocumento: (receptor.numDocumento as string) || '',
+              nombre: receptor.nombre as string,
+              nrc: (receptor.nrc as string) || null,
+              telefono: (receptor.telefono as string) || null,
+              correo: (receptor.correo as string) || null,
+              direccion: JSON.stringify(receptor.direccion || {}),
+            },
+          });
+          clienteId = newCliente.id;
+        } catch (clientError) {
+          // If unique constraint violation, try to find the existing client
+          if (clientError instanceof Prisma.PrismaClientKnownRequestError && clientError.code === 'P2002') {
+            this.logger.warn(`Client unique constraint hit during DTE creation, finding existing client`);
+            const retryCliente = await this.prisma.cliente.findFirst({
+              where: {
+                tenantId,
+                numDocumento: (receptor.numDocumento as string) || '',
+              },
+            });
+            clienteId = retryCliente?.id;
+          } else {
+            this.logger.error(`Failed to create client during DTE: ${clientError instanceof Error ? clientError.message : clientError}`);
+            // Don't fail DTE creation if client creation fails - proceed without clienteId
+          }
+        }
       }
     }
 
@@ -154,13 +177,19 @@ export class DteService {
         });
 
     if (!dte) {
-      throw new Error('DTE no encontrado');
+      throw new NotFoundException('DTE no encontrado');
     }
 
     // Parse jsonOriginal from string
-    const jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
-      ? JSON.parse(dte.jsonOriginal)
-      : dte.jsonOriginal;
+    let jsonOriginalParsed: Record<string, unknown>;
+    try {
+      jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
+        ? JSON.parse(dte.jsonOriginal)
+        : dte.jsonOriginal;
+    } catch (parseError) {
+      this.logger.error(`Failed to parse jsonOriginal for DTE ${dteId}: ${parseError instanceof Error ? parseError.message : parseError}`);
+      throw new InternalServerErrorException('Error al procesar datos del DTE: JSON inválido');
+    }
 
     let jsonFirmado: string;
 
@@ -174,7 +203,7 @@ export class DteService {
       jsonFirmado = `${header}.${payload}.${signature}`;
     } else {
       if (!this.signerService.isCertificateLoaded()) {
-        throw new Error('No certificate loaded for signing');
+        throw new BadRequestException('No hay certificado de firma cargado. Configure su certificado en la sección de ajustes.');
       }
       jsonFirmado = await this.signerService.signDTE(jsonOriginalParsed);
     }
@@ -206,8 +235,11 @@ export class DteService {
           include: { tenant: true },
         });
 
-    if (!dte || !dte.jsonFirmado) {
-      throw new Error('DTE no encontrado o no firmado');
+    if (!dte) {
+      throw new NotFoundException('DTE no encontrado');
+    }
+    if (!dte.jsonFirmado) {
+      throw new BadRequestException('El DTE no ha sido firmado. Firme el DTE antes de transmitir.');
     }
 
     // Demo mode: simulate Hacienda response
@@ -237,10 +269,17 @@ export class DteService {
       const tokenInfo = await this.mhAuthService.getToken(nit, password, env);
 
       // Parse jsonOriginal from string
-      const jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
-        ? JSON.parse(dte.jsonOriginal)
-        : dte.jsonOriginal;
-      const ambiente = (jsonOriginalParsed?.identificacion?.ambiente || '00') as '00' | '01';
+      let jsonOriginalParsed: Record<string, unknown>;
+      try {
+        jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
+          ? JSON.parse(dte.jsonOriginal)
+          : dte.jsonOriginal;
+      } catch (parseError) {
+        this.logger.error(`Failed to parse jsonOriginal for DTE ${dteId}: ${parseError instanceof Error ? parseError.message : parseError}`);
+        throw new InternalServerErrorException('Error al procesar datos del DTE: JSON inválido');
+      }
+      const identificacion = jsonOriginalParsed?.identificacion as Record<string, unknown> | undefined;
+      const ambiente = ((identificacion?.ambiente as string) || '00') as '00' | '01';
 
       const request: SendDTERequest = {
         ambiente,
@@ -269,7 +308,12 @@ export class DteService {
 
       return updated;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      // Re-throw NestJS HTTP exceptions as-is (e.g. InternalServerErrorException from JSON parse)
+      if (error instanceof InternalServerErrorException || error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      }
+
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       const observaciones = error instanceof MHReceptionError ? error.observaciones : undefined;
 
       await this.prisma.dTE.update({
@@ -283,7 +327,14 @@ export class DteService {
 
       await this.logDteAction(dteId, 'TRANSMISSION_ERROR', { error: errorMessage, observaciones });
 
-      throw error;
+      // Wrap MH errors as BadRequestException with descriptive message
+      if (error instanceof MHReceptionError) {
+        throw new BadRequestException({
+          message: 'DTE rechazado por Hacienda',
+          observaciones: error.observaciones,
+        });
+      }
+      throw new InternalServerErrorException(`Error al transmitir DTE: ${errorMessage}`);
     }
   }
 
@@ -399,11 +450,11 @@ export class DteService {
         });
 
     if (!dte) {
-      throw new Error('DTE no encontrado');
+      throw new NotFoundException('DTE no encontrado');
     }
 
     if (dte.estado === DTEStatus.ANULADO) {
-      throw new Error('El DTE ya está anulado');
+      throw new BadRequestException('El DTE ya está anulado');
     }
 
     const updated = await this.prisma.dTE.update({
@@ -437,13 +488,18 @@ export class DteService {
   }
 
   private async logDteAction(dteId: string, accion: string, data: Record<string, unknown>) {
-    await this.prisma.dTELog.create({
-      data: {
-        dteId,
-        accion,
-        request: JSON.stringify(data),
-      },
-    });
+    try {
+      await this.prisma.dTELog.create({
+        data: {
+          dteId,
+          accion,
+          request: JSON.stringify(data),
+        },
+      });
+    } catch (logError) {
+      // Logging failures should never crash the main DTE operation
+      this.logger.error(`Failed to log DTE action [${accion}] for ${dteId}: ${logError instanceof Error ? logError.message : logError}`);
+    }
   }
 
   // =====================

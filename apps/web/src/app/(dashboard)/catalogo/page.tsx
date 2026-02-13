@@ -32,6 +32,12 @@ import {
   ArrowDown,
   Package,
   Star,
+  Upload,
+  Download,
+  Tag,
+  AlertTriangle,
+  X,
+  Check,
 } from 'lucide-react';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
@@ -39,6 +45,15 @@ import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
 
 // ─── Types ─────────────────────────────────────────────────
+
+interface CatalogCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null;
+  sortOrder: number;
+  _count?: { items: number };
+}
 
 interface CatalogItem {
   id: string;
@@ -56,6 +71,8 @@ interface CatalogItem {
   isFavorite: boolean;
   usageCount: number;
   lastUsedAt: string | null;
+  categoryId: string | null;
+  category: CatalogCategory | null;
   createdAt: string;
 }
 
@@ -65,6 +82,12 @@ interface CatalogResponse {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+interface PlanLimitInfo {
+  current: number;
+  max: number;
+  planCode: string;
 }
 
 interface UnidadMedida {
@@ -83,6 +106,20 @@ interface ItemForm {
   uniMedida: string;
   tributo: string;
   taxRate: string;
+  categoryId: string;
+}
+
+interface ImportRowError {
+  row: number;
+  field: string;
+  message: string;
+}
+
+interface ImportResult {
+  total: number;
+  created: number;
+  updated: number;
+  errors: ImportRowError[];
 }
 
 const EMPTY_FORM: ItemForm = {
@@ -96,6 +133,7 @@ const EMPTY_FORM: ItemForm = {
   uniMedida: '99',
   tributo: '20',
   taxRate: '13.00',
+  categoryId: '',
 };
 
 // ─── Constants ─────────────────────────────────────────────
@@ -113,8 +151,8 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  PRODUCT: 'bg-blue-100 text-blue-800',
-  SERVICE: 'bg-purple-100 text-purple-800',
+  PRODUCT: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  SERVICE: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
 };
 
 const TRIBUTO_OPTIONS = [
@@ -128,6 +166,13 @@ const TIPO_ITEM_OPTIONS = [
   { value: '2', label: '2 - Servicios' },
   { value: '3', label: '3 - Ambos' },
 ];
+
+const CATEGORY_COLORS = [
+  '#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f97316',
+  '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
+];
+
+const CSV_TEMPLATE = 'code,name,description,type,basePrice,costPrice,taxRate,tipoItem,uniMedida,tributo\nPRD-001,Producto Ejemplo,Descripcion,PRODUCT,10.00,,13.00,1,99,20\nSRV-001,Servicio Ejemplo,,SERVICE,25.00,,13.00,2,59,20';
 
 // ─── Validation ────────────────────────────────────────────
 
@@ -170,6 +215,51 @@ function isFormValid(form: ItemForm): boolean {
   return true;
 }
 
+// ─── CSV Parser (RFC 4180 compliant) ──────────────────────
+
+function parseCSV(text: string, separator: string = ','): string[][] {
+  const rows: string[][] = [];
+  let current = '';
+  let inQuotes = false;
+  let row: string[] = [];
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (inQuotes) {
+      if (ch === '"' && next === '"') {
+        current += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === separator) {
+        row.push(current.trim());
+        current = '';
+      } else if (ch === '\n' || (ch === '\r' && next === '\n')) {
+        row.push(current.trim());
+        if (row.some((c) => c !== '')) rows.push(row);
+        row = [];
+        current = '';
+        if (ch === '\r') i++;
+      } else {
+        current += ch;
+      }
+    }
+  }
+  // Last field/row
+  row.push(current.trim());
+  if (row.some((c) => c !== '')) rows.push(row);
+
+  return rows;
+}
+
 // ─── Component ─────────────────────────────────────────────
 
 export default function CatalogoPage() {
@@ -184,9 +274,16 @@ export default function CatalogoPage() {
   const [loading, setLoading] = React.useState(true);
   const [fetchError, setFetchError] = React.useState<string | null>(null);
 
+  // Categories
+  const [categories, setCategories] = React.useState<CatalogCategory[]>([]);
+
+  // Plan limit
+  const [planLimit, setPlanLimit] = React.useState<PlanLimitInfo | null>(null);
+
   // Filter state
   const [search, setSearch] = React.useState('');
   const [tab, setTab] = React.useState('');
+  const [categoryFilter, setCategoryFilter] = React.useState('');
   const [page, setPage] = React.useState(1);
   const [limit, setLimit] = React.useState(20);
   const [sortBy, setSortBy] = React.useState('createdAt');
@@ -203,29 +300,88 @@ export default function CatalogoPage() {
   const [deleteConfirm, setDeleteConfirm] = React.useState<CatalogItem | null>(null);
   const [deleting, setDeleting] = React.useState(false);
 
+  // Categories modal
+  const [categoriesModalOpen, setCategoriesModalOpen] = React.useState(false);
+  const [newCatName, setNewCatName] = React.useState('');
+  const [newCatColor, setNewCatColor] = React.useState(CATEGORY_COLORS[0]);
+  const [savingCat, setSavingCat] = React.useState(false);
+  const [editingCat, setEditingCat] = React.useState<CatalogCategory | null>(null);
+  const [editCatName, setEditCatName] = React.useState('');
+  const [editCatColor, setEditCatColor] = React.useState('');
+
+  // Import modal
+  const [importModalOpen, setImportModalOpen] = React.useState(false);
+  const [importFile, setImportFile] = React.useState<File | null>(null);
+  const [importSeparator, setImportSeparator] = React.useState(',');
+  const [importPreview, setImportPreview] = React.useState<string[][] | null>(null);
+  const [importing, setImporting] = React.useState(false);
+  const [importResult, setImportResult] = React.useState<ImportResult | null>(null);
+
   // Units of measure (loaded once)
   const [units, setUnits] = React.useState<UnidadMedida[]>([]);
+
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('token');
+    return { Authorization: `Bearer ${token}` };
+  };
 
   // ─── Load units of measure ──────────────────────────────
 
   React.useEffect(() => {
     const loadUnits = async () => {
       try {
-        const token = localStorage.getItem('token');
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/catalogs/unidades-medida`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          { headers: getAuthHeaders() },
         );
         if (res.ok) {
           const data = await res.json().catch(() => []);
           if (Array.isArray(data)) setUnits(data);
         }
       } catch {
-        // Non-critical, units dropdown will just be empty
+        // Non-critical
       }
     };
     loadUnits();
   }, []);
+
+  // ─── Load categories ─────────────────────────────────────
+
+  const fetchCategories = React.useCallback(async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/categories`,
+        { headers: getAuthHeaders() },
+      );
+      if (res.ok) {
+        const data = await res.json().catch(() => []);
+        if (Array.isArray(data)) setCategories(data);
+      }
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
+  React.useEffect(() => { fetchCategories(); }, [fetchCategories]);
+
+  // ─── Load plan limit ──────────────────────────────────────
+
+  const fetchPlanLimit = React.useCallback(async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/plan-limit`,
+        { headers: getAuthHeaders() },
+      );
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data && typeof data.current === 'number') setPlanLimit(data);
+      }
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
+  React.useEffect(() => { fetchPlanLimit(); }, [fetchPlanLimit]);
 
   // ─── Fetch items ────────────────────────────────────────
 
@@ -233,7 +389,6 @@ export default function CatalogoPage() {
     setLoading(true);
     setFetchError(null);
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -241,6 +396,7 @@ export default function CatalogoPage() {
         sortOrder,
       });
       if (search) params.set('search', search);
+      if (categoryFilter) params.set('categoryId', categoryFilter);
 
       if (tab === 'FAVORITES') {
         params.set('isFavorite', 'true');
@@ -250,7 +406,7 @@ export default function CatalogoPage() {
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/catalog-items?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: getAuthHeaders() },
       );
 
       if (!res.ok) {
@@ -275,7 +431,7 @@ export default function CatalogoPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, tab, sortBy, sortOrder]);
+  }, [page, limit, search, tab, categoryFilter, sortBy, sortOrder]);
 
   React.useEffect(() => {
     fetchItems();
@@ -300,6 +456,11 @@ export default function CatalogoPage() {
       : <ArrowDown className="h-3 w-3 ml-1" />;
   };
 
+  // ─── Plan limit helpers ──────────────────────────────────
+
+  const isAtLimit = planLimit && planLimit.max !== -1 && planLimit.current >= planLimit.max;
+  const isNearLimit = planLimit && planLimit.max !== -1 && planLimit.current >= planLimit.max * 0.8 && !isAtLimit;
+
   // ─── Modal helpers ──────────────────────────────────────
 
   const openCreateModal = () => {
@@ -322,6 +483,7 @@ export default function CatalogoPage() {
       uniMedida: String(item.uniMedida),
       tributo: item.tributo || '20',
       taxRate: String(item.taxRate),
+      categoryId: item.categoryId || '',
     });
     setFieldErrors({});
     setIsModalOpen(true);
@@ -352,7 +514,6 @@ export default function CatalogoPage() {
   // ─── Save ───────────────────────────────────────────────
 
   const handleSave = async () => {
-    // Validate all fields
     const errors: Record<string, string> = {};
     errors.code = validateField('code', formData.code);
     errors.name = validateField('name', formData.name);
@@ -366,7 +527,6 @@ export default function CatalogoPage() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const body: Record<string, unknown> = {
         type: formData.type,
         code: formData.code.trim(),
@@ -377,6 +537,7 @@ export default function CatalogoPage() {
         uniMedida: Number(formData.uniMedida),
         tributo: formData.tributo,
         taxRate: Number(formData.taxRate),
+        categoryId: formData.categoryId || null,
       };
       if (formData.costPrice.trim()) {
         body.costPrice = Number(formData.costPrice);
@@ -390,7 +551,7 @@ export default function CatalogoPage() {
       const res = await fetch(url, {
         method: isEdit ? 'PATCH' : 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
@@ -399,7 +560,7 @@ export default function CatalogoPage() {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(
-          err.message || `Error al ${isEdit ? 'actualizar' : 'crear'} item`,
+          (err as Record<string, string>).message || `Error al ${isEdit ? 'actualizar' : 'crear'} item`,
         );
       }
 
@@ -408,6 +569,7 @@ export default function CatalogoPage() {
       );
       closeModal();
       fetchItems();
+      fetchPlanLimit();
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Error al guardar item',
@@ -423,21 +585,21 @@ export default function CatalogoPage() {
     if (!deleteConfirm) return;
     setDeleting(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/${deleteConfirm.id}`,
         {
           method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: getAuthHeaders(),
         },
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Error al eliminar item');
+        throw new Error((err as Record<string, string>).message || 'Error al eliminar item');
       }
       toast.success('Item eliminado correctamente');
       setDeleteConfirm(null);
       fetchItems();
+      fetchPlanLimit();
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Error al eliminar item',
@@ -451,16 +613,14 @@ export default function CatalogoPage() {
 
   const handleToggleFavorite = async (item: CatalogItem) => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/${item.id}/favorite`,
         {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: getAuthHeaders(),
         },
       );
       if (!res.ok) throw new Error('Error al actualizar favorito');
-      // Update locally without refetching
       setItems((prev) =>
         prev.map((i) =>
           i.id === item.id ? { ...i, isFavorite: !i.isFavorite } : i,
@@ -469,6 +629,222 @@ export default function CatalogoPage() {
     } catch {
       toastRef.current.error('Error al actualizar favorito');
     }
+  };
+
+  // ─── Category CRUD ────────────────────────────────────
+
+  const handleCreateCategory = async () => {
+    if (!newCatName.trim()) return;
+    setSavingCat(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/categories`,
+        {
+          method: 'POST',
+          headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newCatName.trim(), color: newCatColor }),
+        },
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as Record<string, string>).message || 'Error al crear categoria');
+      }
+      toast.success('Categoria creada');
+      setNewCatName('');
+      fetchCategories();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al crear categoria');
+    } finally {
+      setSavingCat(false);
+    }
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!editingCat || !editCatName.trim()) return;
+    setSavingCat(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/categories/${editingCat.id}`,
+        {
+          method: 'PATCH',
+          headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: editCatName.trim(), color: editCatColor }),
+        },
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as Record<string, string>).message || 'Error al actualizar categoria');
+      }
+      toast.success('Categoria actualizada');
+      setEditingCat(null);
+      fetchCategories();
+      fetchItems();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al actualizar categoria');
+    } finally {
+      setSavingCat(false);
+    }
+  };
+
+  const handleDeleteCategory = async (cat: CatalogCategory) => {
+    if (!confirm(`Eliminar categoria "${cat.name}"? Los items quedaran sin categoria.`)) return;
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/categories/${cat.id}`,
+        { method: 'DELETE', headers: getAuthHeaders() },
+      );
+      if (!res.ok) throw new Error('Error al eliminar categoria');
+      toast.success('Categoria eliminada');
+      fetchCategories();
+      fetchItems();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar categoria');
+    }
+  };
+
+  // ─── Import ───────────────────────────────────────────
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFile(file);
+    setImportResult(null);
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const rows = parseCSV(text, importSeparator);
+      setImportPreview(rows.slice(0, 6)); // header + 5 preview rows
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImport = async () => {
+    if (!importFile) return;
+    setImporting(true);
+    setImportResult(null);
+
+    try {
+      const text = await importFile.text();
+      const rows = parseCSV(text, importSeparator);
+
+      if (rows.length < 2) {
+        toast.error('El archivo debe tener al menos un encabezado y una fila de datos');
+        return;
+      }
+
+      const headers = rows[0].map((h) => h.toLowerCase().trim());
+      const dataRows = rows.slice(1);
+
+      // Map headers to fields
+      const fieldMap: Record<string, number> = {};
+      const fieldNames = ['code', 'name', 'description', 'type', 'baseprice', 'costprice', 'taxrate', 'tipoitem', 'unimedida', 'tributo'];
+      for (const fn of fieldNames) {
+        const idx = headers.findIndex((h) => h.replace(/[_\s-]/g, '').toLowerCase() === fn);
+        if (idx !== -1) fieldMap[fn] = idx;
+      }
+
+      if (fieldMap['code'] === undefined || fieldMap['name'] === undefined) {
+        toast.error('El CSV debe tener columnas "code" y "name"');
+        return;
+      }
+
+      const importRows = dataRows.map((row) => ({
+        code: row[fieldMap['code']] || '',
+        name: row[fieldMap['name']] || '',
+        description: fieldMap['description'] !== undefined ? row[fieldMap['description']] : undefined,
+        type: fieldMap['type'] !== undefined ? row[fieldMap['type']] : 'PRODUCT',
+        basePrice: Number(row[fieldMap['baseprice'] ?? -1] || '0'),
+        costPrice: fieldMap['costprice'] !== undefined && row[fieldMap['costprice']] ? Number(row[fieldMap['costprice']]) : undefined,
+        taxRate: fieldMap['taxrate'] !== undefined && row[fieldMap['taxrate']] ? Number(row[fieldMap['taxrate']]) : 13.0,
+        tipoItem: fieldMap['tipoitem'] !== undefined && row[fieldMap['tipoitem']] ? Number(row[fieldMap['tipoitem']]) : 1,
+        uniMedida: fieldMap['unimedida'] !== undefined && row[fieldMap['unimedida']] ? Number(row[fieldMap['unimedida']]) : 99,
+        tributo: fieldMap['tributo'] !== undefined ? row[fieldMap['tributo']] : '20',
+      }));
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/import`,
+        {
+          method: 'POST',
+          headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rows: importRows }),
+        },
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as Record<string, string>).message || 'Error en importacion');
+      }
+
+      const result: ImportResult = await res.json();
+      setImportResult(result);
+      toast.success(`Importacion completada: ${result.created} creados, ${result.updated} actualizados`);
+      fetchItems();
+      fetchPlanLimit();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error en importacion');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const closeImportModal = () => {
+    setImportModalOpen(false);
+    setImportFile(null);
+    setImportPreview(null);
+    setImportResult(null);
+  };
+
+  // ─── Export ───────────────────────────────────────────
+
+  const handleExport = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/export`,
+        { headers: getAuthHeaders() },
+      );
+      if (!res.ok) throw new Error('Error al exportar');
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        toast.error('No hay items para exportar');
+        return;
+      }
+
+      const csvHeaders = ['code', 'name', 'description', 'type', 'category', 'basePrice', 'costPrice', 'taxRate', 'tipoItem', 'uniMedida', 'tributo'];
+      const csvRows = data.map((item: CatalogItem) =>
+        csvHeaders.map((h) => {
+          if (h === 'category') return item.category?.name || '';
+          const val = item[h as keyof CatalogItem];
+          if (val === null || val === undefined) return '';
+          const str = String(val);
+          return str.includes(',') || str.includes('"') || str.includes('\n')
+            ? `"${str.replace(/"/g, '""')}"`
+            : str;
+        }).join(','),
+      );
+
+      const csv = [csvHeaders.join(','), ...csvRows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `catalogo_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Catalogo exportado');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al exportar');
+    }
+  };
+
+  const downloadTemplate = () => {
+    const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plantilla_catalogo.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   // ─── Format price ──────────────────────────────────────
@@ -491,21 +867,54 @@ export default function CatalogoPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
             <Package className="h-6 w-6" />
             Catalogo
           </h1>
           <p className="text-muted-foreground mt-1">
             Gestiona tus productos y servicios
+            {planLimit && planLimit.max !== -1 && (
+              <span className="ml-2 text-sm">
+                ({planLimit.current}/{planLimit.max} items)
+              </span>
+            )}
           </p>
         </div>
         {!fetchError && (
-          <Button onClick={openCreateModal}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Item
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setCategoriesModalOpen(true)}>
+              <Tag className="mr-2 h-4 w-4" />
+              Categorias
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Importar
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Exportar
+            </Button>
+            <Button onClick={openCreateModal} disabled={!!isAtLimit}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Item
+            </Button>
+          </div>
         )}
       </div>
+
+      {/* Plan limit warnings */}
+      {isAtLimit && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          Has alcanzado el limite de {planLimit?.max} items en tu plan {planLimit?.planCode}. Actualiza tu plan para agregar mas productos.
+        </div>
+      )}
+      {isNearLimit && (
+        <div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/30 px-4 py-3 text-sm text-yellow-700 dark:text-yellow-400">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          Estas cerca del limite: {planLimit?.current}/{planLimit?.max} items usados en tu plan {planLimit?.planCode}.
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 border-b pb-2">
@@ -526,16 +935,38 @@ export default function CatalogoPage() {
 
       <Card>
         <CardContent className="p-0">
-          {/* Search + PageSize */}
-          <div className="flex items-center justify-between px-4 py-3 border-b">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nombre o codigo..."
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="pl-9 w-64"
-              />
+          {/* Search + Category Filter + PageSize */}
+          <div className="flex items-center justify-between px-4 py-3 border-b gap-3">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nombre o codigo..."
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="pl-9 w-64"
+                />
+              </div>
+              {categories.length > 0 && (
+                <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v === '_all' ? '' : v); setPage(1); }}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Todas las categorias" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">Todas las categorias</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <span className="flex items-center gap-2">
+                          {cat.color && (
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                          )}
+                          {cat.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <PageSizeSelector value={limit} onChange={handleLimitChange} />
           </div>
@@ -555,7 +986,7 @@ export default function CatalogoPage() {
             <div className="text-center py-12">
               <Package className="mx-auto h-12 w-12 text-muted-foreground/30" />
               <p className="mt-4 text-muted-foreground">No se encontraron items</p>
-              <Button variant="outline" className="mt-4" onClick={openCreateModal}>
+              <Button variant="outline" className="mt-4" onClick={openCreateModal} disabled={!!isAtLimit}>
                 <Plus className="mr-2 h-4 w-4" />
                 Crear primer item
               </Button>
@@ -582,6 +1013,7 @@ export default function CatalogoPage() {
                         Nombre {getSortIcon('name')}
                       </div>
                     </TableHead>
+                    <TableHead>Categoria</TableHead>
                     <TableHead
                       className="cursor-pointer select-none"
                       onClick={() => handleSort('type')}
@@ -635,6 +1067,22 @@ export default function CatalogoPage() {
                           <span className="block text-xs text-muted-foreground truncate max-w-[200px]">
                             {item.description}
                           </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {item.category ? (
+                          <span
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium"
+                            style={{
+                              backgroundColor: item.category.color ? `${item.category.color}20` : '#6366f120',
+                              color: item.category.color || '#6366f1',
+                            }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.category.color || '#6366f1' }} />
+                            {item.category.name}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -759,6 +1207,27 @@ export default function CatalogoPage() {
                   <p className="text-xs text-red-500">{fieldErrors.name}</p>
                 )}
               </div>
+            </div>
+
+            {/* Category */}
+            <div className="space-y-1">
+              <Label>Categoria</Label>
+              <Select value={formData.categoryId || '_none'} onValueChange={(v) => handleFormChange('categoryId', v === '_none' ? '' : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sin categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Sin categoria</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <span className="flex items-center gap-2">
+                        {cat.color && <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />}
+                        {cat.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Description */}
@@ -928,6 +1397,225 @@ export default function CatalogoPage() {
               {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Eliminar
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Categories Modal ─────────────────────────────── */}
+      <Dialog open={categoriesModalOpen} onOpenChange={(open) => { if (!open) { setCategoriesModalOpen(false); setEditingCat(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Gestionar Categorias</DialogTitle>
+            <DialogDescription>
+              Organiza tus productos y servicios en categorias
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Add new category */}
+            <div className="flex items-end gap-2">
+              <div className="flex-1 space-y-1">
+                <Label>Nueva Categoria</Label>
+                <Input
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  placeholder="Nombre de la categoria"
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Color</Label>
+                <div className="flex gap-1">
+                  {CATEGORY_COLORS.slice(0, 5).map((c) => (
+                    <button
+                      key={c}
+                      className={`w-6 h-6 rounded-full border-2 transition-all ${newCatColor === c ? 'border-foreground scale-110' : 'border-transparent'}`}
+                      style={{ backgroundColor: c }}
+                      onClick={() => setNewCatColor(c)}
+                    />
+                  ))}
+                </div>
+              </div>
+              <Button size="sm" onClick={handleCreateCategory} disabled={savingCat || !newCatName.trim()}>
+                {savingCat ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            {/* Category list */}
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {categories.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No hay categorias creadas</p>
+              ) : (
+                categories.map((cat) => (
+                  <div key={cat.id} className="flex items-center gap-2 px-3 py-2 rounded-md border">
+                    {editingCat?.id === cat.id ? (
+                      <>
+                        <Input
+                          value={editCatName}
+                          onChange={(e) => setEditCatName(e.target.value)}
+                          className="h-8 text-sm flex-1"
+                          maxLength={100}
+                        />
+                        <div className="flex gap-0.5">
+                          {CATEGORY_COLORS.slice(0, 5).map((c) => (
+                            <button
+                              key={c}
+                              className={`w-4 h-4 rounded-full border ${editCatColor === c ? 'border-foreground' : 'border-transparent'}`}
+                              style={{ backgroundColor: c }}
+                              onClick={() => setEditCatColor(c)}
+                            />
+                          ))}
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleUpdateCategory} disabled={savingCat}>
+                          <Check className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingCat(null)}>
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: cat.color || '#6366f1' }} />
+                        <span className="flex-1 text-sm font-medium">{cat.name}</span>
+                        <span className="text-xs text-muted-foreground">{cat._count?.items || 0} items</span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => { setEditingCat(cat); setEditCatName(cat.name); setEditCatColor(cat.color || CATEGORY_COLORS[0]); }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-destructive"
+                          onClick={() => handleDeleteCategory(cat)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCategoriesModalOpen(false)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Import Modal ─────────────────────────────────── */}
+      <Dialog open={importModalOpen} onOpenChange={(open) => { if (!open) closeImportModal(); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Importar Catalogo</DialogTitle>
+            <DialogDescription>
+              Sube un archivo CSV para importar productos en lote. Los items existentes (mismo codigo) seran actualizados.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Template download */}
+            <div className="flex items-center justify-between rounded-md border px-3 py-2">
+              <span className="text-sm text-muted-foreground">Descarga la plantilla CSV para ver el formato esperado</span>
+              <Button size="sm" variant="outline" onClick={downloadTemplate}>
+                <Download className="mr-2 h-3.5 w-3.5" />
+                Plantilla
+              </Button>
+            </div>
+
+            {/* File + Separator */}
+            <div className="flex items-end gap-3">
+              <div className="flex-1 space-y-1">
+                <Label>Archivo CSV</Label>
+                <Input
+                  type="file"
+                  accept=".csv,.txt"
+                  onChange={handleFileChange}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Separador</Label>
+                <Select value={importSeparator} onValueChange={setImportSeparator}>
+                  <SelectTrigger className="w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value=",">Coma (,)</SelectItem>
+                    <SelectItem value=";">Punto y coma (;)</SelectItem>
+                    <SelectItem value="\t">Tab</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Preview */}
+            {importPreview && importPreview.length > 0 && (
+              <div className="space-y-1">
+                <Label>Vista previa (primeras filas)</Label>
+                <div className="overflow-x-auto border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {importPreview[0].map((h, i) => (
+                          <TableHead key={i} className="text-xs whitespace-nowrap">{h}</TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {importPreview.slice(1).map((row, i) => (
+                        <TableRow key={i}>
+                          {row.map((cell, j) => (
+                            <TableCell key={j} className="text-xs py-1 whitespace-nowrap">{cell}</TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {/* Import result */}
+            {importResult && (
+              <div className="rounded-md border p-3 space-y-2">
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="font-medium">Resultado:</span>
+                  <span className="text-green-600 dark:text-green-400">{importResult.created} creados</span>
+                  <span className="text-blue-600 dark:text-blue-400">{importResult.updated} actualizados</span>
+                  {importResult.errors.length > 0 && (
+                    <span className="text-red-600 dark:text-red-400">{importResult.errors.length} errores</span>
+                  )}
+                </div>
+                {importResult.errors.length > 0 && (
+                  <div className="max-h-32 overflow-y-auto text-xs space-y-1">
+                    {importResult.errors.map((err, i) => (
+                      <p key={i} className="text-red-600 dark:text-red-400">
+                        Fila {err.row}: {err.field} - {err.message}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={closeImportModal}>
+              {importResult ? 'Cerrar' : 'Cancelar'}
+            </Button>
+            {!importResult && (
+              <Button onClick={handleImport} disabled={importing || !importFile}>
+                {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Importar
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

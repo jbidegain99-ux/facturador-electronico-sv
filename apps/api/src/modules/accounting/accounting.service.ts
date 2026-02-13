@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { CreateJournalEntryDto } from './dto/create-journal-entry.dto';
+import { SimulateInvoiceDto } from './dto/simulate-invoice.dto';
 import { QueryJournalDto } from './dto/query-journal.dto';
 import { PaginatedResponse } from '../../common/dto/paginated-response';
 import { AccountingAccount, JournalEntry } from '@prisma/client';
@@ -59,6 +60,24 @@ export interface LedgerEntry {
   debit: number;
   credit: number;
   runningBalance: number;
+}
+
+export interface SimulatedJournalLine {
+  accountCode: string;
+  accountName: string;
+  description: string;
+  debit: number;
+  credit: number;
+}
+
+export interface SimulationResult {
+  description: string;
+  lines: SimulatedJournalLine[];
+  totalDebit: number;
+  totalCredit: number;
+  balanced: boolean;
+  accountsFound: boolean;
+  missingAccounts: string[];
 }
 
 @Injectable()
@@ -905,6 +924,98 @@ export class AccountingService {
       netIncome: Math.round((monthlyIncome - monthlyExpenses) * 100) / 100,
       accountCount: accounts.length,
       journalEntryCount,
+    };
+  }
+
+  // ================================================================
+  // INVOICE SIMULATION (Test Mode)
+  // ================================================================
+
+  /**
+   * Simulate the accounting impact of an invoice WITHOUT creating any records.
+   * Returns the journal entry lines that would be created.
+   *
+   * Standard El Salvador invoice accounting:
+   *   Debit:  110301 (Clientes Locales)      = totalPagar
+   *   Credit: 4101   (Ventas)                = totalGravada
+   *   Credit: 210201 (IVA Débito Fiscal)     = totalIva
+   */
+  async simulateInvoiceImpact(
+    tenantId: string,
+    dto: SimulateInvoiceDto,
+  ): Promise<SimulationResult> {
+    const tipoDteNames: Record<string, string> = {
+      '01': 'Factura de Consumidor Final',
+      '03': 'Crédito Fiscal',
+      '05': 'Nota de Crédito',
+      '06': 'Nota de Débito',
+      '14': 'Factura Sujeto Excluido',
+    };
+
+    const dteLabel = dto.tipoDte ? (tipoDteNames[dto.tipoDte] || `DTE ${dto.tipoDte}`) : 'Factura';
+    const description = dto.description || `Simulación: ${dteLabel} por $${dto.totalPagar.toFixed(2)}`;
+
+    // Standard account codes for El Salvador invoicing
+    const accountCodes = ['110301', '4101', '210201'];
+
+    const accounts = await this.prisma.accountingAccount.findMany({
+      where: {
+        tenantId,
+        code: { in: accountCodes },
+        isActive: true,
+      },
+      select: { code: true, name: true },
+    });
+
+    const accountMap = new Map(accounts.map(a => [a.code, a.name]));
+    const missingAccounts = accountCodes.filter(code => !accountMap.has(code));
+
+    const lines: SimulatedJournalLine[] = [];
+
+    // Debit: Accounts Receivable (Clientes Locales) = totalPagar
+    if (dto.totalPagar > 0) {
+      lines.push({
+        accountCode: '110301',
+        accountName: accountMap.get('110301') || 'Clientes Locales',
+        description: `${dteLabel} - Cuenta por cobrar`,
+        debit: Math.round(dto.totalPagar * 100) / 100,
+        credit: 0,
+      });
+    }
+
+    // Credit: Revenue (Ventas) = totalGravada
+    if (dto.totalGravada > 0) {
+      lines.push({
+        accountCode: '4101',
+        accountName: accountMap.get('4101') || 'Ventas',
+        description: `${dteLabel} - Ingreso por venta`,
+        debit: 0,
+        credit: Math.round(dto.totalGravada * 100) / 100,
+      });
+    }
+
+    // Credit: IVA Débito Fiscal = totalIva
+    if (dto.totalIva > 0) {
+      lines.push({
+        accountCode: '210201',
+        accountName: accountMap.get('210201') || 'IVA Débito Fiscal',
+        description: `${dteLabel} - IVA débito fiscal`,
+        debit: 0,
+        credit: Math.round(dto.totalIva * 100) / 100,
+      });
+    }
+
+    const totalDebit = lines.reduce((sum, l) => sum + l.debit, 0);
+    const totalCredit = lines.reduce((sum, l) => sum + l.credit, 0);
+
+    return {
+      description,
+      lines,
+      totalDebit: Math.round(totalDebit * 100) / 100,
+      totalCredit: Math.round(totalCredit * 100) / 100,
+      balanced: Math.abs(totalDebit - totalCredit) < 0.01,
+      accountsFound: missingAccounts.length === 0,
+      missingAccounts,
     };
   }
 

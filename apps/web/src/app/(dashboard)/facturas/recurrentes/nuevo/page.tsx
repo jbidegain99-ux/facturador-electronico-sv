@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toast';
 import { ClienteSearch } from '@/components/facturas/cliente-search';
+import { CatalogSearch } from '@/components/facturas/catalog-search';
+import type { CatalogItem } from '@/components/facturas/catalog-search';
 import { ArrowLeft, Plus, Trash2, Save, Loader2, AlertCircle } from 'lucide-react';
 import type { Cliente } from '@/types';
 import Link from 'next/link';
@@ -93,6 +95,16 @@ export default function NuevoRecurrentePage() {
       updated[index] = { ...updated[index], [field]: Number(value) || 0 };
     }
     setItems(updated);
+  };
+
+  const handleCatalogSelect = (catalogItem: CatalogItem) => {
+    const newItem: TemplateItem = {
+      descripcion: catalogItem.name,
+      cantidad: 1,
+      precioUnitario: Number(catalogItem.basePrice),
+      descuento: 0,
+    };
+    setItems([...items, newItem]);
   };
 
   const totalEstimado = items.reduce((sum, item) => {
@@ -409,10 +421,13 @@ export default function NuevoRecurrentePage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Items de la Factura</CardTitle>
-              <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                <Plus className="mr-1 h-4 w-4" />
-                Agregar Item
-              </Button>
+              <div className="flex items-center gap-2">
+                <CatalogSearch onSelect={handleCatalogSelect} />
+                <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Agregar Manual
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>

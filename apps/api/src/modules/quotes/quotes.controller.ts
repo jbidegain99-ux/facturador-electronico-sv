@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
   ForbiddenException,
   Ip,
 } from '@nestjs/common';
@@ -17,7 +16,6 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import {
   CurrentUser,
   CurrentUserData,

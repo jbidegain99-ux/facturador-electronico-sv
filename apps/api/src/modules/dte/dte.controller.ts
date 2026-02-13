@@ -1,6 +1,5 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Request, Res, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Request, Res, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiProduces } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { DteService } from './dte.service';
 import { PdfService } from './pdf.service';
@@ -16,6 +15,8 @@ interface AuthRequest extends Request {
 @Controller('dte')
 @ApiBearerAuth()
 export class DteController {
+  private readonly logger = new Logger(DteController.name);
+
   constructor(
     private dteService: DteService,
     private pdfService: PdfService,
@@ -172,9 +173,17 @@ export class DteController {
       throw new NotFoundException('DTE no encontrado');
     }
 
+    let parsedData: Record<string, unknown> = {};
+    try {
+      parsedData = dte.jsonOriginal ? JSON.parse(dte.jsonOriginal) : {};
+    } catch (parseError) {
+      this.logger.error(`Failed to parse jsonOriginal for PDF generation, DTE ${id}: ${parseError instanceof Error ? parseError.message : parseError}`);
+      throw new InternalServerErrorException('Error al procesar datos del DTE para PDF');
+    }
+
     const pdfBuffer = await this.pdfService.generateInvoicePdf({
       ...dte,
-      data: dte.jsonOriginal ? JSON.parse(dte.jsonOriginal) : {},
+      data: parsedData,
     });
 
     const filename = `DTE-${dte.numeroControl || dte.codigoGeneracion}.pdf`;

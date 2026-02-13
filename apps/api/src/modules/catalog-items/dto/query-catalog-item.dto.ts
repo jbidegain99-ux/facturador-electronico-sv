@@ -15,4 +15,8 @@ export class QueryCatalogItemDto extends PaginationQueryDto {
   @IsOptional()
   @Type(() => String)
   isFavorite?: string; // "true" or "false" from query string
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 }

@@ -462,13 +462,13 @@ export default function CotizacionDetailPage() {
             variant="ghost"
             size="sm"
             onClick={() => router.push('/cotizaciones')}
-            className="text-muted-foreground hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Volver
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <ClipboardList className="w-6 h-6 text-primary" />
               {quote.quoteNumber}
               {quote.version > 1 && (
@@ -701,7 +701,7 @@ export default function CotizacionDetailPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowVersions(!showVersions)}
-                className="text-muted-foreground hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 {showVersions ? (
                   <ChevronUp className="w-4 h-4 mr-1" />

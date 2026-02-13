@@ -66,6 +66,7 @@ model Tenant {
 
   // Product/service catalog
   catalogItems       CatalogItem[]
+  catalogCategories  CatalogCategory[]
 
   // Quotes / Cotizaciones
   quotes             Quote[]
@@ -939,10 +940,32 @@ model RecurringInvoiceHistory {
 // PRODUCT/SERVICE CATALOG
 // ============================================================================
 
+model CatalogCategory {
+  id          String        @id @default(cuid())
+  tenantId    String
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  name        String        @db.NVarChar(100)
+  description String?       @db.NVarChar(300)
+  color       String?       @db.NVarChar(7)       // hex color for UI badges
+  sortOrder   Int           @default(0)
+  isActive    Boolean       @default(true)
+  items       CatalogItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId, isActive])
+  @@map("catalog_categories")
+}
+
 model CatalogItem {
-  id              String    @id @default(cuid())
+  id              String            @id @default(cuid())
   tenantId        String
-  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Category
+  categoryId      String?
+  category        CatalogCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   // Core fields
   type            String    @default("PRODUCT")   // PRODUCT | SERVICE
@@ -976,6 +999,7 @@ model CatalogItem {
   @@index([tenantId, isActive])
   @@index([tenantId, type, isActive])
   @@index([tenantId, isFavorite])
+  @@index([tenantId, categoryId])
 }
 
 // ============================================================================

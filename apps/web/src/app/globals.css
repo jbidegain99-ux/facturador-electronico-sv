@@ -66,6 +66,16 @@
     --border: 214 32% 85%;
     --input: 214 32% 85%;
     --ring: 262 83% 58%;
+
+    /* Custom Republicode colors - light mode */
+    --rc-bg-primary: #ffffff;
+    --rc-bg-secondary: #f8fafc;
+    --rc-accent-primary: #8b5cf6;
+    --rc-accent-secondary: #06b6d4;
+    --rc-text-muted: #64748b;
+    --rc-text-subtle: #94a3b8;
+    --rc-border: rgba(0, 0, 0, 0.1);
+    --rc-surface: rgba(0, 0, 0, 0.03);
   }
 }
 
@@ -310,6 +320,14 @@
     background: rgba(255, 255, 255, 0.02);
   }
 
+  .light .table-rc th {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .light .table-rc tr:hover td {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
   /* Sidebar Styles */
   .sidebar-link {
     @apply flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground transition-all duration-200;
@@ -323,6 +341,18 @@
   .sidebar-link.active {
     @apply text-white;
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+    border-left: 3px solid #8b5cf6;
+  }
+
+  /* Light mode sidebar overrides */
+  .light .sidebar-link:hover {
+    @apply text-foreground;
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .light .sidebar-link.active {
+    @apply text-foreground;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(139, 92, 246, 0.06));
     border-left: 3px solid #8b5cf6;
   }
 }

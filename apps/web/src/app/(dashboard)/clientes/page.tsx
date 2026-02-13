@@ -89,6 +89,41 @@ const NRC_PATTERN = /^\d{1,7}(-\d)?$/;
 const PHONE_PATTERN = /^\d{4}-\d{4}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Input mask formatting functions - auto-insert hyphens as user types
+function formatNit(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 14);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 10) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  if (digits.length <= 13) return `${digits.slice(0, 4)}-${digits.slice(4, 10)}-${digits.slice(10)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 10)}-${digits.slice(10, 13)}-${digits.slice(13)}`;
+}
+
+function formatDui(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 9);
+  if (digits.length <= 8) return digits;
+  return `${digits.slice(0, 8)}-${digits.slice(8)}`;
+}
+
+function formatNrc(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 7) return digits;
+  return `${digits.slice(0, 7)}-${digits.slice(7)}`;
+}
+
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 4) return digits;
+  return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+}
+
+function formatDocumento(tipoDocumento: string, value: string): string {
+  switch (tipoDocumento) {
+    case '36': return formatNit(value);
+    case '13': return formatDui(value);
+    default: return value;
+  }
+}
+
 function validateField(field: string, value: string, formData: ClienteForm): string {
   switch (field) {
     case 'numDocumento': {
@@ -286,15 +321,28 @@ export default function ClientesPage() {
   };
 
   const handleFormChange = (field: keyof ClienteForm, value: string) => {
-    const newFormData = { ...formData, [field]: value };
+    // Apply input masks for formatted fields
+    let maskedValue = value;
+    if (field === 'numDocumento') {
+      maskedValue = formatDocumento(formData.tipoDocumento, value);
+    } else if (field === 'nrc') {
+      maskedValue = formatNrc(value);
+    } else if (field === 'telefono') {
+      maskedValue = formatPhone(value);
+    }
+
+    const newFormData = { ...formData, [field]: maskedValue };
     setFormData(newFormData);
     setFormError(null);
     // Validate changed field
-    const error = validateField(field, value, newFormData);
+    const error = validateField(field, maskedValue, newFormData);
     setFieldErrors(prev => ({ ...prev, [field]: error }));
-    // Re-validate numDocumento when tipoDocumento changes
+    // Re-validate and re-format numDocumento when tipoDocumento changes
     if (field === 'tipoDocumento' && newFormData.numDocumento) {
-      const docError = validateField('numDocumento', newFormData.numDocumento, newFormData);
+      const reformatted = formatDocumento(value, newFormData.numDocumento);
+      newFormData.numDocumento = reformatted;
+      setFormData(newFormData);
+      const docError = validateField('numDocumento', reformatted, newFormData);
       setFieldErrors(prev => ({ ...prev, numDocumento: docError }));
     }
   };
@@ -605,7 +653,8 @@ export default function ClientesPage() {
                   placeholder={formData.tipoDocumento === '36' ? '0000-000000-000-0' : formData.tipoDocumento === '13' ? '00000000-0' : 'Numero de documento'}
                   value={formData.numDocumento}
                   onChange={(e) => handleFormChange('numDocumento', e.target.value)}
-                  className={fieldErrors.numDocumento ? 'border-red-500' : ''}
+                  maxLength={formData.tipoDocumento === '36' ? 17 : formData.tipoDocumento === '13' ? 10 : 20}
+                  className={`font-mono ${fieldErrors.numDocumento ? 'border-red-500' : ''}`}
                 />
                 {fieldErrors.numDocumento && (
                   <p className="text-xs text-red-500">{fieldErrors.numDocumento}</p>
@@ -633,7 +682,8 @@ export default function ClientesPage() {
                   placeholder="000000-0"
                   value={formData.nrc}
                   onChange={(e) => handleFormChange('nrc', e.target.value)}
-                  className={fieldErrors.nrc ? 'border-red-500' : ''}
+                  maxLength={9}
+                  className={`font-mono ${fieldErrors.nrc ? 'border-red-500' : ''}`}
                 />
                 {fieldErrors.nrc && (
                   <p className="text-xs text-red-500">{fieldErrors.nrc}</p>
@@ -645,7 +695,8 @@ export default function ClientesPage() {
                   placeholder="0000-0000"
                   value={formData.telefono}
                   onChange={(e) => handleFormChange('telefono', e.target.value)}
-                  className={fieldErrors.telefono ? 'border-red-500' : ''}
+                  maxLength={9}
+                  className={`font-mono ${fieldErrors.telefono ? 'border-red-500' : ''}`}
                 />
                 {fieldErrors.telefono && (
                   <p className="text-xs text-red-500">{fieldErrors.telefono}</p>

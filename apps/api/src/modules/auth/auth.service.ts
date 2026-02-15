@@ -312,7 +312,7 @@ export class AuthService {
 
     // Send reset email
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
-    const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+    const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
 
     const tenantId = user.tenantId || 'system';
     const emailResult = await this.defaultEmailService.sendEmail(tenantId, {

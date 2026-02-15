@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DteService } from './dte.service';
+import { PdfService } from './pdf.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SignerService } from '../signer/signer.service';
 import { MhAuthService } from '../mh-auth/mh-auth.service';
+import { DefaultEmailService } from '../email-config/services/default-email.service';
 import { createMockPrismaService, MockPrismaClient } from '../../test/helpers/mock-prisma';
 import { createMockDte } from '../../test/helpers/test-fixtures';
 
@@ -19,6 +21,8 @@ describe('DteService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: SignerService, useValue: { signDocument: jest.fn() } },
         { provide: MhAuthService, useValue: { getToken: jest.fn() } },
+        { provide: DefaultEmailService, useValue: { sendEmail: jest.fn().mockResolvedValue({ success: true }), sendEmailWithAttachment: jest.fn().mockResolvedValue({ success: true }) } },
+        { provide: PdfService, useValue: { generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('fake-pdf')) } },
       ],
     }).compile();
 

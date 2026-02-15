@@ -1058,7 +1058,7 @@ model Quote {
   clientNotes     String?     @db.NVarChar(1000)  // Client feedback/comments
 
   // Approval portal
-  approvalToken   String?     @unique
+  approvalToken   String?
   approvalUrl     String?     @db.NVarChar(500)
 
   // Client approval

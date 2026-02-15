@@ -11,66 +11,59 @@
 - [x] Auditar código para puntos de envío de correo
 - [x] Documentar en `tasks/email-audit.md`
 
-### Hallazgos Clave:
-- ACR real: `facturadorsvacr` (no `republicodeacr`)
-- App Service Plan compartido en RG `ExternalBot` (asp-rag-bot, B1)
-- API desplegada en v36 (última disponible: v47)
-- Web desplegada en v40 (es la última)
-- DB: `facturadordb` en `facturador-sql-sv`, tier Basic (5 DTU, 2GB)
-- Infraestructura de email multi-proveedor ya 100% completa
-- Falta: envío real de DTEs, quotes, password reset, notificaciones
+## Fase 2: Exportación DB ✅
+- [x] Exportar .bacpac de la base actual
+- [x] Verificar integridad del backup
 
-## Fase 2: Exportación DB
-- [ ] Exportar .bacpac de la base actual
-- [ ] Verificar integridad del backup
+## Fase 3: Infraestructura Nueva (Tenant Republicode) ✅
+- [x] Login en tenant Republicode (340b2ae3-5342-46aa-b5b5-956583cc715f)
+- [x] Crear resource group `facturador-sv-rg` (eastus2)
+- [x] Crear ACR `republicodeacr` (eastus2)
+- [x] Crear SQL Server `facturador-rc-sql` (eastus2)
+- [x] Configurar firewall SQL (AllowAzureServices + admin IP + App Service outbound IPs)
+- [x] Crear base de datos `facturadordb` (tier Basic)
+- [x] Importar .bacpac
+- [x] Crear App Service Plan `facturador-plan` (B1 Linux, Central US)
+- [x] Crear API App Service `facturador-api-sv`
+- [x] Crear Web App Service `facturador-web-sv`
+- [x] Configurar container registry en App Services
+- [x] Configurar TODAS las app settings
+- [x] Generar nuevo JWT_SECRET seguro
+- [x] Actualizar CORS_ORIGIN con nuevo hostname web
+- [x] Actualizar NEXT_PUBLIC_API_URL con nuevo hostname api
 
-## Fase 3: Infraestructura Nueva (Tenant Republicode)
-- [ ] Login en tenant Republicode (340b2ae3-5342-46aa-b5b5-956583cc715f)
-- [ ] Crear resource group `facturador-sv-rg`
-- [ ] Crear ACR (nuevo nombre necesario si `facturadorsvacr` existe)
-- [ ] Crear SQL Server
-- [ ] Configurar firewall SQL (AllowAzureServices + admin IP)
-- [ ] Crear base de datos (tier Basic)
-- [ ] Importar .bacpac
-- [ ] Crear App Service Plan (B1 Linux)
-- [ ] Crear API App Service
-- [ ] Crear Web App Service
-- [ ] Configurar container registry en App Services
-- [ ] Configurar TODAS las app settings (copiar de audit)
-- [ ] Generar nuevo JWT_SECRET seguro
-- [ ] Actualizar CORS_ORIGIN con nuevo hostname web
-- [ ] Actualizar NEXT_PUBLIC_API_URL con nuevo hostname api
+## Fase 4: Docker Images ✅
+- [x] Importar imágenes desde `facturadorsvacr` al nuevo ACR
+- [x] Verificar imágenes en nuevo ACR
+- [x] Build y deploy API v50 con cambios de email + forgot-password
+- [x] Build y deploy Web v42
 
-## Fase 4: Docker Images
-- [ ] Importar imágenes desde `facturadorsvacr` al nuevo ACR
-- [ ] Verificar imágenes en nuevo ACR
-
-## Fase 5: Correo (Microsoft Graph)
+## Fase 5: Correo (Microsoft Graph) - Parcial
 - [x] Crear App Registration en Azure AD (Republicode) → `Facturador-Email-Service`
 - [x] Asignar permiso Mail.Send (Application)
 - [x] Admin consent para permisos
-- [ ] Verificar shared mailbox `facturas@republicode.com` (requiere Exchange Online)
 - [x] Configurar env vars de email en API App Service
 - [x] Implementar DefaultEmailService (client_credentials flow + fallback)
 - [x] Conectar QuoteEmailService con DefaultEmailService (ya no es stub)
-- [ ] Implementar endpoint /auth/forgot-password
-- [ ] Verificar envío de correo de prueba
+- [x] Implementar endpoints /auth/forgot-password y /auth/reset-password
+- [ ] **Verificar/crear shared mailbox `facturas@republicode.com`** (requiere Exchange Online / M365 admin)
+- [ ] **Verificar envío de correo de prueba** (depende del mailbox)
 
 ### Credenciales Email (App Registration):
 - App ID: `b2b0e1b4-d8d6-469a-a0aa-8236663ce174`
 - Tenant: `340b2ae3-5342-46aa-b5b5-956583cc715f`
 
-## Fase 6: Verificación
-- [ ] Verificar datos en DB nueva (350+ clientes)
-- [ ] Verificar API health
-- [ ] Verificar frontend carga
-- [ ] Login funciona
-- [ ] Listar clientes (verifica DB)
-- [ ] Crear DTE de prueba
-- [ ] Conexión con Hacienda funciona
-- [ ] Cotizaciones funcionan
+## Fase 6: Verificación - Parcial
+- [x] Verificar API health (401 en login = OK)
+- [x] Verificar frontend carga (200)
+- [ ] **Verificar datos en DB nueva (350+ clientes)**
+- [ ] **Login funciona (con usuario real)**
+- [ ] **Listar clientes (verifica DB)**
+- [ ] **Crear DTE de prueba**
+- [ ] **Conexión con Hacienda funciona**
+- [ ] **Cotizaciones funcionan**
 
 ## Fase 7: Switch y Limpieza
-- [ ] Definir estrategia de nombres de App Services
+- [ ] Definir estrategia de nombres de App Services / dominio custom
 - [ ] Actualizar todas las referencias de URLs
 - [ ] Eliminar recursos del tenant viejo (cuando confirmado)

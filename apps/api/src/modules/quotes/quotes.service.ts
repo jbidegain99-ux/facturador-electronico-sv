@@ -157,6 +157,7 @@ export class QuotesService {
         terms: dto.terms,
         notes: dto.notes,
         createdBy: userId,
+        approvalToken: randomUUID(),
       },
     });
 

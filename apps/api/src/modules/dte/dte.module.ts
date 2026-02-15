@@ -7,9 +7,10 @@ import { PdfService } from './pdf.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { SignerModule } from '../signer/signer.module';
 import { MhAuthModule } from '../mh-auth/mh-auth.module';
+import { EmailConfigModule } from '../email-config/email-config.module';
 
 @Module({
-  imports: [PrismaModule, SignerModule, MhAuthModule],
+  imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule],
   controllers: [DteController],
   providers: [DteBuilderService, DteValidatorService, DteService, PdfService],
   exports: [DteBuilderService, DteValidatorService, DteService, PdfService],

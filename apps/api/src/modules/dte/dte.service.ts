@@ -17,6 +17,8 @@ String.prototype.hashCode = function() {
 import { PrismaService } from '../../prisma/prisma.service';
 import { SignerService } from '../signer/signer.service';
 import { MhAuthService } from '../mh-auth/mh-auth.service';
+import { DefaultEmailService } from '../email-config/services/default-email.service';
+import { PdfService } from './pdf.service';
 import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
 import { DTE_VERSIONS, TipoDte } from '@facturador/shared';
 import { v4 as uuidv4 } from 'uuid';
@@ -40,6 +42,8 @@ export class DteService {
     private prisma: PrismaService,
     private signerService: SignerService,
     private mhAuthService: MhAuthService,
+    private defaultEmailService: DefaultEmailService,
+    private pdfService: PdfService,
   ) {}
 
   /**
@@ -275,6 +279,11 @@ export class DteService {
 
       await this.logDteAction(dteId, 'TRANSMITTED_DEMO', { response: demoResponse, demoMode: true });
 
+      // Send email notification (fire-and-forget)
+      this.sendDteEmail(updated, dte.tenant).catch((err) =>
+        this.logger.error(`Failed to send DTE email for ${dteId}: ${err instanceof Error ? err.message : err}`),
+      );
+
       return updated;
     }
 
@@ -321,6 +330,11 @@ export class DteService {
 
       await this.logDteAction(dteId, 'TRANSMITTED', { response });
 
+      // Send email notification (fire-and-forget)
+      this.sendDteEmail(updated, dte.tenant).catch((err) =>
+        this.logger.error(`Failed to send DTE email for ${dteId}: ${err instanceof Error ? err.message : err}`),
+      );
+
       return updated;
     } catch (error) {
       // Re-throw NestJS HTTP exceptions as-is (e.g. InternalServerErrorException from JSON parse)
@@ -350,6 +364,87 @@ export class DteService {
         });
       }
       throw new InternalServerErrorException(`Error al transmitir DTE: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Send DTE email with PDF attachment to the receptor.
+   * Fire-and-forget: errors are logged but don't affect DTE flow.
+   */
+  private async sendDteEmail(
+    dte: { id: string; tenantId: string; tipoDte: string; codigoGeneracion: string; numeroControl: string; totalPagar: number | { toNumber(): number }; jsonOriginal: string; selloRecepcion?: string | null; estado: string; createdAt: Date },
+    tenant?: { id?: string; nombre: string; nit: string; nrc: string; direccion?: string | null; telefono: string; correo: string } | null,
+  ): Promise<void> {
+    // Parse receptor email from jsonOriginal
+    let parsedData: Record<string, unknown>;
+    try {
+      parsedData = typeof dte.jsonOriginal === 'string' ? JSON.parse(dte.jsonOriginal) : dte.jsonOriginal;
+    } catch {
+      this.logger.warn(`Cannot parse jsonOriginal for email, DTE ${dte.id}`);
+      return;
+    }
+
+    const receptor = parsedData.receptor as Record<string, unknown> | undefined;
+    const correoReceptor = receptor?.correo as string | undefined;
+
+    if (!correoReceptor) {
+      this.logger.debug(`No receptor email for DTE ${dte.id}, skipping email`);
+      return;
+    }
+
+    // Generate PDF
+    const pdfBuffer = await this.pdfService.generateInvoicePdf({
+      id: dte.id,
+      codigoGeneracion: dte.codigoGeneracion,
+      numeroControl: dte.numeroControl,
+      tipoDte: dte.tipoDte,
+      estado: dte.estado,
+      data: parsedData,
+      createdAt: dte.createdAt,
+      tenant: tenant ? {
+        nombre: tenant.nombre,
+        nit: tenant.nit,
+        nrc: tenant.nrc,
+        direccion: tenant.direccion ?? undefined,
+        telefono: tenant.telefono,
+        correo: tenant.correo,
+      } : undefined,
+    });
+
+    const tipoLabel = dte.tipoDte === '01' ? 'Factura' : dte.tipoDte === '03' ? 'Comprobante de Crédito Fiscal' : dte.tipoDte === '11' ? 'Factura de Exportación' : 'Documento Tributario';
+    const filename = `${tipoLabel}-${dte.numeroControl || dte.codigoGeneracion}.pdf`;
+    const nombreReceptor = (receptor?.nombre as string) || 'Cliente';
+    const nombreEmisor = tenant?.nombre || 'Facturador Electrónico SV';
+
+    const result = await this.defaultEmailService.sendEmailWithAttachment(dte.tenantId, {
+      to: correoReceptor,
+      subject: `${tipoLabel} ${dte.numeroControl} - ${nombreEmisor}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>${tipoLabel} Electrónica</h2>
+          <p>Estimado/a ${nombreReceptor},</p>
+          <p>Adjunto encontrará su ${tipoLabel.toLowerCase()} electrónica con los siguientes datos:</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Número de Control</td><td style="padding: 8px; border: 1px solid #ddd;">${dte.numeroControl}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Código de Generación</td><td style="padding: 8px; border: 1px solid #ddd;">${dte.codigoGeneracion}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Total</td><td style="padding: 8px; border: 1px solid #ddd;">$${Number(dte.totalPagar).toFixed(2)}</td></tr>
+            ${dte.selloRecepcion ? `<tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Sello de Recepción</td><td style="padding: 8px; border: 1px solid #ddd;">${dte.selloRecepcion}</td></tr>` : ''}
+          </table>
+          <p>Este documento ha sido procesado exitosamente por el Ministerio de Hacienda de El Salvador.</p>
+          <p style="color: #666; font-size: 12px;">Enviado por ${nombreEmisor} a través de Facturador Electrónico SV.</p>
+        </div>
+      `,
+      attachments: [{
+        filename,
+        content: pdfBuffer.toString('base64'),
+        contentType: 'application/pdf',
+      }],
+    });
+
+    if (result.success) {
+      this.logger.log(`DTE email sent to ${correoReceptor} for DTE ${dte.numeroControl}`);
+    } else {
+      this.logger.warn(`DTE email failed for ${dte.numeroControl}: ${result.errorMessage}`);
     }
   }
 

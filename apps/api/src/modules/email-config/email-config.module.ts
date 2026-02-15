@@ -6,6 +6,7 @@ import {
   EmailConfigService,
   EmailHealthService,
   EmailAssistanceService,
+  DefaultEmailService,
 } from './services';
 import { EmailAdapterFactory } from './adapters';
 
@@ -23,11 +24,13 @@ import { EmailAdapterFactory } from './adapters';
     EmailConfigService,
     EmailHealthService,
     EmailAssistanceService,
+    DefaultEmailService,
   ],
   exports: [
     EmailConfigService,
     EmailHealthService,
     EncryptionService,
+    DefaultEmailService,
   ],
 })
 export class EmailConfigModule {}

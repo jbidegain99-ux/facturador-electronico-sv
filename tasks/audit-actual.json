@@ -1,0 +1,153 @@
+{
+  "audit_date": "2026-02-15",
+  "tenant": {
+    "name": "SIGET CSP",
+    "tenant_id": "15984c6f-3b2c-46f2-b6e4-534470f605f7",
+    "subscription_id": "faba21c7-960a-4f6f-927b-45114044ec79",
+    "user": "jbidegain@siget.gob.sv"
+  },
+  "resource_group": {
+    "name": "facturador-sv-rg",
+    "location": "eastus2"
+  },
+  "container_registry": {
+    "name": "facturadorsvacr",
+    "login_server": "facturadorsvacr.azurecr.io",
+    "sku": "Basic",
+    "location": "eastus",
+    "admin_enabled": true,
+    "repositories": [
+      "api", "apiv19", "apiv20", "apiv21", "apiv22",
+      "facturador-api", "facturador-web",
+      "republicode-api", "republicode-web",
+      "web", "webv2", "webv3"
+    ],
+    "active_images": {
+      "facturador-api": {
+        "current_deployed": "v36",
+        "latest_tag": "v47",
+        "all_tags": ["apiv23", "latest", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37", "v38", "v39", "v40", "v41", "v42", "v43", "v44", "v45", "v46", "v47"]
+      },
+      "facturador-web": {
+        "current_deployed": "v40",
+        "latest_tag": "v40",
+        "all_tags": ["2ba6844", "latest", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37", "v39", "v40", "webv4", "webv5", "webv6"]
+      }
+    }
+  },
+  "sql_server": {
+    "name": "facturador-sql-sv",
+    "fqdn": "facturador-sql-sv.database.windows.net",
+    "admin_login": "sqladmin",
+    "location": "eastus2",
+    "version": "12.0",
+    "minimal_tls": "1.2",
+    "public_network_access": "Enabled",
+    "firewall_rules": [
+      { "name": "AllowAllAzureIps", "start": "0.0.0.0", "end": "0.0.0.0" },
+      { "name": "AllowAzureServices", "start": "0.0.0.0", "end": "0.0.0.0" },
+      { "name": "AllowMyIP", "start": "190.150.218.19", "end": "190.150.218.19" },
+      { "name": "AllowNewIP", "start": "201.247.160.85", "end": "201.247.160.85" },
+      { "name": "AppService1", "ip": "135.224.135.125" },
+      { "name": "AppService2", "ip": "20.15.67.36" },
+      { "name": "AppService3", "ip": "135.222.152.48" },
+      { "name": "AppService4", "ip": "4.152.165.81" },
+      { "name": "AppService5", "ip": "52.252.24.147" },
+      { "name": "AppService6", "ip": "4.150.117.121" },
+      { "name": "AppService7", "ip": "172.175.239.6" },
+      { "name": "AppService8", "ip": "52.251.15.105" },
+      { "name": "AppService9", "ip": "4.153.225.251" },
+      { "name": "AppService10", "ip": "172.193.101.114" },
+      { "name": "AppService11", "ip": "68.220.143.197" },
+      { "name": "AppService12", "ip": "68.220.17.128" },
+      { "name": "AppService13", "ip": "20.119.155.1" },
+      { "name": "ClientIPAddress_2026-1-23_17-43-58", "ip": "190.53.0.180" },
+      { "name": "query-editor-3cd7d5", "ip": "190.150.168.228" },
+      { "name": "query-editor-49f763", "ip": "201.247.160.130" },
+      { "name": "query-editor-952ff7", "ip": "45.170.28.194" },
+      { "name": "query-editor-df6f2f", "ip": "201.247.38.18" }
+    ]
+  },
+  "database": {
+    "name": "facturadordb",
+    "server": "facturador-sql-sv",
+    "sku": "Basic",
+    "tier": "Basic",
+    "capacity": 5,
+    "max_size_bytes": 2147483648,
+    "max_size_gb": 2,
+    "collation": "SQL_Latin1_General_CP1_CI_AS",
+    "backup_redundancy": "Geo",
+    "status": "Online",
+    "connection_string": "sqlserver://facturador-sql-sv.database.windows.net:1433;database=facturadordb;user=sqladmin;password=***;encrypt=true;trustServerCertificate=false"
+  },
+  "app_service_plan": {
+    "name": "asp-rag-bot",
+    "resource_group": "ExternalBot",
+    "location": "East US 2",
+    "sku": "B1",
+    "tier": "Basic",
+    "kind": "linux",
+    "workers": 1,
+    "number_of_sites": 3,
+    "note": "SHARED plan from different resource group - hosts 3 sites including facturador apps"
+  },
+  "app_services": {
+    "api": {
+      "name": "facturador-api-sv",
+      "hostname": "facturador-api-sv-gvavh8heb5c5gkc9.eastus2-01.azurewebsites.net",
+      "location": "East US 2",
+      "state": "Running",
+      "kind": "app,linux,container",
+      "sku": "Basic",
+      "https_only": true,
+      "always_on": true,
+      "docker_image": "facturadorsvacr.azurecr.io/facturador-api:v36",
+      "app_settings": {
+        "DATABASE_URL": "sqlserver://facturador-sql-sv.database.windows.net:1433;database=facturadordb;user=sqladmin;password=***;encrypt=true;trustServerCertificate=false",
+        "CORS_ORIGIN": "https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net",
+        "JWT_SECRET": "tu-secreto-super-seguro-2024",
+        "MH_API_ENV": "test",
+        "PORT": "3001",
+        "WEBSITES_PORT": "3001",
+        "WEBSITES_ENABLE_APP_SERVICE_STORAGE": "false",
+        "WEBSITE_HTTPLOGGING_RETENTION_DAYS": "3",
+        "ENCRYPTION_KEY": "e2ec959638e61afc4850b57054965266249ca18e5edc32f46c9d2fb6110c26a8",
+        "DOCKER_REGISTRY_SERVER_URL": "https://facturadorsvacr.azurecr.io",
+        "DOCKER_REGISTRY_SERVER_USERNAME": "facturadorsvacr"
+      }
+    },
+    "web": {
+      "name": "facturador-web-sv",
+      "hostname": "facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net",
+      "location": "East US 2",
+      "state": "Running",
+      "kind": "app,linux,container",
+      "sku": "Basic",
+      "https_only": true,
+      "always_on": false,
+      "docker_image": "facturadorsvacr.azurecr.io/facturador-web:v40",
+      "app_settings": {
+        "NEXT_PUBLIC_API_URL": "https://facturador-api-sv-gvavh8heb5c5gkc9.eastus2-01.azurewebsites.net/api/v1",
+        "PORT": "3000",
+        "WEBSITES_PORT": "3000",
+        "WEBSITES_ENABLE_APP_SERVICE_STORAGE": "false",
+        "WEBSITE_HTTPLOGGING_RETENTION_DAYS": "3",
+        "DOCKER_FORCE_PULL": "1769703848",
+        "DOCKER_REGISTRY_SERVER_URL": "https://facturadorsvacr.azurecr.io",
+        "DOCKER_REGISTRY_SERVER_USERNAME": "facturadorsvacr"
+      }
+    }
+  },
+  "notes": [
+    "ACR name is 'facturadorsvacr' NOT 'republicodeacr' as assumed in migration doc",
+    "App Service Plan is SHARED from resource group 'ExternalBot' (asp-rag-bot, B1 Linux) - NOT in facturador-sv-rg",
+    "API deployed at v36 but latest tag is v47 (11 versions ahead)",
+    "Web deployed at v40 which is the latest tag",
+    "JWT_SECRET is weak ('tu-secreto-super-seguro-2024') - should be regenerated for new tenant",
+    "MH_API_ENV is 'test' - will need to switch to 'prod' for production",
+    "App Service hostnames use new Azure format with random suffix (e.g., -gvavh8heb5c5gkc9)",
+    "Database is Basic tier (5 DTU, 2GB max) with Geo backup redundancy",
+    "ACR has legacy repos (api, web, apiv19-22, webv2-3, republicode-api/web) that can be cleaned"
+  ]
+}

@@ -1,17 +1,30 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AuditAction, AuditModule } from '../audit-logs/dto';
+import { DefaultEmailService } from '../email-config/services/default-email.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private configService: ConfigService,
     private auditLogsService: AuditLogsService,
+    private defaultEmailService: DefaultEmailService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -268,5 +281,127 @@ export class AuthService {
         nit: user.tenant.nit,
       } : null,
     };
+  }
+
+  /**
+   * Generate a password reset token and send reset email.
+   * Always returns success message to avoid user enumeration.
+   */
+  async forgotPassword(email: string, ipAddress?: string): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      // Don't reveal whether the email exists
+      this.logger.warn(`Password reset requested for non-existent email: ${email}`);
+      return { message: 'Si el correo existe, recibirás un enlace para restablecer tu contraseña' };
+    }
+
+    // Generate a secure random token (64 hex chars)
+    const resetToken = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: resetToken,
+        passwordResetExpiresAt: expiresAt,
+      },
+    });
+
+    // Send reset email
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+    const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+    const tenantId = user.tenantId || 'system';
+    const emailResult = await this.defaultEmailService.sendEmail(tenantId, {
+      to: user.email,
+      subject: 'Restablecer contraseña - Facturador Electrónico SV',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Restablecer contraseña</h2>
+          <p>Hola ${user.nombre},</p>
+          <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
+          <p>
+            <a href="${resetLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Restablecer contraseña
+            </a>
+          </p>
+          <p>Este enlace expira en <strong>1 hora</strong>.</p>
+          <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
+          <p style="color: #666; font-size: 12px;">Facturador Electrónico SV</p>
+        </div>
+      `,
+    });
+
+    if (!emailResult.success) {
+      this.logger.error(`Failed to send password reset email to ${email}: ${emailResult.errorMessage}`);
+    }
+
+    // Audit log
+    await this.auditLogsService.log({
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.nombre,
+      userRole: user.rol,
+      tenantId: user.tenantId || undefined,
+      action: AuditAction.UPDATE,
+      module: AuditModule.AUTH,
+      description: `Solicitud de restablecimiento de contraseña para ${user.email}`,
+      ipAddress,
+      success: true,
+    });
+
+    return { message: 'Si el correo existe, recibirás un enlace para restablecer tu contraseña' };
+  }
+
+  /**
+   * Reset password using a valid token.
+   */
+  async resetPassword(token: string, newPassword: string, ipAddress?: string): Promise<{ message: string }> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpiresAt: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Token inválido o expirado');
+    }
+
+    const hashedPassword = await this.hashPassword(newPassword);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpiresAt: null,
+        // Also clear any account lockout
+        failedLoginAttempts: 0,
+        accountLockedUntil: null,
+        lastFailedLoginAt: null,
+      },
+    });
+
+    // Audit log
+    await this.auditLogsService.log({
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.nombre,
+      userRole: user.rol,
+      tenantId: user.tenantId || undefined,
+      action: AuditAction.UPDATE,
+      module: AuditModule.AUTH,
+      description: `Contraseña restablecida exitosamente para ${user.email}`,
+      ipAddress,
+      success: true,
+    });
+
+    this.logger.log(`Password reset completed for user ${user.email}`);
+
+    return { message: 'Contraseña restablecida exitosamente' };
   }
 }

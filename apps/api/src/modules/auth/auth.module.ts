@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { MhAuthService } from './mh-auth.service';
+import { EmailConfigModule } from '../email-config/email-config.module';
 
 @Module({
   imports: [
@@ -19,6 +20,8 @@ import { MhAuthService } from './mh-auth.service';
       }),
       inject: [ConfigService],
     }),
+    ConfigModule,
+    EmailConfigModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtAuthGuard, MhAuthService],

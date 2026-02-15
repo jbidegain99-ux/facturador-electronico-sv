@@ -5,6 +5,8 @@ import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Public } from '../../common/decorators/public.decorator';
 
 interface AuthRequest extends Request {
@@ -50,5 +52,24 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   async getProfile(@Request() req: AuthRequest) {
     return this.authService.getProfile(req.user.id);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Solicitar restablecimiento de contraseña' })
+  @ApiResponse({ status: 200, description: 'Solicitud procesada' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: ExpressRequest) {
+    const ipAddress = req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
+    return this.authService.forgotPassword(dto.email, ipAddress);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Restablecer contraseña con token' })
+  @ApiResponse({ status: 200, description: 'Contraseña restablecida' })
+  @ApiResponse({ status: 400, description: 'Token inválido o expirado' })
+  async resetPassword(@Body() dto: ResetPasswordDto, @Req() req: ExpressRequest) {
+    const ipAddress = req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
+    return this.authService.resetPassword(dto.token, dto.password, ipAddress);
   }
 }

@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsNumber,
   IsIn,
+  IsNotEmpty,
   ValidateNested,
   Min,
 } from 'class-validator';
@@ -60,4 +61,22 @@ export class ClientRejectionDto {
   @IsOptional()
   @IsString()
   comments?: string;
+}
+
+export class RequestChangesDto {
+  @IsArray()
+  @IsString({ each: true })
+  removedItems: string[];
+
+  @IsString()
+  @IsNotEmpty()
+  comments: string;
+
+  @IsOptional()
+  @IsString()
+  clientName?: string;
+
+  @IsOptional()
+  @IsEmail()
+  clientEmail?: string;
 }

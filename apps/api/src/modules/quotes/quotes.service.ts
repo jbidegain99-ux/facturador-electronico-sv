@@ -12,7 +12,7 @@ import { QuoteEmailService } from './quote-email.service';
 import { CreateQuoteDto, QuoteLineItemDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QueryQuoteDto } from './dto/query-quote.dto';
-import { ClientApprovalDto, ClientRejectionDto } from './dto/approval.dto';
+import { ClientApprovalDto, ClientRejectionDto, RequestChangesDto } from './dto/approval.dto';
 import { PaginatedResponse } from '../../common/dto/paginated-response';
 import { Quote, QuoteLineItem } from '@prisma/client';
 
@@ -28,6 +28,8 @@ const QUOTE_STATUSES = {
   EXPIRED: 'EXPIRED',
   CONVERTED: 'CONVERTED',
   CANCELLED: 'CANCELLED',
+  CHANGES_REQUESTED: 'CHANGES_REQUESTED',
+  REVISED: 'REVISED',
 } as const;
 
 const ALLOWED_SORT_FIELDS: Record<string, string> = {
@@ -747,12 +749,9 @@ export class QuotesService {
       throw new NotFoundException('Cotizacion no encontrada o token invalido');
     }
 
-    if (
-      quote.status !== QUOTE_STATUSES.SENT &&
-      quote.status !== QUOTE_STATUSES.PENDING_APPROVAL
-    ) {
+    if (quote.status !== QUOTE_STATUSES.SENT) {
       throw new BadRequestException(
-        'Esta cotizacion no puede ser aprobada en su estado actual',
+        'Esta cotizacion no puede ser aprobada en su estado actual. Solo cotizaciones enviadas pueden ser aprobadas.',
       );
     }
 
@@ -760,70 +759,110 @@ export class QuotesService {
       throw new BadRequestException('Esta cotizacion ha expirado');
     }
 
-    // Handle line-item-level approval if provided
-    let hasPartialApproval = false;
-    if (dto.lineItems && dto.lineItems.length > 0) {
-      for (const lineApproval of dto.lineItems) {
-        // Verify the line item belongs to this quote (prevent IDOR)
-        const lineItem = await this.prisma.quoteLineItem.findFirst({
-          where: { id: lineApproval.id, quoteId: quote.id },
-        });
-        if (!lineItem) {
-          throw new BadRequestException(
-            `Linea de cotizacion no encontrada: ${lineApproval.id}`,
-          );
-        }
-        await this.prisma.quoteLineItem.update({
-          where: { id: lineApproval.id },
-          data: {
-            approvalStatus: lineApproval.approvalStatus,
-            approvedQuantity: lineApproval.approvedQuantity,
-            rejectionReason: lineApproval.rejectionReason,
-          },
-        });
-        if (lineApproval.approvalStatus === 'REJECTED') {
-          hasPartialApproval = true;
-        }
-      }
-    } else {
-      // Approve all line items
-      await this.prisma.quoteLineItem.updateMany({
-        where: { quoteId: quote.id },
-        data: { approvalStatus: 'APPROVED' },
-      });
-    }
-
-    const newStatus = hasPartialApproval
-      ? QUOTE_STATUSES.PARTIALLY_APPROVED
-      : QUOTE_STATUSES.APPROVED;
+    // Approve all line items (client approves the whole quote or requests changes)
+    await this.prisma.quoteLineItem.updateMany({
+      where: { quoteId: quote.id },
+      data: { approvalStatus: 'APPROVED' },
+    });
 
     const updated = await this.prisma.quote.update({
       where: { id: quote.id },
       data: {
-        status: newStatus,
+        status: QUOTE_STATUSES.APPROVED,
         approvedAt: new Date(),
         approvedBy: dto.approverEmail || dto.approverName,
+        clientNotes: dto.comments,
+        approvedSubtotal: quote.subtotal,
+        approvedTaxAmount: quote.taxAmount,
+        approvedTotal: quote.total,
+      },
+      include: { lineItems: { orderBy: { lineNumber: 'asc' } } },
+    });
+
+    await this.createStatusHistory(
+      quote.id,
+      quote.status,
+      QUOTE_STATUSES.APPROVED,
+      'CLIENT',
+      dto.approverEmail,
+      'Quote approved by client',
+      undefined,
+      clientIp,
+    );
+
+    // Notify tenant
+    await this.emailService.notifyQuoteApproval(updated);
+
+    return updated;
+  }
+
+  async requestChangesByClient(
+    token: string,
+    dto: RequestChangesDto,
+    clientIp?: string,
+  ): Promise<QuoteWithLineItems> {
+    const quote = await this.prisma.quote.findFirst({
+      where: { approvalToken: token },
+      include: { lineItems: true },
+    });
+
+    if (!quote) {
+      throw new NotFoundException('Cotizacion no encontrada o token invalido');
+    }
+
+    if (quote.status !== QUOTE_STATUSES.SENT) {
+      throw new BadRequestException(
+        'Solo se pueden solicitar cambios en cotizaciones enviadas',
+      );
+    }
+
+    if (new Date() > quote.validUntil) {
+      throw new BadRequestException('Esta cotizacion ha expirado');
+    }
+
+    // Mark removed items as REJECTED
+    if (dto.removedItems.length > 0) {
+      for (const itemId of dto.removedItems) {
+        const lineItem = await this.prisma.quoteLineItem.findFirst({
+          where: { id: itemId, quoteId: quote.id },
+        });
+        if (!lineItem) {
+          throw new BadRequestException(
+            `Linea de cotizacion no encontrada: ${itemId}`,
+          );
+        }
+        await this.prisma.quoteLineItem.update({
+          where: { id: itemId },
+          data: {
+            approvalStatus: 'REJECTED',
+            rejectionReason: 'Removido por el cliente',
+          },
+        });
+      }
+    }
+
+    const updated = await this.prisma.quote.update({
+      where: { id: quote.id },
+      data: {
+        status: QUOTE_STATUSES.CHANGES_REQUESTED,
         clientNotes: dto.comments,
       },
       include: { lineItems: { orderBy: { lineNumber: 'asc' } } },
     });
 
-    // Calculate approved totals
-    await this.calculateApprovedTotals(quote.id);
-
     await this.createStatusHistory(
       quote.id,
       quote.status,
-      newStatus,
+      QUOTE_STATUSES.CHANGES_REQUESTED,
       'CLIENT',
-      dto.approverEmail,
-      `Quote ${hasPartialApproval ? 'partially ' : ''}approved by client`,
-      undefined,
+      dto.clientEmail,
+      dto.comments,
+      { removedItems: dto.removedItems },
       clientIp,
     );
 
-    // Notify admin
-    await this.emailService.notifyQuoteApproval(updated);
+    // Notify tenant about requested changes
+    await this.emailService.notifyChangesRequested(updated, dto.removedItems, dto.comments);
 
     return updated;
   }
@@ -874,6 +913,78 @@ export class QuotesService {
     );
 
     await this.emailService.notifyQuoteRejection(updated);
+
+    return updated;
+  }
+
+  // ── Resend (after changes requested) ─────────────────────────────────
+
+  async resend(
+    tenantId: string,
+    id: string,
+    userId?: string,
+  ): Promise<QuoteWithLineItems> {
+    const quote = await this.ensureQuote(tenantId, id);
+
+    if (
+      quote.status !== QUOTE_STATUSES.CHANGES_REQUESTED &&
+      quote.status !== QUOTE_STATUSES.DRAFT
+    ) {
+      throw new BadRequestException(
+        'Solo se pueden reenviar cotizaciones con cambios solicitados o en borrador',
+      );
+    }
+
+    // Reset all line item approval statuses to PENDING
+    await this.prisma.quoteLineItem.updateMany({
+      where: { quoteId: id },
+      data: {
+        approvalStatus: 'PENDING',
+        rejectionReason: null,
+      },
+    });
+
+    // Generate a new approval token (invalidates old links)
+    const approvalToken = randomUUID();
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+    const approvalUrl = frontendUrl
+      ? `${frontendUrl}/approve/${approvalToken}`
+      : undefined;
+
+    const previousStatus = quote.status;
+
+    const updated = await this.prisma.quote.update({
+      where: { id },
+      data: {
+        status: QUOTE_STATUSES.SENT,
+        approvalToken,
+        approvalUrl,
+        sentAt: new Date(),
+        clientNotes: null, // Clear previous client notes
+        updatedBy: userId,
+      },
+      include: { lineItems: { orderBy: { lineNumber: 'asc' } } },
+    });
+
+    // Send email to client
+    if (updated.clienteEmail) {
+      const sent = await this.emailService.sendQuoteToClient(updated);
+      if (sent) {
+        await this.prisma.quote.update({
+          where: { id },
+          data: { emailSentAt: new Date(), emailDelivered: true },
+        });
+      }
+    }
+
+    await this.createStatusHistory(
+      id,
+      previousStatus,
+      QUOTE_STATUSES.SENT,
+      'ADMIN',
+      userId,
+      'Quote revised and resent to client',
+    );
 
     return updated;
   }

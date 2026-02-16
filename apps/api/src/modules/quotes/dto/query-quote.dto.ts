@@ -25,6 +25,8 @@ export class QueryQuoteDto {
     'EXPIRED',
     'CONVERTED',
     'CANCELLED',
+    'CHANGES_REQUESTED',
+    'REVISED',
   ])
   status?: string;
 

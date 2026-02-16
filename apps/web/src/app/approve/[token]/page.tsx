@@ -38,14 +38,9 @@ interface PublicQuote {
   total: number;
   terms: string | null;
   notes: string | null;
+  clientNotes: string | null;
   lineItems: QuoteLineItem[];
   version: number;
-}
-
-interface LineItemDecision {
-  approvalStatus: 'APPROVED' | 'REJECTED';
-  approvedQuantity: number | null;
-  rejectionReason: string;
 }
 
 interface ErrorResponse {
@@ -112,6 +107,18 @@ const STATUS_DISPLAY: Record<string, StatusDisplay> = {
     textClass: 'text-gray-500',
     borderClass: 'border-gray-500/30',
   },
+  CHANGES_REQUESTED: {
+    label: 'Cambios Solicitados',
+    bgClass: 'bg-orange-500/20',
+    textClass: 'text-orange-400',
+    borderClass: 'border-orange-500/30',
+  },
+  REVISED: {
+    label: 'Revisada',
+    bgClass: 'bg-indigo-500/20',
+    textClass: 'text-indigo-400',
+    borderClass: 'border-indigo-500/30',
+  },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -134,10 +141,6 @@ function isExpired(validUntil: string): boolean {
   } catch {
     return false;
   }
-}
-
-function isActionable(status: string): boolean {
-  return status === 'SENT';
 }
 
 // ── Spinner SVG ─────────────────────────────────────────────────────
@@ -167,15 +170,9 @@ function Spinner({ className }: { className?: string }) {
   );
 }
 
-// ── Check icon ──────────────────────────────────────────────────────
-
 function CheckIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className || 'h-5 w-5'}
-      viewBox="0 0 20 20"
-      fill="currentColor"
-    >
+    <svg className={className || 'h-5 w-5'} viewBox="0 0 20 20" fill="currentColor">
       <path
         fillRule="evenodd"
         d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -185,15 +182,9 @@ function CheckIcon({ className }: { className?: string }) {
   );
 }
 
-// ── X icon ──────────────────────────────────────────────────────────
-
 function XIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className || 'h-5 w-5'}
-      viewBox="0 0 20 20"
-      fill="currentColor"
-    >
+    <svg className={className || 'h-5 w-5'} viewBox="0 0 20 20" fill="currentColor">
       <path
         fillRule="evenodd"
         d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -225,10 +216,8 @@ export default function QuoteApprovalPage() {
   const [approverEmail, setApproverEmail] = React.useState('');
   const [comments, setComments] = React.useState('');
 
-  // Line item decisions: map from lineItem.id -> decision
-  const [decisions, setDecisions] = React.useState<
-    Record<string, LineItemDecision>
-  >({});
+  // Items marked for removal (Set of line item IDs)
+  const [removedItems, setRemovedItems] = React.useState<Set<string>>(new Set());
 
   // Reject dialog
   const [showRejectDialog, setShowRejectDialog] = React.useState(false);
@@ -255,19 +244,6 @@ export default function QuoteApprovalPage() {
 
       const data = (await res.json()) as PublicQuote;
       setQuote(data);
-
-      // Initialize decisions: all items approved by default
-      const initialDecisions: Record<string, LineItemDecision> = {};
-      if (Array.isArray(data.lineItems)) {
-        for (const item of data.lineItems) {
-          initialDecisions[item.id] = {
-            approvalStatus: 'APPROVED',
-            approvedQuantity: Number(item.quantity),
-            rejectionReason: '',
-          };
-        }
-      }
-      setDecisions(initialDecisions);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Error al cargar la cotizacion';
@@ -282,111 +258,27 @@ export default function QuoteApprovalPage() {
     fetchQuote();
   }, [fetchQuote]);
 
-  // ── Decision handlers ─────────────────────────────────────────────
+  // ── Toggle item removal ────────────────────────────────────────────
 
-  const toggleItemApproval = (itemId: string) => {
-    setDecisions((prev) => {
-      const current = prev[itemId];
-      if (!current) return prev;
-
-      const item = quote?.lineItems.find((li) => li.id === itemId);
-      const newStatus: 'APPROVED' | 'REJECTED' =
-        current.approvalStatus === 'APPROVED' ? 'REJECTED' : 'APPROVED';
-
-      return {
-        ...prev,
-        [itemId]: {
-          ...current,
-          approvalStatus: newStatus,
-          approvedQuantity:
-            newStatus === 'APPROVED' ? Number(item?.quantity ?? 1) : null,
-          rejectionReason: newStatus === 'APPROVED' ? '' : current.rejectionReason,
-        },
-      };
+  const toggleItemRemoval = (itemId: string) => {
+    setRemovedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
     });
   };
 
-  const updateRejectionReason = (itemId: string, reason: string) => {
-    setDecisions((prev) => {
-      const current = prev[itemId];
-      if (!current) return prev;
-      return {
-        ...prev,
-        [itemId]: {
-          ...current,
-          rejectionReason: reason,
-        },
-      };
-    });
-  };
+  // ── Computed values ────────────────────────────────────────────────
 
-  const updateApprovedQuantity = (itemId: string, qty: number) => {
-    setDecisions((prev) => {
-      const current = prev[itemId];
-      if (!current) return prev;
-      return {
-        ...prev,
-        [itemId]: {
-          ...current,
-          approvedQuantity: qty,
-        },
-      };
-    });
-  };
-
-  // ── Calculated totals ─────────────────────────────────────────────
-
-  const approvedTotal = React.useMemo(() => {
-    if (!quote) return 0;
-    let total = 0;
-    for (const item of quote.lineItems) {
-      const decision = decisions[item.id];
-      if (decision?.approvalStatus === 'APPROVED') {
-        const qty = decision.approvedQuantity ?? item.quantity;
-        const ratio = qty / item.quantity;
-        total += item.lineTotal * ratio;
-      }
-    }
-    return total;
-  }, [quote, decisions]);
-
-  const approvedSubtotal = React.useMemo(() => {
-    if (!quote) return 0;
-    let subtotal = 0;
-    for (const item of quote.lineItems) {
-      const decision = decisions[item.id];
-      if (decision?.approvalStatus === 'APPROVED') {
-        const qty = decision.approvedQuantity ?? item.quantity;
-        const ratio = qty / item.quantity;
-        subtotal += item.lineSubtotal * ratio;
-      }
-    }
-    return subtotal;
-  }, [quote, decisions]);
-
-  const approvedTax = React.useMemo(() => {
-    if (!quote) return 0;
-    let tax = 0;
-    for (const item of quote.lineItems) {
-      const decision = decisions[item.id];
-      if (decision?.approvalStatus === 'APPROVED') {
-        const qty = decision.approvedQuantity ?? item.quantity;
-        const ratio = qty / item.quantity;
-        tax += item.lineTax * ratio;
-      }
-    }
-    return tax;
-  }, [quote, decisions]);
-
-  const approvedCount = React.useMemo(() => {
-    return Object.values(decisions).filter(
-      (d) => d.approvalStatus === 'APPROVED',
-    ).length;
-  }, [decisions]);
-
+  const hasRemovedItems = removedItems.size > 0;
   const totalItems = quote?.lineItems.length ?? 0;
+  const keptItems = totalItems - removedItems.size;
 
-  // ── Submit approval ───────────────────────────────────────────────
+  // ── Submit approval (approve all) ──────────────────────────────────
 
   const handleApprove = async () => {
     if (!approverName.trim() || !approverEmail.trim()) {
@@ -397,21 +289,6 @@ export default function QuoteApprovalPage() {
     setSubmitting(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const lineItems = Object.entries(decisions).map(([id, decision]) => {
-        const item = quote?.lineItems.find((li) => li.id === id);
-        const base: { id: string; approvalStatus: string; approvedQuantity?: number; rejectionReason?: string } = {
-          id,
-          approvalStatus: decision.approvalStatus,
-        };
-        if (decision.approvalStatus === 'APPROVED') {
-          base.approvedQuantity = Number(decision.approvedQuantity ?? item?.quantity ?? 1);
-        }
-        if (decision.approvalStatus === 'REJECTED' && decision.rejectionReason.trim()) {
-          base.rejectionReason = decision.rejectionReason.trim();
-        }
-        return base;
-      });
-
       const res = await fetch(`${apiUrl}/quotes/public/approve/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -419,7 +296,6 @@ export default function QuoteApprovalPage() {
           approverName: approverName.trim(),
           approverEmail: approverEmail.trim(),
           comments: comments.trim() || undefined,
-          lineItems,
         }),
       });
 
@@ -429,15 +305,54 @@ export default function QuoteApprovalPage() {
       }
 
       setSubmitResult('success');
-      setSubmitMessage(
-        approvedCount === totalItems
-          ? 'La cotizacion ha sido aprobada exitosamente.'
-          : `La cotizacion ha sido aprobada parcialmente (${approvedCount} de ${totalItems} items).`,
-      );
+      setSubmitMessage('La cotizacion ha sido aprobada exitosamente.');
       toastRef.current.success('Cotizacion aprobada');
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Error al enviar la aprobacion';
+      setSubmitResult('error');
+      setSubmitMessage(message);
+      toastRef.current.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ── Submit request changes ─────────────────────────────────────────
+
+  const handleRequestChanges = async () => {
+    if (!comments.trim()) {
+      toastRef.current.error('Por favor explica los cambios que necesitas');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/quotes/public/request-changes/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          removedItems: Array.from(removedItems),
+          comments: comments.trim(),
+          clientName: approverName.trim() || undefined,
+          clientEmail: approverEmail.trim() || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = (await res.json().catch(() => ({}))) as ErrorResponse;
+        throw new Error(errData.message || 'Error al solicitar cambios');
+      }
+
+      setSubmitResult('success');
+      setSubmitMessage(
+        'Sus cambios han sido enviados al proveedor. Recibira una cotizacion actualizada pronto.',
+      );
+      toastRef.current.success('Cambios solicitados');
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Error al solicitar cambios';
       setSubmitResult('error');
       setSubmitMessage(message);
       toastRef.current.error(message);
@@ -561,7 +476,8 @@ export default function QuoteApprovalPage() {
   // ── Determine page state ──────────────────────────────────────────
 
   const expired = isExpired(quote.validUntil);
-  const actionable = isActionable(quote.status) && !expired;
+  const actionable = quote.status === 'SENT' && !expired;
+  const isChangesRequested = quote.status === 'CHANGES_REQUESTED';
   const statusInfo = STATUS_DISPLAY[quote.status] || STATUS_DISPLAY.SENT;
 
   // ── Render ────────────────────────────────────────────────────────
@@ -571,8 +487,36 @@ export default function QuoteApprovalPage() {
       <Header />
 
       <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Non-actionable banner */}
-        {!actionable && (
+        {/* Changes requested banner */}
+        {isChangesRequested && (
+          <div
+            className="mb-6 p-5 rounded-xl"
+            style={{
+              background: 'rgba(249,115,22,0.08)',
+              border: '1px solid rgba(249,115,22,0.25)',
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-orange-400 text-lg">!</span>
+              </div>
+              <div>
+                <p className="font-semibold text-orange-400">
+                  Cambios enviados
+                </p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Sus cambios han sido enviados al proveedor. Recibira una cotizacion actualizada pronto.
+                </p>
+                <p className="text-gray-500 text-xs mt-2">
+                  No es posible realizar mas cambios hasta que reciba la version actualizada.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Non-actionable banner (for terminal states) */}
+        {!actionable && !isChangesRequested && (
           <div
             className="mb-6 p-4 rounded-xl"
             style={{
@@ -663,23 +607,18 @@ export default function QuoteApprovalPage() {
             <div className="text-sm text-gray-400 sm:text-right space-y-1 flex-shrink-0">
               <p>
                 Emision:{' '}
-                <span className="text-gray-300">
-                  {formatDate(quote.issueDate)}
-                </span>
+                <span className="text-gray-300">{formatDate(quote.issueDate)}</span>
               </p>
               <p>
                 Valida hasta:{' '}
-                <span
-                  className={expired ? 'text-amber-400 font-medium' : 'text-gray-300'}
-                >
+                <span className={expired ? 'text-amber-400 font-medium' : 'text-gray-300'}>
                   {formatDate(quote.validUntil)}
                   {expired && ' (expirada)'}
                 </span>
               </p>
               {quote.version > 1 && (
                 <p>
-                  Version:{' '}
-                  <span className="text-gray-300">v{quote.version}</span>
+                  Version: <span className="text-gray-300">v{quote.version}</span>
                 </p>
               )}
             </div>
@@ -700,7 +639,7 @@ export default function QuoteApprovalPage() {
             </h2>
             {actionable && (
               <p className="text-gray-500 text-xs mt-1">
-                Marca los items que deseas aprobar o rechazar individualmente.
+                Si desea eliminar algun item, marquelo con la casilla. Luego podra solicitar cambios.
               </p>
             )}
           </div>
@@ -711,8 +650,8 @@ export default function QuoteApprovalPage() {
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
                   {actionable && (
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                      Estado
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                      Quitar
                     </th>
                   )}
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -724,11 +663,6 @@ export default function QuoteApprovalPage() {
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cant.
                   </th>
-                  {actionable && (
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Cant. Aprobada
-                    </th>
-                  )}
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Precio Unit.
                   </th>
@@ -742,127 +676,67 @@ export default function QuoteApprovalPage() {
               </thead>
               <tbody>
                 {quote.lineItems.map((item) => {
-                  const decision = decisions[item.id];
-                  const isApproved = decision?.approvalStatus === 'APPROVED';
-                  const isRejected = decision?.approvalStatus === 'REJECTED';
+                  const isRemoved = removedItems.has(item.id);
+                  const wasRejected = item.approvalStatus === 'REJECTED';
 
                   return (
-                    <React.Fragment key={item.id}>
-                      <tr
-                        className="transition-colors"
-                        style={{
-                          borderTop: '1px solid rgba(255,255,255,0.04)',
-                          background: isRejected && actionable
-                            ? 'rgba(239,68,68,0.05)'
+                    <tr
+                      key={item.id}
+                      className="transition-colors"
+                      style={{
+                        borderTop: '1px solid rgba(255,255,255,0.04)',
+                        background: isRemoved
+                          ? 'rgba(239,68,68,0.05)'
+                          : wasRejected && !actionable
+                            ? 'rgba(239,68,68,0.03)'
                             : 'transparent',
-                        }}
-                      >
-                        {actionable && (
-                          <td className="px-4 py-3">
-                            <button
-                              type="button"
-                              onClick={() => toggleItemApproval(item.id)}
-                              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                                isApproved
-                                  ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                                  : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                              }`}
-                              title={isApproved ? 'Click para rechazar' : 'Click para aprobar'}
-                            >
-                              {isApproved ? (
-                                <CheckIcon className="h-4 w-4" />
-                              ) : (
-                                <XIcon className="h-4 w-4" />
-                              )}
-                            </button>
-                          </td>
-                        )}
-                        <td className="px-4 py-3 text-gray-500 text-sm">
-                          {item.lineNumber}
-                        </td>
+                      }}
+                    >
+                      {actionable && (
                         <td className="px-4 py-3">
-                          <p
-                            className={`text-sm font-medium ${
-                              isRejected && actionable ? 'text-gray-500 line-through' : 'text-white'
-                            }`}
-                          >
-                            {item.description}
-                          </p>
-                          {item.itemCode && (
-                            <p className="text-xs text-gray-500">{item.itemCode}</p>
-                          )}
+                          <label className="flex items-center justify-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isRemoved}
+                              onChange={() => toggleItemRemoval(item.id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-red-500 focus:ring-red-500/40 focus:ring-offset-0 cursor-pointer"
+                            />
+                          </label>
                         </td>
-                        <td className="px-4 py-3 text-right text-sm text-gray-300">
-                          {item.quantity}
-                        </td>
-                        {actionable && (
-                          <td className="px-4 py-3 text-right">
-                            {isApproved ? (
-                              <input
-                                type="number"
-                                min={1}
-                                max={item.quantity}
-                                value={decision?.approvedQuantity ?? item.quantity}
-                                onChange={(e) =>
-                                  updateApprovedQuantity(
-                                    item.id,
-                                    Math.min(
-                                      Math.max(1, parseInt(e.target.value) || 1),
-                                      item.quantity,
-                                    ),
-                                  )
-                                }
-                                className="w-20 px-2 py-1 text-right text-sm rounded-lg text-white"
-                                style={{
-                                  background: 'rgba(255,255,255,0.05)',
-                                  border: '1px solid rgba(255,255,255,0.1)',
-                                }}
-                              />
-                            ) : (
-                              <span className="text-gray-500 text-sm">-</span>
-                            )}
-                          </td>
-                        )}
-                        <td className="px-4 py-3 text-right text-sm text-gray-300">
-                          {formatCurrency(item.unitPrice)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-sm text-gray-300">
-                          {item.discount > 0 ? formatCurrency(item.discount) : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-right text-sm font-medium text-white">
-                          {formatCurrency(item.lineTotal)}
-                        </td>
-                      </tr>
-                      {/* Rejection reason input */}
-                      {actionable && isRejected && (
-                        <tr>
-                          <td
-                            colSpan={8}
-                            className="px-4 pb-3 pt-0"
-                            style={{ borderTop: 'none' }}
-                          >
-                            <div className="ml-12 flex items-center gap-2">
-                              <span className="text-xs text-red-400 flex-shrink-0">
-                                Motivo:
-                              </span>
-                              <input
-                                type="text"
-                                value={decision?.rejectionReason || ''}
-                                onChange={(e) =>
-                                  updateRejectionReason(item.id, e.target.value)
-                                }
-                                placeholder="Razon del rechazo (opcional)"
-                                className="flex-1 px-3 py-1.5 text-sm rounded-lg text-white placeholder-gray-600"
-                                style={{
-                                  background: 'rgba(255,255,255,0.05)',
-                                  border: '1px solid rgba(239,68,68,0.2)',
-                                }}
-                              />
-                            </div>
-                          </td>
-                        </tr>
                       )}
-                    </React.Fragment>
+                      <td className="px-4 py-3 text-gray-500 text-sm">
+                        {item.lineNumber}
+                      </td>
+                      <td className="px-4 py-3">
+                        <p
+                          className={`text-sm font-medium ${
+                            isRemoved || wasRejected ? 'text-gray-500 line-through' : 'text-white'
+                          }`}
+                        >
+                          {item.description}
+                        </p>
+                        {item.itemCode && (
+                          <p className="text-xs text-gray-500">{item.itemCode}</p>
+                        )}
+                        {wasRejected && !actionable && item.rejectionReason && (
+                          <p className="text-xs text-red-400/70 mt-1">
+                            {item.rejectionReason}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-gray-300">
+                        {item.quantity}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-gray-300">
+                        {formatCurrency(item.unitPrice)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-gray-300">
+                        {item.discount > 0 ? formatCurrency(item.discount) : '-'}
+                      </td>
+                      <td className={`px-4 py-3 text-right text-sm font-medium ${isRemoved ? 'text-gray-500 line-through' : 'text-white'}`}>
+                        {formatCurrency(item.lineTotal)}
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
@@ -872,16 +746,15 @@ export default function QuoteApprovalPage() {
           {/* Mobile cards */}
           <div className="sm:hidden divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
             {quote.lineItems.map((item) => {
-              const decision = decisions[item.id];
-              const isApproved = decision?.approvalStatus === 'APPROVED';
-              const isRejected = decision?.approvalStatus === 'REJECTED';
+              const isRemoved = removedItems.has(item.id);
+              const wasRejected = item.approvalStatus === 'REJECTED';
 
               return (
                 <div
                   key={item.id}
                   className="p-4"
                   style={{
-                    background: isRejected && actionable
+                    background: isRemoved
                       ? 'rgba(239,68,68,0.05)'
                       : 'transparent',
                     borderColor: 'rgba(255,255,255,0.04)',
@@ -889,26 +762,19 @@ export default function QuoteApprovalPage() {
                 >
                   <div className="flex items-start gap-3">
                     {actionable && (
-                      <button
-                        type="button"
-                        onClick={() => toggleItemApproval(item.id)}
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
-                          isApproved
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-red-500/20 text-red-400'
-                        }`}
-                      >
-                        {isApproved ? (
-                          <CheckIcon className="h-4 w-4" />
-                        ) : (
-                          <XIcon className="h-4 w-4" />
-                        )}
-                      </button>
+                      <label className="flex items-center pt-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isRemoved}
+                          onChange={() => toggleItemRemoval(item.id)}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-red-500 focus:ring-red-500/40 focus:ring-offset-0 cursor-pointer"
+                        />
+                      </label>
                     )}
                     <div className="flex-1 min-w-0">
                       <p
                         className={`text-sm font-medium ${
-                          isRejected && actionable ? 'text-gray-500 line-through' : 'text-white'
+                          isRemoved || wasRejected ? 'text-gray-500 line-through' : 'text-white'
                         }`}
                       >
                         {item.description}
@@ -923,48 +789,8 @@ export default function QuoteApprovalPage() {
                           <span>Desc: {formatCurrency(item.discount)}</span>
                         )}
                       </div>
-                      {actionable && isApproved && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-xs text-gray-500">Cant. aprobada:</span>
-                          <input
-                            type="number"
-                            min={1}
-                            max={item.quantity}
-                            value={decision?.approvedQuantity ?? item.quantity}
-                            onChange={(e) =>
-                              updateApprovedQuantity(
-                                item.id,
-                                Math.min(
-                                  Math.max(1, parseInt(e.target.value) || 1),
-                                  item.quantity,
-                                ),
-                              )
-                            }
-                            className="w-16 px-2 py-1 text-right text-xs rounded-lg text-white"
-                            style={{
-                              background: 'rgba(255,255,255,0.05)',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                            }}
-                          />
-                        </div>
-                      )}
-                      {actionable && isRejected && (
-                        <input
-                          type="text"
-                          value={decision?.rejectionReason || ''}
-                          onChange={(e) =>
-                            updateRejectionReason(item.id, e.target.value)
-                          }
-                          placeholder="Motivo del rechazo (opcional)"
-                          className="mt-2 w-full px-3 py-1.5 text-xs rounded-lg text-white placeholder-gray-600"
-                          style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(239,68,68,0.2)',
-                          }}
-                        />
-                      )}
                     </div>
-                    <p className="text-sm font-medium text-white flex-shrink-0">
+                    <p className={`text-sm font-medium flex-shrink-0 ${isRemoved ? 'text-gray-500 line-through' : 'text-white'}`}>
                       {formatCurrency(item.lineTotal)}
                     </p>
                   </div>
@@ -981,7 +807,7 @@ export default function QuoteApprovalPage() {
             <div className="flex flex-col items-end space-y-2">
               <div className="w-full max-w-xs space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Subtotal original:</span>
+                  <span className="text-gray-400">Subtotal:</span>
                   <span className="text-gray-300">
                     {formatCurrency(Number(quote.subtotal))}
                   </span>
@@ -997,44 +823,16 @@ export default function QuoteApprovalPage() {
                   style={{ background: 'rgba(255,255,255,0.08)' }}
                 />
                 <div className="flex justify-between">
-                  <span className="text-gray-400 font-medium">
-                    Total original:
-                  </span>
+                  <span className="text-gray-400 font-medium">Total:</span>
                   <span className="text-white font-semibold text-lg">
                     {formatCurrency(Number(quote.total))}
                   </span>
                 </div>
 
-                {actionable && approvedTotal !== Number(quote.total) && (
-                  <>
-                    <div
-                      className="h-px my-1"
-                      style={{ background: 'rgba(34,197,94,0.2)' }}
-                    />
-                    <div className="flex justify-between text-sm">
-                      <span className="text-green-400/70">Subtotal aprobado:</span>
-                      <span className="text-green-400/70">
-                        {formatCurrency(approvedSubtotal)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-green-400/70">IVA aprobado:</span>
-                      <span className="text-green-400/70">
-                        {formatCurrency(approvedTax)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-green-400 font-medium">
-                        Total aprobado:
-                      </span>
-                      <span className="text-green-400 font-semibold text-lg">
-                        {formatCurrency(approvedTotal)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 text-right">
-                      {approvedCount} de {totalItems} items aprobados
-                    </p>
-                  </>
+                {hasRemovedItems && actionable && (
+                  <p className="text-xs text-orange-400 text-right mt-1">
+                    {removedItems.size} item{removedItems.size > 1 ? 's' : ''} marcado{removedItems.size > 1 ? 's' : ''} para eliminar
+                  </p>
                 )}
               </div>
             </div>
@@ -1079,7 +877,7 @@ export default function QuoteApprovalPage() {
           </div>
         )}
 
-        {/* Approval form (only when actionable) */}
+        {/* Approval / Request Changes form (only when actionable) */}
         {actionable && (
           <div
             className="rounded-2xl p-6 mb-6"
@@ -1092,7 +890,9 @@ export default function QuoteApprovalPage() {
               Tu Respuesta
             </h2>
             <p className="text-gray-500 text-xs mb-5">
-              Completa tus datos para aprobar o rechazar esta cotizacion.
+              {hasRemovedItems
+                ? 'Has marcado items para eliminar. Describe los cambios que necesitas y envialos al proveedor.'
+                : 'Aprueba la cotizacion tal como esta, solicita cambios, o rechazala.'}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -1134,43 +934,74 @@ export default function QuoteApprovalPage() {
 
             <div className="mb-5">
               <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                Comentarios (opcional)
+                {hasRemovedItems
+                  ? 'Comentarios sobre los cambios *'
+                  : 'Comentarios (opcional)'}
               </label>
               <textarea
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
-                placeholder="Agrega notas o comentarios adicionales..."
+                placeholder={
+                  hasRemovedItems
+                    ? 'Explique que cambios necesita en la cotizacion...'
+                    : 'Agrega notas o comentarios adicionales...'
+                }
                 rows={3}
                 className="w-full px-4 py-2.5 text-sm rounded-xl text-white placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 style={{
                   background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  border: hasRemovedItems
+                    ? '1px solid rgba(249,115,22,0.3)'
+                    : '1px solid rgba(255,255,255,0.1)',
                 }}
               />
             </div>
 
             {/* Action buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                type="button"
-                onClick={handleApprove}
-                disabled={submitting || !approverName.trim() || !approverEmail.trim()}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
-                style={{
-                  background: submitting
-                    ? '#166534'
-                    : 'linear-gradient(135deg, #22C55E, #16A34A)',
-                }}
-              >
-                {submitting ? (
-                  <Spinner className="h-4 w-4" />
-                ) : (
-                  <CheckIcon className="h-4 w-4" />
-                )}
-                {approvedCount === totalItems
-                  ? 'Aprobar Cotizacion'
-                  : `Aprobar ${approvedCount} de ${totalItems} Items`}
-              </button>
+              {hasRemovedItems ? (
+                /* Request changes button (when items are marked for removal) */
+                <button
+                  type="button"
+                  onClick={handleRequestChanges}
+                  disabled={submitting || !comments.trim()}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
+                  style={{
+                    background: submitting
+                      ? '#92400e'
+                      : 'linear-gradient(135deg, #F97316, #EA580C)',
+                  }}
+                >
+                  {submitting ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : (
+                    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                  )}
+                  Solicitar Cambios ({removedItems.size} item{removedItems.size > 1 ? 's' : ''} a eliminar)
+                </button>
+              ) : (
+                /* Approve button (when no items removed) */
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={submitting || !approverName.trim() || !approverEmail.trim()}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
+                  style={{
+                    background: submitting
+                      ? '#166534'
+                      : 'linear-gradient(135deg, #22C55E, #16A34A)',
+                  }}
+                >
+                  {submitting ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : (
+                    <CheckIcon className="h-4 w-4" />
+                  )}
+                  Aprobar Cotizacion
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -1187,9 +1018,15 @@ export default function QuoteApprovalPage() {
                 }}
               >
                 <XIcon className="h-4 w-4 text-red-400" />
-                <span className="text-red-400">Rechazar Todo</span>
+                <span className="text-red-400">Rechazar</span>
               </button>
             </div>
+
+            {hasRemovedItems && (
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                Sus cambios seran enviados al proveedor para actualizar su cotizacion. Recibira una nueva version para su aprobacion.
+              </p>
+            )}
           </div>
         )}
       </main>

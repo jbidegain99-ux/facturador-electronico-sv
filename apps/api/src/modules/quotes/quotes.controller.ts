@@ -25,7 +25,7 @@ import { QuotesService } from './quotes.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QueryQuoteDto } from './dto/query-quote.dto';
-import { ClientApprovalDto, ClientRejectionDto } from './dto/approval.dto';
+import { ClientApprovalDto, ClientRejectionDto, RequestChangesDto } from './dto/approval.dto';
 
 // ── Public endpoints (no auth) ────────────────────────────────────────
 @Public()
@@ -58,6 +58,16 @@ export class QuotesPublicController {
     @Ip() clientIp: string,
   ) {
     return this.quotesService.rejectByClient(token, dto, clientIp);
+  }
+
+  @Post('request-changes/:token')
+  @ApiOperation({ summary: 'Request changes to a quote via public link' })
+  requestChanges(
+    @Param('token') token: string,
+    @Body() dto: RequestChangesDto,
+    @Ip() clientIp: string,
+  ) {
+    return this.quotesService.requestChangesByClient(token, dto, clientIp);
   }
 }
 
@@ -184,6 +194,16 @@ export class QuotesController {
   ) {
     const tenantId = this.ensureTenant(user);
     return this.quotesService.reject(tenantId, id, body.reason, user.id);
+  }
+
+  @Post(':id/resend')
+  @ApiOperation({ summary: 'Reenviar cotizacion despues de cambios solicitados' })
+  resend(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+  ) {
+    const tenantId = this.ensureTenant(user);
+    return this.quotesService.resend(tenantId, id, user.id);
   }
 
   @Post(':id/cancel')

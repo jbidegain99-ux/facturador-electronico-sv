@@ -136,6 +136,8 @@ const STATUS_MAP: Record<string, StatusConfig> = {
   EXPIRED: { label: 'Expirada', variant: 'outline', className: 'bg-amber-600/20 text-amber-400 border-amber-600/30' },
   CONVERTED: { label: 'Convertida', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
   CANCELLED: { label: 'Cancelada', variant: 'secondary', className: 'bg-gray-700/20 text-gray-500 border-gray-700/30' },
+  CHANGES_REQUESTED: { label: 'Cambios Solicitados', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
+  REVISED: { label: 'Revisada', variant: 'default', className: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30' },
 };
 
 const APPROVAL_STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -418,7 +420,8 @@ export default function CotizacionDetailPage() {
   const showApprovalBadges =
     quote?.status === 'PARTIALLY_APPROVED' ||
     quote?.status === 'APPROVED' ||
-    quote?.status === 'PENDING_APPROVAL';
+    quote?.status === 'PENDING_APPROVAL' ||
+    quote?.status === 'CHANGES_REQUESTED';
 
   const hasApprovedTotals =
     quote?.approvedTotal != null &&
@@ -568,6 +571,31 @@ export default function CotizacionDetailPage() {
               </Button>
             </>
           )}
+          {quote.status === 'CHANGES_REQUESTED' && (
+            <>
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  router.push(`/cotizaciones/nueva?edit=${quote.id}`)
+                }
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Editar y Reenviar
+              </Button>
+              <Button
+                className="bg-orange-600 hover:bg-orange-700 text-white"
+                onClick={() => handleAction('resend')}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 mr-2" />
+                )}
+                Reenviar sin Cambios
+              </Button>
+            </>
+          )}
           {(quote.status === 'APPROVED' || quote.status === 'PARTIALLY_APPROVED') && (
             <>
               <Button
@@ -630,6 +658,37 @@ export default function CotizacionDetailPage() {
           <p className="text-sm text-red-400">
             <strong>Motivo de rechazo:</strong> {quote.rejectionReason}
           </p>
+        </div>
+      )}
+
+      {/* Changes requested info */}
+      {quote.status === 'CHANGES_REQUESTED' && (
+        <div className="glass-card p-5 border-orange-600/30">
+          <div className="flex items-center gap-2 mb-3">
+            <RefreshCw className="w-5 h-5 text-orange-400" />
+            <h2 className="font-semibold text-orange-400">El cliente solicito cambios</h2>
+          </div>
+          {quote.clientNotes && (
+            <div className="bg-orange-600/10 border border-orange-600/20 rounded-lg p-4 mb-3">
+              <p className="text-sm text-muted-foreground mb-1 font-medium">Comentario del cliente:</p>
+              <p className="text-foreground text-sm whitespace-pre-wrap">{quote.clientNotes}</p>
+            </div>
+          )}
+          {lineItems.some((li) => li.approvalStatus === 'REJECTED') && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2 font-medium">Items que el cliente desea eliminar:</p>
+              <ul className="space-y-1">
+                {lineItems
+                  .filter((li) => li.approvalStatus === 'REJECTED')
+                  .map((li) => (
+                    <li key={li.id} className="text-sm text-red-400 flex items-center gap-2">
+                      <XCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span className="line-through">{li.description}</span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

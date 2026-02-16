@@ -79,6 +79,7 @@ const STATUS_TABS = [
   { value: '', label: 'Todas' },
   { value: 'DRAFT', label: 'Borrador' },
   { value: 'SENT', label: 'Enviadas' },
+  { value: 'CHANGES_REQUESTED', label: 'Cambios Solicitados' },
   { value: 'APPROVED', label: 'Aprobadas' },
   { value: 'PARTIALLY_APPROVED', label: 'Parciales' },
   { value: 'CONVERTED', label: 'Convertidas' },
@@ -100,6 +101,8 @@ const STATUS_MAP: Record<string, StatusConfig> = {
   EXPIRED: { label: 'Expirada', variant: 'outline', className: 'bg-amber-600/20 text-amber-400 border-amber-600/30' },
   CONVERTED: { label: 'Convertida', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
   CANCELLED: { label: 'Cancelada', variant: 'secondary', className: 'bg-gray-700/20 text-gray-500 border-gray-700/30' },
+  CHANGES_REQUESTED: { label: 'Cambios Solicitados', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
+  REVISED: { label: 'Revisada', variant: 'default', className: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30' },
 };
 
 function QuoteStatusBadge({ status }: { status: string }) {
@@ -573,6 +576,20 @@ export default function CotizacionesPage() {
                             title="Ver"
                           >
                             <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {quote.status === 'CHANGES_REQUESTED' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-orange-400 hover:text-orange-300"
+                            onClick={() =>
+                              router.push(`/cotizaciones/${quote.id}`)
+                            }
+                            title="Revisar cambios solicitados"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Revisar
                           </Button>
                         )}
                         {(quote.status === 'APPROVED' ||

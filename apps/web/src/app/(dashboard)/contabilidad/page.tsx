@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useToast } from '@/components/ui/toast';
 import { UpsellBanner } from '@/components/ui/upsell-banner';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
+import { useTranslations } from 'next-intl';
 import {
   DollarSign,
   TrendingUp,
@@ -62,6 +63,8 @@ function formatCurrency(amount: number): string {
 }
 
 export default function ContabilidadPage() {
+  const t = useTranslations('accounting');
+  const tCommon = useTranslations('common');
   const { features, loading: planLoading } = usePlanFeatures();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,13 +108,13 @@ export default function ContabilidadPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        toastRef.current.success('Plan de cuentas sembrado', `Se crearon ${(json as { created?: number }).created ?? 0} cuentas`);
+        toastRef.current.success(t('chartOfAccounts'), `${(json as { created?: number }).created ?? 0}`);
         fetchData();
       } else {
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al sembrar cuentas');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || tCommon('error'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexión');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     } finally {
       setSeeding(false);
     }
@@ -120,7 +123,7 @@ export default function ContabilidadPage() {
   const handleSimulate = async () => {
     const amount = parseFloat(simAmount);
     if (isNaN(amount) || amount <= 0) {
-      toastRef.current.error('Ingrese un monto válido mayor a cero');
+      toastRef.current.error(t('invalidAmount'));
       return;
     }
 
@@ -150,39 +153,39 @@ export default function ContabilidadPage() {
       if (res.ok) {
         setSimResult(json as SimulationResult);
       } else {
-        toastRef.current.error((json as { message?: string }).message || 'Error al simular');
+        toastRef.current.error((json as { message?: string }).message || t('simulateError'));
       }
     } catch {
-      toastRef.current.error('Error de conexión');
+      toastRef.current.error(t('connectionError'));
     } finally {
       setSimulating(false);
     }
   };
 
   const navItems = [
-    { name: 'Plan de Cuentas', href: '/contabilidad/cuentas', icon: List, description: 'Gestionar catálogo de cuentas' },
-    { name: 'Libro Diario', href: '/contabilidad/libro-diario', icon: FileText, description: 'Partidas contables' },
-    { name: 'Libro Mayor', href: '/contabilidad/libro-mayor', icon: BookOpen, description: 'Movimientos por cuenta' },
-    { name: 'Balance General', href: '/contabilidad/balance', icon: Landmark, description: 'Estado de situación financiera' },
-    { name: 'Estado de Resultados', href: '/contabilidad/resultados', icon: PieChart, description: 'Ingresos y gastos' },
+    { name: t('chartOfAccounts'), href: '/contabilidad/cuentas', icon: List, description: t('chartOfAccountsDesc') },
+    { name: t('journal'), href: '/contabilidad/libro-diario', icon: FileText, description: t('journalDesc') },
+    { name: t('ledger'), href: '/contabilidad/libro-mayor', icon: BookOpen, description: t('ledgerDesc') },
+    { name: t('balanceSheet'), href: '/contabilidad/balance', icon: Landmark, description: t('balanceSheetDesc') },
+    { name: t('incomeStatement'), href: '/contabilidad/resultados', icon: PieChart, description: t('incomeStatementDesc') },
   ];
 
   if (!planLoading && !features.accounting) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Contabilidad</h1>
-          <p className="text-muted-foreground">Modulo contable integrado - Partida doble</p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <UpsellBanner
-          title="Contabilidad — Plan Pro"
-          description="Lleva el control completo de tu contabilidad con nuestro sistema integrado de partida doble."
+          title={t('upsellTitle')}
+          description={t('upsellDesc')}
           features={[
-            'Plan de cuentas estandar El Salvador (NIIF PYMES)',
-            'Libro diario y libro mayor',
-            'Balance general y estado de resultados',
-            'Partidas contables con validacion automatica',
-            'Reportes financieros completos',
+            t('upsellFeature1'),
+            t('upsellFeature2'),
+            t('upsellFeature3'),
+            t('upsellFeature4'),
+            t('upsellFeature5'),
           ]}
         />
       </div>
@@ -194,8 +197,8 @@ export default function ContabilidadPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Contabilidad</h1>
-        <p className="text-muted-foreground">Módulo contable integrado - Partida doble</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       {/* Loading skeleton */}
@@ -207,9 +210,9 @@ export default function ContabilidadPage() {
         /* ====== EMPTY STATE: No accounts seeded ====== */
         <div className="rounded-lg border bg-card p-8 text-center max-w-lg mx-auto">
           <Calculator className="h-16 w-16 text-purple-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Inicializar Plan de Cuentas</h3>
+          <h3 className="text-xl font-semibold mb-2">{t('initChartOfAccounts')}</h3>
           <p className="text-muted-foreground mb-6">
-            Crea el plan de cuentas estándar de El Salvador (NIIF PYMES) para comenzar a registrar partidas contables.
+            {t('emptyState')}
           </p>
           <button
             onClick={handleSeedAccounts}
@@ -221,7 +224,7 @@ export default function ContabilidadPage() {
             ) : (
               <Zap className="h-5 w-5" />
             )}
-            {seeding ? 'Creando cuentas...' : 'Crear Plan de Cuentas (85+ cuentas)'}
+            {seeding ? t('creatingAccounts') : t('createAccounts')}
           </button>
         </div>
       ) : (
@@ -232,28 +235,28 @@ export default function ContabilidadPage() {
             <div className="rounded-lg border bg-card p-6">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                 <TrendingUp className="h-4 w-4 text-green-500" />
-                Total Activos
+                {t('totalAssets')}
               </div>
               <p className="text-2xl font-bold">{formatCurrency(data.totalAssets)}</p>
             </div>
             <div className="rounded-lg border bg-card p-6">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                 <TrendingDown className="h-4 w-4 text-red-500" />
-                Total Pasivos
+                {t('totalLiabilities')}
               </div>
               <p className="text-2xl font-bold">{formatCurrency(data.totalLiabilities)}</p>
             </div>
             <div className="rounded-lg border bg-card p-6">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                 <DollarSign className="h-4 w-4 text-blue-500" />
-                Patrimonio
+                {t('equity')}
               </div>
               <p className="text-2xl font-bold">{formatCurrency(data.totalEquity)}</p>
             </div>
             <div className="rounded-lg border bg-card p-6">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                 <BarChart3 className="h-4 w-4 text-purple-500" />
-                Utilidad Neta
+                {t('netIncome')}
               </div>
               <p className={`text-2xl font-bold ${data.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(data.netIncome)}
@@ -268,9 +271,9 @@ export default function ContabilidadPage() {
               className="flex items-center gap-2 w-full text-left"
             >
               <FlaskConical className="h-5 w-5 text-yellow-500" />
-              <h3 className="font-semibold flex-1">Simulador Contable</h3>
+              <h3 className="font-semibold flex-1">{t('simulator')}</h3>
               <span className="text-xs px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-600 dark:text-yellow-400">
-                MODO PRUEBA
+                {t('testMode')}
               </span>
               <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${simOpen ? 'rotate-90' : ''}`} />
             </button>
@@ -280,14 +283,13 @@ export default function ContabilidadPage() {
                 <div className="flex items-start gap-2 p-3 rounded-md bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800">
                   <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
                   <p className="text-xs text-yellow-700 dark:text-yellow-400">
-                    El simulador muestra las partidas contables que se generarían al emitir una factura.
-                    No se crean registros ni se envía nada al Ministerio de Hacienda.
+                    {t('simulatorDesc')}
                   </p>
                 </div>
 
                 <div className="flex gap-3 items-end">
                   <div className="flex-1">
-                    <label className="text-sm font-medium mb-1 block">Monto total (con IVA)</label>
+                    <label className="text-sm font-medium mb-1 block">{t('totalAmount')}</label>
                     <input
                       type="number"
                       min="0.01"
@@ -304,7 +306,7 @@ export default function ContabilidadPage() {
                     className="inline-flex items-center gap-2 rounded-md bg-yellow-600 px-4 h-9 text-sm font-medium text-white hover:bg-yellow-700 disabled:opacity-50"
                   >
                     {simulating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />}
-                    Simular
+                    {t('simulate')}
                   </button>
                 </div>
 
@@ -321,18 +323,18 @@ export default function ContabilidadPage() {
 
                     {!simResult.accountsFound && (
                       <div className="text-xs text-red-600 dark:text-red-400 p-2 rounded bg-red-50 dark:bg-red-900/10">
-                        Cuentas faltantes: {simResult.missingAccounts.join(', ')}.
-                        Siembre el plan de cuentas para usar el simulador completamente.
+                        {t('missingAccounts')}: {simResult.missingAccounts.join(', ')}.
+                        {t('seedAccounts')}
                       </div>
                     )}
 
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b text-muted-foreground">
-                          <th className="text-left py-1 font-medium">Cuenta</th>
-                          <th className="text-left py-1 font-medium">Descripción</th>
-                          <th className="text-right py-1 font-medium">Débito</th>
-                          <th className="text-right py-1 font-medium">Crédito</th>
+                          <th className="text-left py-1 font-medium">{t('account')}</th>
+                          <th className="text-left py-1 font-medium">{tCommon('description')}</th>
+                          <th className="text-right py-1 font-medium">{t('debit')}</th>
+                          <th className="text-right py-1 font-medium">{t('creditCol')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -354,7 +356,7 @@ export default function ContabilidadPage() {
                       </tbody>
                       <tfoot>
                         <tr className="font-semibold">
-                          <td colSpan={2} className="py-1.5">TOTALES</td>
+                          <td colSpan={2} className="py-1.5">{t('totals')}</td>
                           <td className="py-1.5 text-right font-mono">{formatCurrency(simResult.totalDebit)}</td>
                           <td className="py-1.5 text-right font-mono">{formatCurrency(simResult.totalCredit)}</td>
                         </tr>
@@ -364,7 +366,7 @@ export default function ContabilidadPage() {
                     {simResult.balanced && (
                       <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
                         <Check className="h-3 w-3" />
-                        Partida cuadrada — débitos iguales a créditos
+                        {t('balanced')}
                       </p>
                     )}
                   </div>
@@ -376,22 +378,22 @@ export default function ContabilidadPage() {
           {/* Quick stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-lg border bg-card p-6">
-              <h3 className="font-semibold mb-2">Resumen</h3>
+              <h3 className="font-semibold mb-2">{t('summary')}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Cuentas contables</span>
+                  <span className="text-muted-foreground">{t('accounts')}</span>
                   <span className="font-medium">{data.accountCount}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Partidas contabilizadas</span>
+                  <span className="text-muted-foreground">{t('entries')}</span>
                   <span className="font-medium">{data.journalEntryCount}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ingresos del período</span>
+                  <span className="text-muted-foreground">{t('periodRevenue')}</span>
                   <span className="font-medium text-green-600">{formatCurrency(data.monthlyIncome)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Gastos del período</span>
+                  <span className="text-muted-foreground">{t('periodExpenses')}</span>
                   <span className="font-medium text-red-600">{formatCurrency(data.monthlyExpenses)}</span>
                 </div>
               </div>
@@ -399,7 +401,7 @@ export default function ContabilidadPage() {
 
             {/* Navigation Cards - inline in dashboard */}
             <div className="rounded-lg border bg-card p-6">
-              <h3 className="font-semibold mb-3">Accesos rápidos</h3>
+              <h3 className="font-semibold mb-3">{t('quickAccess')}</h3>
               <div className="space-y-2">
                 {navItems.map(item => (
                   <Link
@@ -423,7 +425,7 @@ export default function ContabilidadPage() {
       {/* Navigation always visible (even before seeding) */}
       {!loading && !hasAccounts && (
         <div className="rounded-lg border bg-card p-6">
-          <h3 className="font-semibold mb-3">Módulos contables</h3>
+          <h3 className="font-semibold mb-3">{t('modules')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {navItems.map(item => (
               <Link

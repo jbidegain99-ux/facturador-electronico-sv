@@ -20,6 +20,7 @@ import {
   TrendingDown,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Skeleton, SkeletonCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton';
 import {
   AreaChart,
@@ -83,7 +84,7 @@ function calcPercentChange(current: number, previous: number): number | null {
   return Math.round(((current - previous) / previous) * 100);
 }
 
-function ChangeIndicator({ current, previous, label }: { current: number; previous: number; label: string }) {
+function ChangeIndicator({ current, previous, label, vsLabel }: { current: number; previous: number; label: string; vsLabel: string }) {
   const pct = calcPercentChange(current, previous);
   if (pct === null) return <p className="text-xs text-muted-foreground">{label}</p>;
 
@@ -91,7 +92,7 @@ function ChangeIndicator({ current, previous, label }: { current: number; previo
   return (
     <p className={`text-xs flex items-center gap-1 ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
       {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-      {isPositive ? '+' : ''}{pct}% vs mes anterior
+      {isPositive ? '+' : ''}{pct}{vsLabel}
     </p>
   );
 }
@@ -116,6 +117,8 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
 // --- Main Component ---
 
 export default function DashboardPage() {
+  const t = useTranslations('dashboard');
+  const tCommon = useTranslations('common');
   const { status, isLoading: isLoadingOnboarding } = useOnboardingStatus();
   const { isConfigured: isHaciendaConfigured, isLoading: isLoadingHacienda, demoMode } = useHaciendaStatus();
   const [isLoading, setIsLoading] = React.useState(true);
@@ -196,22 +199,22 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Resumen de tu actividad de facturacion electronica
+            {t('subtitle')}
           </p>
         </div>
         <div className="flex gap-2">
           <Link href="/reportes">
             <Button variant="outline">
               <BarChart3 className="mr-2 h-4 w-4" />
-              Reportes
+              {t('reports')}
             </Button>
           </Link>
           <Link href="/facturas/nueva">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Nueva Factura
+              {t('newInvoice')}
             </Button>
           </Link>
         </div>
@@ -254,7 +257,7 @@ export default function DashboardPage() {
             {/* Facturas este mes */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Facturas este Mes</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('invoicesThisMonth')}</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -262,7 +265,8 @@ export default function DashboardPage() {
                 <ChangeIndicator
                   current={stats?.totalInvoicesThisMonth ?? 0}
                   previous={stats?.totalInvoicesLastMonth ?? 0}
-                  label="Documentos emitidos este mes"
+                  label={t('invoicesDesc')}
+                  vsLabel={t('vsLastMonth')}
                 />
               </CardContent>
             </Card>
@@ -270,7 +274,7 @@ export default function DashboardPage() {
             {/* Ingresos este mes */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Ingresos este Mes</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('revenueThisMonth')}</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -280,7 +284,8 @@ export default function DashboardPage() {
                 <ChangeIndicator
                   current={stats?.revenueThisMonth ?? 0}
                   previous={stats?.revenueLastMonth ?? 0}
-                  label="Total facturado"
+                  label={t('revenueDesc')}
+                  vsLabel={t('vsLastMonth')}
                 />
               </CardContent>
             </Card>
@@ -288,16 +293,16 @@ export default function DashboardPage() {
             {/* Clientes totales */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Clientes</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('clientsTotal')}</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.totalClients ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
                   {(stats?.newClientsThisMonth ?? 0) > 0 ? (
-                    <span className="text-green-500">+{stats?.newClientsThisMonth} nuevos este mes</span>
+                    <span className="text-green-500">{t('newThisMonth', { count: stats?.newClientsThisMonth ?? 0 })}</span>
                   ) : (
-                    'Total de clientes registrados'
+                    t('clientsDesc')
                   )}
                 </p>
               </CardContent>
@@ -306,13 +311,13 @@ export default function DashboardPage() {
             {/* Catalogo items */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Catalogo</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('catalogTotal')}</CardTitle>
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.totalCatalogItems ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  Productos y servicios
+                  {t('catalogDesc')}
                 </p>
               </CardContent>
             </Card>
@@ -323,32 +328,35 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Mi Plan: {planUsage.planNombre}
+                  {t('myPlan', { planName: planUsage.planNombre })}
                 </CardTitle>
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <PlanUsageBar
-                    label="DTEs este mes"
+                    label={t('dtesThisMonth')}
                     used={planUsage.usage.dtesThisMonth}
                     max={planUsage.usage.maxDtesPerMonth}
+                    unlimitedLabel={t('unlimited')}
                   />
                   <PlanUsageBar
-                    label="Usuarios"
+                    label={t('users')}
                     used={planUsage.usage.users}
                     max={planUsage.usage.maxUsers}
+                    unlimitedLabel={t('unlimited')}
                   />
                   <PlanUsageBar
-                    label="Clientes"
+                    label={t('clientsTotal')}
                     used={planUsage.usage.clientes}
                     max={planUsage.usage.maxClientes}
+                    unlimitedLabel={t('unlimited')}
                   />
                 </div>
                 {(!planUsage.limits.canCreateDte || !planUsage.limits.canAddUser || !planUsage.limits.canAddCliente) && (
                   <div className="mt-3 p-2 rounded-md bg-destructive/10 border border-destructive/20">
                     <p className="text-xs text-destructive">
-                      Has alcanzado el limite de tu plan. Contacta a soporte para actualizar.
+                      {t('planLimitReached')}
                     </p>
                   </div>
                 )}
@@ -361,9 +369,9 @@ export default function DashboardPage() {
             {/* Revenue Chart */}
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Ingresos del Mes</CardTitle>
+                <CardTitle>{t('monthlyRevenue')}</CardTitle>
                 <CardDescription>
-                  Ingresos diarios de facturas procesadas
+                  {t('monthlyRevenueDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -405,7 +413,7 @@ export default function DashboardPage() {
                   </ResponsiveContainer>
                 ) : (
                   <div className="h-[260px] flex items-center justify-center text-muted-foreground">
-                    No hay datos de ingresos este mes
+                    {t('noRevenueData')}
                   </div>
                 )}
               </CardContent>
@@ -414,9 +422,9 @@ export default function DashboardPage() {
             {/* Top Clients */}
             <Card className="col-span-3">
               <CardHeader>
-                <CardTitle>Top Clientes</CardTitle>
+                <CardTitle>{t('topClients')}</CardTitle>
                 <CardDescription>
-                  Clientes con mayor facturacion este mes
+                  {t('topClientsDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -430,7 +438,7 @@ export default function DashboardPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{client.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {client.totalInvoices} {client.totalInvoices === 1 ? 'factura' : 'facturas'}
+                            {client.totalInvoices} DTEs
                           </p>
                         </div>
                         <span className="text-sm font-semibold shrink-0">
@@ -441,12 +449,12 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="h-32 flex items-center justify-center text-muted-foreground">
-                    No hay datos de clientes este mes
+                    {t('noClientData')}
                   </div>
                 )}
                 <Link href="/clientes">
                   <Button variant="ghost" className="w-full mt-4">
-                    Ver todos los clientes
+                    {t('viewAllClients')}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
@@ -457,9 +465,9 @@ export default function DashboardPage() {
           {/* ── Recent Invoices ── */}
           <Card>
             <CardHeader>
-              <CardTitle>Facturas Recientes</CardTitle>
+              <CardTitle>{t('recentInvoices')}</CardTitle>
               <CardDescription>
-                Los ultimos 5 documentos emitidos
+                {t('recentInvoicesDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -497,12 +505,12 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="h-32 flex items-center justify-center text-muted-foreground">
-                  No hay documentos recientes
+                  {t('noRecentDocs')}
                 </div>
               )}
               <Link href="/facturas">
                 <Button variant="ghost" className="w-full mt-4">
-                  Ver todas las facturas
+                  {t('viewAllInvoices')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -516,7 +524,7 @@ export default function DashboardPage() {
 
 // --- Subcomponents ---
 
-function PlanUsageBar({ label, used, max }: { label: string; used: number; max: number }) {
+function PlanUsageBar({ label, used, max, unlimitedLabel }: { label: string; used: number; max: number; unlimitedLabel: string }) {
   const isUnlimited = max === -1;
   const ratio = isUnlimited ? 0 : max > 0 ? used / max : 0;
 
@@ -526,7 +534,7 @@ function PlanUsageBar({ label, used, max }: { label: string; used: number; max: 
         <span className="text-muted-foreground">{label}</span>
         <span className="font-medium">
           {used}
-          {isUnlimited ? ' / Ilimitado' : ` / ${max}`}
+          {isUnlimited ? ` / ${unlimitedLabel}` : ` / ${max}`}
         </span>
       </div>
       {!isUnlimited && (

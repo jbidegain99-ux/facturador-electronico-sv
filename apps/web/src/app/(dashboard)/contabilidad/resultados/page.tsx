@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { ArrowLeft, Loader2, PieChart, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface IncomeStatementAccount {
   code: string;
@@ -36,6 +37,8 @@ function formatCurrency(amount: number): string {
 }
 
 export default function ResultadosPage() {
+  const t = useTranslations('accounting');
+  const tCommon = useTranslations('common');
   const { features, loading: planLoading } = usePlanFeatures();
   const router = useRouter();
 
@@ -73,10 +76,10 @@ export default function ResultadosPage() {
         if (json) setData(json);
       } else {
         const json = await res.json().catch(() => ({}));
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al obtener estado de resultados');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('incomeError'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexion');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     } finally {
       setLoading(false);
     }
@@ -85,10 +88,10 @@ export default function ResultadosPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const periodLabel = (() => {
-    if (dateFrom && dateTo) return `Del ${dateFrom} al ${dateTo}`;
-    if (dateFrom) return `Desde ${dateFrom}`;
-    if (dateTo) return `Hasta ${dateTo}`;
-    return 'Periodo actual';
+    if (dateFrom && dateTo) return t('periodFrom', { from: dateFrom, to: dateTo });
+    if (dateFrom) return t('periodSince', { from: dateFrom });
+    if (dateTo) return t('periodUntil', { to: dateTo });
+    return t('currentPeriod');
   })();
 
   return (
@@ -99,8 +102,8 @@ export default function ResultadosPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Estado de Resultados</h1>
-            <p className="text-muted-foreground">Ingresos y gastos del periodo</p>
+            <h1 className="text-2xl font-bold">{t('incomeStatement')}</h1>
+            <p className="text-muted-foreground">{t('incomeStatementSubtitle')}</p>
           </div>
         </div>
         <button
@@ -109,7 +112,7 @@ export default function ResultadosPage() {
           className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Actualizar
+          {tCommon('refresh')}
         </button>
       </div>
 
@@ -117,7 +120,7 @@ export default function ResultadosPage() {
       <div className="rounded-lg border bg-card p-4">
         <div className="flex flex-wrap items-end gap-4">
           <div>
-            <label className="text-sm font-medium mb-1 block">Desde</label>
+            <label className="text-sm font-medium mb-1 block">{t('fromDate').replace(':', '')}</label>
             <input
               type="date"
               value={dateFrom}
@@ -126,7 +129,7 @@ export default function ResultadosPage() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1 block">Hasta</label>
+            <label className="text-sm font-medium mb-1 block">{t('toDate').replace(':', '')}</label>
             <input
               type="date"
               value={dateTo}
@@ -139,7 +142,7 @@ export default function ResultadosPage() {
               onClick={() => { setDateFrom(''); setDateTo(''); }}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              Limpiar filtros
+              {t('clearFilters')}
             </button>
           )}
         </div>
@@ -152,21 +155,21 @@ export default function ResultadosPage() {
       ) : !data ? (
         <div className="text-center py-12 text-muted-foreground">
           <PieChart className="h-12 w-12 mx-auto mb-2 opacity-30" />
-          <p className="text-lg font-medium">No hay datos disponibles</p>
-          <p className="text-sm mt-1">Contabiliza partidas de ingresos y gastos para ver el estado de resultados</p>
+          <p className="text-lg font-medium">{t('noDataAvailable')}</p>
+          <p className="text-sm mt-1">{t('postEntriesToSeeIncome')}</p>
         </div>
       ) : (
         <div className="rounded-lg border bg-card p-6 space-y-6 max-w-3xl">
           {/* Report Header */}
           <div className="text-center border-b pb-4">
-            <h2 className="text-lg font-bold">ESTADO DE RESULTADOS</h2>
+            <h2 className="text-lg font-bold">{t('incomeStatementTitle')}</h2>
             <p className="text-sm text-muted-foreground">{periodLabel}</p>
-            <p className="text-xs text-muted-foreground">(Cifras expresadas en dolares de los Estados Unidos de America)</p>
+            <p className="text-xs text-muted-foreground">{t('currencyNote')}</p>
           </div>
 
           {/* Income */}
           <div className="space-y-3">
-            <h3 className="text-sm font-bold text-green-700 dark:text-green-400 border-b pb-1">INGRESOS</h3>
+            <h3 className="text-sm font-bold text-green-700 dark:text-green-400 border-b pb-1">{t('incomeSection')}</h3>
             {data.income.length > 0 ? (
               data.income.map((section, idx) => (
                 <div key={idx} className="space-y-1">
@@ -182,17 +185,17 @@ export default function ResultadosPage() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground pl-4">No hay ingresos en el periodo</p>
+              <p className="text-sm text-muted-foreground pl-4">{t('noIncomeData')}</p>
             )}
             <div className="flex justify-between font-semibold text-base border-t border-green-600 pt-2 text-green-700 dark:text-green-400">
-              <span>TOTAL INGRESOS</span>
+              <span>{t('totalIncomeLabel')}</span>
               <span className="font-mono">{formatCurrency(data.totalIncome)}</span>
             </div>
           </div>
 
           {/* Expenses */}
           <div className="space-y-3">
-            <h3 className="text-sm font-bold text-red-700 dark:text-red-400 border-b pb-1">GASTOS</h3>
+            <h3 className="text-sm font-bold text-red-700 dark:text-red-400 border-b pb-1">{t('expenseSection')}</h3>
             {data.expenses.length > 0 ? (
               data.expenses.map((section, idx) => (
                 <div key={idx} className="space-y-1">
@@ -208,10 +211,10 @@ export default function ResultadosPage() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground pl-4">No hay gastos en el periodo</p>
+              <p className="text-sm text-muted-foreground pl-4">{t('noExpenseData')}</p>
             )}
             <div className="flex justify-between font-semibold text-base border-t border-red-600 pt-2 text-red-700 dark:text-red-400">
-              <span>TOTAL GASTOS</span>
+              <span>{t('totalExpensesLabel')}</span>
               <span className="font-mono">{formatCurrency(data.totalExpenses)}</span>
             </div>
           </div>
@@ -221,14 +224,14 @@ export default function ResultadosPage() {
           {/* Net Income */}
           <div className="bg-muted/50 rounded-md p-4">
             <div className="flex justify-between font-bold text-lg">
-              <span>{data.netIncome >= 0 ? 'UTILIDAD NETA' : 'PERDIDA NETA'}</span>
+              <span>{data.netIncome >= 0 ? t('netIncomeLabel') : t('netLossLabel')}</span>
               <span className={`font-mono ${data.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(data.netIncome)}
               </span>
             </div>
             <div className="flex justify-between text-sm text-muted-foreground mt-2">
-              <span>Margen: {data.totalIncome > 0 ? ((data.netIncome / data.totalIncome) * 100).toFixed(1) : '0.0'}%</span>
-              <span>Ingresos - Gastos = {formatCurrency(data.totalIncome)} - {formatCurrency(data.totalExpenses)}</span>
+              <span>{t('marginLabel')} {data.totalIncome > 0 ? ((data.netIncome / data.totalIncome) * 100).toFixed(1) : '0.0'}%</span>
+              <span>{t('incomeSection')} - {t('expenseSection')} = {formatCurrency(data.totalIncome)} - {formatCurrency(data.totalExpenses)}</span>
             </div>
           </div>
         </div>

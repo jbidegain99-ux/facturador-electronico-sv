@@ -40,6 +40,7 @@ import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
 import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
+import { useTranslations } from 'next-intl';
 import { formatCurrency } from '@/lib/utils';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -75,14 +76,14 @@ interface QuotesResponse {
 
 // ── Status config ────────────────────────────────────────────────────
 
-const STATUS_TABS = [
-  { value: '', label: 'Todas' },
-  { value: 'DRAFT', label: 'Borrador' },
-  { value: 'SENT', label: 'Enviadas' },
-  { value: 'CHANGES_REQUESTED', label: 'Cambios Solicitados' },
-  { value: 'APPROVED', label: 'Aprobadas' },
-  { value: 'PARTIALLY_APPROVED', label: 'Parciales' },
-  { value: 'CONVERTED', label: 'Convertidas' },
+const STATUS_TAB_KEYS: { value: string; labelKey: string }[] = [
+  { value: '', labelKey: 'all' },
+  { value: 'DRAFT', labelKey: 'draftTab' },
+  { value: 'SENT', labelKey: 'sentTab' },
+  { value: 'CHANGES_REQUESTED', labelKey: 'changesRequestedTab' },
+  { value: 'APPROVED', labelKey: 'approvedTab' },
+  { value: 'PARTIALLY_APPROVED', labelKey: 'partialTab' },
+  { value: 'CONVERTED', labelKey: 'convertedTab' },
 ];
 
 interface StatusConfig {
@@ -91,25 +92,26 @@ interface StatusConfig {
   className: string;
 }
 
-const STATUS_MAP: Record<string, StatusConfig> = {
-  DRAFT: { label: 'Borrador', variant: 'secondary', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
-  SENT: { label: 'Enviada', variant: 'default', className: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
-  PENDING_APPROVAL: { label: 'Pendiente', variant: 'default', className: 'bg-teal-600/20 text-teal-400 border-teal-600/30' },
-  APPROVED: { label: 'Aprobada', variant: 'default', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
-  PARTIALLY_APPROVED: { label: 'Parcial', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
-  REJECTED: { label: 'Rechazada', variant: 'destructive', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
-  EXPIRED: { label: 'Expirada', variant: 'outline', className: 'bg-amber-600/20 text-amber-400 border-amber-600/30' },
-  CONVERTED: { label: 'Convertida', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
-  CANCELLED: { label: 'Cancelada', variant: 'secondary', className: 'bg-gray-700/20 text-gray-500 border-gray-700/30' },
-  CHANGES_REQUESTED: { label: 'Cambios Solicitados', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
-  REVISED: { label: 'Revisada', variant: 'default', className: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30' },
+const STATUS_STYLE_MAP: Record<string, { labelKey: string; variant: StatusConfig['variant']; className: string }> = {
+  DRAFT: { labelKey: 'statusDraft', variant: 'secondary', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
+  SENT: { labelKey: 'statusSent', variant: 'default', className: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
+  PENDING_APPROVAL: { labelKey: 'statusPending', variant: 'default', className: 'bg-teal-600/20 text-teal-400 border-teal-600/30' },
+  APPROVED: { labelKey: 'statusApproved', variant: 'default', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
+  PARTIALLY_APPROVED: { labelKey: 'statusPartial', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
+  REJECTED: { labelKey: 'statusRejected', variant: 'destructive', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
+  EXPIRED: { labelKey: 'statusExpired', variant: 'outline', className: 'bg-amber-600/20 text-amber-400 border-amber-600/30' },
+  CONVERTED: { labelKey: 'statusConverted', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
+  CANCELLED: { labelKey: 'statusCancelled', variant: 'secondary', className: 'bg-gray-700/20 text-gray-500 border-gray-700/30' },
+  CHANGES_REQUESTED: { labelKey: 'statusChangesRequested', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
+  REVISED: { labelKey: 'statusRevised', variant: 'default', className: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30' },
 };
 
 function QuoteStatusBadge({ status }: { status: string }) {
-  const config = STATUS_MAP[status] || STATUS_MAP.DRAFT;
+  const tq = useTranslations('quotes');
+  const config = STATUS_STYLE_MAP[status] || STATUS_STYLE_MAP.DRAFT;
   return (
     <Badge variant={config.variant} className={config.className}>
-      {config.label}
+      {tq(config.labelKey)}
     </Badge>
   );
 }
@@ -129,6 +131,8 @@ function formatDate(dateStr: string): string {
 // ── Component ────────────────────────────────────────────────────────
 
 export default function CotizacionesPage() {
+  const t = useTranslations('quotes');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const toast = useToast();
   const toastRef = React.useRef(toast);
@@ -158,7 +162,7 @@ export default function CotizacionesPage() {
   const fetchQuotes = React.useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setError('No hay sesion activa');
+      setError(tCommon('noSession'));
       setLoading(false);
       return;
     }
@@ -182,7 +186,7 @@ export default function CotizacionesPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Error al cargar cotizaciones');
+        throw new Error(t('loadError'));
       }
 
       const data: QuotesResponse = await res.json().catch(() => ({
@@ -202,11 +206,11 @@ export default function CotizacionesPage() {
       setTotalPages(!isNaN(parsedPages) && parsedPages >= 1 ? parsedPages : 1);
     } catch (err) {
       console.error('Error fetching quotes:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : tCommon('error'));
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter, page, limit, sortBy, sortOrder]);
+  }, [search, statusFilter, page, limit, sortBy, sortOrder, t, tCommon]);
 
   React.useEffect(() => {
     fetchQuotes();
@@ -246,11 +250,11 @@ export default function CotizacionesPage() {
         );
       }
 
-      toastRef.current.success('Accion realizada correctamente');
+      toastRef.current.success(t('actionSuccess'));
       fetchQuotes();
     } catch (err) {
       toastRef.current.error(
-        err instanceof Error ? err.message : 'Error desconocido',
+        err instanceof Error ? err.message : tCommon('error'),
       );
     } finally {
       setActionLoading(null);
@@ -278,11 +282,11 @@ export default function CotizacionesPage() {
       }
 
       setDeleteConfirm(null);
-      toastRef.current.success('Cotizacion eliminada');
+      toastRef.current.success(t('deleteSuccess'));
       fetchQuotes();
     } catch (err) {
       toastRef.current.error(
-        err instanceof Error ? err.message : 'Error desconocido',
+        err instanceof Error ? err.message : tCommon('error'),
       );
     } finally {
       setActionLoading(null);
@@ -310,7 +314,7 @@ export default function CotizacionesPage() {
       }
 
       const result = await res.json().catch(() => ({}));
-      toastRef.current.success('Cotizacion convertida a factura');
+      toastRef.current.success(t('convertSuccess'));
 
       if ((result as { invoice?: { id?: string } }).invoice?.id) {
         router.push(
@@ -321,7 +325,7 @@ export default function CotizacionesPage() {
       }
     } catch (err) {
       toastRef.current.error(
-        err instanceof Error ? err.message : 'Error desconocido',
+        err instanceof Error ? err.message : tCommon('error'),
       );
     } finally {
       setActionLoading(null);
@@ -362,10 +366,10 @@ export default function CotizacionesPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <ClipboardList className="w-6 h-6 text-primary" />
-            Cotizaciones
+            {t('title')}
           </h1>
           <p className="text-muted-foreground text-sm">
-            Gestiona tus cotizaciones y conviertelas en facturas
+            {t('subtitle')}
           </p>
         </div>
         <Button
@@ -373,13 +377,13 @@ export default function CotizacionesPage() {
           className="btn-primary"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Nueva Cotizacion
+          {t('newQuote')}
         </Button>
       </div>
 
       {/* Status tabs */}
       <div className="flex gap-2 flex-wrap">
-        {STATUS_TABS.map((tab) => (
+        {STATUS_TAB_KEYS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => setStatusFilter(tab.value)}
@@ -389,7 +393,7 @@ export default function CotizacionesPage() {
                 : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
             }`}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
@@ -401,7 +405,7 @@ export default function CotizacionesPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por numero o cliente..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -421,7 +425,7 @@ export default function CotizacionesPage() {
             className="ml-2 text-red-700"
             onClick={fetchQuotes}
           >
-            Reintentar
+            {tCommon('retry')}
           </Button>
         </div>
       )}
@@ -436,8 +440,8 @@ export default function CotizacionesPage() {
               <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
               <p className="text-muted-foreground">
                 {search || statusFilter
-                  ? 'No se encontraron cotizaciones con esos filtros'
-                  : 'No tienes cotizaciones aun'}
+                  ? t('noQuotesFilter')
+                  : t('noQuotes')}
               </p>
               {!search && !statusFilter && (
                 <Button
@@ -445,7 +449,7 @@ export default function CotizacionesPage() {
                   onClick={() => router.push('/cotizaciones/nueva')}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Crear primera cotizacion
+                  {t('createFirst')}
                 </Button>
               )}
             </div>
@@ -458,25 +462,25 @@ export default function CotizacionesPage() {
                     onClick={() => handleSort('quoteNumber')}
                   >
                     <span className="flex items-center">
-                      Numero <SortIcon field="quoteNumber" />
+                      {t('number')} <SortIcon field="quoteNumber" />
                     </span>
                   </TableHead>
-                  <TableHead>Cliente</TableHead>
+                  <TableHead>{t('client')}</TableHead>
                   <TableHead
                     className="cursor-pointer select-none"
                     onClick={() => handleSort('issueDate')}
                   >
                     <span className="flex items-center">
-                      Fecha <SortIcon field="issueDate" />
+                      {tCommon('date')} <SortIcon field="issueDate" />
                     </span>
                   </TableHead>
-                  <TableHead>Valida hasta</TableHead>
+                  <TableHead>{t('validUntil')}</TableHead>
                   <TableHead
                     className="cursor-pointer select-none text-right"
                     onClick={() => handleSort('total')}
                   >
                     <span className="flex items-center justify-end">
-                      Total <SortIcon field="total" />
+                      {tCommon('total')} <SortIcon field="total" />
                     </span>
                   </TableHead>
                   <TableHead
@@ -484,10 +488,10 @@ export default function CotizacionesPage() {
                     onClick={() => handleSort('status')}
                   >
                     <span className="flex items-center">
-                      Estado <SortIcon field="status" />
+                      {tCommon('status')} <SortIcon field="status" />
                     </span>
                   </TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
+                  <TableHead className="text-right">{tCommon('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -508,7 +512,7 @@ export default function CotizacionesPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      {quote.client?.nombre || 'Sin cliente'}
+                      {quote.client?.nombre || t('client')}
                     </TableCell>
                     <TableCell>{formatDate(quote.issueDate)}</TableCell>
                     <TableCell>{formatDate(quote.validUntil)}</TableCell>
@@ -534,7 +538,7 @@ export default function CotizacionesPage() {
                                   `/cotizaciones/nueva?edit=${quote.id}`,
                                 )
                               }
-                              title="Editar"
+                              title={tCommon('edit')}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -546,7 +550,7 @@ export default function CotizacionesPage() {
                                 handleAction(quote.id, 'send')
                               }
                               disabled={actionLoading === quote.id}
-                              title="Enviar"
+                              title={t('sendToClient')}
                             >
                               {actionLoading === quote.id ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -559,7 +563,7 @@ export default function CotizacionesPage() {
                               size="icon"
                               className="h-8 w-8 text-red-400 hover:text-red-300"
                               onClick={() => setDeleteConfirm(quote)}
-                              title="Eliminar"
+                              title={tCommon('delete')}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -573,7 +577,7 @@ export default function CotizacionesPage() {
                             onClick={() =>
                               router.push(`/cotizaciones/${quote.id}`)
                             }
-                            title="Ver"
+                            title={tCommon('view')}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -586,10 +590,10 @@ export default function CotizacionesPage() {
                             onClick={() =>
                               router.push(`/cotizaciones/${quote.id}`)
                             }
-                            title="Revisar cambios solicitados"
+                            title={t('review')}
                           >
                             <Eye className="h-4 w-4 mr-1" />
-                            Revisar
+                            {t('review')}
                           </Button>
                         )}
                         {(quote.status === 'APPROVED' ||
@@ -600,14 +604,14 @@ export default function CotizacionesPage() {
                             className="text-purple-400 hover:text-purple-300"
                             onClick={() => handleConvert(quote.id)}
                             disabled={actionLoading === quote.id}
-                            title="Convertir a factura"
+                            title={t('convertToInvoice')}
                           >
                             {actionLoading === quote.id ? (
                               <Loader2 className="h-4 w-4 animate-spin mr-1" />
                             ) : (
                               <ArrowRight className="h-4 w-4 mr-1" />
                             )}
-                            Facturar
+                            {t('convertToInvoice')}
                           </Button>
                         )}
                         {quote.status === 'CONVERTED' &&
@@ -621,9 +625,9 @@ export default function CotizacionesPage() {
                                   `/facturas/${quote.convertedToInvoiceId}`,
                                 )
                               }
-                              title="Ver factura"
+                              title={t('viewInvoice')}
                             >
-                              Ver Factura
+                              {t('viewInvoice')}
                               <ArrowRight className="h-4 w-4 ml-1" />
                             </Button>
                           )}
@@ -637,7 +641,7 @@ export default function CotizacionesPage() {
                             onClick={() =>
                               router.push(`/cotizaciones/${quote.id}`)
                             }
-                            title="Ver"
+                            title={tCommon('view')}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -670,11 +674,9 @@ export default function CotizacionesPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Cotizacion</DialogTitle>
+            <DialogTitle>{t('deleteQuote')}</DialogTitle>
             <DialogDescription>
-              Estas seguro de que deseas eliminar la cotizacion{' '}
-              <strong>{deleteConfirm?.quoteNumber}</strong>? Esta accion no
-              se puede deshacer.
+              {t('deleteConfirm', { number: deleteConfirm?.quoteNumber ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -682,7 +684,7 @@ export default function CotizacionesPage() {
               variant="ghost"
               onClick={() => setDeleteConfirm(null)}
             >
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -694,7 +696,7 @@ export default function CotizacionesPage() {
               ) : (
                 <Trash2 className="h-4 w-4 mr-2" />
               )}
-              Eliminar
+              {tCommon('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

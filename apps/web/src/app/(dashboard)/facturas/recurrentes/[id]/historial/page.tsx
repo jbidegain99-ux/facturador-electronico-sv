@@ -12,6 +12,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
 import { formatDate } from '@/lib/utils';
 import { ArrowLeft, History, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface HistoryEntry {
   id: string;
@@ -43,6 +44,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function HistorialRecurrentePage() {
+  const t = useTranslations('recurring');
+  const tCommon = useTranslations('common');
   const params = useParams();
   const templateId = params.id as string;
   const toast = useToast();
@@ -77,10 +80,10 @@ export default function HistorialRecurrentePage() {
 
       if (!res.ok) {
         if (res.status === 404) {
-          setFetchError('Historial no disponible. El servicio de facturas recurrentes no esta habilitado.');
+          setFetchError(t('historyUnavailable'));
           return;
         }
-        throw new Error(`Error al cargar historial (${res.status})`);
+        throw new Error(`Error (${res.status})`);
       }
 
       const data: HistoryResponse = await res.json();
@@ -95,7 +98,7 @@ export default function HistorialRecurrentePage() {
         setStats({ success, failed, total: data.total });
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error al cargar historial';
+      const message = err instanceof Error ? err.message : tCommon('error');
       setFetchError(message);
       toastRef.current.error(message);
     } finally {
@@ -124,10 +127,10 @@ export default function HistorialRecurrentePage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <History className="h-6 w-6" />
-            Historial de Ejecuciones
+            {t('historyTitle')}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Registro completo de facturas generadas por este template
+            {t('historySubtitle')}
           </p>
         </div>
       </div>
@@ -137,19 +140,19 @@ export default function HistorialRecurrentePage() {
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold">{stats.total}</p>
-            <p className="text-sm text-muted-foreground">Total Ejecuciones</p>
+            <p className="text-sm text-muted-foreground">{t('totalExecutions')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-green-600">{stats.success}</p>
-            <p className="text-sm text-muted-foreground">Exitosas</p>
+            <p className="text-sm text-muted-foreground">{t('successful')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-red-600">{stats.failed}</p>
-            <p className="text-sm text-muted-foreground">Fallidas</p>
+            <p className="text-sm text-muted-foreground">{t('failed')}</p>
           </CardContent>
         </Card>
       </div>
@@ -158,7 +161,7 @@ export default function HistorialRecurrentePage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Ejecuciones</CardTitle>
+            <CardTitle className="text-lg">{t('executionsLabel')}</CardTitle>
             <PageSizeSelector value={limit} onChange={handleLimitChange} />
           </div>
         </CardHeader>
@@ -169,22 +172,22 @@ export default function HistorialRecurrentePage() {
             <div className="text-center py-12">
               <p className="text-muted-foreground">{fetchError}</p>
               <Button variant="outline" className="mt-4" onClick={fetchHistory}>
-                Reintentar
+                {tCommon('retry')}
               </Button>
             </div>
           ) : history.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              No hay ejecuciones registradas
+              {t('noExecutions')}
             </div>
           ) : (
             <>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>DTE Generado</TableHead>
-                    <TableHead>Error</TableHead>
+                    <TableHead>{tCommon('date')}</TableHead>
+                    <TableHead>{tCommon('status')}</TableHead>
+                    <TableHead>{t('dteGenerated')}</TableHead>
+                    <TableHead>{tCommon('error')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -207,7 +210,7 @@ export default function HistorialRecurrentePage() {
                             href="/facturas"
                             className="text-primary hover:underline text-sm"
                           >
-                            Ver Factura
+                            {t('viewInvoice')}
                           </Link>
                         ) : (
                           <span className="text-muted-foreground text-sm">-</span>

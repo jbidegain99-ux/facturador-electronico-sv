@@ -2,9 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { FacturoLogo } from '@/components/brand';
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,12 +27,12 @@ export default function ForgotPasswordPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Error al enviar el correo');
+        throw new Error(data.message || t('sendError'));
       }
 
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al enviar el correo');
+      setError(err instanceof Error ? err.message : t('sendError'));
     } finally {
       setLoading(false);
     }
@@ -43,17 +46,17 @@ export default function ForgotPasswordPage() {
             <FacturoLogo variant="full" size="lg" />
           </div>
           <div className="rounded-md bg-green-50 border border-green-200 p-6 text-center">
-            <h2 className="text-lg font-semibold text-green-800 mb-2">Correo Enviado</h2>
+            <h2 className="text-lg font-semibold text-green-800 mb-2">{t('emailSent')}</h2>
             <p className="text-sm text-green-700">
-              Si el correo <strong>{email}</strong> está registrado, recibirás un enlace para restablecer tu contraseña.
+              {t('emailSentDesc', { email })}
             </p>
             <p className="text-sm text-green-600 mt-4">
-              Revisa tu bandeja de entrada y la carpeta de spam.
+              {t('checkInbox')}
             </p>
           </div>
           <p className="mt-6 text-center text-sm text-muted-foreground">
             <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-              Volver al inicio de sesión
+              {t('backToLogin')}
             </Link>
           </p>
         </div>
@@ -69,10 +72,10 @@ export default function ForgotPasswordPage() {
         </div>
 
         <h2 className="text-center text-2xl font-bold leading-9 tracking-tight text-foreground">
-          Recuperar Contraseña
+          {t('forgotPasswordTitle')}
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+          {t('forgotPasswordDesc')}
         </p>
       </div>
 
@@ -86,7 +89,7 @@ export default function ForgotPasswordPage() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium leading-6 text-foreground">
-              Correo electrónico
+              {t('emailLabel')}
             </label>
             <div className="mt-2">
               <input
@@ -109,20 +112,20 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="flex w-full justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 transition-all hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)]"
             >
-              {loading ? 'Enviando...' : 'Enviar Enlace de Recuperación'}
+              {loading ? tCommon('sending') : t('sendResetLink')}
             </button>
           </div>
         </form>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
           <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-            Volver al inicio de sesión
+            {t('backToLogin')}
           </Link>
         </p>
 
         <div className="mt-12 pt-6 border-t border-border">
           <p className="text-center text-xs text-muted-foreground">
-            powered by <span className="font-medium text-foreground/70">Republicode</span>
+            {tCommon('poweredBy')}
           </p>
         </div>
       </div>

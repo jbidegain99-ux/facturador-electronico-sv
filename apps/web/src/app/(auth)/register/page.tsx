@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { MaskedInput } from '@/components/ui/masked-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HelpCircle } from 'lucide-react';
@@ -395,6 +396,8 @@ function CharCounter({ length, max }: { length: number; max: number }) {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -454,14 +457,14 @@ export default function RegisterPage() {
     setError('');
 
     if (formData.adminPassword !== formData.adminPasswordConfirm) {
-      setError('Las contraseñas no coinciden');
+      setError(t('passwordMismatch'));
       setLoading(false);
       return;
     }
 
     // Validate empresa and admin emails are different
     if (formData.correo.toLowerCase().trim() === formData.adminEmail.toLowerCase().trim()) {
-      setError('El correo de la empresa y el correo del administrador deben ser diferentes');
+      setError(t('emailDifferent'));
       setLoading(false);
       return;
     }
@@ -500,13 +503,13 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Error al registrar');
+        throw new Error(data.message || t('registerError'));
       }
 
       setSuccess(true);
       setTimeout(() => router.push('/login'), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al registrar');
+      setError(err instanceof Error ? err.message : t('registerError'));
     } finally {
       setLoading(false);
     }
@@ -518,7 +521,7 @@ export default function RegisterPage() {
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="rounded-md bg-green-50 p-4">
             <p className="text-center text-green-700">
-              Registro exitoso! Redirigiendo al login...
+              {t('registerSuccess')}
             </p>
           </div>
         </div>
@@ -530,10 +533,10 @@ export default function RegisterPage() {
     <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
         <h2 className="mt-6 text-xl sm:text-2xl font-bold leading-9 tracking-tight text-gray-900 text-center sm:text-left">
-          Registrar Empresa
+          {t('registerTitle')}
         </h2>
         <p className="mt-2 text-sm sm:text-base text-gray-600 text-center sm:text-left">
-          Complete los datos de su empresa para comenzar a facturar
+          {t('registerSubtitle')}
         </p>
       </div>
 
@@ -547,12 +550,12 @@ export default function RegisterPage() {
 
           {/* Datos de la Empresa */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Datos de la Empresa</h3>
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">{t('companyData')}</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <div className="flex justify-between items-center">
                   <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
-                    Razón Social *
+                    {t('businessName')} *
                   </label>
                   <CharCounter length={formData.nombre.length} max={200} />
                 </div>
@@ -569,7 +572,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="nombreComercial" className="block text-sm font-medium text-gray-700">
-                  Nombre Comercial
+                  {t('tradeName')}
                 </label>
                 <input
                   type="text"
@@ -614,7 +617,7 @@ export default function RegisterPage() {
               <div className="sm:col-span-2">
                 <div className="flex items-center gap-2">
                   <label htmlFor="actividadEcon" className="block text-sm font-medium text-gray-700">
-                    Actividad Económica *
+                    {t('economicActivity')} *
                   </label>
                   <TooltipProvider>
                     <Tooltip>
@@ -623,8 +626,7 @@ export default function RegisterPage() {
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className="max-w-xs">
-                          Seleccione la actividad económica principal de su empresa según
-                          la clasificación del Ministerio de Hacienda de El Salvador.
+                          {t('activityTooltip')}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -638,7 +640,7 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 >
-                  <option value="">Seleccione una actividad</option>
+                  <option value="">{t('selectActivity')}</option>
                   {ACTIVIDADES_ECONOMICAS.map((act) => (
                     <option key={act.codigo} value={act.codigo}>
                       {act.codigo} - {act.descripcion}
@@ -648,7 +650,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
-                  Teléfono *
+                  {tCommon('phone')} *
                 </label>
                 <MaskedInput
                   mask="9999-9999"
@@ -663,7 +665,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="correo" className="block text-sm font-medium text-gray-700">
-                  Correo de la Empresa *
+                  {t('companyEmail')} *
                 </label>
                 <input
                   type="email"
@@ -681,11 +683,11 @@ export default function RegisterPage() {
 
           {/* Direccion */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Dirección</h3>
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">{t('companyAddress')}</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="departamento" className="block text-sm font-medium text-gray-700">
-                  Departamento *
+                  {t('department')} *
                 </label>
                 <select
                   name="departamento"
@@ -695,7 +697,7 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
                 >
-                  <option value="">Seleccione un departamento</option>
+                  <option value="">{t('selectDepartment')}</option>
                   {DEPARTAMENTOS.map((dep) => (
                     <option key={dep.codigo} value={dep.codigo}>
                       {dep.nombre}
@@ -705,7 +707,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="municipio" className="block text-sm font-medium text-gray-700">
-                  Municipio *
+                  {t('municipality')} *
                 </label>
                 <select
                   name="municipio"
@@ -717,7 +719,7 @@ export default function RegisterPage() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900 disabled:bg-gray-100"
                 >
                   <option value="">
-                    {formData.departamento ? 'Seleccione un municipio' : 'Primero seleccione departamento'}
+                    {formData.departamento ? t('selectMunicipality') : t('selectDepartmentFirst')}
                   </option>
                   {municipiosDisponibles.map((mun) => (
                     <option key={mun.codigo} value={mun.codigo}>
@@ -729,7 +731,7 @@ export default function RegisterPage() {
               <div className="sm:col-span-2">
                 <div className="flex justify-between items-center">
                   <label htmlFor="complemento" className="block text-sm font-medium text-gray-700">
-                    Dirección Completa *
+                    {t('fullAddress')} *
                   </label>
                   <CharCounter length={formData.complemento.length} max={500} />
                 </div>
@@ -739,7 +741,7 @@ export default function RegisterPage() {
                   id="complemento"
                   required
                   maxLength={500}
-                  placeholder="Calle, numero, colonia, etc."
+                  placeholder={t('addressPlaceholder')}
                   value={formData.complemento}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
@@ -750,11 +752,11 @@ export default function RegisterPage() {
 
           {/* Usuario Administrador */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Usuario Administrador</h3>
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">{t('adminUser')}</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="adminNombre" className="block text-sm font-medium text-gray-700">
-                  Nombre Completo *
+                  {t('fullName')} *
                 </label>
                 <input
                   type="text"
@@ -769,7 +771,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700">
-                  Correo Electrónico *
+                  {t('emailLabel')} *
                 </label>
                 <input
                   type="email"
@@ -784,7 +786,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700">
-                  Contraseña *
+                  {t('passwordLabel')} *
                 </label>
                 <input
                   type="password"
@@ -800,7 +802,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="adminPasswordConfirm" className="block text-sm font-medium text-gray-700">
-                  Confirmar Contraseña *
+                  {t('confirmPassword')} *
                 </label>
                 <input
                   type="password"
@@ -828,13 +830,13 @@ export default function RegisterPage() {
               required
             />
             <label htmlFor="acceptTerms" className="text-sm text-gray-600">
-              Acepto los{' '}
+              {t('acceptTerms')}{' '}
               <a href="/terminos" target="_blank" className="text-purple-600 hover:underline">
-                términos y condiciones
+                {t('termsAndConditions')}
               </a>
-              {' '}y la{' '}
+              {' '}{t('and')}{' '}
               <a href="/privacidad" target="_blank" className="text-purple-600 hover:underline">
-                política de privacidad
+                {t('privacyPolicy')}
               </a>
             </label>
           </div>
@@ -845,15 +847,15 @@ export default function RegisterPage() {
               disabled={loading || !acceptTerms}
               className="flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
             >
-              {loading ? 'Registrando...' : 'Registrar Empresa'}
+              {loading ? t('registering') : t('registerTitle')}
             </button>
           </div>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500">
-          Ya tienes cuenta?{' '}
+          {t('hasAccount')}{' '}
           <Link href="/login" className="font-semibold leading-6 text-primary hover:text-primary/80">
-            Iniciar Sesión
+            {t('loginTitle')}
           </Link>
         </p>
       </div>

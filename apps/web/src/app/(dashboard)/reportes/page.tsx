@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Skeleton, SkeletonCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
+import { useTranslations } from 'next-intl';
 
 interface StatsData {
   fecha: string;
@@ -64,6 +65,8 @@ interface SummaryStats {
 
 export default function ReportesPage() {
   const toast = useToast();
+  const t = useTranslations('reports');
+  const tCommon = useTranslations('common');
 
   const [dateRange, setDateRange] = React.useState<'7d' | '30d' | '90d' | 'custom'>('30d');
   const [startDate, setStartDate] = React.useState('');
@@ -147,7 +150,7 @@ export default function ReportesPage() {
   // Export to CSV
   const handleExportCSV = () => {
     try {
-      const headers = ['Fecha', 'Cantidad DTEs', 'Total Facturado'];
+      const headers = [tCommon('date'), 'DTEs', tCommon('total')];
       const rows = chartData.map((d) => [d.fecha, d.cantidad, d.total.toFixed(2)]);
       const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
 
@@ -158,9 +161,9 @@ export default function ReportesPage() {
       link.download = `reporte-ventas-${new Date().toISOString().split('T')[0]}.csv`;
       link.click();
       URL.revokeObjectURL(url);
-      toast.success('Reporte exportado correctamente');
+      toast.success(t('exportSuccess'));
     } catch (error) {
-      toast.error('Error al exportar el reporte');
+      toast.error(t('exportError'));
     }
   };
 
@@ -189,15 +192,15 @@ export default function ReportesPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <BarChart3 className="w-8 h-8 text-primary" />
-            Reportes y Analytics
+            {t('title')}
           </h1>
           <p className="text-muted-foreground">
-            Analiza el rendimiento de tu facturacion electronica
+            {t('subtitle')}
           </p>
         </div>
         <Button onClick={handleExportCSV} disabled={chartData.length === 0}>
           <Download className="mr-2 h-4 w-4" />
-          Exportar CSV
+          {t('exportCsv')}
         </Button>
       </div>
 
@@ -206,22 +209,22 @@ export default function ReportesPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Rango de Fechas
+            {t('dateRange')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4 items-end">
             <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Periodo</label>
-              <Select value={dateRange} onValueChange={(v: any) => setDateRange(v)}>
+              <label className="text-sm text-muted-foreground mb-1.5 block">{t('period')}</label>
+              <Select value={dateRange} onValueChange={(v) => setDateRange(v as '7d' | '30d' | '90d' | 'custom')}>
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="7d">Ultimos 7 dias</SelectItem>
-                  <SelectItem value="30d">Ultimos 30 dias</SelectItem>
-                  <SelectItem value="90d">Ultimos 90 dias</SelectItem>
-                  <SelectItem value="custom">Personalizado</SelectItem>
+                  <SelectItem value="7d">{t('last7days')}</SelectItem>
+                  <SelectItem value="30d">{t('last30days')}</SelectItem>
+                  <SelectItem value="90d">{t('last90days')}</SelectItem>
+                  <SelectItem value="custom">{t('custom')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -229,7 +232,7 @@ export default function ReportesPage() {
             {dateRange === 'custom' && (
               <>
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1.5 block">Desde</label>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">{t('from')}</label>
                   <Input
                     type="date"
                     value={startDate}
@@ -238,7 +241,7 @@ export default function ReportesPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1.5 block">Hasta</label>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">{t('to')}</label>
                   <Input
                     type="date"
                     value={endDate}
@@ -250,21 +253,21 @@ export default function ReportesPage() {
             )}
 
             <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Agrupar por</label>
-              <Select value={groupBy} onValueChange={(v: any) => setGroupBy(v)}>
+              <label className="text-sm text-muted-foreground mb-1.5 block">{t('groupBy')}</label>
+              <Select value={groupBy} onValueChange={(v) => setGroupBy(v as 'day' | 'week' | 'month')}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="day">Dia</SelectItem>
-                  <SelectItem value="week">Semana</SelectItem>
-                  <SelectItem value="month">Mes</SelectItem>
+                  <SelectItem value="day">{t('day')}</SelectItem>
+                  <SelectItem value="week">{t('week')}</SelectItem>
+                  <SelectItem value="month">{t('month')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <Button variant="outline" onClick={fetchData} disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Actualizar'}
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : tCommon('refresh')}
             </Button>
           </div>
         </CardContent>
@@ -350,7 +353,7 @@ export default function ReportesPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">DTEs Hoy</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dtesToday')}</CardTitle>
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -360,38 +363,38 @@ export default function ReportesPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">DTEs este Mes</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dtesMonth')}</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{summary.dtesMes}</div>
                   <p className="text-xs text-muted-foreground">
-                    {summary.dtesMesChange >= 0 ? '+' : ''}{summary.dtesMesChange}% vs mes anterior
+                    {t('vsLastMonth', { change: `${summary.dtesMesChange >= 0 ? '+' : ''}${summary.dtesMesChange}` })}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Facturado</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('totalBilled')}</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(summary.totalFacturado)}</div>
                   <p className="text-xs text-muted-foreground">
-                    {summary.totalFacturadoChange >= 0 ? '+' : ''}{summary.totalFacturadoChange}% vs mes anterior
+                    {t('vsLastMonth', { change: `${summary.totalFacturadoChange >= 0 ? '+' : ''}${summary.totalFacturadoChange}` })}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Rechazados</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('rejected')}</CardTitle>
                   <FileText className="h-4 w-4 text-destructive" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-destructive">{summary.rechazados}</div>
-                  <p className="text-xs text-muted-foreground">Requieren atencion</p>
+                  <p className="text-xs text-muted-foreground">{t('needAttention')}</p>
                 </CardContent>
               </Card>
             </div>
@@ -402,8 +405,8 @@ export default function ReportesPage() {
             {/* DTEs by Date Chart */}
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Volumen de DTEs</CardTitle>
-                <CardDescription>Cantidad de documentos emitidos por periodo</CardDescription>
+                <CardTitle>{t('dteVolume')}</CardTitle>
+                <CardDescription>{t('dteVolumeDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {chartData.length > 0 ? (
@@ -424,7 +427,7 @@ export default function ReportesPage() {
                   </div>
                 ) : (
                   <div className="h-64 flex items-center justify-center text-muted-foreground">
-                    No hay datos para el periodo seleccionado
+                    {t('noDataPeriod')}
                   </div>
                 )}
               </CardContent>
@@ -435,9 +438,9 @@ export default function ReportesPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="w-4 h-4" />
-                  Por Tipo de Documento
+                  {t('byDocType')}
                 </CardTitle>
-                <CardDescription>Distribucion de DTEs por tipo</CardDescription>
+                <CardDescription>{t('byDocTypeDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {typeStats.length > 0 ? (
@@ -499,7 +502,7 @@ export default function ReportesPage() {
                   </div>
                 ) : (
                   <div className="h-48 flex items-center justify-center text-muted-foreground">
-                    Sin datos
+                    {tCommon('noData')}
                   </div>
                 )}
               </CardContent>
@@ -508,8 +511,8 @@ export default function ReportesPage() {
             {/* Status Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Por Estado</CardTitle>
-                <CardDescription>Estado actual de los documentos</CardDescription>
+                <CardTitle>{t('byStatus')}</CardTitle>
+                <CardDescription>{t('byStatusDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {statusStats.length > 0 ? (
@@ -535,7 +538,7 @@ export default function ReportesPage() {
                   </div>
                 ) : (
                   <div className="h-48 flex items-center justify-center text-muted-foreground">
-                    Sin datos
+                    {tCommon('noData')}
                   </div>
                 )}
               </CardContent>
@@ -547,9 +550,9 @@ export default function ReportesPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                Top Clientes
+                {t('topClients')}
               </CardTitle>
-              <CardDescription>Clientes con mayor facturacion en el periodo</CardDescription>
+              <CardDescription>{t('topClientsDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {topClients.length > 0 ? (
@@ -576,7 +579,7 @@ export default function ReportesPage() {
                 </div>
               ) : (
                 <div className="h-32 flex items-center justify-center text-muted-foreground">
-                  Sin datos de clientes
+                  {t('noClientData')}
                 </div>
               )}
             </CardContent>

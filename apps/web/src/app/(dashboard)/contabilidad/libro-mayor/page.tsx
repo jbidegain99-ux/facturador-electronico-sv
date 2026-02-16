@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { ArrowLeft, Loader2, BookOpen, Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface PostableAccount {
   id: string;
@@ -48,6 +49,8 @@ function formatDate(dateStr: string): string {
 }
 
 export default function LibroMayorPage() {
+  const t = useTranslations('accounting');
+  const tCommon = useTranslations('common');
   const { features, loading: planLoading } = usePlanFeatures();
   const router = useRouter();
 
@@ -92,7 +95,7 @@ export default function LibroMayorPage() {
 
   const fetchLedger = async () => {
     if (!selectedAccountId) {
-      toastRef.current.error('Error', 'Selecciona una cuenta');
+      toastRef.current.error(tCommon('error'), t('selectAccountError'));
       return;
     }
 
@@ -113,10 +116,10 @@ export default function LibroMayorPage() {
         if (json) setLedger(json);
       } else {
         const json = await res.json().catch(() => ({}));
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al obtener libro mayor');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('ledgerError'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexion');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     } finally {
       setLoading(false);
     }
@@ -136,8 +139,8 @@ export default function LibroMayorPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Libro Mayor</h1>
-          <p className="text-muted-foreground">Movimientos detallados por cuenta</p>
+          <h1 className="text-2xl font-bold">{t('ledger')}</h1>
+          <p className="text-muted-foreground">{t('ledgerSubtitle')}</p>
         </div>
       </div>
 
@@ -145,20 +148,20 @@ export default function LibroMayorPage() {
       <div className="rounded-lg border bg-card p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
-            <label className="text-sm font-medium mb-1 block">Cuenta *</label>
+            <label className="text-sm font-medium mb-1 block">{t('accountRequired')}</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                placeholder="Buscar cuenta..."
+                placeholder={t('searchAccount')}
                 className="w-full rounded-md border bg-background pl-10 pr-4 py-2 text-sm mb-1"
               />
             </div>
             {loadingAccounts ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Cargando cuentas...
+                <Loader2 className="h-4 w-4 animate-spin" /> {t('loadingAccounts')}
               </div>
             ) : (
               <select
@@ -167,7 +170,7 @@ export default function LibroMayorPage() {
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                 size={Math.min(filteredAccounts.length + 1, 8)}
               >
-                <option value="">-- Seleccionar cuenta --</option>
+                <option value="">{t('selectAccountOption')}</option>
                 {filteredAccounts.map(a => (
                   <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
                 ))}
@@ -175,7 +178,7 @@ export default function LibroMayorPage() {
             )}
           </div>
           <div>
-            <label className="text-sm font-medium mb-1 block">Desde</label>
+            <label className="text-sm font-medium mb-1 block">{t('fromDate').replace(':', '')}</label>
             <input
               type="date"
               value={dateFrom}
@@ -184,7 +187,7 @@ export default function LibroMayorPage() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1 block">Hasta</label>
+            <label className="text-sm font-medium mb-1 block">{t('toDate').replace(':', '')}</label>
             <input
               type="date"
               value={dateTo}
@@ -200,7 +203,7 @@ export default function LibroMayorPage() {
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
-            Consultar
+            {t('query')}
           </button>
         </div>
       </div>
@@ -213,7 +216,7 @@ export default function LibroMayorPage() {
               {ledger.account.code} - {ledger.account.name}
             </h3>
             <p className="text-xs text-muted-foreground">
-              Saldo normal: {ledger.account.normalBalance === 'DEBIT' ? 'Deudor' : 'Acreedor'}
+              {t('normalBalanceLabel')}: {ledger.account.normalBalance === 'DEBIT' ? t('debitNature') : t('creditNature')}
               {dateFrom && ` | Desde: ${dateFrom}`}
               {dateTo && ` | Hasta: ${dateTo}`}
             </p>
@@ -221,23 +224,23 @@ export default function LibroMayorPage() {
 
           {ledger.entries.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No hay movimientos para esta cuenta en el periodo seleccionado</p>
+              <p>{t('noMovements')}</p>
             </div>
           ) : (
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Fecha</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">No. Partida</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Descripcion</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-muted-foreground">Debe</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-muted-foreground">Haber</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-muted-foreground">Saldo</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">{tCommon('date')}</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">{t('entryNumber')}</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">{tCommon('description')}</th>
+                  <th className="px-4 py-2 text-right text-sm font-medium text-muted-foreground">{t('debitCol')}</th>
+                  <th className="px-4 py-2 text-right text-sm font-medium text-muted-foreground">{t('creditColJournal')}</th>
+                  <th className="px-4 py-2 text-right text-sm font-medium text-muted-foreground">{t('balance')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-b bg-muted/10">
-                  <td colSpan={5} className="px-4 py-2 text-sm font-medium">Saldo Inicial</td>
+                  <td colSpan={5} className="px-4 py-2 text-sm font-medium">{t('openingBalance')}</td>
                   <td className="px-4 py-2 text-sm text-right font-mono font-medium">
                     {formatCurrency(ledger.openingBalance)}
                   </td>
@@ -261,7 +264,7 @@ export default function LibroMayorPage() {
               </tbody>
               <tfoot>
                 <tr className="border-t-2 font-semibold bg-muted/30">
-                  <td colSpan={3} className="px-4 py-2 text-sm text-right">Totales / Saldo Final:</td>
+                  <td colSpan={3} className="px-4 py-2 text-sm text-right">{t('closingBalance')}</td>
                   <td className="px-4 py-2 text-sm text-right font-mono">
                     {formatCurrency(ledger.entries.reduce((s, e) => s + e.debit, 0))}
                   </td>

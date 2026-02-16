@@ -13,6 +13,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 interface TicketDetail {
   id: string;
@@ -65,6 +66,8 @@ const priorityLabels: Record<string, string> = {
 };
 
 export default function TicketDetailPage() {
+  const ts = useTranslations('support');
+  const tCommon = useTranslations('common');
   const params = useParams();
   const router = useRouter();
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
@@ -91,7 +94,7 @@ export default function TicketDetailPage() {
       );
 
       if (!res.ok) {
-        throw new Error('Error al cargar ticket');
+        throw new Error(ts('ticketNotFound'));
       }
 
       const data: TicketDetail = await res.json();
@@ -126,11 +129,11 @@ export default function TicketDetailPage() {
         }
       );
 
-      if (!res.ok) throw new Error('Error al agregar comentario');
+      if (!res.ok) throw new Error(tCommon('error'));
       setNewComment('');
       fetchTicket();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al agregar comentario');
+      setError(err instanceof Error ? err.message : tCommon('error'));
     } finally {
       setAddingComment(false);
     }
@@ -170,10 +173,10 @@ export default function TicketDetailPage() {
     return (
       <div className="bg-card rounded-lg border p-6 text-center">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <p className="text-red-400">{error || 'Ticket no encontrado'}</p>
+        <p className="text-red-400">{error || ts('ticketNotFound')}</p>
         <Link href="/soporte">
           <Button variant="outline" className="mt-4">
-            Volver a Soporte
+            {ts('backToSupport')}
           </Button>
         </Link>
       </div>
@@ -198,10 +201,10 @@ export default function TicketDetailPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold">{ticket.ticketNumber}</h1>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(ticket.status)}`}>
-              {statusLabels[ticket.status]}
+              {({ PENDING: ts('statusPending'), ASSIGNED: ts('statusAssigned'), IN_PROGRESS: ts('statusInProgress'), WAITING_CUSTOMER: ts('statusWaiting'), RESOLVED: ts('statusResolved'), CLOSED: ts('statusClosed') } as Record<string, string>)[ticket.status]}
             </span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityBadge(ticket.priority)}`}>
-              {priorityLabels[ticket.priority]}
+              {({ LOW: ts('priorityLow'), MEDIUM: ts('priorityMedium'), HIGH: ts('priorityHigh'), URGENT: ts('priorityUrgent') } as Record<string, string>)[ticket.priority]}
             </span>
           </div>
           <p className="text-muted-foreground mt-1">{ticket.subject}</p>
@@ -213,9 +216,9 @@ export default function TicketDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Ticket Description */}
           <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-lg font-semibold mb-4">Descripcion</h3>
+            <h3 className="text-lg font-semibold mb-4">{ts('detailDesc')}</h3>
             <p className="text-muted-foreground whitespace-pre-wrap">
-              {ticket.description || 'Sin descripcion adicional'}
+              {ticket.description || ts('noDescription')}
             </p>
           </div>
 
@@ -224,7 +227,7 @@ export default function TicketDetailPage() {
             <div className="bg-card rounded-lg border p-6 border-green-500/20">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400" />
-                Resolucion
+                {ts('resolution')}
               </h3>
               <p className="text-muted-foreground whitespace-pre-wrap">
                 {ticket.resolution}
@@ -236,7 +239,7 @@ export default function TicketDetailPage() {
           <div className="bg-card rounded-lg border p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <MessageSquare className="w-5 h-5" />
-              Comentarios ({publicComments.length})
+              {ts('commentsSection')} ({publicComments.length})
             </h3>
 
             <div className="space-y-4 mb-6">
@@ -254,7 +257,7 @@ export default function TicketDetailPage() {
                         <span className="font-medium">{comment.author.nombre}</span>
                         {comment.author.rol === 'SUPER_ADMIN' && (
                           <span className="ml-2 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
-                            Soporte
+                            {ts('title')}
                           </span>
                         )}
                       </div>
@@ -274,7 +277,7 @@ export default function TicketDetailPage() {
               ))}
 
               {publicComments.length === 0 && (
-                <p className="text-muted-foreground text-center py-4">Sin comentarios aun</p>
+                <p className="text-muted-foreground text-center py-4">{ts('noComments')}</p>
               )}
             </div>
 
@@ -284,7 +287,7 @@ export default function TicketDetailPage() {
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Escribe un comentario o respuesta..."
+                  placeholder={ts('commentPlaceholder')}
                   rows={3}
                   className="block w-full rounded-lg border border-input bg-background py-2.5 px-4 text-foreground shadow-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-colors"
                 />
@@ -294,13 +297,13 @@ export default function TicketDetailPage() {
                     disabled={addingComment || !newComment.trim()}
                   >
                     <Send className="w-4 h-4 mr-2" />
-                    {addingComment ? 'Enviando...' : 'Enviar'}
+                    {addingComment ? tCommon('sending') : ts('send')}
                   </Button>
                 </div>
               </form>
             ) : (
               <div className="text-center py-3 text-sm text-muted-foreground bg-muted/30 rounded-lg">
-                Este ticket esta {ticket.status === 'RESOLVED' ? 'resuelto' : 'cerrado'}. Si necesitas mas ayuda, crea un nuevo ticket.
+                {ts('ticketClosed', { status: ticket.status === 'RESOLVED' ? ts('statusResolved').toLowerCase() : ts('statusClosed').toLowerCase() })}
               </div>
             )}
           </div>
@@ -310,22 +313,22 @@ export default function TicketDetailPage() {
         <div className="space-y-6">
           {/* Ticket Info */}
           <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-lg font-semibold mb-4">Informacion</h3>
+            <h3 className="text-lg font-semibold mb-4">{ts('info')}</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">Tipo</label>
-                <div className="font-medium">{typeLabels[ticket.type] || ticket.type}</div>
+                <label className="block text-sm text-muted-foreground mb-1">{ts('typeLabel')}</label>
+                <div className="font-medium">{({ EMAIL_CONFIG: ts('typeEmail'), TECHNICAL: ts('typeTechnical'), BILLING: ts('typeBilling'), GENERAL: ts('typeGeneral'), ONBOARDING: ts('typeOnboarding') } as Record<string, string>)[ticket.type] || ticket.type}</div>
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">Estado</label>
+                <label className="block text-sm text-muted-foreground mb-1">{tCommon('status')}</label>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(ticket.status)}`}>
-                  {statusLabels[ticket.status]}
+                  {({ PENDING: ts('statusPending'), ASSIGNED: ts('statusAssigned'), IN_PROGRESS: ts('statusInProgress'), WAITING_CUSTOMER: ts('statusWaiting'), RESOLVED: ts('statusResolved'), CLOSED: ts('statusClosed') } as Record<string, string>)[ticket.status]}
                 </span>
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">Prioridad</label>
+                <label className="block text-sm text-muted-foreground mb-1">{ts('priorityLabel')}</label>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityBadge(ticket.priority)}`}>
-                  {priorityLabels[ticket.priority]}
+                  {({ LOW: ts('priorityLow'), MEDIUM: ts('priorityMedium'), HIGH: ts('priorityHigh'), URGENT: ts('priorityUrgent') } as Record<string, string>)[ticket.priority]}
                 </span>
               </div>
             </div>
@@ -335,11 +338,11 @@ export default function TicketDetailPage() {
           <div className="bg-card rounded-lg border p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Fechas
+              {ts('datesSection')}
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Creado</span>
+                <span className="text-muted-foreground">{ts('createdAt')}</span>
                 <span>
                   {new Date(ticket.createdAt).toLocaleDateString('es', {
                     day: '2-digit',
@@ -349,7 +352,7 @@ export default function TicketDetailPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Actualizado</span>
+                <span className="text-muted-foreground">{ts('updatedAt')}</span>
                 <span>
                   {new Date(ticket.updatedAt).toLocaleDateString('es', {
                     day: '2-digit',
@@ -360,7 +363,7 @@ export default function TicketDetailPage() {
               </div>
               {ticket.resolvedAt && (
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Resuelto</span>
+                  <span className="text-muted-foreground">{ts('resolvedAt')}</span>
                   <span>
                     {new Date(ticket.resolvedAt).toLocaleDateString('es', {
                       day: '2-digit',
@@ -378,10 +381,10 @@ export default function TicketDetailPage() {
             <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
               <div className="flex items-center gap-2 text-orange-400 mb-2">
                 <Clock className="w-4 h-4" />
-                <span className="font-medium text-sm">Esperando tu respuesta</span>
+                <span className="font-medium text-sm">{ts('waitingResponse')}</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Nuestro equipo necesita mas informacion para resolver tu caso. Agrega un comentario con los detalles solicitados.
+                {ts('waitingResponseDesc')}
               </p>
             </div>
           )}

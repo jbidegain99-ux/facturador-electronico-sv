@@ -33,6 +33,7 @@ import { FavoritosPanel } from '@/components/facturas/favoritos-panel';
 import { useTemplatesStore, InvoiceTemplate, FavoriteItem } from '@/store/templates';
 import { useKeyboardShortcuts, getShortcutDisplay } from '@/hooks/use-keyboard-shortcuts';
 import { useToast } from '@/components/ui/toast';
+import { useTranslations } from 'next-intl';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Cliente, ItemFactura } from '@/types';
 
@@ -96,6 +97,8 @@ async function trackCatalogUsage(catalogIds: string[]) {
 // Component
 // ════════════════════════════════════════════════════════════════════
 export default function NuevaFacturaPage() {
+  const t = useTranslations('invoices');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { useTemplate, useFavorite } = useTemplatesStore();
@@ -198,9 +201,9 @@ export default function NuevaFacturaPage() {
         const draft = JSON.parse(savedDraft);
         setFormState(draft);
         setHasDraft(false);
-        toastRef.current.success('Borrador recuperado correctamente');
+        toastRef.current.success(t('draftRecovered'));
       } catch {
-        toastRef.current.error('Error al recuperar el borrador');
+        toastRef.current.error(t('draftRecoverError'));
       }
     }
   };
@@ -208,12 +211,12 @@ export default function NuevaFacturaPage() {
   const handleDiscardDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
     setHasDraft(false);
-    toastRef.current.info('Borrador descartado');
+    toastRef.current.info(t('draftDiscarded'));
   };
 
   const handleSaveDraft = () => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(formState));
-    toastRef.current.success('Borrador guardado correctamente');
+    toastRef.current.success(t('draftSaved'));
   };
 
   // ── Template handler ─────────────────────────────────────────────
@@ -233,7 +236,7 @@ export default function NuevaFacturaPage() {
       condicionPago: usedTemplate.condicionPago,
     });
 
-    toastRef.current.success(`Plantilla "${template.name}" aplicada`);
+    toastRef.current.success(t('templateApplied', { name: template.name }));
   };
 
   // ── Favorite handler ─────────────────────────────────────────────
@@ -260,7 +263,7 @@ export default function NuevaFacturaPage() {
     };
 
     updateForm('items', [...items, newItem]);
-    toastRef.current.success(`"${favorite.descripcion}" agregado a la factura`);
+    toastRef.current.success(t('favoriteAdded', { name: favorite.descripcion }));
   };
 
   // ── Catalog item handler ─────────────────────────────────────────
@@ -288,7 +291,7 @@ export default function NuevaFacturaPage() {
 
     updateForm('items', [...items, newItem]);
     setCatalogRefs((prev) => [...prev, { itemId, catalogId: catalogItem.id }]);
-    toastRef.current.success(`"${catalogItem.name}" agregado a la factura`);
+    toastRef.current.success(t('catalogItemAdded', { name: catalogItem.name }));
   };
 
   // ── Duplicate from URL params ────────────────────────────────────
@@ -346,15 +349,13 @@ export default function NuevaFacturaPage() {
             items: duplicatedItems,
             condicionPago: '01',
           });
-          toastRef.current.success(
-            'Factura duplicada - selecciona un cliente para continuar'
-          );
+          toastRef.current.success(t('duplicateMsg'));
         } catch {
-          toastRef.current.error('Error al cargar los datos de la factura');
+          toastRef.current.error(t('loadDuplicateError'));
         }
       }
     } catch {
-      toastRef.current.error('No se pudo cargar la factura para duplicar');
+      toastRef.current.error(t('cantLoadDuplicate'));
     }
   };
 
@@ -364,19 +365,19 @@ export default function NuevaFacturaPage() {
 
     if (tipoDte === '03') {
       if (!cliente) {
-        newErrors.cliente = 'Selecciona un cliente para Credito Fiscal';
+        newErrors.cliente = t('selectClientCcf');
       } else if (!cliente.nrc) {
-        newErrors.cliente = 'El cliente debe tener NRC para Credito Fiscal';
+        newErrors.cliente = t('clientNeedNrc');
       }
     }
 
     if (items.length === 0) {
-      newErrors.items = 'Agrega al menos un item a la factura';
+      newErrors.items = t('addItems');
     }
 
     const invalidItems = items.filter((i) => i.precioUnitario <= 0);
     if (invalidItems.length > 0) {
-      newErrors.items = 'Todos los items deben tener precio mayor a 0';
+      newErrors.items = t('itemsPriceZero');
     }
 
     setErrors(newErrors);
@@ -399,9 +400,7 @@ export default function NuevaFacturaPage() {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error(
-          'No hay sesion activa. Por favor inicia sesion nuevamente.'
-        );
+        throw new Error(t('noSessionLogin'));
       }
 
       const getSubtotal = () => items.reduce((sum, i) => sum + i.subtotal, 0);
@@ -533,7 +532,7 @@ export default function NuevaFacturaPage() {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : 'Error desconocido al emitir la factura';
+          : t('unknownError');
       setErrors({ submit: errorMessage });
       toastRef.current.error(errorMessage);
     } finally {
@@ -545,9 +544,7 @@ export default function NuevaFacturaPage() {
   const handleClienteCreated = (newCliente: Cliente) => {
     updateForm('cliente', newCliente);
     setShowNuevoCliente(false);
-    toastRef.current.success(
-      `Cliente "${newCliente.nombre}" creado y seleccionado`
-    );
+    toastRef.current.success(t('clientCreated', { name: newCliente.nombre }));
   };
 
   // ── Post-success handlers ────────────────────────────────────────
@@ -578,16 +575,16 @@ export default function NuevaFacturaPage() {
 
           <div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Factura Emitida
+              {t('invoiceEmitted')}
             </h1>
             <p className="text-muted-foreground">
-              Tu documento ha sido procesado exitosamente
+              {t('invoiceEmittedDesc')}
             </p>
           </div>
 
           <div className="glass-card p-4 text-left">
             <div className="text-sm text-muted-foreground mb-1">
-              Numero de Control
+              {t('controlNumber')}
             </div>
             <code className="text-xs text-primary break-all">
               {successData.numeroControl}
@@ -601,10 +598,10 @@ export default function NuevaFacturaPage() {
               className="btn-secondary"
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Nueva Factura
+              {t('newInvoiceBtn')}
             </Button>
             <Button onClick={handleViewInvoice} className="btn-primary">
-              Ver Detalle
+              {t('seeDetail')}
             </Button>
           </div>
         </div>
@@ -627,15 +624,15 @@ export default function NuevaFacturaPage() {
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Volver
+            {tCommon('back')}
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <FileText className="w-6 h-6 text-primary" />
-              Nueva Factura
+              {t('createTitle')}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Crea y emite documentos tributarios electronicos
+              {t('createSubtitle')}
             </p>
           </div>
         </div>
@@ -649,12 +646,12 @@ export default function NuevaFacturaPage() {
           {isEmitting ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Emitiendo...
+              {t('emitting')}
             </>
           ) : (
             <>
               <Send className="w-4 h-4 mr-2" />
-              Emitir
+              {t('emit')}
             </>
           )}
         </Button>
@@ -666,7 +663,7 @@ export default function NuevaFacturaPage() {
           {/* Tipo DTE */}
           <div className="flex items-center gap-3">
             <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-              Tipo:
+              {t('typeLabel')}
             </label>
             <div className="flex gap-2">
               <button
@@ -678,7 +675,7 @@ export default function NuevaFacturaPage() {
                     : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                 )}
               >
-                Factura (01)
+                {t('invoiceType')}
               </button>
               <button
                 onClick={() => updateForm('tipoDte', '03')}
@@ -689,7 +686,7 @@ export default function NuevaFacturaPage() {
                     : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                 )}
               >
-                Credito Fiscal (03)
+                {t('ccfType')}
               </button>
             </div>
           </div>
@@ -700,7 +697,7 @@ export default function NuevaFacturaPage() {
           {/* Condicion de pago */}
           <div className="flex items-center gap-3">
             <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-              Condicion:
+              {t('conditionLabel')}
             </label>
             <Select
               value={condicionPago}
@@ -728,23 +725,23 @@ export default function NuevaFacturaPage() {
             <Save className="w-5 h-5 text-warning" />
             <div>
               <p className="text-sm font-medium text-foreground">
-                Tienes un borrador guardado
+                {t('hasDraft')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Se guardo automaticamente antes de salir
+                {t('draftAutoSave')}
               </p>
             </div>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={handleDiscardDraft}>
-              Descartar
+              {t('discard')}
             </Button>
             <Button
               size="sm"
               onClick={handleLoadDraft}
               className="btn-primary"
             >
-              Recuperar
+              {t('recover')}
             </Button>
           </div>
         </div>
@@ -765,11 +762,11 @@ export default function NuevaFacturaPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                Cliente / Receptor
+                {t('clientSection')}
               </h2>
               {tipoDte === '03' && !cliente && (
                 <span className="text-xs text-destructive">
-                  * Requerido para CCF
+                  * {t('requiredForCcf')}
                 </span>
               )}
             </div>
@@ -789,7 +786,7 @@ export default function NuevaFacturaPage() {
           {/* Items section */}
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Items de la Factura
+              {t('itemsSection')}
             </h2>
 
             <CatalogSearch onSelect={handleCatalogSelect} />
@@ -812,7 +809,7 @@ export default function NuevaFacturaPage() {
             <div className="glass-card p-5 space-y-4">
               <div className="flex items-center gap-2 pb-3 border-b border-border">
                 <Calculator className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Resumen</h3>
+                <h3 className="font-semibold text-foreground">{t('summary')}</h3>
                 {items.length > 0 && (
                   <span className="ml-auto text-xs text-muted-foreground">
                     {items.length} {items.length === 1 ? 'item' : 'items'}
@@ -822,7 +819,7 @@ export default function NuevaFacturaPage() {
 
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="text-muted-foreground">{t('subtotalLabel')}</span>
                   <span className="text-foreground font-medium">
                     {formatCurrency(subtotalGravado)}
                   </span>
@@ -830,7 +827,7 @@ export default function NuevaFacturaPage() {
 
                 {totalDescuentos > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Descuentos:</span>
+                    <span className="text-muted-foreground">{t('discountsLabel')}</span>
                     <span className="text-warning font-medium">
                       -{formatCurrency(totalDescuentos)}
                     </span>
@@ -838,7 +835,7 @@ export default function NuevaFacturaPage() {
                 )}
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">IVA (13%):</span>
+                  <span className="text-muted-foreground">{t('ivaLabel')}</span>
                   <span className="text-foreground font-medium">
                     {formatCurrency(totalIva)}
                   </span>
@@ -848,7 +845,7 @@ export default function NuevaFacturaPage() {
 
                 <div className="flex justify-between items-center pt-1">
                   <span className="text-lg font-semibold text-foreground">
-                    TOTAL:
+                    {t('totalLabel')}
                   </span>
                   <span className="text-2xl font-bold text-primary">
                     {formatCurrency(totalPagar)}
@@ -867,12 +864,12 @@ export default function NuevaFacturaPage() {
                 {isEmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Emitiendo...
+                    {t('emitting')}
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    Emitir Factura
+                    {t('emitInvoice')}
                   </>
                 )}
               </Button>
@@ -885,7 +882,7 @@ export default function NuevaFacturaPage() {
                   disabled={items.length === 0}
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  Preview
+                  {t('preview')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -894,7 +891,7 @@ export default function NuevaFacturaPage() {
                   disabled={items.length === 0 && !cliente}
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  Borrador
+                  {t('draft')}
                 </Button>
               </div>
 
@@ -905,7 +902,7 @@ export default function NuevaFacturaPage() {
                 disabled={items.length === 0}
               >
                 <Files className="w-4 h-4 mr-2" />
-                Guardar como plantilla
+                {t('saveTemplate')}
               </Button>
             </div>
 
@@ -921,19 +918,19 @@ export default function NuevaFacturaPage() {
                 <kbd className="px-1.5 py-0.5 rounded bg-white/5 font-mono">
                   {getShortcutDisplay('mod+enter')}
                 </kbd>{' '}
-                Emitir
+                {t('emit')}
               </span>
               <span>
                 <kbd className="px-1.5 py-0.5 rounded bg-white/5 font-mono">
                   {getShortcutDisplay('mod+s')}
                 </kbd>{' '}
-                Borrador
+                {t('draft')}
               </span>
               <span>
                 <kbd className="px-1.5 py-0.5 rounded bg-white/5 font-mono">
                   {getShortcutDisplay('mod+p')}
                 </kbd>{' '}
-                Preview
+                {t('preview')}
               </span>
             </div>
           </div>

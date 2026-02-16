@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
 import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle, FileUp } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 const NRC_PATTERN = /^\d{1,7}(-\d)?$/;
 const PHONE_PATTERN = /^\d{4}-\d{4}$/;
@@ -56,6 +57,8 @@ interface TenantData {
 }
 
 export default function ConfiguracionPage() {
+  const t = useTranslations('settings');
+  const tCommon = useTranslations('common');
   const { tenant, setTenant } = useAppStore();
   const [certificateStatus, setCertificateStatus] = React.useState<'loaded' | 'not_loaded'>('not_loaded');
   const [loading, setLoading] = React.useState(true);
@@ -81,7 +84,7 @@ export default function ConfiguracionPage() {
     const loadData = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        setError('No hay sesion activa');
+        setError(tCommon('noSession'));
         setLoading(false);
         return;
       }
@@ -105,7 +108,7 @@ export default function ConfiguracionPage() {
 
         if (!tenantRes.ok) {
           const errorData = await tenantRes.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Error al cargar datos');
+          throw new Error(errorData.message || t('loadError'));
         }
 
         const data: TenantData = await tenantRes.json();
@@ -128,7 +131,7 @@ export default function ConfiguracionPage() {
         }
       } catch (err) {
         console.error('Error loading tenant:', err);
-        setError(err instanceof Error ? err.message : 'Error al cargar configuracion');
+        setError(err instanceof Error ? err.message : t('configLoadError'));
       } finally {
         setLoading(false);
       }
@@ -140,7 +143,7 @@ export default function ConfiguracionPage() {
   const toggleDemoMode = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setError('No hay sesion activa');
+      setError(tCommon('noSession'));
       return;
     }
 
@@ -162,7 +165,7 @@ export default function ConfiguracionPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al cambiar modo demo');
+        throw new Error(errorData.message || t('demoModeError'));
       }
 
       const data = await res.json();
@@ -170,7 +173,7 @@ export default function ConfiguracionPage() {
       setSuccess(data.message);
     } catch (err) {
       console.error('Error toggling demo mode:', err);
-      setError(err instanceof Error ? err.message : 'Error al cambiar modo demo');
+      setError(err instanceof Error ? err.message : t('demoModeError'));
     } finally {
       setTogglingDemo(false);
     }
@@ -198,7 +201,7 @@ export default function ConfiguracionPage() {
   const handleSave = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setError('No hay sesion activa');
+      setError(tCommon('noSession'));
       return;
     }
 
@@ -213,7 +216,7 @@ export default function ConfiguracionPage() {
     const activeErrors = Object.entries(errors).filter(([, v]) => v);
     if (activeErrors.length > 0) {
       setFieldErrors(errors);
-      setError('Corrija los errores en el formulario');
+      setError(t('formErrors'));
       return;
     }
 
@@ -239,15 +242,15 @@ export default function ConfiguracionPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al guardar');
+        throw new Error(errorData.message || t('saveError'));
       }
 
       const updatedTenant = await res.json();
       setTenant(updatedTenant);
-      setSuccess('Configuracion guardada exitosamente');
+      setSuccess(t('saveSuccess'));
     } catch (err) {
       console.error('Error saving tenant:', err);
-      setError(err instanceof Error ? err.message : 'Error al guardar configuracion');
+      setError(err instanceof Error ? err.message : t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -265,9 +268,9 @@ export default function ConfiguracionPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Configuracion</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground">
-          Configura los datos de tu empresa y credenciales del MH
+          {t('subtitle')}
         </p>
       </div>
 
@@ -289,15 +292,15 @@ export default function ConfiguracionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Datos de la Empresa
+              {t('companyData')}
             </CardTitle>
             <CardDescription>
-              Informacion del emisor para los documentos tributarios
+              {t('companyDataDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Nombre / Razon Social *</label>
+              <label className="text-sm font-medium">{t('nameLabel')} *</label>
               <Input
                 placeholder="Mi Empresa S.A. de C.V."
                 value={formData.nombre || ''}
@@ -317,10 +320,10 @@ export default function ConfiguracionPage() {
                   disabled
                   className="bg-muted"
                 />
-                <p className="text-xs text-muted-foreground">El NIT no se puede modificar</p>
+                <p className="text-xs text-muted-foreground">{t('nitReadonly')}</p>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">NRC</label>
+                <label className="text-sm font-medium">{t('nrcLabel')}</label>
                 <Input
                   placeholder="000000-0"
                   value={formData.nrc || ''}
@@ -333,7 +336,7 @@ export default function ConfiguracionPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Correo Electronico</label>
+              <label className="text-sm font-medium">{t('emailLabel')}</label>
               <Input
                 type="email"
                 placeholder="facturacion@empresa.com"
@@ -346,7 +349,7 @@ export default function ConfiguracionPage() {
               )}
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Telefono</label>
+              <label className="text-sm font-medium">{t('phoneLabel')}</label>
               <Input
                 placeholder="0000-0000"
                 value={formData.telefono || ''}
@@ -358,9 +361,9 @@ export default function ConfiguracionPage() {
               )}
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Direccion</label>
+              <label className="text-sm font-medium">{t('addressLabel')}</label>
               <Input
-                placeholder="Direccion completa del establecimiento"
+                placeholder={t('addressPlaceholder')}
                 value={formData.direccion?.complemento || ''}
                 onChange={(e) => handleDireccionChange('complemento', e.target.value)}
                 className={fieldErrors.complemento ? 'border-red-500' : ''}
@@ -377,33 +380,33 @@ export default function ConfiguracionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Key className="h-5 w-5" />
-              Credenciales del MH
+              {t('mhCredentials')}
             </CardTitle>
             <CardDescription>
-              Credenciales para autenticacion con el Ministerio de Hacienda
+              {t('mhCredentialsDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">NIT (Usuario)</label>
+              <label className="text-sm font-medium">{t('nitUser')}</label>
               <Input placeholder="0000000000000" />
-              <p className="text-xs text-muted-foreground">NIT sin guiones</p>
+              <p className="text-xs text-muted-foreground">{t('nitUserDesc')}</p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Password Privado</label>
+              <label className="text-sm font-medium">{t('mhPassword')}</label>
               <Input type="password" placeholder="********" />
               <p className="text-xs text-muted-foreground">
-                Contraseña proporcionada por el MH
+                {t('mhPasswordDesc')}
               </p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Ambiente</label>
+              <label className="text-sm font-medium">{tCommon('status')}</label>
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1">
-                  Pruebas
+                  {t('envTest')}
                 </Button>
                 <Button variant="default" className="flex-1">
-                  Produccion
+                  {t('envProd')}
                 </Button>
               </div>
             </div>
@@ -415,10 +418,10 @@ export default function ConfiguracionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5" />
-              Certificado Digital
+              {t('certificate')}
             </CardTitle>
             <CardDescription>
-              Certificado .p12 para firma de documentos electronicos
+              {t('certificateDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -430,9 +433,9 @@ export default function ConfiguracionPage() {
                       <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
-                      <p className="font-medium">Certificado cargado</p>
+                      <p className="font-medium">{t('certUploaded')}</p>
                       <p className="text-sm text-muted-foreground">
-                        certificado.p12 - Valido hasta: 31/12/2025
+                        certificado.p12 - {t('certValidUntil', { date: '31/12/2025' })}
                       </p>
                     </div>
                   </>
@@ -442,9 +445,9 @@ export default function ConfiguracionPage() {
                       <AlertCircle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
-                      <p className="font-medium">Sin certificado</p>
+                      <p className="font-medium">{t('noCert')}</p>
                       <p className="text-sm text-muted-foreground">
-                        Sube tu certificado .p12 para poder firmar documentos
+                        {t('noCertDesc')}
                       </p>
                     </div>
                   </>
@@ -462,7 +465,7 @@ export default function ConfiguracionPage() {
                   <Button variant="outline" asChild>
                     <span>
                       <Upload className="mr-2 h-4 w-4" />
-                      Subir Certificado
+                      {t('uploadCert')}
                     </span>
                   </Button>
                 </label>
@@ -470,7 +473,7 @@ export default function ConfiguracionPage() {
             </div>
             {certificateStatus === 'not_loaded' && (
               <div className="mt-4 space-y-2">
-                <label className="text-sm font-medium">Contraseña del Certificado</label>
+                <label className="text-sm font-medium">{t('certPassword')}</label>
                 <Input type="password" placeholder="********" />
               </div>
             )}
@@ -482,10 +485,10 @@ export default function ConfiguracionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
-              Configuracion de Email
+              {t('emailConfig')}
             </CardTitle>
             <CardDescription>
-              Configura el servicio de email para enviar facturas y DTEs a tus clientes
+              {t('emailConfigDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -496,9 +499,9 @@ export default function ConfiguracionPage() {
                     <Mail className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">Servicio de Email</p>
+                    <p className="font-medium">{t('emailService')}</p>
                     <p className="text-sm text-muted-foreground">
-                      SendGrid, Mailgun, Amazon SES, Microsoft 365, Gmail y mas
+                      SendGrid, Mailgun, Amazon SES, Microsoft 365, Gmail
                     </p>
                   </div>
                 </div>
@@ -513,11 +516,11 @@ export default function ConfiguracionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" />
-              Configuracion de Hacienda
-              <Badge className="ml-2 bg-primary/10 text-primary border-primary/20">Nuevo</Badge>
+              {t('haciendaConfig')}
+              <Badge className="ml-2 bg-primary/10 text-primary border-primary/20">{tCommon('new')}</Badge>
             </CardTitle>
             <CardDescription>
-              Configure su integracion con el Ministerio de Hacienda y ejecute las pruebas de acreditacion
+              {t('haciendaConfigDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -528,9 +531,9 @@ export default function ConfiguracionPage() {
                     <Building2 className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">Centro de Configuracion y Pruebas</p>
+                    <p className="font-medium">{t('configCenter')}</p>
                     <p className="text-sm text-muted-foreground">
-                      Certificados, credenciales API, ambiente de pruebas y produccion
+                      {t('haciendaConfigDesc')}
                     </p>
                   </div>
                 </div>
@@ -545,10 +548,10 @@ export default function ConfiguracionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Rocket className="h-5 w-5" />
-              Habilitacion con Hacienda
+              {t('haciendaOnboarding')}
             </CardTitle>
             <CardDescription>
-              Proceso guiado para convertirse en emisor autorizado de DTE
+              {t('haciendaOnboardingDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -559,9 +562,9 @@ export default function ConfiguracionPage() {
                     <Rocket className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">Wizard de Onboarding</p>
+                    <p className="font-medium">{t('onboardingWizard')}</p>
                     <p className="text-sm text-muted-foreground">
-                      13 pasos para habilitarse como emisor de documentos electronicos
+                      {t('haciendaOnboardingDesc')}
                     </p>
                   </div>
                 </div>
@@ -576,10 +579,10 @@ export default function ConfiguracionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileUp className="h-5 w-5" />
-              Migracion de Datos
+              {t('migration')}
             </CardTitle>
             <CardDescription>
-              Importa clientes desde archivos CSV para migrar datos de otros sistemas
+              {t('migrationDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -590,9 +593,9 @@ export default function ConfiguracionPage() {
                     <FileUp className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">Importar Datos</p>
+                    <p className="font-medium">{t('importData')}</p>
                     <p className="text-sm text-muted-foreground">
-                      Carga clientes desde CSV para comenzar a facturar rapidamente
+                      {t('migrationDesc')}
                     </p>
                   </div>
                 </div>
@@ -607,15 +610,15 @@ export default function ConfiguracionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className={`h-5 w-5 ${demoMode ? 'text-yellow-500' : ''}`} />
-              Modo Demo
+              {t('demoMode')}
               {demoMode && (
                 <Badge variant="outline" className="ml-2 border-yellow-500 text-yellow-500">
-                  Activo
+                  {tCommon('active')}
                 </Badge>
               )}
             </CardTitle>
             <CardDescription>
-              Prueba la plataforma sin conectar con el Ministerio de Hacienda
+              {t('demoModeDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -627,9 +630,9 @@ export default function ConfiguracionPage() {
                       <Sparkles className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-yellow-600 dark:text-yellow-400">Modo Demo Activo</p>
+                      <p className="font-medium text-yellow-600 dark:text-yellow-400">{t('demoActive')}</p>
                       <p className="text-sm text-muted-foreground">
-                        Las facturas se crean con datos simulados. No se envian a Hacienda.
+                        {t('demoActiveDesc')}
                       </p>
                     </div>
                   </>
@@ -639,9 +642,9 @@ export default function ConfiguracionPage() {
                       <XCircle className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <div>
-                      <p className="font-medium">Modo Demo Desactivado</p>
+                      <p className="font-medium">{t('demoInactive')}</p>
                       <p className="text-sm text-muted-foreground">
-                        Las facturas se envian al Ministerio de Hacienda en modo produccion.
+                        {t('demoInactiveDesc')}
                       </p>
                     </div>
                   </>
@@ -660,14 +663,13 @@ export default function ConfiguracionPage() {
                 ) : (
                   <Sparkles className="h-4 w-4 mr-2" />
                 )}
-                {demoMode ? 'Desactivar Demo' : 'Activar Demo'}
+                {demoMode ? t('deactivateDemo') : t('activateDemo')}
               </Button>
             </div>
             {demoMode && (
               <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                 <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                  <strong>Nota:</strong> En modo demo, las facturas se generan con un sello simulado y no son validas legalmente.
-                  Para emitir facturas reales, desactiva el modo demo y completa el proceso de habilitacion con Hacienda.
+                  {t('demoInfo')}
                 </p>
               </div>
             )}
@@ -681,10 +683,10 @@ export default function ConfiguracionPage() {
           {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Guardando...
+              {tCommon('saving')}
             </>
           ) : (
-            'Guardar Configuracion'
+            t('saveConfig')
           )}
         </Button>
       </div>

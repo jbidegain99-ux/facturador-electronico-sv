@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Shield, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function AdminSetupPage() {
   const router = useRouter();
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
   const [canBootstrap, setCanBootstrap] = useState<boolean | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,7 +29,7 @@ export default function AdminSetupPage() {
       const data = await res.json();
       setCanBootstrap(data.canBootstrap);
     } catch (err) {
-      setError('Error al verificar estado del sistema');
+      setError(t('checkSystemError'));
     } finally {
       setChecking(false);
     }
@@ -47,15 +50,15 @@ export default function AdminSetupPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || 'Error al crear administrador');
+        throw new Error(data.message || t('createAdminError'));
       }
 
-      setSuccess('Super Administrador creado exitosamente. Redirigiendo al login...');
+      setSuccess(t('superAdminCreated'));
       setTimeout(() => {
         router.push('/login');
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear administrador');
+      setError(err instanceof Error ? err.message : t('createAdminError'));
     } finally {
       setLoading(false);
     }
@@ -65,7 +68,7 @@ export default function AdminSetupPage() {
     return (
       <div className="flex min-h-screen flex-col justify-center items-center px-6 py-12">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="mt-4 text-gray-600">Verificando estado del sistema...</p>
+        <p className="mt-4 text-gray-600">{t('checkingSystem')}</p>
       </div>
     );
   }
@@ -77,15 +80,15 @@ export default function AdminSetupPage() {
           <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Sistema ya configurado</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('systemConfigured')}</h2>
           <p className="text-gray-600 mb-6">
-            Ya existe un Super Administrador. Para crear mas administradores, ingresa al panel de administracion.
+            {t('systemConfiguredDesc')}
           </p>
           <Link
             href="/login"
             className="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90"
           >
-            Ir al Login
+            {t('goToLogin')}
           </Link>
         </div>
       </div>
@@ -99,10 +102,10 @@ export default function AdminSetupPage() {
           <Shield className="w-8 h-8 text-blue-600" />
         </div>
         <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-          Configuracion Inicial
+          {t('adminSetupTitle')}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Crea el primer Super Administrador del sistema
+          {t('adminSetupSubtitle')}
         </p>
       </div>
 
@@ -125,7 +128,7 @@ export default function AdminSetupPage() {
 
             <div>
               <label htmlFor="nombre" className="block text-sm font-medium leading-6 text-gray-900">
-                Nombre completo
+                {t('fullName')}
               </label>
               <div className="mt-2">
                 <input
@@ -143,7 +146,7 @@ export default function AdminSetupPage() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
-                Correo electronico
+                {t('emailLabel')}
               </label>
               <div className="mt-2">
                 <input
@@ -162,7 +165,7 @@ export default function AdminSetupPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
-                Contrasena
+                {t('passwordLabel')}
               </label>
               <div className="mt-2">
                 <input
@@ -175,7 +178,7 @@ export default function AdminSetupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 px-3"
-                  placeholder="Minimo 8 caracteres"
+                  placeholder={t('minChars')}
                 />
               </div>
             </div>
@@ -186,14 +189,14 @@ export default function AdminSetupPage() {
                 disabled={loading || !!success}
                 className="flex w-full justify-center rounded-md bg-primary px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
               >
-                {loading ? 'Creando...' : 'Crear Super Administrador'}
+                {loading ? t('creating') : t('createSuperAdmin')}
               </button>
             </div>
           </form>
         </div>
 
         <p className="mt-6 text-center text-sm text-gray-500">
-          Este formulario solo funciona una vez. Despues de crear el primer administrador, deberas usar el panel de administracion.
+          {t('adminSetupNote')}
         </p>
       </div>
     </div>

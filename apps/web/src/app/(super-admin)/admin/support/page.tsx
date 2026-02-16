@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   Ticket,
   Search,
@@ -71,31 +72,10 @@ interface TicketsResponse {
   };
 }
 
-const typeLabels: Record<string, string> = {
-  EMAIL_CONFIG: 'Config. Email',
-  TECHNICAL: 'Tecnico',
-  BILLING: 'Facturacion',
-  GENERAL: 'General',
-  ONBOARDING: 'Onboarding',
-};
-
-const statusLabels: Record<string, string> = {
-  PENDING: 'Pendiente',
-  ASSIGNED: 'Asignado',
-  IN_PROGRESS: 'En Progreso',
-  WAITING_CUSTOMER: 'Esperando Cliente',
-  RESOLVED: 'Resuelto',
-  CLOSED: 'Cerrado',
-};
-
-const priorityLabels: Record<string, string> = {
-  LOW: 'Baja',
-  MEDIUM: 'Media',
-  HIGH: 'Alta',
-  URGENT: 'Urgente',
-};
-
 export default function SupportTicketsPage() {
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('common');
+  const tSupport = useTranslations('support');
   const router = useRouter();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [stats, setStats] = useState<TicketStats | null>(null);
@@ -162,14 +142,14 @@ export default function SupportTicketsPage() {
       );
 
       if (!res.ok) {
-        throw new Error('Error al cargar tickets');
+        throw new Error(t('loadTicketsError'));
       }
 
       const data: TicketsResponse = await res.json();
       setTickets(data.data);
       setTotalPages(data.meta.totalPages);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error');
+      setError(err instanceof Error ? err.message : tCommon('error'));
     } finally {
       setLoading(false);
     }
@@ -214,13 +194,37 @@ export default function SupportTicketsPage() {
     return badges[type] || 'bg-gray-500/20 text-gray-400';
   };
 
+  const typeLabels: Record<string, string> = {
+    EMAIL_CONFIG: tSupport('typeEmail'),
+    TECHNICAL: tSupport('typeTechnical'),
+    BILLING: tSupport('typeBilling'),
+    GENERAL: tSupport('typeGeneral'),
+    ONBOARDING: tSupport('typeOnboarding'),
+  };
+
+  const statusLabels: Record<string, string> = {
+    PENDING: tSupport('statusPending'),
+    ASSIGNED: tSupport('statusAssigned'),
+    IN_PROGRESS: tSupport('statusInProgress'),
+    WAITING_CUSTOMER: t('statusWaitingClient'),
+    RESOLVED: tSupport('statusResolved'),
+    CLOSED: tSupport('statusClosed'),
+  };
+
+  const priorityLabels: Record<string, string> = {
+    LOW: tSupport('priorityLow'),
+    MEDIUM: tSupport('priorityMedium'),
+    HIGH: tSupport('priorityHigh'),
+    URGENT: tSupport('priorityUrgent'),
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Tickets de Soporte</h1>
-          <p className="text-muted-foreground mt-1">Gestiona las solicitudes de soporte de las empresas</p>
+          <h1 className="text-3xl font-bold">{t('supportTitle')}</h1>
+          <p className="text-muted-foreground mt-1">{t('supportSubtitle')}</p>
         </div>
       </div>
 
@@ -234,7 +238,7 @@ export default function SupportTicketsPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-white">{stats.pending}</div>
-                <div className="text-sm text-muted-foreground">Pendientes</div>
+                <div className="text-sm text-muted-foreground">{tSupport('statsPending')}</div>
               </div>
             </div>
           </div>
@@ -245,7 +249,7 @@ export default function SupportTicketsPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-white">{stats.inProgress}</div>
-                <div className="text-sm text-muted-foreground">En Progreso</div>
+                <div className="text-sm text-muted-foreground">{tSupport('statsInProgress')}</div>
               </div>
             </div>
           </div>
@@ -256,7 +260,7 @@ export default function SupportTicketsPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-white">{stats.resolved}</div>
-                <div className="text-sm text-muted-foreground">Resueltos</div>
+                <div className="text-sm text-muted-foreground">{tSupport('statsResolved')}</div>
               </div>
             </div>
           </div>
@@ -267,7 +271,7 @@ export default function SupportTicketsPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
-                <div className="text-sm text-muted-foreground">Total</div>
+                <div className="text-sm text-muted-foreground">{t('totalLabel')}</div>
               </div>
             </div>
           </div>
@@ -277,12 +281,12 @@ export default function SupportTicketsPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setPage(1); }}>
         <TabsList>
-          <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsTrigger value="all">{tSupport('tabAll')}</TabsTrigger>
           <TabsTrigger value="pending">
-            Pendientes {stats && stats.pending > 0 && <span className="ml-1 px-1.5 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded-full">{stats.pending}</span>}
+            {tSupport('tabPending')} {stats && stats.pending > 0 && <span className="ml-1 px-1.5 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded-full">{stats.pending}</span>}
           </TabsTrigger>
-          <TabsTrigger value="in_progress">En Progreso</TabsTrigger>
-          <TabsTrigger value="resolved">Resueltos</TabsTrigger>
+          <TabsTrigger value="in_progress">{tSupport('tabInProgress')}</TabsTrigger>
+          <TabsTrigger value="resolved">{tSupport('tabResolved')}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -294,7 +298,7 @@ export default function SupportTicketsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Buscar por numero, asunto o empresa..."
+                placeholder={t('searchTickets')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="input-rc pl-10"
@@ -309,15 +313,15 @@ export default function SupportTicketsPage() {
             }}
           >
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Tipo" />
+              <SelectValue placeholder={tCommon('type')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Todos los tipos</SelectItem>
-              <SelectItem value="EMAIL_CONFIG">Config. Email</SelectItem>
-              <SelectItem value="TECHNICAL">Tecnico</SelectItem>
-              <SelectItem value="BILLING">Facturacion</SelectItem>
-              <SelectItem value="GENERAL">General</SelectItem>
-              <SelectItem value="ONBOARDING">Onboarding</SelectItem>
+              <SelectItem value="ALL">{t('allTypes')}</SelectItem>
+              <SelectItem value="EMAIL_CONFIG">{tSupport('typeEmail')}</SelectItem>
+              <SelectItem value="TECHNICAL">{tSupport('typeTechnical')}</SelectItem>
+              <SelectItem value="BILLING">{tSupport('typeBilling')}</SelectItem>
+              <SelectItem value="GENERAL">{tSupport('typeGeneral')}</SelectItem>
+              <SelectItem value="ONBOARDING">{tSupport('typeOnboarding')}</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -328,19 +332,19 @@ export default function SupportTicketsPage() {
             }}
           >
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Prioridad" />
+              <SelectValue placeholder={tSupport('priorityLabel')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Todas</SelectItem>
-              <SelectItem value="LOW">Baja</SelectItem>
-              <SelectItem value="MEDIUM">Media</SelectItem>
-              <SelectItem value="HIGH">Alta</SelectItem>
-              <SelectItem value="URGENT">Urgente</SelectItem>
+              <SelectItem value="ALL">{t('allPriorities')}</SelectItem>
+              <SelectItem value="LOW">{tSupport('priorityLow')}</SelectItem>
+              <SelectItem value="MEDIUM">{tSupport('priorityMedium')}</SelectItem>
+              <SelectItem value="HIGH">{tSupport('priorityHigh')}</SelectItem>
+              <SelectItem value="URGENT">{tSupport('priorityUrgent')}</SelectItem>
             </SelectContent>
           </Select>
           <button type="submit" className="btn-primary">
             <Filter className="w-4 h-4" />
-            Filtrar
+            {tCommon('filter')}
           </button>
         </form>
       </div>
@@ -363,13 +367,13 @@ export default function SupportTicketsPage() {
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Empresa</th>
-                    <th>Tipo</th>
-                    <th>Asunto</th>
-                    <th>Estado</th>
-                    <th>Prioridad</th>
-                    <th>Asignado</th>
-                    <th>Fecha</th>
+                    <th>{t('company')}</th>
+                    <th>{tCommon('type')}</th>
+                    <th>{t('subject')}</th>
+                    <th>{tCommon('status')}</th>
+                    <th>{t('priority')}</th>
+                    <th>{t('assignedTo')}</th>
+                    <th>{t('dateLabel')}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -420,7 +424,7 @@ export default function SupportTicketsPage() {
                         {ticket.assignedTo ? (
                           <span className="text-sm">{ticket.assignedTo.nombre}</span>
                         ) : (
-                          <span className="text-sm text-muted-foreground">Sin asignar</span>
+                          <span className="text-sm text-muted-foreground">{t('unassigned')}</span>
                         )}
                       </td>
                       <td className="text-sm text-muted-foreground">
@@ -437,7 +441,7 @@ export default function SupportTicketsPage() {
                   {tickets.length === 0 && (
                     <tr>
                       <td colSpan={9} className="text-center py-12 text-muted-foreground">
-                        No se encontraron tickets
+                        {t('noTickets')}
                       </td>
                     </tr>
                   )}
@@ -449,7 +453,7 @@ export default function SupportTicketsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border">
                 <div className="text-sm text-muted-foreground">
-                  Pagina {page} de {totalPages}
+                  {tCommon('page', { page, totalPages })}
                 </div>
                 <div className="flex items-center gap-2">
                   <button

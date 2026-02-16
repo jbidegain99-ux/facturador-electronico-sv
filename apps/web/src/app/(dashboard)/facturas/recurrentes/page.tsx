@@ -14,6 +14,7 @@ import { PageSizeSelector } from '@/components/ui/page-size-selector';
 import { formatDate } from '@/lib/utils';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { UpsellBanner } from '@/components/ui/upsell-banner';
+import { useTranslations } from 'next-intl';
 import {
   Plus,
   Search,
@@ -58,13 +59,6 @@ interface TemplateResponse {
   totalPages: number;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  ACTIVE: 'Activo',
-  PAUSED: 'Pausado',
-  SUSPENDED_ERROR: 'Suspendido',
-  CANCELLED: 'Cancelado',
-};
-
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'bg-green-100 text-green-800',
   PAUSED: 'bg-yellow-100 text-yellow-800',
@@ -72,41 +66,28 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: 'bg-gray-100 text-gray-800',
 };
 
-const INTERVAL_LABELS: Record<string, string> = {
-  DAILY: 'Diario',
-  WEEKLY: 'Semanal',
-  MONTHLY: 'Mensual',
-  YEARLY: 'Anual',
-};
-
-const TABS = [
-  { key: '', label: 'Todas' },
-  { key: 'ACTIVE', label: 'Activas' },
-  { key: 'PAUSED', label: 'Pausadas' },
-  { key: 'CANCELLED', label: 'Canceladas' },
-];
-
 function RecurrentesUpsell() {
+  const t = useTranslations('recurring');
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Repeat className="h-6 w-6" />
-          Facturas Recurrentes
+          {t('title')}
         </h1>
         <p className="text-muted-foreground mt-1">
-          Templates automaticos para generacion periodica de facturas
+          {t('subtitle')}
         </p>
       </div>
 
       <UpsellBanner
-        title="Facturas Recurrentes — Plan Pro"
-        description="Automatiza tu facturacion con templates recurrentes que se generan automaticamente."
+        title={t('upsellTitle')}
+        description={t('upsellDesc')}
         features={[
-          'Crea templates de factura reutilizables',
-          'Generacion automatica (diaria, semanal, mensual)',
-          'Historial completo de ejecuciones',
-          'Pausar y reanudar en cualquier momento',
+          t('upsellFeature1'),
+          t('upsellFeature2'),
+          t('upsellFeature3'),
+          t('upsellFeature4'),
         ]}
       />
     </div>
@@ -114,11 +95,34 @@ function RecurrentesUpsell() {
 }
 
 export default function RecurrentesPage() {
+  const t = useTranslations('recurring');
+  const tCommon = useTranslations('common');
   const toast = useToast();
   const toastRef = React.useRef(toast);
   toastRef.current = toast;
   const { confirm, ConfirmDialog } = useConfirm();
   const { features, loading: planLoading } = usePlanFeatures();
+
+  const STATUS_LABELS: Record<string, string> = {
+    ACTIVE: t('statusActive'),
+    PAUSED: t('statusPaused'),
+    SUSPENDED_ERROR: t('statusSuspended'),
+    CANCELLED: t('statusCancelled'),
+  };
+
+  const INTERVAL_LABELS: Record<string, string> = {
+    DAILY: t('freqDaily'),
+    WEEKLY: t('freqWeekly'),
+    MONTHLY: t('freqMonthly'),
+    YEARLY: t('freqYearly'),
+  };
+
+  const TABS = [
+    { key: '', label: t('allTab') },
+    { key: 'ACTIVE', label: t('activeTab') },
+    { key: 'PAUSED', label: t('pausedTab') },
+    { key: 'CANCELLED', label: t('cancelledTab') },
+  ];
 
   const [search, setSearch] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('');
@@ -153,10 +157,10 @@ export default function RecurrentesPage() {
 
       if (!res.ok) {
         if (res.status === 404) {
-          setFetchError('El servicio de facturas recurrentes no esta disponible aun.');
+          setFetchError(t('serviceUnavailable'));
           return;
         }
-        throw new Error(`Error al cargar templates (${res.status})`);
+        throw new Error(`Error (${res.status})`);
       }
 
       const data: TemplateResponse = await res.json();
@@ -177,18 +181,18 @@ export default function RecurrentesPage() {
   }, [fetchTemplates]);
 
   const handleAction = async (id: string, action: 'pause' | 'resume' | 'cancel' | 'trigger') => {
-    const labels: Record<string, string> = {
-      pause: 'pausar',
-      resume: 'reanudar',
-      cancel: 'cancelar',
-      trigger: 'ejecutar ahora',
+    const successLabels: Record<string, string> = {
+      pause: t('pauseSuccess'),
+      resume: t('resumeSuccess'),
+      cancel: t('cancelSuccess'),
+      trigger: t('executeSuccess'),
     };
 
     if (action === 'cancel') {
       const ok = await confirm({
-        title: 'Cancelar Template',
-        description: 'Esta accion es irreversible. El template no generara mas facturas.',
-        confirmText: 'Cancelar Template',
+        title: t('cancelTemplate'),
+        description: t('cancelConfirm'),
+        confirmText: t('cancelTemplate'),
         variant: 'destructive',
       });
       if (!ok) return;
@@ -206,13 +210,13 @@ export default function RecurrentesPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `Error al ${labels[action]}`);
+        throw new Error(err.message || tCommon('error'));
       }
 
-      toast.success(`Template ${labels[action]} exitosamente`);
+      toast.success(successLabels[action]);
       fetchTemplates();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : `Error al ${labels[action]}`);
+      toast.error(error instanceof Error ? error.message : tCommon('error'));
     }
   };
 
@@ -252,17 +256,17 @@ export default function RecurrentesPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Repeat className="h-6 w-6" />
-            Facturas Recurrentes
+            {t('title')}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Templates automaticos para generacion periodica de facturas
+            {t('subtitle')}
           </p>
         </div>
         {!fetchError && (
           <Link href="/facturas/recurrentes/nuevo">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Nuevo Template
+              {t('newTemplate')}
             </Button>
           </Link>
         )}
@@ -293,7 +297,7 @@ export default function RecurrentesPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nombre o cliente..."
+                  placeholder={t('searchPlaceholder')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   className="pl-9 w-64"
@@ -311,17 +315,17 @@ export default function RecurrentesPage() {
               <Repeat className="mx-auto h-12 w-12 text-muted-foreground/30" />
               <p className="mt-4 text-muted-foreground">{fetchError}</p>
               <Button variant="outline" className="mt-4" onClick={fetchTemplates}>
-                Reintentar
+                {tCommon('retry')}
               </Button>
             </div>
           ) : templates.length === 0 ? (
             <div className="text-center py-12">
               <Repeat className="mx-auto h-12 w-12 text-muted-foreground/30" />
-              <p className="mt-4 text-muted-foreground">No se encontraron templates</p>
+              <p className="mt-4 text-muted-foreground">{t('noTemplates')}</p>
               <Link href="/facturas/recurrentes/nuevo">
                 <Button variant="outline" className="mt-4">
                   <Plus className="mr-2 h-4 w-4" />
-                  Crear primer template
+                  {t('createFirst')}
                 </Button>
               </Link>
             </div>
@@ -335,17 +339,17 @@ export default function RecurrentesPage() {
                       onClick={() => handleSort('nombre')}
                     >
                       <div className="flex items-center">
-                        Nombre {getSortIcon('nombre')}
+                        {t('templateName')} {getSortIcon('nombre')}
                       </div>
                     </TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Frecuencia</TableHead>
+                    <TableHead>{tCommon('name')}</TableHead>
+                    <TableHead>{tCommon('type')}</TableHead>
                     <TableHead
                       className="cursor-pointer select-none"
                       onClick={() => handleSort('nextRunDate')}
                     >
                       <div className="flex items-center">
-                        Proxima Ejecucion {getSortIcon('nextRunDate')}
+                        {t('nextExecution')} {getSortIcon('nextRunDate')}
                       </div>
                     </TableHead>
                     <TableHead
@@ -353,56 +357,56 @@ export default function RecurrentesPage() {
                       onClick={() => handleSort('status')}
                     >
                       <div className="flex items-center">
-                        Estado {getSortIcon('status')}
+                        {tCommon('status')} {getSortIcon('status')}
                       </div>
                     </TableHead>
-                    <TableHead>Ejecuciones</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>{t('executions')}</TableHead>
+                    <TableHead className="text-right">{tCommon('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {templates.map((t) => (
-                    <TableRow key={t.id}>
+                  {templates.map((tmpl) => (
+                    <TableRow key={tmpl.id}>
                       <TableCell className="font-medium">
                         <Link
-                          href={`/facturas/recurrentes/${t.id}`}
+                          href={`/facturas/recurrentes/${tmpl.id}`}
                           className="hover:underline text-primary"
                         >
-                          {t.nombre}
+                          {tmpl.nombre}
                         </Link>
                       </TableCell>
-                      <TableCell>{t.cliente.nombre}</TableCell>
-                      <TableCell>{INTERVAL_LABELS[t.interval] || t.interval}</TableCell>
+                      <TableCell>{tmpl.cliente.nombre}</TableCell>
+                      <TableCell>{INTERVAL_LABELS[tmpl.interval] || tmpl.interval}</TableCell>
                       <TableCell>
-                        {t.status === 'ACTIVE'
-                          ? formatDate(t.nextRunDate)
+                        {tmpl.status === 'ACTIVE'
+                          ? formatDate(tmpl.nextRunDate)
                           : '-'}
                       </TableCell>
                       <TableCell>
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            STATUS_COLORS[t.status] || 'bg-gray-100 text-gray-800'
+                            STATUS_COLORS[tmpl.status] || 'bg-gray-100 text-gray-800'
                           }`}
                         >
-                          {STATUS_LABELS[t.status] || t.status}
+                          {STATUS_LABELS[tmpl.status] || tmpl.status}
                         </span>
                       </TableCell>
-                      <TableCell>{t._count.history}</TableCell>
+                      <TableCell>{tmpl._count.history}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Link href={`/facturas/recurrentes/${t.id}`}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Ver detalle">
+                          <Link href={`/facturas/recurrentes/${tmpl.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title={t('viewDetail')}>
                               <Eye className="h-4 w-4" />
                             </Button>
                           </Link>
-                          {t.status === 'ACTIVE' && (
+                          {tmpl.status === 'ACTIVE' && (
                             <>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => handleAction(t.id, 'trigger')}
-                                title="Ejecutar ahora"
+                                onClick={() => handleAction(tmpl.id, 'trigger')}
+                                title={t('executeNow')}
                               >
                                 <Zap className="h-4 w-4" />
                               </Button>
@@ -410,31 +414,31 @@ export default function RecurrentesPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => handleAction(t.id, 'pause')}
-                                title="Pausar"
+                                onClick={() => handleAction(tmpl.id, 'pause')}
+                                title={t('pause')}
                               >
                                 <Pause className="h-4 w-4" />
                               </Button>
                             </>
                           )}
-                          {(t.status === 'PAUSED' || t.status === 'SUSPENDED_ERROR') && (
+                          {(tmpl.status === 'PAUSED' || tmpl.status === 'SUSPENDED_ERROR') && (
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => handleAction(t.id, 'resume')}
-                              title="Reanudar"
+                              onClick={() => handleAction(tmpl.id, 'resume')}
+                              title={t('resume')}
                             >
                               <Play className="h-4 w-4" />
                             </Button>
                           )}
-                          {t.status !== 'CANCELLED' && (
+                          {tmpl.status !== 'CANCELLED' && (
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive"
-                              onClick={() => handleAction(t.id, 'cancel')}
-                              title="Cancelar"
+                              onClick={() => handleAction(tmpl.id, 'cancel')}
+                              title={tCommon('cancel')}
                             >
                               <XCircle className="h-4 w-4" />
                             </Button>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import {
   ArrowLeft,
   Building2,
@@ -70,6 +71,9 @@ interface TenantDetail {
 }
 
 export default function TenantDetailPage() {
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('common');
+  const tSupport = useTranslations('support');
   const params = useParams();
   const router = useRouter();
   const [tenant, setTenant] = useState<TenantDetail | null>(null);
@@ -102,7 +106,7 @@ export default function TenantDetailPage() {
       );
 
       if (!res.ok) {
-        throw new Error('Error al cargar empresa');
+        throw new Error(t('loadError'));
       }
 
       const data: TenantDetail = await res.json();
@@ -112,7 +116,7 @@ export default function TenantDetailPage() {
       setMaxDtesPerMonth(data.maxDtesPerMonth);
       setAdminNotes(data.adminNotes || '');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error');
+      setError(err instanceof Error ? err.message : tCommon('error'));
     } finally {
       setLoading(false);
     }
@@ -149,12 +153,12 @@ export default function TenantDetailPage() {
   };
 
   const ticketStatusLabels: Record<string, string> = {
-    PENDING: 'Pendiente',
-    ASSIGNED: 'Asignado',
-    IN_PROGRESS: 'En Progreso',
-    WAITING_CUSTOMER: 'Esperando',
-    RESOLVED: 'Resuelto',
-    CLOSED: 'Cerrado',
+    PENDING: tSupport('statusPending'),
+    ASSIGNED: tSupport('statusAssigned'),
+    IN_PROGRESS: tSupport('statusInProgress'),
+    WAITING_CUSTOMER: tSupport('statusWaiting'),
+    RESOLVED: tSupport('statusResolved'),
+    CLOSED: tSupport('statusClosed'),
   };
 
   const handleSave = async () => {
@@ -178,11 +182,11 @@ export default function TenantDetailPage() {
         }
       );
 
-      if (!res.ok) throw new Error('Error al guardar');
-      alert('Cambios guardados correctamente');
+      if (!res.ok) throw new Error(t('saveError'));
+      alert(t('changesSaved'));
       fetchTenant();
     } catch (err) {
-      alert('Error al guardar los cambios');
+      alert(t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -220,9 +224,9 @@ export default function TenantDetailPage() {
     return (
       <div className="glass-card p-6 text-center">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <p className="text-red-400">{error || 'Empresa no encontrada'}</p>
+        <p className="text-red-400">{error || t('companyNotFound')}</p>
         <Link href="/admin/tenants" className="btn-primary mt-4 inline-block">
-          Volver a Empresas
+          {t('backToCompanies')}
         </Link>
       </div>
     );
@@ -245,7 +249,7 @@ export default function TenantDetailPage() {
           className="btn-primary flex items-center gap-2"
         >
           <Save className="w-4 h-4" />
-          {saving ? 'Guardando...' : 'Guardar Cambios'}
+          {saving ? tCommon('saving') : t('saveChanges')}
         </button>
       </div>
 
@@ -254,33 +258,33 @@ export default function TenantDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Contact Info */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Informacion de Contacto</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('contactInfo')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <div className="text-sm text-muted-foreground">Correo</div>
+                  <div className="text-sm text-muted-foreground">{t('emailLabel')}</div>
                   <div className="text-white">{tenant.correo}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <div className="text-sm text-muted-foreground">Telefono</div>
+                  <div className="text-sm text-muted-foreground">{t('phoneLabel')}</div>
                   <div className="text-white">{tenant.telefono}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 md:col-span-2">
                 <MapPin className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <div className="text-sm text-muted-foreground">Direccion</div>
+                  <div className="text-sm text-muted-foreground">{t('addressLabel')}</div>
                   <div className="text-white">{tenant.direccion.complemento}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Calendar className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <div className="text-sm text-muted-foreground">Fecha de Registro</div>
+                  <div className="text-sm text-muted-foreground">{t('registrationDate')}</div>
                   <div className="text-white">
                     {new Date(tenant.createdAt).toLocaleDateString('es', {
                       year: 'numeric',
@@ -295,36 +299,36 @@ export default function TenantDetailPage() {
 
           {/* Plan Configuration */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Configuracion de Plan</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('planConfig')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">Plan</label>
+                <label className="block text-sm text-muted-foreground mb-2">{t('plan')}</label>
                 <select
                   value={plan}
                   onChange={(e) => setPlan(e.target.value)}
                   className="input-rc"
                 >
-                  <option value="TRIAL">Prueba</option>
-                  <option value="BASIC">Basico</option>
-                  <option value="PRO">Profesional</option>
-                  <option value="ENTERPRISE">Empresa</option>
+                  <option value="TRIAL">{t('planTrial')}</option>
+                  <option value="BASIC">{t('planBasic')}</option>
+                  <option value="PRO">{t('planPro')}</option>
+                  <option value="ENTERPRISE">{t('planEnterprise')}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">Estado</label>
+                <label className="block text-sm text-muted-foreground mb-2">{t('statusLabel')}</label>
                 <select
                   value={planStatus}
                   onChange={(e) => setPlanStatus(e.target.value)}
                   className="input-rc"
                 >
-                  <option value="ACTIVE">Activo</option>
-                  <option value="SUSPENDED">Suspendido</option>
-                  <option value="CANCELLED">Cancelado</option>
-                  <option value="EXPIRED">Expirado</option>
+                  <option value="ACTIVE">{t('statusActive')}</option>
+                  <option value="SUSPENDED">{t('statusSuspended')}</option>
+                  <option value="CANCELLED">{t('statusCancelled')}</option>
+                  <option value="EXPIRED">{t('statusExpired')}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">DTEs por Mes</label>
+                <label className="block text-sm text-muted-foreground mb-2">{t('dtesPerMonth')}</label>
                 <input
                   type="number"
                   value={maxDtesPerMonth}
@@ -333,7 +337,7 @@ export default function TenantDetailPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">DTEs Usados Este Mes</label>
+                <label className="block text-sm text-muted-foreground mb-2">{t('dtesUsedThisMonth')}</label>
                 <div className="input-rc bg-white/5 cursor-not-allowed">
                   {tenant.dtesUsedThisMonth} / {tenant.maxDtesPerMonth}
                 </div>
@@ -343,11 +347,11 @@ export default function TenantDetailPage() {
 
           {/* Admin Notes */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Notas del Administrador</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('adminNotes')}</h3>
             <textarea
               value={adminNotes}
               onChange={(e) => setAdminNotes(e.target.value)}
-              placeholder="Notas internas sobre esta empresa..."
+              placeholder={t('adminNotesPlaceholder')}
               rows={4}
               className="input-rc"
             />
@@ -367,13 +371,13 @@ export default function TenantDetailPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Ticket className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-semibold text-white">Tickets de Soporte</h3>
+                <h3 className="text-lg font-semibold text-white">{t('supportTitle')}</h3>
               </div>
               <Link
                 href={`/admin/support?tenantId=${params.id}`}
                 className="text-sm text-primary hover:underline"
               >
-                Ver todos
+                {tCommon('viewAll')}
               </Link>
             </div>
 
@@ -410,7 +414,7 @@ export default function TenantDetailPage() {
               <div className="text-center py-6">
                 <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  Esta empresa no tiene tickets de soporte
+                  {t('noTicketsForCompany')}
                 </p>
               </div>
             )}
@@ -418,15 +422,15 @@ export default function TenantDetailPage() {
 
           {/* Users */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Usuarios ({tenant.usuarios.length})</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('users')} ({tenant.usuarios.length})</h3>
             <div className="overflow-x-auto">
               <table className="table-rc">
                 <thead>
                   <tr>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Rol</th>
-                    <th>Registro</th>
+                    <th>{t('name')}</th>
+                    <th>{tCommon('email')}</th>
+                    <th>{t('rol')}</th>
+                    <th>{t('registration')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -456,33 +460,33 @@ export default function TenantDetailPage() {
         <div className="space-y-6">
           {/* Quick Stats */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Estadisticas</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('statistics')}</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Usuarios</span>
+                  <span className="text-muted-foreground">{t('users')}</span>
                 </div>
                 <span className="text-white font-medium">{tenant.usuarios.length}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Total DTEs</span>
+                  <span className="text-muted-foreground">{t('totalDtesLabel')}</span>
                 </div>
                 <span className="text-white font-medium">{tenant._count.dtes}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Clientes</span>
+                  <span className="text-muted-foreground">{t('clients')}</span>
                 </div>
                 <span className="text-white font-medium">{tenant._count.clientes}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">DTEs (30 dias)</span>
+                  <span className="text-muted-foreground">{t('dtesLast30Days')}</span>
                 </div>
                 <span className="text-white font-medium">{tenant.dtesLast30Days}</span>
               </div>
@@ -491,16 +495,16 @@ export default function TenantDetailPage() {
 
           {/* Plan Status */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Estado Actual</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('currentStatus')}</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Plan</span>
+                <span className="text-muted-foreground">{t('plan')}</span>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPlanBadge(tenant.plan)}`}>
                   {tenant.plan}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Estado</span>
+                <span className="text-muted-foreground">{tCommon('status')}</span>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(tenant.planStatus)}`}>
                   {tenant.planStatus}
                 </span>
@@ -510,7 +514,7 @@ export default function TenantDetailPage() {
 
           {/* DTE by Status */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">DTEs por Estado</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('dtesByStatus')}</h3>
             <div className="space-y-3">
               {tenant.dteStats.map((stat) => (
                 <div key={stat.status} className="flex items-center justify-between">
@@ -519,7 +523,7 @@ export default function TenantDetailPage() {
                 </div>
               ))}
               {tenant.dteStats.length === 0 && (
-                <p className="text-muted-foreground text-sm">Sin DTEs</p>
+                <p className="text-muted-foreground text-sm">{t('noDtes')}</p>
               )}
             </div>
           </div>

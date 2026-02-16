@@ -22,6 +22,7 @@ import {
   AlertCircle,
   FileText,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 interface DTEDetail {
@@ -70,6 +71,8 @@ const timelineIcons: Record<string, any> = {
 };
 
 export default function FacturaDetallePage() {
+  const t = useTranslations('invoices');
+  const tCommon = useTranslations('common');
   const params = useParams();
   const router = useRouter();
   const [dte, setDte] = React.useState<DTEDetail | null>(null);
@@ -84,7 +87,7 @@ export default function FacturaDetallePage() {
     const fetchDTE = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        setError('No hay sesion activa');
+        setError(tCommon('noSession'));
         setLoading(false);
         return;
       }
@@ -233,11 +236,11 @@ export default function FacturaDetallePage() {
         <Link href="/facturas">
           <Button variant="ghost">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
+            {tCommon('back')}
           </Button>
         </Link>
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
-          {error || 'Documento no encontrado'}
+          {error || t('docNotFound')}
         </div>
       </div>
     );
@@ -279,11 +282,11 @@ export default function FacturaDetallePage() {
             ) : (
               <FileText className="mr-2 h-4 w-4" />
             )}
-            Descargar PDF
+            {t('downloadPdf')}
           </Button>
           <Button variant="outline" onClick={handleDownloadJSON}>
             <Download className="mr-2 h-4 w-4" />
-            Descargar JSON
+            {t('downloadJson')}
           </Button>
           {dte.estado === 'PROCESADO' && (
             <Button variant="destructive" onClick={handleAnular} disabled={anulando}>
@@ -292,7 +295,7 @@ export default function FacturaDetallePage() {
               ) : (
                 <Ban className="mr-2 h-4 w-4" />
               )}
-              Anular
+              {t('void')}
             </Button>
           )}
         </div>
@@ -304,12 +307,12 @@ export default function FacturaDetallePage() {
           {/* Info General */}
           <Card>
             <CardHeader>
-              <CardTitle>Informacion General</CardTitle>
+              <CardTitle>{t('generalInfo')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Codigo Generacion</p>
+                  <p className="text-sm text-muted-foreground">{t('generationCode')}</p>
                   <div className="flex items-center gap-2">
                     <code className="text-xs bg-muted px-2 py-1 rounded">{dte.codigoGeneracion}</code>
                     <Button
@@ -323,18 +326,18 @@ export default function FacturaDetallePage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Fecha Emision</p>
+                  <p className="text-sm text-muted-foreground">{t('emissionDate')}</p>
                   <p className="font-medium">{formatDateTime(dte.createdAt)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Ambiente</p>
+                  <p className="text-sm text-muted-foreground">{t('environment')}</p>
                   <Badge variant={identificacion?.ambiente === '01' ? 'default' : 'secondary'}>
-                    {identificacion?.ambiente === '01' ? 'Produccion' : 'Pruebas'}
+                    {identificacion?.ambiente === '01' ? t('production') : t('testing')}
                   </Badge>
                 </div>
                 {dte.selloRecepcion && (
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Sello Recibido</p>
+                    <p className="text-sm text-muted-foreground">{t('receivedSeal')}</p>
                     <code className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded break-all">
                       {dte.selloRecepcion}
                     </code>
@@ -348,20 +351,20 @@ export default function FacturaDetallePage() {
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Emisor</CardTitle>
+                <CardTitle className="text-base">{t('issuer')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <p className="font-semibold">{emisor?.nombre || 'N/A'}</p>
-                <p className="text-muted-foreground">NIT: {emisor?.nit || 'N/A'}</p>
+                <p className="font-semibold">{emisor?.nombre || t('na')}</p>
+                <p className="text-muted-foreground">NIT: {emisor?.nit || t('na')}</p>
                 {emisor?.nrc && <p className="text-muted-foreground">NRC: {emisor.nrc}</p>}
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Receptor</CardTitle>
+                <CardTitle className="text-base">{t('receiver')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <p className="font-semibold">{receptor?.nombre || dte.cliente?.nombre || 'N/A'}</p>
+                <p className="font-semibold">{receptor?.nombre || dte.cliente?.nombre || t('na')}</p>
                 {(receptor?.numDocumento || dte.cliente?.numDocumento) && (
                   <p className="text-muted-foreground">
                     NIT: {receptor?.numDocumento || dte.cliente?.numDocumento}
@@ -380,18 +383,18 @@ export default function FacturaDetallePage() {
           {/* Items */}
           <Card>
             <CardHeader>
-              <CardTitle>Detalle de Items</CardTitle>
+              <CardTitle>{t('itemDetail')}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">#</TableHead>
-                    <TableHead>Descripcion</TableHead>
-                    <TableHead className="text-right">Cant.</TableHead>
-                    <TableHead className="text-right">Precio</TableHead>
-                    <TableHead className="text-right">Gravado</TableHead>
-                    <TableHead className="text-right">IVA</TableHead>
+                    <TableHead>{t('itemDescription')}</TableHead>
+                    <TableHead className="text-right">{t('qty')}</TableHead>
+                    <TableHead className="text-right">{t('unitPrice')}</TableHead>
+                    <TableHead className="text-right">{t('taxable')}</TableHead>
+                    <TableHead className="text-right">{t('iva')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -409,7 +412,7 @@ export default function FacturaDetallePage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        No hay items disponibles
+                        {t('noItems')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -421,13 +424,13 @@ export default function FacturaDetallePage() {
           {/* Resumen */}
           <Card>
             <CardHeader>
-              <CardTitle>Resumen</CardTitle>
+              <CardTitle>{t('summary')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex justify-end">
                 <div className="w-64 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal Gravado:</span>
+                    <span className="text-muted-foreground">{t('subtotalTaxable')}</span>
                     <span>{formatCurrency(parseNumber(resumen?.totalGravada || dte.totalGravada))}</span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -435,7 +438,7 @@ export default function FacturaDetallePage() {
                     <span>{formatCurrency(parseNumber(resumen?.totalIva || dte.totalIva))}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t pt-2">
-                    <span>Total a Pagar:</span>
+                    <span>{t('totalToPay')}</span>
                     <span>{formatCurrency(parseNumber(resumen?.totalPagar || dte.totalPagar))}</span>
                   </div>
                 </div>
@@ -448,8 +451,8 @@ export default function FacturaDetallePage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Timeline</CardTitle>
-              <CardDescription>Historial de eventos del documento</CardDescription>
+              <CardTitle>{t('timeline')}</CardTitle>
+              <CardDescription>{t('timelineDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -483,7 +486,7 @@ export default function FacturaDetallePage() {
                     );
                   })
                 ) : (
-                  <p className="text-sm text-muted-foreground">No hay eventos registrados</p>
+                  <p className="text-sm text-muted-foreground">{t('noEvents')}</p>
                 )}
               </div>
             </CardContent>
@@ -493,7 +496,7 @@ export default function FacturaDetallePage() {
           {dte.descripcionMh && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Respuesta MH</CardTitle>
+                <CardTitle className="text-base">{t('mhResponse')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">{dte.descripcionMh}</p>

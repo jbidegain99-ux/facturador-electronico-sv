@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { ArrowLeft, Loader2, Landmark, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface BalanceSheetAccount {
   code: string;
@@ -58,6 +59,8 @@ function ReportSection({ section, colorClass }: { section: BalanceSheetSection; 
 }
 
 export default function BalancePage() {
+  const t = useTranslations('accounting');
+  const tCommon = useTranslations('common');
   const { features, loading: planLoading } = usePlanFeatures();
   const router = useRouter();
 
@@ -88,10 +91,10 @@ export default function BalancePage() {
         if (json) setData(json);
       } else {
         const json = await res.json().catch(() => ({}));
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al obtener balance');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('balanceError'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexion');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     } finally {
       setLoading(false);
     }
@@ -113,8 +116,8 @@ export default function BalancePage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Balance General</h1>
-            <p className="text-muted-foreground">Estado de situacion financiera</p>
+            <h1 className="text-2xl font-bold">{t('balanceSheet')}</h1>
+            <p className="text-muted-foreground">{t('balanceSheetSubtitle')}</p>
           </div>
         </div>
         <button
@@ -123,7 +126,7 @@ export default function BalancePage() {
           className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Actualizar
+          {tCommon('refresh')}
         </button>
       </div>
 
@@ -134,16 +137,16 @@ export default function BalancePage() {
       ) : !data ? (
         <div className="text-center py-12 text-muted-foreground">
           <Landmark className="h-12 w-12 mx-auto mb-2 opacity-30" />
-          <p className="text-lg font-medium">No hay datos disponibles</p>
-          <p className="text-sm mt-1">Contabiliza partidas para ver el balance general</p>
+          <p className="text-lg font-medium">{t('noDataAvailable')}</p>
+          <p className="text-sm mt-1">{t('postEntriesToSee')}</p>
         </div>
       ) : (
         <div className="rounded-lg border bg-card p-6 space-y-6 max-w-3xl">
           {/* Report Header */}
           <div className="text-center border-b pb-4">
-            <h2 className="text-lg font-bold">BALANCE GENERAL</h2>
-            <p className="text-sm text-muted-foreground">Al {today}</p>
-            <p className="text-xs text-muted-foreground">(Cifras expresadas en dolares de los Estados Unidos de America)</p>
+            <h2 className="text-lg font-bold">{t('balanceSheetTitle')}</h2>
+            <p className="text-sm text-muted-foreground">{t('asOf', { date: today })}</p>
+            <p className="text-xs text-muted-foreground">{t('currencyNote')}</p>
           </div>
 
           {/* Assets */}
@@ -154,12 +157,12 @@ export default function BalancePage() {
               ))
             ) : (
               <div className="text-sm text-muted-foreground py-2">
-                <span className="font-bold text-green-700 dark:text-green-400">Activos</span>
-                <p className="pl-4">No hay saldos en cuentas de activo</p>
+                <span className="font-bold text-green-700 dark:text-green-400">{t('assetType')}</span>
+                <p className="pl-4">{t('noAssetBalances')}</p>
               </div>
             )}
             <div className="flex justify-between font-bold text-base border-t-2 border-green-600 pt-2 text-green-700 dark:text-green-400">
-              <span>TOTAL ACTIVOS</span>
+              <span>{t('totalAssetsLabel')}</span>
               <span className="font-mono">{formatCurrency(data.totalAssets)}</span>
             </div>
           </div>
@@ -174,12 +177,12 @@ export default function BalancePage() {
               ))
             ) : (
               <div className="text-sm text-muted-foreground py-2">
-                <span className="font-bold text-red-700 dark:text-red-400">Pasivos</span>
-                <p className="pl-4">No hay saldos en cuentas de pasivo</p>
+                <span className="font-bold text-red-700 dark:text-red-400">{t('liabilityType')}</span>
+                <p className="pl-4">{t('noLiabilityBalances')}</p>
               </div>
             )}
             <div className="flex justify-between font-bold text-base border-t-2 border-red-600 pt-2 text-red-700 dark:text-red-400">
-              <span>TOTAL PASIVOS</span>
+              <span>{t('totalLiabilitiesLabel')}</span>
               <span className="font-mono">{formatCurrency(data.totalLiabilities)}</span>
             </div>
           </div>
@@ -192,12 +195,12 @@ export default function BalancePage() {
               ))
             ) : (
               <div className="text-sm text-muted-foreground py-2">
-                <span className="font-bold text-blue-700 dark:text-blue-400">Patrimonio</span>
-                <p className="pl-4">No hay saldos en cuentas de patrimonio</p>
+                <span className="font-bold text-blue-700 dark:text-blue-400">{t('equityType')}</span>
+                <p className="pl-4">{t('noEquityBalances')}</p>
               </div>
             )}
             <div className="flex justify-between font-bold text-base border-t-2 border-blue-600 pt-2 text-blue-700 dark:text-blue-400">
-              <span>TOTAL PATRIMONIO</span>
+              <span>{t('totalEquityLabel')}</span>
               <span className="font-mono">{formatCurrency(data.totalEquity)}</span>
             </div>
           </div>
@@ -207,11 +210,11 @@ export default function BalancePage() {
           {/* Equation Check */}
           <div className="bg-muted/50 rounded-md p-4">
             <div className="flex justify-between font-bold text-base">
-              <span>PASIVO + PATRIMONIO</span>
+              <span>{t('liabilityPlusEquity')}</span>
               <span className="font-mono">{formatCurrency(data.totalLiabilities + data.totalEquity)}</span>
             </div>
             <div className="flex justify-between text-sm text-muted-foreground mt-1">
-              <span>Diferencia (Activo - Pasivo - Patrimonio):</span>
+              <span>{t('differenceLabel')}</span>
               <span className={`font-mono ${Math.abs(data.totalAssets - data.totalLiabilities - data.totalEquity) < 0.01 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(data.totalAssets - data.totalLiabilities - data.totalEquity)}
               </span>

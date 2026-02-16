@@ -3,10 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { FacturoLogo } from '@/components/brand';
 
 export default function LoginPage() {
   const router = useRouter();
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -26,7 +29,7 @@ export default function LoginPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Credenciales invalidas');
+        throw new Error(errorData.message || t('invalidCredentials'));
       }
 
       const data = await res.json();
@@ -39,7 +42,7 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
+      setError(err instanceof Error ? err.message : t('loginError'));
     } finally {
       setLoading(false);
     }
@@ -54,7 +57,7 @@ export default function LoginPage() {
         </div>
 
         <h2 className="text-center text-2xl font-bold leading-9 tracking-tight text-foreground">
-          Iniciar Sesión
+          {t('loginTitle')}
         </h2>
       </div>
 
@@ -68,7 +71,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium leading-6 text-foreground">
-              Correo electrónico
+              {t('emailLabel')}
             </label>
             <div className="mt-2">
               <input
@@ -88,10 +91,10 @@ export default function LoginPage() {
           <div>
             <div className="flex items-center justify-between">
               <label htmlFor="password" className="block text-sm font-medium leading-6 text-foreground">
-                Contraseña
+                {t('passwordLabel')}
               </label>
               <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 transition-colors">
-                ¿Olvidaste tu contraseña?
+                {t('forgotPassword')}
               </Link>
             </div>
             <div className="mt-2">
@@ -115,22 +118,22 @@ export default function LoginPage() {
               disabled={loading}
               className="flex w-full justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 transition-all hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)]"
             >
-              {loading ? 'Cargando...' : 'Iniciar Sesión'}
+              {loading ? tCommon('loading') : t('loginTitle')}
             </button>
           </div>
         </form>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          No tienes cuenta?{' '}
+          {t('noAccount')}{' '}
           <Link href="/register" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-            Registra tu empresa
+            {t('registerCompany')}
           </Link>
         </p>
 
         {/* Powered by */}
         <div className="mt-12 pt-6 border-t border-border">
           <p className="text-center text-xs text-muted-foreground">
-            powered by <span className="font-medium text-foreground/70">Republicode</span>
+            {tCommon('poweredBy')}
           </p>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import {
   Building2,
   Search,
@@ -57,6 +58,8 @@ interface TenantsResponse {
 }
 
 export default function TenantsPage() {
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,14 +96,14 @@ export default function TenantsPage() {
       );
 
       if (!res.ok) {
-        throw new Error('Error al cargar empresas');
+        throw new Error(t('loadError'));
       }
 
       const data: TenantsResponse = await res.json();
       setTenants(data.data);
       setTotalPages(data.meta.totalPages);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error');
+      setError(err instanceof Error ? err.message : tCommon('error'));
     } finally {
       setLoading(false);
     }
@@ -113,7 +116,7 @@ export default function TenantsPage() {
   };
 
   const handleSuspend = async (id: string) => {
-    if (!confirm('¿Estas seguro de suspender esta empresa?')) return;
+    if (!confirm(t('suspendConfirm'))) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -125,14 +128,14 @@ export default function TenantsPage() {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ reason: 'Suspendido por administrador' }),
+          body: JSON.stringify({ reason: t('suspendedByAdmin') }),
         }
       );
 
-      if (!res.ok) throw new Error('Error al suspender');
+      if (!res.ok) throw new Error(t('suspendError'));
       fetchTenants();
     } catch (err) {
-      alert('Error al suspender la empresa');
+      alert(t('suspendError'));
     }
   };
 
@@ -149,16 +152,16 @@ export default function TenantsPage() {
         }
       );
 
-      if (!res.ok) throw new Error('Error al activar');
+      if (!res.ok) throw new Error(t('activateError'));
       fetchTenants();
     } catch (err) {
-      alert('Error al activar la empresa');
+      alert(t('activateError'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estas seguro de ELIMINAR esta empresa? Esta accion no se puede deshacer.')) return;
-    if (!confirm('CONFIRMACION FINAL: Se eliminaran TODOS los datos de esta empresa incluyendo usuarios, clientes y DTEs.')) return;
+    if (!confirm(t('deleteCompanyConfirm'))) return;
+    if (!confirm(t('deleteCompanyFinal'))) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -172,10 +175,10 @@ export default function TenantsPage() {
         }
       );
 
-      if (!res.ok) throw new Error('Error al eliminar');
+      if (!res.ok) throw new Error(t('deleteError'));
       fetchTenants();
     } catch (err) {
-      alert('Error al eliminar la empresa');
+      alert(t('deleteError'));
     }
   };
 
@@ -204,8 +207,8 @@ export default function TenantsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Empresas</h1>
-          <p className="text-muted-foreground mt-1">Gestiona las empresas registradas</p>
+          <h1 className="text-3xl font-bold">{t('companies')}</h1>
+          <p className="text-muted-foreground mt-1">{t('companiesSubtitle')}</p>
         </div>
       </div>
 
@@ -217,7 +220,7 @@ export default function TenantsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Buscar por nombre, NIT o correo..."
+                placeholder={t('searchCompanies')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="input-rc pl-10"
@@ -232,14 +235,14 @@ export default function TenantsPage() {
             }}
           >
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Todos los planes" />
+              <SelectValue placeholder={t('allPlans')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Todos los planes</SelectItem>
-              <SelectItem value="TRIAL">Prueba</SelectItem>
-              <SelectItem value="BASIC">Basico</SelectItem>
-              <SelectItem value="PRO">Profesional</SelectItem>
-              <SelectItem value="ENTERPRISE">Empresa</SelectItem>
+              <SelectItem value="ALL">{t('allPlans')}</SelectItem>
+              <SelectItem value="TRIAL">{t('planTrial')}</SelectItem>
+              <SelectItem value="BASIC">{t('planBasic')}</SelectItem>
+              <SelectItem value="PRO">{t('planPro')}</SelectItem>
+              <SelectItem value="ENTERPRISE">{t('planEnterprise')}</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -250,19 +253,19 @@ export default function TenantsPage() {
             }}
           >
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Todos los estados" />
+              <SelectValue placeholder={t('allStatuses')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Todos los estados</SelectItem>
-              <SelectItem value="ACTIVE">Activo</SelectItem>
-              <SelectItem value="SUSPENDED">Suspendido</SelectItem>
-              <SelectItem value="CANCELLED">Cancelado</SelectItem>
-              <SelectItem value="EXPIRED">Expirado</SelectItem>
+              <SelectItem value="ALL">{t('allStatuses')}</SelectItem>
+              <SelectItem value="ACTIVE">{t('statusActive')}</SelectItem>
+              <SelectItem value="SUSPENDED">{t('statusSuspended')}</SelectItem>
+              <SelectItem value="CANCELLED">{t('statusCancelled')}</SelectItem>
+              <SelectItem value="EXPIRED">{t('statusExpired')}</SelectItem>
             </SelectContent>
           </Select>
           <button type="submit" className="btn-primary">
             <Filter className="w-4 h-4" />
-            Filtrar
+            {tCommon('filter')}
           </button>
         </form>
       </div>
@@ -284,13 +287,13 @@ export default function TenantsPage() {
               <table className="table-rc w-full">
                 <thead>
                   <tr>
-                    <th>Empresa</th>
+                    <th>{t('company')}</th>
                     <th>NIT</th>
-                    <th>Plan</th>
-                    <th>Estado</th>
-                    <th>Usuarios</th>
-                    <th>DTEs</th>
-                    <th>Registro</th>
+                    <th>{t('plan')}</th>
+                    <th>{tCommon('status')}</th>
+                    <th>{t('users')}</th>
+                    <th>{t('dtes')}</th>
+                    <th>{t('registration')}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -332,7 +335,7 @@ export default function TenantsPage() {
                               className="flex items-center gap-2 cursor-pointer"
                             >
                               <Eye className="w-4 h-4" />
-                              Ver Detalles
+                              {tCommon('viewDetails')}
                             </DropdownMenuItem>
                             {tenant.planStatus === 'ACTIVE' ? (
                               <DropdownMenuItem
@@ -340,7 +343,7 @@ export default function TenantsPage() {
                                 className="text-yellow-600 dark:text-yellow-400"
                               >
                                 <Pause className="w-4 h-4 mr-2" />
-                                Suspender
+                                {t('suspend')}
                               </DropdownMenuItem>
                             ) : (
                               <DropdownMenuItem
@@ -348,7 +351,7 @@ export default function TenantsPage() {
                                 className="text-green-600 dark:text-green-400"
                               >
                                 <Play className="w-4 h-4 mr-2" />
-                                Activar
+                                {t('activate')}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
@@ -357,7 +360,7 @@ export default function TenantsPage() {
                               className="text-destructive"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Eliminar
+                              {tCommon('delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -367,7 +370,7 @@ export default function TenantsPage() {
                   {tenants.length === 0 && (
                     <tr>
                       <td colSpan={8} className="text-center py-12 text-muted-foreground">
-                        No se encontraron empresas
+                        {t('noCompanies')}
                       </td>
                     </tr>
                   )}
@@ -379,7 +382,7 @@ export default function TenantsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border">
                 <div className="text-sm text-muted-foreground">
-                  Pagina {page} de {totalPages}
+                  {tCommon('page', { page, totalPages })}
                 </div>
                 <div className="flex items-center gap-2">
                   <button

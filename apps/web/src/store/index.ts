@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, Tenant, ItemFactura } from '@/types';
+import { type Locale, defaultLocale } from '@/i18n/config';
 
 interface AppState {
   // User & Tenant
@@ -12,6 +13,10 @@ interface AppState {
   // Theme
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
+
+  // Locale
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
 
   // Sidebar
   sidebarOpen: boolean;
@@ -36,6 +41,10 @@ export const useAppStore = create<AppState>()(
       theme: 'dark',
       setTheme: (theme) => set({ theme }),
 
+      // Locale
+      locale: defaultLocale,
+      setLocale: (locale) => set({ locale }),
+
       // Sidebar
       sidebarOpen: true,
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
@@ -49,6 +58,7 @@ export const useAppStore = create<AppState>()(
       name: 'facturador-storage',
       partialize: (state) => ({
         theme: state.theme,
+        locale: state.locale,
         sidebarOpen: state.sidebarOpen,
         tenant: state.tenant,
         user: state.user,

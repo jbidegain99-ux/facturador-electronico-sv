@@ -43,6 +43,7 @@ import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
 import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
+import { useTranslations } from 'next-intl';
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -263,6 +264,8 @@ function parseCSV(text: string, separator: string = ','): string[][] {
 // ─── Component ─────────────────────────────────────────────
 
 export default function CatalogoPage() {
+  const tc = useTranslations('catalog');
+  const tCommon = useTranslations('common');
   const toast = useToast();
   const toastRef = React.useRef(toast);
   toastRef.current = toast;
@@ -411,10 +414,10 @@ export default function CatalogoPage() {
 
       if (!res.ok) {
         if (res.status === 404) {
-          setFetchError('El servicio de catalogo no esta disponible aun.');
+          setFetchError(tc('importError'));
           return;
         }
-        throw new Error(`Error al cargar catalogo (${res.status})`);
+        throw new Error(tc('importError'));
       }
 
       const data: CatalogResponse = await res.json().catch(() => ({ data: [], total: 0, page: 1, limit: 20, totalPages: 0 }));
@@ -425,7 +428,7 @@ export default function CatalogoPage() {
       setTotal(!isNaN(parsedTotal) ? parsedTotal : list.length);
       setTotalPages(!isNaN(parsedPages) && parsedPages >= 1 ? parsedPages : 1);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error al cargar catalogo';
+      const message = err instanceof Error ? err.message : tc('importError');
       setFetchError(message);
       toastRef.current.error(message);
     } finally {
@@ -560,19 +563,19 @@ export default function CatalogoPage() {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(
-          (err as Record<string, string>).message || `Error al ${isEdit ? 'actualizar' : 'crear'} item`,
+          (err as Record<string, string>).message || tc('itemSaveError'),
         );
       }
 
       toast.success(
-        isEdit ? 'Item actualizado correctamente' : 'Item creado correctamente',
+        isEdit ? tc('itemUpdated') : tc('itemCreated'),
       );
       closeModal();
       fetchItems();
       fetchPlanLimit();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : 'Error al guardar item',
+        err instanceof Error ? err.message : tc('itemSaveError'),
       );
     } finally {
       setSaving(false);
@@ -594,15 +597,15 @@ export default function CatalogoPage() {
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error((err as Record<string, string>).message || 'Error al eliminar item');
+        throw new Error((err as Record<string, string>).message || tc('itemDeleteError'));
       }
-      toast.success('Item eliminado correctamente');
+      toast.success(tc('itemDeleted'));
       setDeleteConfirm(null);
       fetchItems();
       fetchPlanLimit();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : 'Error al eliminar item',
+        err instanceof Error ? err.message : tc('itemDeleteError'),
       );
     } finally {
       setDeleting(false);
@@ -620,14 +623,14 @@ export default function CatalogoPage() {
           headers: getAuthHeaders(),
         },
       );
-      if (!res.ok) throw new Error('Error al actualizar favorito');
+      if (!res.ok) throw new Error(tc('favoriteError'));
       setItems((prev) =>
         prev.map((i) =>
           i.id === item.id ? { ...i, isFavorite: !i.isFavorite } : i,
         ),
       );
     } catch {
-      toastRef.current.error('Error al actualizar favorito');
+      toastRef.current.error(tc('favoriteError'));
     }
   };
 
@@ -647,13 +650,13 @@ export default function CatalogoPage() {
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error((err as Record<string, string>).message || 'Error al crear categoria');
+        throw new Error((err as Record<string, string>).message || tc('categoryCreateError'));
       }
-      toast.success('Categoria creada');
+      toast.success(tc('categoryCreated'));
       setNewCatName('');
       fetchCategories();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al crear categoria');
+      toast.error(err instanceof Error ? err.message : tc('categoryCreateError'));
     } finally {
       setSavingCat(false);
     }
@@ -673,32 +676,32 @@ export default function CatalogoPage() {
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error((err as Record<string, string>).message || 'Error al actualizar categoria');
+        throw new Error((err as Record<string, string>).message || tc('categoryUpdateError'));
       }
-      toast.success('Categoria actualizada');
+      toast.success(tc('categoryUpdated'));
       setEditingCat(null);
       fetchCategories();
       fetchItems();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al actualizar categoria');
+      toast.error(err instanceof Error ? err.message : tc('categoryUpdateError'));
     } finally {
       setSavingCat(false);
     }
   };
 
   const handleDeleteCategory = async (cat: CatalogCategory) => {
-    if (!confirm(`Eliminar categoria "${cat.name}"? Los items quedaran sin categoria.`)) return;
+    if (!confirm(tc('deleteCategoryConfirm', { name: cat.name }))) return;
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/categories/${cat.id}`,
         { method: 'DELETE', headers: getAuthHeaders() },
       );
-      if (!res.ok) throw new Error('Error al eliminar categoria');
-      toast.success('Categoria eliminada');
+      if (!res.ok) throw new Error(tc('categoryDeleteError'));
+      toast.success(tc('categoryDeleted'));
       fetchCategories();
       fetchItems();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al eliminar categoria');
+      toast.error(err instanceof Error ? err.message : tc('categoryDeleteError'));
     }
   };
 
@@ -729,7 +732,7 @@ export default function CatalogoPage() {
       const rows = parseCSV(text, importSeparator);
 
       if (rows.length < 2) {
-        toast.error('El archivo debe tener al menos un encabezado y una fila de datos');
+        toast.error(tc('csvMinRows'));
         return;
       }
 
@@ -745,7 +748,7 @@ export default function CatalogoPage() {
       }
 
       if (fieldMap['code'] === undefined || fieldMap['name'] === undefined) {
-        toast.error('El CSV debe tener columnas "code" y "name"');
+        toast.error(tc('csvRequiredCols'));
         return;
       }
 
@@ -773,16 +776,16 @@ export default function CatalogoPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error((err as Record<string, string>).message || 'Error en importacion');
+        throw new Error((err as Record<string, string>).message || tc('importError'));
       }
 
       const result: ImportResult = await res.json();
       setImportResult(result);
-      toast.success(`Importacion completada: ${result.created} creados, ${result.updated} actualizados`);
+      toast.success(tc('importSuccess', { created: result.created, updated: result.updated }));
       fetchItems();
       fetchPlanLimit();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error en importacion');
+      toast.error(err instanceof Error ? err.message : tc('importError'));
     } finally {
       setImporting(false);
     }
@@ -803,10 +806,10 @@ export default function CatalogoPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/export`,
         { headers: getAuthHeaders() },
       );
-      if (!res.ok) throw new Error('Error al exportar');
+      if (!res.ok) throw new Error(tc('exportError'));
       const data = await res.json();
       if (!Array.isArray(data) || data.length === 0) {
-        toast.error('No hay items para exportar');
+        toast.error(tc('noItemsExport'));
         return;
       }
 
@@ -831,9 +834,9 @@ export default function CatalogoPage() {
       a.download = `catalogo_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Catalogo exportado');
+      toast.success(tc('exportSuccess'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al exportar');
+      toast.error(err instanceof Error ? err.message : tc('exportError'));
     }
   };
 
@@ -869,10 +872,10 @@ export default function CatalogoPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
             <Package className="h-6 w-6" />
-            Catalogo
+            {tc('title')}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gestiona tus productos y servicios
+            {tc('subtitle')}
             {planLimit && planLimit.max !== -1 && (
               <span className="ml-2 text-sm">
                 ({planLimit.current}/{planLimit.max} items)
@@ -884,19 +887,19 @@ export default function CatalogoPage() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setCategoriesModalOpen(true)}>
               <Tag className="mr-2 h-4 w-4" />
-              Categorias
+              {tc('categories')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
               <Upload className="mr-2 h-4 w-4" />
-              Importar
+              {tCommon('import')}
             </Button>
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
-              Exportar
+              {tCommon('export')}
             </Button>
             <Button onClick={openCreateModal} disabled={!!isAtLimit}>
               <Plus className="mr-2 h-4 w-4" />
-              Nuevo Item
+              {tc('newItem')}
             </Button>
           </div>
         )}
@@ -906,31 +909,34 @@ export default function CatalogoPage() {
       {isAtLimit && (
         <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          Has alcanzado el limite de {planLimit?.max} items en tu plan {planLimit?.planCode}. Actualiza tu plan para agregar mas productos.
+          {tc('planLimitReached', { max: planLimit?.max ?? 0, plan: planLimit?.planCode ?? '' })}
         </div>
       )}
       {isNearLimit && (
         <div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/30 px-4 py-3 text-sm text-yellow-700 dark:text-yellow-400">
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          Estas cerca del limite: {planLimit?.current}/{planLimit?.max} items usados en tu plan {planLimit?.planCode}.
+          {tc('planLimitNear', { current: planLimit?.current ?? 0, max: planLimit?.max ?? 0, plan: planLimit?.planCode ?? '' })}
         </div>
       )}
 
       {/* Tabs */}
       <div className="flex gap-2 border-b pb-2">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => { setTab(t.key); setPage(1); }}
-            className={`px-4 py-2 text-sm font-medium rounded-t-md transition-colors ${
-              tab === t.key
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+        {TABS.map((tabItem) => {
+          const tabLabels: Record<string, string> = { '': tc('allTab'), 'PRODUCT': tc('productsTab'), 'SERVICE': tc('servicesTab'), 'FAVORITES': tc('favoritesTab') };
+          return (
+            <button
+              key={tabItem.key}
+              onClick={() => { setTab(tabItem.key); setPage(1); }}
+              className={`px-4 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                tab === tabItem.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              {tabLabels[tabItem.key] || tabItem.label}
+            </button>
+          );
+        })}
       </div>
 
       <Card>
@@ -941,7 +947,7 @@ export default function CatalogoPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nombre o codigo..."
+                  placeholder={tc('searchPlaceholder')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   className="pl-9 w-64"
@@ -950,10 +956,10 @@ export default function CatalogoPage() {
               {categories.length > 0 && (
                 <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v === '_all' ? '' : v); setPage(1); }}>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Todas las categorias" />
+                    <SelectValue placeholder={tc('allCategories')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_all">Todas las categorias</SelectItem>
+                    <SelectItem value="_all">{tc('allCategories')}</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         <span className="flex items-center gap-2">
@@ -979,16 +985,16 @@ export default function CatalogoPage() {
               <Package className="mx-auto h-12 w-12 text-muted-foreground/30" />
               <p className="mt-4 text-muted-foreground">{fetchError}</p>
               <Button variant="outline" className="mt-4" onClick={fetchItems}>
-                Reintentar
+                {tCommon('retry')}
               </Button>
             </div>
           ) : !items || items.length === 0 ? (
             <div className="text-center py-12">
               <Package className="mx-auto h-12 w-12 text-muted-foreground/30" />
-              <p className="mt-4 text-muted-foreground">No se encontraron items</p>
+              <p className="mt-4 text-muted-foreground">{tCommon('noResults')}</p>
               <Button variant="outline" className="mt-4" onClick={openCreateModal} disabled={!!isAtLimit}>
                 <Plus className="mr-2 h-4 w-4" />
-                Crear primer item
+                {tc('createFirst')}
               </Button>
             </div>
           ) : (
@@ -1002,7 +1008,7 @@ export default function CatalogoPage() {
                       onClick={() => handleSort('code')}
                     >
                       <div className="flex items-center">
-                        Codigo {getSortIcon('code')}
+                        {tc('codeLabel')} {getSortIcon('code')}
                       </div>
                     </TableHead>
                     <TableHead
@@ -1010,16 +1016,16 @@ export default function CatalogoPage() {
                       onClick={() => handleSort('name')}
                     >
                       <div className="flex items-center">
-                        Nombre {getSortIcon('name')}
+                        {tc('nameLabel')} {getSortIcon('name')}
                       </div>
                     </TableHead>
-                    <TableHead>Categoria</TableHead>
+                    <TableHead>{tc('categoryLabel')}</TableHead>
                     <TableHead
                       className="cursor-pointer select-none"
                       onClick={() => handleSort('type')}
                     >
                       <div className="flex items-center">
-                        Tipo {getSortIcon('type')}
+                        {tc('typeLabel')} {getSortIcon('type')}
                       </div>
                     </TableHead>
                     <TableHead
@@ -1027,19 +1033,19 @@ export default function CatalogoPage() {
                       onClick={() => handleSort('basePrice')}
                     >
                       <div className="flex items-center">
-                        Precio {getSortIcon('basePrice')}
+                        {tCommon('price')} {getSortIcon('basePrice')}
                       </div>
                     </TableHead>
-                    <TableHead>Impuesto</TableHead>
+                    <TableHead>{tCommon('tax')}</TableHead>
                     <TableHead
                       className="cursor-pointer select-none"
                       onClick={() => handleSort('usageCount')}
                     >
                       <div className="flex items-center">
-                        Usos {getSortIcon('usageCount')}
+                        {tc('uses')} {getSortIcon('usageCount')}
                       </div>
                     </TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead className="text-right">{tCommon('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1049,7 +1055,7 @@ export default function CatalogoPage() {
                         <button
                           onClick={() => handleToggleFavorite(item)}
                           className="hover:scale-110 transition-transform"
-                          title={item.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                          title={item.isFavorite ? tc('removeFavorite') : tc('addFavorite')}
                         >
                           <Star
                             className={`h-4 w-4 ${
@@ -1089,12 +1095,12 @@ export default function CatalogoPage() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           TYPE_COLORS[item.type] || 'bg-gray-100 text-gray-800'
                         }`}>
-                          {TYPE_LABELS[item.type] || item.type}
+                          {item.type === 'PRODUCT' ? tc('product') : item.type === 'SERVICE' ? tc('service') : item.type}
                         </span>
                       </TableCell>
                       <TableCell className="font-medium">{formatPrice(item.basePrice)}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {TRIBUTO_OPTIONS.find((t) => t.value === item.tributo)?.label || 'IVA 13%'}
+                        {TRIBUTO_OPTIONS.find((opt) => opt.value === item.tributo)?.label || tc('taxIva')}
                       </TableCell>
                       <TableCell className="text-center">{item.usageCount}</TableCell>
                       <TableCell className="text-right">
@@ -1104,7 +1110,7 @@ export default function CatalogoPage() {
                             size="icon"
                             className="h-8 w-8"
                             onClick={() => openEditModal(item)}
-                            title="Editar"
+                            title={tCommon('edit')}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -1113,7 +1119,7 @@ export default function CatalogoPage() {
                             size="icon"
                             className="h-8 w-8 text-destructive"
                             onClick={() => setDeleteConfirm(item)}
-                            title="Eliminar"
+                            title={tCommon('delete')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -1140,19 +1146,19 @@ export default function CatalogoPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? 'Editar Item' : 'Nuevo Item'}
+              {editingItem ? tc('editItem') : tc('newItem')}
             </DialogTitle>
             <DialogDescription>
               {editingItem
-                ? 'Modifica los datos del item de catalogo'
-                : 'Agrega un nuevo producto o servicio al catalogo'}
+                ? tc('editDesc')
+                : tc('createDesc')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             {/* Type radio */}
             <div className="space-y-1">
-              <Label>Tipo *</Label>
+              <Label>{tc('typeLabel')} *</Label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -1163,7 +1169,7 @@ export default function CatalogoPage() {
                     onChange={() => handleFormChange('type', 'PRODUCT')}
                     className="accent-primary"
                   />
-                  <span className="text-sm">Producto</span>
+                  <span className="text-sm">{tc('product')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -1174,7 +1180,7 @@ export default function CatalogoPage() {
                     onChange={() => handleFormChange('type', 'SERVICE')}
                     className="accent-primary"
                   />
-                  <span className="text-sm">Servicio</span>
+                  <span className="text-sm">{tc('service')}</span>
                 </label>
               </div>
             </div>
@@ -1182,7 +1188,7 @@ export default function CatalogoPage() {
             {/* Code + Name */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label>Codigo *</Label>
+                <Label>{tc('codeLabel')} *</Label>
                 <Input
                   value={formData.code}
                   onChange={(e) => handleFormChange('code', e.target.value)}
@@ -1195,7 +1201,7 @@ export default function CatalogoPage() {
                 )}
               </div>
               <div className="space-y-1">
-                <Label>Nombre *</Label>
+                <Label>{tc('nameLabel')} *</Label>
                 <Input
                   value={formData.name}
                   onChange={(e) => handleFormChange('name', e.target.value)}
@@ -1211,13 +1217,13 @@ export default function CatalogoPage() {
 
             {/* Category */}
             <div className="space-y-1">
-              <Label>Categoria</Label>
+              <Label>{tc('categoryLabel')}</Label>
               <Select value={formData.categoryId || '_none'} onValueChange={(v) => handleFormChange('categoryId', v === '_none' ? '' : v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sin categoria" />
+                  <SelectValue placeholder={tc('noCategory')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_none">Sin categoria</SelectItem>
+                  <SelectItem value="_none">{tc('noCategory')}</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       <span className="flex items-center gap-2">
@@ -1232,7 +1238,7 @@ export default function CatalogoPage() {
 
             {/* Description */}
             <div className="space-y-1">
-              <Label>Descripcion</Label>
+              <Label>{tc('descriptionLabel')}</Label>
               <textarea
                 value={formData.description}
                 onChange={(e) => handleFormChange('description', e.target.value)}
@@ -1251,7 +1257,7 @@ export default function CatalogoPage() {
             {/* Prices */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label>Precio Base *</Label>
+                <Label>{tc('basePriceLabel')} *</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -1266,7 +1272,7 @@ export default function CatalogoPage() {
                 )}
               </div>
               <div className="space-y-1">
-                <Label>Precio Costo</Label>
+                <Label>{tc('costPriceLabel')}</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -1285,13 +1291,13 @@ export default function CatalogoPage() {
             {/* Unit + Tax */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label>Unidad de Medida</Label>
+                <Label>{tc('unitLabel')}</Label>
                 <Select
                   value={formData.uniMedida}
                   onValueChange={(v) => handleFormChange('uniMedida', v)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar unidad" />
+                    <SelectValue placeholder={tc('selectUnit')} />
                   </SelectTrigger>
                   <SelectContent>
                     {units.length > 0 ? (
@@ -1316,13 +1322,13 @@ export default function CatalogoPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>Perfil Fiscal</Label>
+                <Label>{tc('taxProfileLabel')}</Label>
                 <Select
                   value={formData.tributo}
                   onValueChange={handleTributoChange}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar impuesto" />
+                    <SelectValue placeholder={tc('selectTax')} />
                   </SelectTrigger>
                   <SelectContent>
                     {TRIBUTO_OPTIONS.map((o) => (
@@ -1337,13 +1343,13 @@ export default function CatalogoPage() {
 
             {/* Tipo Item MH */}
             <div className="space-y-1">
-              <Label>Tipo Item MH (CAT-011)</Label>
+              <Label>{tc('mhTypeLabel')}</Label>
               <Select
                 value={formData.tipoItem}
                 onValueChange={(v) => handleFormChange('tipoItem', v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar tipo" />
+                  <SelectValue placeholder={tc('selectType')} />
                 </SelectTrigger>
                 <SelectContent>
                   {TIPO_ITEM_OPTIONS.map((o) => (
@@ -1358,14 +1364,14 @@ export default function CatalogoPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={closeModal} disabled={saving}>
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button
               onClick={handleSave}
               disabled={saving || !isFormValid(formData)}
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {editingItem ? 'Guardar Cambios' : 'Crear Item'}
+              {editingItem ? tCommon('save') : tCommon('create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1375,10 +1381,9 @@ export default function CatalogoPage() {
       <Dialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Eliminar Item</DialogTitle>
+            <DialogTitle>{tc('deleteItem')}</DialogTitle>
             <DialogDescription>
-              ¿Estas seguro de eliminar <strong>{deleteConfirm?.name}</strong> ({deleteConfirm?.code})?
-              Esta accion no se puede deshacer.
+              {tc('deleteConfirm', { name: deleteConfirm?.name ?? '', code: deleteConfirm?.code ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1387,7 +1392,7 @@ export default function CatalogoPage() {
               onClick={() => setDeleteConfirm(null)}
               disabled={deleting}
             >
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -1395,7 +1400,7 @@ export default function CatalogoPage() {
               disabled={deleting}
             >
               {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Eliminar
+              {tCommon('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1405,9 +1410,9 @@ export default function CatalogoPage() {
       <Dialog open={categoriesModalOpen} onOpenChange={(open) => { if (!open) { setCategoriesModalOpen(false); setEditingCat(null); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Gestionar Categorias</DialogTitle>
+            <DialogTitle>{tc('manageCategories')}</DialogTitle>
             <DialogDescription>
-              Organiza tus productos y servicios en categorias
+              {tc('manageCategoriesDesc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -1415,11 +1420,11 @@ export default function CatalogoPage() {
             {/* Add new category */}
             <div className="flex items-end gap-2">
               <div className="flex-1 space-y-1">
-                <Label>Nueva Categoria</Label>
+                <Label>{tc('newCategory')}</Label>
                 <Input
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
-                  placeholder="Nombre de la categoria"
+                  placeholder={tc('categoryNamePlaceholder')}
                   maxLength={100}
                 />
               </div>
@@ -1444,7 +1449,7 @@ export default function CatalogoPage() {
             {/* Category list */}
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {categories.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No hay categorias creadas</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{tc('noCategories')}</p>
               ) : (
                 categories.map((cat) => (
                   <div key={cat.id} className="flex items-center gap-2 px-3 py-2 rounded-md border">
@@ -1504,7 +1509,7 @@ export default function CatalogoPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setCategoriesModalOpen(false)}>
-              Cerrar
+              {tCommon('close')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1514,26 +1519,26 @@ export default function CatalogoPage() {
       <Dialog open={importModalOpen} onOpenChange={(open) => { if (!open) closeImportModal(); }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Importar Catalogo</DialogTitle>
+            <DialogTitle>{tc('importCatalog')}</DialogTitle>
             <DialogDescription>
-              Sube un archivo CSV para importar productos en lote. Los items existentes (mismo codigo) seran actualizados.
+              {tc('importDesc')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* Template download */}
             <div className="flex items-center justify-between rounded-md border px-3 py-2">
-              <span className="text-sm text-muted-foreground">Descarga la plantilla CSV para ver el formato esperado</span>
+              <span className="text-sm text-muted-foreground">{tc('downloadTemplate')}</span>
               <Button size="sm" variant="outline" onClick={downloadTemplate}>
                 <Download className="mr-2 h-3.5 w-3.5" />
-                Plantilla
+                {tc('template')}
               </Button>
             </div>
 
             {/* File + Separator */}
             <div className="flex items-end gap-3">
               <div className="flex-1 space-y-1">
-                <Label>Archivo CSV</Label>
+                <Label>{tc('csvFile')}</Label>
                 <Input
                   type="file"
                   accept=".csv,.txt"
@@ -1541,15 +1546,15 @@ export default function CatalogoPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label>Separador</Label>
+                <Label>{tc('separator')}</Label>
                 <Select value={importSeparator} onValueChange={setImportSeparator}>
                   <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value=",">Coma (,)</SelectItem>
-                    <SelectItem value=";">Punto y coma (;)</SelectItem>
-                    <SelectItem value="\t">Tab</SelectItem>
+                    <SelectItem value=",">{tc('comma')}</SelectItem>
+                    <SelectItem value=";">{tc('semicolon')}</SelectItem>
+                    <SelectItem value="\t">{tc('tab')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1558,7 +1563,7 @@ export default function CatalogoPage() {
             {/* Preview */}
             {importPreview && importPreview.length > 0 && (
               <div className="space-y-1">
-                <Label>Vista previa (primeras filas)</Label>
+                <Label>{tc('previewRows')}</Label>
                 <div className="overflow-x-auto border rounded-md">
                   <Table>
                     <TableHeader>
@@ -1586,11 +1591,11 @@ export default function CatalogoPage() {
             {importResult && (
               <div className="rounded-md border p-3 space-y-2">
                 <div className="flex items-center gap-4 text-sm">
-                  <span className="font-medium">Resultado:</span>
-                  <span className="text-green-600 dark:text-green-400">{importResult.created} creados</span>
-                  <span className="text-blue-600 dark:text-blue-400">{importResult.updated} actualizados</span>
+                  <span className="font-medium">{tc('importResult')}</span>
+                  <span className="text-green-600 dark:text-green-400">{tc('created', { count: importResult.created })}</span>
+                  <span className="text-blue-600 dark:text-blue-400">{tc('updated', { count: importResult.updated })}</span>
                   {importResult.errors.length > 0 && (
-                    <span className="text-red-600 dark:text-red-400">{importResult.errors.length} errores</span>
+                    <span className="text-red-600 dark:text-red-400">{tc('errors', { count: importResult.errors.length })}</span>
                   )}
                 </div>
                 {importResult.errors.length > 0 && (
@@ -1608,12 +1613,12 @@ export default function CatalogoPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={closeImportModal}>
-              {importResult ? 'Cerrar' : 'Cancelar'}
+              {importResult ? tCommon('close') : tCommon('cancel')}
             </Button>
             {!importResult && (
               <Button onClick={handleImport} disabled={importing || !importFile}>
                 {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Importar
+                {tCommon('import')}
               </Button>
             )}
           </DialogFooter>

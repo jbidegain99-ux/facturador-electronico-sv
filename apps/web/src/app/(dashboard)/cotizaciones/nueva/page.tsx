@@ -21,6 +21,7 @@ import type { CatalogItem } from '@/components/facturas/catalog-search';
 import { ItemsTable } from '@/components/facturas/items-table';
 import { NuevoClienteModal } from '@/components/facturas/nuevo-cliente-modal';
 import { useToast } from '@/components/ui/toast';
+import { useTranslations } from 'next-intl';
 import { formatCurrency } from '@/lib/utils';
 import type { Cliente, ItemFactura } from '@/types';
 
@@ -40,6 +41,9 @@ export default function NuevaCotizacionPage() {
   const toast = useToast();
   const toastRef = React.useRef(toast);
   toastRef.current = toast;
+  const t = useTranslations('quotes');
+  const tCommon = useTranslations('common');
+  const tInvoices = useTranslations('invoices');
 
   const editId = searchParams.get('edit');
 
@@ -79,7 +83,7 @@ export default function NuevaCotizacionPage() {
         });
 
         if (!res.ok) {
-          toastRef.current.error('No se pudo cargar la cotizacion');
+          toastRef.current.error(t('cantLoadQuote'));
           router.push('/cotizaciones');
           return;
         }
@@ -173,7 +177,7 @@ export default function NuevaCotizacionPage() {
         setNotes((quote.notes as string) || '');
       } catch (err) {
         console.error('Error loading quote:', err);
-        toastRef.current.error('Error al cargar la cotizacion');
+        toastRef.current.error(t('cantLoadQuote'));
       } finally {
         setLoadingEdit(false);
       }
@@ -216,19 +220,20 @@ export default function NuevaCotizacionPage() {
     };
 
     setItems((prev) => [...prev, newItem]);
-    toastRef.current.success(`"${catalogItem.name}" agregado`);
+    toastRef.current.success(`"${catalogItem.name}"`);
+
   };
 
   // ── Validation ─────────────────────────────────────────────────────
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!cliente) newErrors.cliente = 'Selecciona un cliente';
-    if (items.length === 0) newErrors.items = 'Agrega al menos un item';
-    if (!validUntil) newErrors.validUntil = 'Fecha de validez requerida';
+    if (!cliente) newErrors.cliente = t('selectClient');
+    if (items.length === 0) newErrors.items = t('addItems');
+    if (!validUntil) newErrors.validUntil = t('validDateRequired');
 
     const invalidItems = items.filter((i) => i.precioUnitario <= 0);
     if (invalidItems.length > 0) {
-      newErrors.items = 'Todos los items deben tener precio mayor a 0';
+      newErrors.items = t('priceZero');
     }
 
     setErrors(newErrors);
@@ -245,7 +250,7 @@ export default function NuevaCotizacionPage() {
 
     try {
       const token = localStorage.getItem('token');
-      if (!token) throw new Error('No hay sesion activa');
+      if (!token) throw new Error(tCommon('noSession'));
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const payload = {
@@ -281,7 +286,7 @@ export default function NuevaCotizacionPage() {
           const errData = await res.json().catch(() => ({}));
           throw new Error(
             (errData as { message?: string }).message ||
-              'Error al actualizar',
+              t('updateError'),
           );
         }
       } else {
@@ -299,7 +304,7 @@ export default function NuevaCotizacionPage() {
           const errData = await res.json().catch(() => ({}));
           throw new Error(
             (errData as { message?: string }).message ||
-              'Error al crear cotizacion',
+              t('createError'),
           );
         }
 
@@ -316,7 +321,7 @@ export default function NuevaCotizacionPage() {
 
         if (!sendRes.ok) {
           toastRef.current.warning(
-            'Cotizacion guardada pero no se pudo enviar',
+            t('savedNotSent'),
           );
           router.push(`/cotizaciones/${quoteId}`);
           return;
@@ -325,15 +330,15 @@ export default function NuevaCotizacionPage() {
 
       toastRef.current.success(
         andSend
-          ? 'Cotizacion enviada'
+          ? t('quoteSent')
           : editId
-            ? 'Cotizacion actualizada'
-            : 'Cotizacion creada',
+            ? t('quoteUpdated')
+            : t('quoteCreated'),
       );
       router.push(quoteId ? `/cotizaciones/${quoteId}` : '/cotizaciones');
     } catch (err) {
       const msg =
-        err instanceof Error ? err.message : 'Error desconocido';
+        err instanceof Error ? err.message : tCommon('error');
       setErrors({ submit: msg });
       toastRef.current.error(msg);
     } finally {
@@ -347,7 +352,7 @@ export default function NuevaCotizacionPage() {
     if (newCliente.correo) setClienteEmail(newCliente.correo);
     setShowNuevoCliente(false);
     toastRef.current.success(
-      `Cliente "${newCliente.nombre}" creado y seleccionado`,
+      t('clientCreated', { name: newCliente.nombre }),
     );
   };
 
@@ -373,17 +378,17 @@ export default function NuevaCotizacionPage() {
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Volver
+            {tCommon('back')}
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <ClipboardList className="w-6 h-6 text-primary" />
-              {editId ? 'Editar Cotizacion' : 'Nueva Cotizacion'}
+              {editId ? t('editQuote') : t('newQuote')}
             </h1>
             <p className="text-sm text-muted-foreground">
               {editId
-                ? 'Modifica los datos de la cotizacion'
-                : 'Crea una cotizacion para enviar a tu cliente'}
+                ? t('editSubtitle')
+                : t('createSubtitle')}
             </p>
           </div>
         </div>
@@ -405,7 +410,7 @@ export default function NuevaCotizacionPage() {
             <div className="flex items-center gap-3">
               <Calendar className="w-5 h-5 text-primary" />
               <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                Valida hasta:
+                {t('validUntilLabel')}
               </label>
               <input
                 type="date"
@@ -424,7 +429,7 @@ export default function NuevaCotizacionPage() {
           {/* Client */}
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Cliente
+              {t('client')}
             </h2>
             <ClienteSearch
               value={cliente}
@@ -448,7 +453,7 @@ export default function NuevaCotizacionPage() {
                   className="text-sm"
                 />
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  Email para aprobacion
+                  {t('emailLabel')}
                 </span>
               </div>
             )}
@@ -457,7 +462,7 @@ export default function NuevaCotizacionPage() {
           {/* Items */}
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Items de la Cotizacion
+              {t('itemsSection')}
             </h2>
             <CatalogSearch onSelect={handleCatalogSelect} />
             <ItemsTable items={items} onChange={setItems} />
@@ -469,12 +474,12 @@ export default function NuevaCotizacionPage() {
           {/* Notes (internal) */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground">
-              Notas internas (no visibles al cliente)
+              {t('internalNotes')}
             </label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Notas internas sobre esta cotizacion..."
+              placeholder={t('internalNotesPlaceholder')}
               rows={3}
               className="resize-none"
             />
@@ -488,7 +493,7 @@ export default function NuevaCotizacionPage() {
             <div className="glass-card p-5 space-y-4">
               <div className="flex items-center gap-2 pb-3 border-b border-border">
                 <Calculator className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Resumen</h3>
+                <h3 className="font-semibold text-foreground">{tInvoices('summary')}</h3>
                 {items.length > 0 && (
                   <span className="ml-auto text-xs text-muted-foreground">
                     {items.length} {items.length === 1 ? 'item' : 'items'}
@@ -498,7 +503,7 @@ export default function NuevaCotizacionPage() {
 
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="text-muted-foreground">{tInvoices('subtotalLabel')}</span>
                   <span className="text-foreground font-medium">
                     {formatCurrency(subtotal)}
                   </span>
@@ -507,7 +512,7 @@ export default function NuevaCotizacionPage() {
                 {totalDescuentos > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
-                      Descuentos:
+                      {tInvoices('discountsLabel')}
                     </span>
                     <span className="text-warning font-medium">
                       -{formatCurrency(totalDescuentos)}
@@ -516,7 +521,7 @@ export default function NuevaCotizacionPage() {
                 )}
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">IVA (13%):</span>
+                  <span className="text-muted-foreground">{tInvoices('ivaLabel')}</span>
                   <span className="text-foreground font-medium">
                     {formatCurrency(totalIva)}
                   </span>
@@ -526,7 +531,7 @@ export default function NuevaCotizacionPage() {
 
                 <div className="flex justify-between items-center pt-1">
                   <span className="text-lg font-semibold text-foreground">
-                    TOTAL:
+                    {tInvoices('totalLabel')}
                   </span>
                   <span className="text-2xl font-bold text-primary">
                     {formatCurrency(totalPagar)}
@@ -550,12 +555,12 @@ export default function NuevaCotizacionPage() {
                 {sending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Enviando...
+                    {tCommon('sending')}
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    Guardar y Enviar
+                    {t('saveAndSend')}
                   </>
                 )}
               </Button>
@@ -574,12 +579,12 @@ export default function NuevaCotizacionPage() {
                 {saving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Guardando...
+                    {tCommon('saving')}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Guardar Borrador
+                    {t('saveDraft')}
                   </>
                 )}
               </Button>
@@ -588,12 +593,12 @@ export default function NuevaCotizacionPage() {
             {/* Terms */}
             <div className="glass-card p-4 space-y-2">
               <label className="text-sm font-medium text-muted-foreground">
-                Terminos y Condiciones
+                {t('termsLabel')}
               </label>
               <Textarea
                 value={terms}
                 onChange={(e) => setTerms(e.target.value)}
-                placeholder="Condiciones de pago, garantias, etc."
+                placeholder={t('termsPlaceholder')}
                 rows={4}
                 className="resize-none"
               />

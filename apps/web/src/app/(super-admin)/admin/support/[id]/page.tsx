@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import {
   ArrowLeft,
   Building2,
@@ -85,41 +86,10 @@ interface Admin {
   email: string;
 }
 
-const typeLabels: Record<string, string> = {
-  EMAIL_CONFIG: 'Configuracion de Email',
-  TECHNICAL: 'Problema Tecnico',
-  BILLING: 'Facturacion',
-  GENERAL: 'General',
-  ONBOARDING: 'Onboarding',
-};
-
-const statusLabels: Record<string, string> = {
-  PENDING: 'Pendiente',
-  ASSIGNED: 'Asignado',
-  IN_PROGRESS: 'En Progreso',
-  WAITING_CUSTOMER: 'Esperando Cliente',
-  RESOLVED: 'Resuelto',
-  CLOSED: 'Cerrado',
-};
-
-const priorityLabels: Record<string, string> = {
-  LOW: 'Baja',
-  MEDIUM: 'Media',
-  HIGH: 'Alta',
-  URGENT: 'Urgente',
-};
-
-const actionLabels: Record<string, string> = {
-  CREATED: 'Ticket creado',
-  STATUS_CHANGED: 'Estado cambiado',
-  ASSIGNED: 'Ticket asignado',
-  PRIORITY_CHANGED: 'Prioridad cambiada',
-  COMMENT_ADDED: 'Comentario agregado',
-  RESOLVED: 'Ticket resuelto',
-  CLOSED: 'Ticket cerrado',
-};
-
 export default function TicketDetailPage() {
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('common');
+  const tSupport = useTranslations('support');
   const params = useParams();
   const router = useRouter();
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
@@ -136,6 +106,40 @@ export default function TicketDetailPage() {
   const [newComment, setNewComment] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [addingComment, setAddingComment] = useState(false);
+
+  const typeLabels: Record<string, string> = {
+    EMAIL_CONFIG: tSupport('typeEmail'),
+    TECHNICAL: tSupport('typeTechnical'),
+    BILLING: tSupport('typeBilling'),
+    GENERAL: tSupport('typeGeneral'),
+    ONBOARDING: tSupport('typeOnboarding'),
+  };
+
+  const statusLabels: Record<string, string> = {
+    PENDING: tSupport('statusPending'),
+    ASSIGNED: tSupport('statusAssigned'),
+    IN_PROGRESS: tSupport('statusInProgress'),
+    WAITING_CUSTOMER: t('statusWaitingClient'),
+    RESOLVED: tSupport('statusResolved'),
+    CLOSED: tSupport('statusClosed'),
+  };
+
+  const priorityLabels: Record<string, string> = {
+    LOW: tSupport('priorityLow'),
+    MEDIUM: tSupport('priorityMedium'),
+    HIGH: tSupport('priorityHigh'),
+    URGENT: tSupport('priorityUrgent'),
+  };
+
+  const actionLabels: Record<string, string> = {
+    CREATED: t('activityTicketCreated'),
+    STATUS_CHANGED: t('activityStatusChanged'),
+    ASSIGNED: t('activityAssigned'),
+    PRIORITY_CHANGED: t('activityPriorityChanged'),
+    COMMENT_ADDED: t('activityCommentAdded'),
+    RESOLVED: t('activityResolved'),
+    CLOSED: t('activityClosed'),
+  };
 
   useEffect(() => {
     fetchTicket();
@@ -154,7 +158,7 @@ export default function TicketDetailPage() {
       );
 
       if (!res.ok) {
-        throw new Error('Error al cargar ticket');
+        throw new Error(t('loadTicketsError'));
       }
 
       const data: TicketDetail = await res.json();
@@ -164,7 +168,7 @@ export default function TicketDetailPage() {
       setAssignedToId(data.assignedTo?.id || '__none__');
       setResolution(data.resolution || '');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error');
+      setError(err instanceof Error ? err.message : tCommon('error'));
     } finally {
       setLoading(false);
     }
@@ -203,7 +207,7 @@ export default function TicketDetailPage() {
       if (resolution !== (ticket?.resolution || '')) body.resolution = resolution;
 
       if (Object.keys(body).length === 0) {
-        alert('No hay cambios para guardar');
+        alert(t('noChanges'));
         return;
       }
 
@@ -219,11 +223,11 @@ export default function TicketDetailPage() {
         }
       );
 
-      if (!res.ok) throw new Error('Error al actualizar');
-      alert('Ticket actualizado correctamente');
+      if (!res.ok) throw new Error(t('updateError'));
+      alert(t('updateSuccess'));
       fetchTicket();
     } catch (err) {
-      alert('Error al actualizar el ticket');
+      alert(t('updateError'));
     } finally {
       setSaving(false);
     }
@@ -252,12 +256,12 @@ export default function TicketDetailPage() {
         }
       );
 
-      if (!res.ok) throw new Error('Error al agregar comentario');
+      if (!res.ok) throw new Error(t('commentError'));
       setNewComment('');
       setIsInternal(false);
       fetchTicket();
     } catch (err) {
-      alert('Error al agregar comentario');
+      alert(t('commentError'));
     } finally {
       setAddingComment(false);
     }
@@ -297,9 +301,9 @@ export default function TicketDetailPage() {
     return (
       <div className="glass-card p-6 text-center">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <p className="text-red-400">{error || 'Ticket no encontrado'}</p>
+        <p className="text-red-400">{error || t('ticketNotFound')}</p>
         <Link href="/admin/support" className="btn-primary mt-4 inline-block">
-          Volver a Tickets
+          {t('backToTickets')}
         </Link>
       </div>
     );
@@ -329,7 +333,7 @@ export default function TicketDetailPage() {
           disabled={saving}
           className="btn-primary"
         >
-          {saving ? 'Guardando...' : 'Guardar Cambios'}
+          {saving ? tCommon('saving') : t('saveChanges')}
         </button>
       </div>
 
@@ -338,17 +342,17 @@ export default function TicketDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Ticket Description */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Descripcion</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('description')}</h3>
             <div className="prose prose-invert max-w-none">
               <p className="text-muted-foreground whitespace-pre-wrap">
-                {ticket.description || 'Sin descripcion'}
+                {ticket.description || t('noDescription')}
               </p>
             </div>
 
             {/* Metadata */}
             {ticket.metadata && (
               <div className="mt-4 pt-4 border-t border-border">
-                <h4 className="text-sm font-medium text-white mb-2">Informacion adicional</h4>
+                <h4 className="text-sm font-medium text-white mb-2">{t('additionalInfo')}</h4>
                 <pre className="text-xs text-muted-foreground bg-black/20 p-3 rounded-lg overflow-auto">
                   {(() => {
                     try {
@@ -367,12 +371,12 @@ export default function TicketDetailPage() {
             <div className="glass-card p-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400" />
-                Resolucion
+                {t('resolution')}
               </h3>
               <textarea
                 value={resolution}
                 onChange={(e) => setResolution(e.target.value)}
-                placeholder="Describe como se resolvio el ticket..."
+                placeholder={t('resolutionPlaceholder')}
                 rows={4}
                 className="input-rc"
               />
@@ -383,7 +387,7 @@ export default function TicketDetailPage() {
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <MessageSquare className="w-5 h-5" />
-              Comentarios ({ticket.comments.length})
+              {t('comments')} ({ticket.comments.length})
             </h3>
 
             <div className="space-y-4 mb-6">
@@ -405,12 +409,12 @@ export default function TicketDetailPage() {
                         <span className="font-medium text-white">{comment.author.nombre}</span>
                         {comment.author.rol === 'SUPER_ADMIN' && (
                           <span className="ml-2 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
-                            Admin
+                            {t('adminBadge')}
                           </span>
                         )}
                         {comment.isInternal && (
                           <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">
-                            Interno
+                            {t('internalBadge')}
                           </span>
                         )}
                       </div>
@@ -424,7 +428,7 @@ export default function TicketDetailPage() {
               ))}
 
               {ticket.comments.length === 0 && (
-                <p className="text-muted-foreground text-center py-4">Sin comentarios</p>
+                <p className="text-muted-foreground text-center py-4">{t('noComments')}</p>
               )}
             </div>
 
@@ -433,7 +437,7 @@ export default function TicketDetailPage() {
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Escribe un comentario..."
+                placeholder={t('writeComment')}
                 rows={3}
                 className="input-rc"
               />
@@ -443,7 +447,7 @@ export default function TicketDetailPage() {
                     checked={isInternal}
                     onCheckedChange={(checked) => setIsInternal(checked === true)}
                   />
-                  Nota interna (solo visible para admins)
+                  {t('internalNote')}
                 </label>
                 <button
                   type="submit"
@@ -451,7 +455,7 @@ export default function TicketDetailPage() {
                   className="btn-primary flex items-center gap-2"
                 >
                   <Send className="w-4 h-4" />
-                  {addingComment ? 'Enviando...' : 'Enviar'}
+                  {addingComment ? tCommon('sending') : tSupport('send')}
                 </button>
               </div>
             </form>
@@ -461,7 +465,7 @@ export default function TicketDetailPage() {
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5" />
-              Actividad
+              {t('activity')}
             </h3>
 
             <div className="space-y-3">
@@ -474,8 +478,8 @@ export default function TicketDetailPage() {
                       {' '}{actionLabels[activity.action] || activity.action}
                       {activity.oldValue && activity.newValue && (
                         <span>
-                          {' '}de <span className="text-white">{activity.oldValue}</span>
-                          {' '}a <span className="text-white">{activity.newValue}</span>
+                          {' '}<span className="text-white">{activity.oldValue}</span>
+                          {' '}<span className="text-white">{activity.newValue}</span>
                         </span>
                       )}
                       {!activity.oldValue && activity.newValue && (
@@ -501,53 +505,53 @@ export default function TicketDetailPage() {
         <div className="space-y-6">
           {/* Ticket Info */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Informacion</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('information')}</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">Tipo</label>
+                <label className="block text-sm text-muted-foreground mb-1">{t('typeLabel')}</label>
                 <div className="text-white">{typeLabels[ticket.type] || ticket.type}</div>
               </div>
 
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">Estado</label>
+                <label className="block text-sm text-muted-foreground mb-2">{tCommon('status')}</label>
                 <Select value={status} onValueChange={setStatus}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PENDING">Pendiente</SelectItem>
-                    <SelectItem value="ASSIGNED">Asignado</SelectItem>
-                    <SelectItem value="IN_PROGRESS">En Progreso</SelectItem>
-                    <SelectItem value="WAITING_CUSTOMER">Esperando Cliente</SelectItem>
-                    <SelectItem value="RESOLVED">Resuelto</SelectItem>
-                    <SelectItem value="CLOSED">Cerrado</SelectItem>
+                    <SelectItem value="PENDING">{tSupport('statusPending')}</SelectItem>
+                    <SelectItem value="ASSIGNED">{tSupport('statusAssigned')}</SelectItem>
+                    <SelectItem value="IN_PROGRESS">{tSupport('statusInProgress')}</SelectItem>
+                    <SelectItem value="WAITING_CUSTOMER">{t('statusWaitingClient')}</SelectItem>
+                    <SelectItem value="RESOLVED">{tSupport('statusResolved')}</SelectItem>
+                    <SelectItem value="CLOSED">{tSupport('statusClosed')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">Prioridad</label>
+                <label className="block text-sm text-muted-foreground mb-2">{t('priority')}</label>
                 <Select value={priority} onValueChange={setPriority}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="LOW">Baja</SelectItem>
-                    <SelectItem value="MEDIUM">Media</SelectItem>
-                    <SelectItem value="HIGH">Alta</SelectItem>
-                    <SelectItem value="URGENT">Urgente</SelectItem>
+                    <SelectItem value="LOW">{tSupport('priorityLow')}</SelectItem>
+                    <SelectItem value="MEDIUM">{tSupport('priorityMedium')}</SelectItem>
+                    <SelectItem value="HIGH">{tSupport('priorityHigh')}</SelectItem>
+                    <SelectItem value="URGENT">{tSupport('priorityUrgent')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">Asignado a</label>
+                <label className="block text-sm text-muted-foreground mb-2">{t('assignToLabel')}</label>
                 <Select value={assignedToId} onValueChange={setAssignedToId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sin asignar" />
+                    <SelectValue placeholder={t('unassigned')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">Sin asignar</SelectItem>
+                    <SelectItem value="__none__">{t('unassigned')}</SelectItem>
                     {admins.map((admin) => (
                       <SelectItem key={admin.id} value={admin.id}>
                         {admin.nombre}
@@ -563,7 +567,7 @@ export default function TicketDetailPage() {
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Building2 className="w-5 h-5" />
-              Empresa
+              {t('companyLabel')}
             </h3>
             <div className="space-y-3">
               <div>
@@ -578,7 +582,7 @@ export default function TicketDetailPage() {
                 href={`/admin/tenants/${ticket.tenant.id}`}
                 className="text-sm text-primary hover:underline"
               >
-                Ver empresa
+                {t('viewCompany')}
               </Link>
             </div>
           </div>
@@ -587,7 +591,7 @@ export default function TicketDetailPage() {
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <User className="w-5 h-5" />
-              Solicitante
+              {t('requester')}
             </h3>
             <div className="space-y-2">
               <div className="font-medium text-white">{ticket.requester.nombre}</div>
@@ -602,24 +606,24 @@ export default function TicketDetailPage() {
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Fechas
+              {t('dates')}
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Creado</span>
+                <span className="text-muted-foreground">{t('createdAt')}</span>
                 <span className="text-white">
                   {new Date(ticket.createdAt).toLocaleString('es')}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Actualizado</span>
+                <span className="text-muted-foreground">{t('updatedAt')}</span>
                 <span className="text-white">
                   {new Date(ticket.updatedAt).toLocaleString('es')}
                 </span>
               </div>
               {ticket.resolvedAt && (
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Resuelto</span>
+                  <span className="text-muted-foreground">{t('resolvedAt')}</span>
                   <span className="text-white">
                     {new Date(ticket.resolvedAt).toLocaleString('es')}
                   </span>

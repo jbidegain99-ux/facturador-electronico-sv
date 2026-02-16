@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   Shield,
   CheckCircle,
@@ -43,18 +44,21 @@ interface TenantHaciendaConfigProps {
   tenantName: string;
 }
 
-const testingStatusLabels: Record<string, string> = {
-  NOT_STARTED: 'No iniciado',
-  IN_PROGRESS: 'En progreso',
-  PENDING_AUTHORIZATION: 'Pendiente autorizacion',
-  AUTHORIZED: 'Autorizado',
-};
-
 export function TenantHaciendaConfig({ tenantId, tenantName }: TenantHaciendaConfigProps) {
+  const t = useTranslations('admin');
+  const tSettings = useTranslations('settings');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const [config, setConfig] = useState<HaciendaConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const testingStatusLabels: Record<string, string> = {
+    NOT_STARTED: t('testingNotStarted'),
+    IN_PROGRESS: t('testingInProgress'),
+    PENDING_AUTHORIZATION: t('testingPendingAuth'),
+    AUTHORIZED: t('testingAuthorized'),
+  };
 
   useEffect(() => {
     fetchConfig();
@@ -125,24 +129,24 @@ export function TenantHaciendaConfig({ tenantId, tenantName }: TenantHaciendaCon
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Shield className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-white">Configuracion de Hacienda</h3>
+          <h3 className="text-lg font-semibold text-white">{t('haciendaConfig')}</h3>
         </div>
         <div className="flex items-center gap-2">
           {configured ? (
             tokenValid ? (
               <span className="flex items-center gap-1 text-xs text-green-400">
                 <CheckCircle className="w-3 h-3" />
-                Conectado
+                {t('connected')}
               </span>
             ) : (
               <span className="flex items-center gap-1 text-xs text-yellow-400">
                 <AlertTriangle className="w-3 h-3" />
-                Token expirado
+                {t('tokenExpired')}
               </span>
             )
           ) : (
             <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-500/20 text-yellow-400">
-              Sin configurar
+              {t('notConfigured')}
             </span>
           )}
           <Button
@@ -161,15 +165,15 @@ export function TenantHaciendaConfig({ tenantId, tenantName }: TenantHaciendaCon
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Ambiente:</span>
+              <span className="text-muted-foreground">{t('environment')}:</span>
               <span className={`ml-2 font-medium ${
                 config.activeEnvironment === 'PRODUCTION' ? 'text-green-400' : 'text-yellow-400'
               }`}>
-                {config.activeEnvironment === 'PRODUCTION' ? 'Produccion' : 'Pruebas'}
+                {config.activeEnvironment === 'PRODUCTION' ? tSettings('envProd') : tSettings('envTest')}
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground">Estado pruebas:</span>
+              <span className="text-muted-foreground">{t('testingStatus')}:</span>
               <span className="ml-2 text-white">
                 {testingStatusLabels[config.testingStatus] || config.testingStatus}
               </span>
@@ -177,11 +181,11 @@ export function TenantHaciendaConfig({ tenantId, tenantName }: TenantHaciendaCon
             {envConfig?.certificateInfo && (
               <>
                 <div>
-                  <span className="text-muted-foreground">Certificado:</span>
+                  <span className="text-muted-foreground">{t('certificate')}:</span>
                   <span className="ml-2 text-white">{envConfig.certificateInfo.fileName}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Vence:</span>
+                  <span className="text-muted-foreground">{t('expires')}:</span>
                   <span className="ml-2 text-white">
                     {new Date(envConfig.certificateInfo.validUntil).toLocaleDateString('es')}
                   </span>
@@ -190,7 +194,7 @@ export function TenantHaciendaConfig({ tenantId, tenantName }: TenantHaciendaCon
             )}
             {envConfig?.tokenExpiry && (
               <div>
-                <span className="text-muted-foreground">Token expira:</span>
+                <span className="text-muted-foreground">{t('tokenExpires')}:</span>
                 <span className={`ml-2 ${tokenValid ? 'text-green-400' : 'text-red-400'}`}>
                   {new Date(envConfig.tokenExpiry).toLocaleString('es')}
                 </span>
@@ -198,10 +202,10 @@ export function TenantHaciendaConfig({ tenantId, tenantName }: TenantHaciendaCon
             )}
             {envConfig?.isValidated && (
               <div>
-                <span className="text-muted-foreground">Validado:</span>
+                <span className="text-muted-foreground">{t('validated')}:</span>
                 <span className="flex items-center gap-1 ml-2 text-green-400">
                   <CheckCircle className="w-3 h-3" />
-                  Si
+                  {tCommon('yes')}
                 </span>
               </div>
             )}
@@ -221,18 +225,18 @@ export function TenantHaciendaConfig({ tenantId, tenantName }: TenantHaciendaCon
               onClick={() => router.push(`/admin/tenants/${tenantId}/hacienda`)}
             >
               <ExternalLink className="w-4 h-4 mr-1" />
-              Configurar
+              {t('configure')}
             </Button>
           </div>
         </div>
       ) : (
         <div className="text-center py-4">
           <p className="text-sm text-muted-foreground mb-4">
-            Esta empresa no tiene configuracion de Hacienda.
+            {t('noHaciendaConfig')}
           </p>
           <Button onClick={() => router.push(`/admin/tenants/${tenantId}/hacienda`)}>
             <Shield className="w-4 h-4 mr-2" />
-            Configurar Hacienda
+            {t('configureHacienda')}
           </Button>
         </div>
       )}

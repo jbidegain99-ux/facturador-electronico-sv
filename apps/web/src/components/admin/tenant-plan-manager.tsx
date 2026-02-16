@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   CreditCard,
   FileText,
@@ -66,6 +67,8 @@ interface TenantPlanManagerProps {
 }
 
 export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerProps) {
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('common');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [usage, setUsage] = useState<TenantUsage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,7 +106,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
         setSelectedPlanId(usageData.planId || '');
       }
     } catch (err) {
-      setError('Error al cargar datos del plan');
+      setError(t('planDataError'));
     } finally {
       setLoading(false);
     }
@@ -129,20 +132,20 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.message || 'Error al asignar plan');
+        throw new Error(error.message || t('planAssignError'));
       }
 
       await fetchData();
-      alert('Plan asignado correctamente');
+      alert(t('planAssigned'));
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al asignar plan');
+      alert(err instanceof Error ? err.message : t('planAssignError'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleRemovePlan = async () => {
-    if (!confirm('¿Estás seguro de quitar el plan de este tenant?')) return;
+    if (!confirm(t('removePlanConfirm'))) return;
 
     try {
       setSaving(true);
@@ -156,14 +159,14 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
       );
 
       if (!res.ok) {
-        throw new Error('Error al quitar plan');
+        throw new Error(t('planRemoveError'));
       }
 
       await fetchData();
       setSelectedPlanId('');
-      alert('Plan removido correctamente');
+      alert(t('planRemoved'));
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al quitar plan');
+      alert(err instanceof Error ? err.message : t('planRemoveError'));
     } finally {
       setSaving(false);
     }
@@ -189,7 +192,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
       <div className="glass-card p-6">
         <div className="flex items-center gap-3 mb-4">
           <CreditCard className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-white">Plan y Límites</h3>
+          <h3 className="text-lg font-semibold text-white">{t('planAndLimits')}</h3>
         </div>
         <div className="flex items-center justify-center h-32">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -203,7 +206,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <CreditCard className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-white">Plan y Límites</h3>
+          <h3 className="text-lg font-semibold text-white">{t('planAndLimits')}</h3>
         </div>
         <Button variant="outline" size="sm" onClick={fetchData}>
           <RefreshCw className="w-4 h-4" />
@@ -219,27 +222,27 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
         <>
           {/* Current Plan */}
           <div className="mb-6 p-4 rounded-lg bg-white/5">
-            <div className="text-sm text-muted-foreground mb-1">Plan actual</div>
+            <div className="text-sm text-muted-foreground mb-1">{t('currentPlan')}</div>
             {usage?.planNombre ? (
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold text-white">{usage.planNombre}</span>
                 <span className="text-sm font-mono text-primary">({usage.planCodigo})</span>
               </div>
             ) : (
-              <div className="text-yellow-400">Sin plan asignado</div>
+              <div className="text-yellow-400">{t('noPlanAssigned')}</div>
             )}
           </div>
 
           {/* Plan Selector */}
           <div className="mb-6">
-            <label className="block text-sm text-muted-foreground mb-2">Asignar plan</label>
+            <label className="block text-sm text-muted-foreground mb-2">{t('assignPlan')}</label>
             <div className="flex gap-2">
               <Select
                 value={selectedPlanId}
                 onValueChange={setSelectedPlanId}
               >
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Seleccionar plan..." />
+                  <SelectValue placeholder={t('selectPlan')} />
                 </SelectTrigger>
                 <SelectContent>
                   {plans.map((plan) => (
@@ -256,7 +259,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
                 onClick={handleAssignPlan}
                 disabled={saving || !selectedPlanId || selectedPlanId === usage?.planId}
               >
-                {saving ? 'Guardando...' : 'Asignar'}
+                {saving ? tCommon('saving') : t('assign')}
               </Button>
               {usage?.planId && (
                 <Button
@@ -265,7 +268,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
                   disabled={saving}
                   className="text-red-400"
                 >
-                  Quitar
+                  {t('remove')}
                 </Button>
               )}
             </div>
@@ -274,14 +277,14 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
           {/* Usage Stats */}
           {usage && (
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-white">Uso actual</h4>
+              <h4 className="text-sm font-medium text-white">{t('currentUsage')}</h4>
 
               {/* DTEs */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">DTEs este mes</span>
+                    <span className="text-muted-foreground">{t('dtesThisMonthLabel')}</span>
                   </div>
                   <span className="text-white">
                     {usage.usage.dtesThisMonth} / {formatLimit(usage.usage.maxDtesPerMonth)}
@@ -298,7 +301,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
                 {!usage.limits.canCreateDte && (
                   <div className="flex items-center gap-1 text-xs text-red-400">
                     <AlertCircle className="w-3 h-3" />
-                    Límite alcanzado
+                    {t('limitReached')}
                   </div>
                 )}
               </div>
@@ -308,7 +311,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Usuarios</span>
+                    <span className="text-muted-foreground">{t('usersLabel')}</span>
                   </div>
                   <span className="text-white">
                     {usage.usage.users} / {formatLimit(usage.usage.maxUsers)}
@@ -325,7 +328,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
                 {!usage.limits.canAddUser && (
                   <div className="flex items-center gap-1 text-xs text-red-400">
                     <AlertCircle className="w-3 h-3" />
-                    Límite alcanzado
+                    {t('limitReached')}
                   </div>
                 )}
               </div>
@@ -335,7 +338,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <Database className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Clientes</span>
+                    <span className="text-muted-foreground">{t('clientsLabel')}</span>
                   </div>
                   <span className="text-white">
                     {usage.usage.clientes} / {formatLimit(usage.usage.maxClientes)}
@@ -352,7 +355,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
                 {!usage.limits.canAddCliente && (
                   <div className="flex items-center gap-1 text-xs text-red-400">
                     <AlertCircle className="w-3 h-3" />
-                    Límite alcanzado
+                    {t('limitReached')}
                   </div>
                 )}
               </div>
@@ -373,7 +376,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
                   ) : (
                     <AlertCircle className="w-4 h-4 text-red-400" />
                   )}
-                  <span className="text-muted-foreground">Usuarios</span>
+                  <span className="text-muted-foreground">{t('usersLabel')}</span>
                 </div>
                 <div className="flex items-center gap-1 text-sm">
                   {usage.limits.canAddCliente ? (
@@ -381,7 +384,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
                   ) : (
                     <AlertCircle className="w-4 h-4 text-red-400" />
                   )}
-                  <span className="text-muted-foreground">Clientes</span>
+                  <span className="text-muted-foreground">{t('clientsLabel')}</span>
                 </div>
               </div>
             </div>

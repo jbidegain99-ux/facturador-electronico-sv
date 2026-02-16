@@ -24,6 +24,7 @@ import {
 import { Plus, Search, Pencil, Trash2, User, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
+import { useTranslations } from 'next-intl';
 import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
 
@@ -180,6 +181,8 @@ type SortOrder = 'asc' | 'desc';
 
 export default function ClientesPage() {
   const toast = useToast();
+  const t = useTranslations('clients');
+  const tCommon = useTranslations('common');
 
   const [search, setSearch] = React.useState('');
   const [clientes, setClientes] = React.useState<Cliente[]>([]);
@@ -212,7 +215,7 @@ export default function ClientesPage() {
   const fetchClientes = React.useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setError('No hay sesion activa');
+      setError(tCommon('noSession'));
       setLoading(false);
       return;
     }
@@ -235,7 +238,7 @@ export default function ClientesPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error al cargar clientes (${res.status})`);
+        throw new Error(errorData.message || t('loadError'));
       }
 
       const data = await res.json();
@@ -249,7 +252,7 @@ export default function ClientesPage() {
       setError(null);
     } catch (err) {
       console.error('Error fetching clientes:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar clientes');
+      setError(err instanceof Error ? err.message : t('loadError'));
     } finally {
       setLoading(false);
     }
@@ -360,7 +363,7 @@ export default function ClientesPage() {
     e.preventDefault();
     const token = localStorage.getItem('token');
     if (!token) {
-      setFormError('No hay sesion activa');
+      setFormError(tCommon('noSession'));
       return;
     }
 
@@ -377,7 +380,7 @@ export default function ClientesPage() {
     const activeErrors = Object.entries(errors).filter(([, v]) => v);
     if (activeErrors.length > 0) {
       setFieldErrors(errors);
-      setFormError('Corrija los errores en el formulario');
+      setFormError(t('formErrors'));
       return;
     }
 
@@ -400,15 +403,15 @@ export default function ClientesPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al guardar cliente');
+        throw new Error(errorData.message || t('saveError'));
       }
 
       closeModal();
       fetchClientes();
-      toast.success(editingCliente ? 'Cliente actualizado correctamente' : 'Cliente creado correctamente');
+      toast.success(editingCliente ? t('updateSuccess') : t('createSuccess'));
     } catch (err) {
       console.error('Error saving cliente:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Error al guardar cliente';
+      const errorMessage = err instanceof Error ? err.message : t('saveError');
       setFormError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -432,15 +435,15 @@ export default function ClientesPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al eliminar cliente');
+        throw new Error(errorData.message || t('deleteError'));
       }
 
       setDeleteConfirm(null);
       fetchClientes();
-      toast.success('Cliente eliminado correctamente');
+      toast.success(t('deleteSuccess'));
     } catch (err) {
       console.error('Error deleting cliente:', err);
-      toast.error(err instanceof Error ? err.message : 'Error al eliminar cliente');
+      toast.error(err instanceof Error ? err.message : t('deleteError'));
     } finally {
       setDeleting(false);
     }
@@ -451,14 +454,14 @@ export default function ClientesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Gestiona tu base de clientes para facturacion rapida
+            {t('subtitle')}
           </p>
         </div>
         <Button onClick={openCreateModal}>
           <Plus className="mr-2 h-4 w-4" />
-          Nuevo Cliente
+          {t('newClient')}
         </Button>
       </div>
 
@@ -467,7 +470,7 @@ export default function ClientesPage() {
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
           {error}
           <Button variant="link" className="ml-2 text-red-700" onClick={fetchClientes}>
-            Reintentar
+            {tCommon('retry')}
           </Button>
         </div>
       )}
@@ -479,7 +482,7 @@ export default function ClientesPage() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nombre, documento o correo..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -507,7 +510,7 @@ export default function ClientesPage() {
                         className="flex items-center hover:text-foreground transition-colors"
                         onClick={() => handleSort('nombre')}
                       >
-                        Cliente
+                        {tCommon('name')}
                         {getSortIcon('nombre')}
                       </button>
                     </TableHead>
@@ -516,20 +519,20 @@ export default function ClientesPage() {
                         className="flex items-center hover:text-foreground transition-colors"
                         onClick={() => handleSort('numDocumento')}
                       >
-                        Documento
+                        {t('document')}
                         {getSortIcon('numDocumento')}
                       </button>
                     </TableHead>
                     <TableHead>NRC</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>{t('contact')}</TableHead>
+                    <TableHead className="text-right">{tCommon('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {(!clientes || clientes.length === 0) ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        {search ? 'No se encontraron clientes con esa busqueda' : 'No hay clientes registrados. Crea el primero.'}
+                        {search ? t('noClientsSearch') : t('noClients')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -612,12 +615,12 @@ export default function ClientesPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {editingCliente ? 'Editar Cliente' : 'Nuevo Cliente'}
+              {editingCliente ? t('editClient') : t('newClient')}
             </DialogTitle>
             <DialogDescription>
               {editingCliente
-                ? 'Modifica los datos del cliente'
-                : 'Completa los datos para registrar un nuevo cliente'}
+                ? t('editDesc')
+                : t('createDesc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -630,7 +633,7 @@ export default function ClientesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Tipo Documento</label>
+                <label className="text-sm font-medium">{t('docType')}</label>
                 <Select
                   value={formData.tipoDocumento}
                   onValueChange={(value) => handleFormChange('tipoDocumento', value)}
@@ -648,7 +651,7 @@ export default function ClientesPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Numero Documento *</label>
+                <label className="text-sm font-medium">{t('docNumber')} *</label>
                 <Input
                   placeholder={formData.tipoDocumento === '36' ? '0000-000000-000-0' : formData.tipoDocumento === '13' ? '00000000-0' : 'Numero de documento'}
                   value={formData.numDocumento}
@@ -663,7 +666,7 @@ export default function ClientesPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">Nombre / Razon Social *</label>
+              <label className="text-sm font-medium">{t('nameLabel')} *</label>
               <Input
                 placeholder="Nombre del cliente"
                 value={formData.nombre}
@@ -690,7 +693,7 @@ export default function ClientesPage() {
                 )}
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Telefono</label>
+                <label className="text-sm font-medium">{t('phoneLabel')}</label>
                 <Input
                   placeholder="0000-0000"
                   value={formData.telefono}
@@ -705,7 +708,7 @@ export default function ClientesPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">Correo Electronico</label>
+              <label className="text-sm font-medium">{t('emailLabel')}</label>
               <Input
                 type="email"
                 placeholder="cliente@ejemplo.com"
@@ -719,7 +722,7 @@ export default function ClientesPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">Direccion</label>
+              <label className="text-sm font-medium">{t('addressLabel')}</label>
               <Input
                 placeholder="Direccion completa"
                 value={formData.direccion.complemento}
@@ -733,18 +736,18 @@ export default function ClientesPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeModal}>
-                Cancelar
+                {tCommon('cancel')}
               </Button>
               <Button type="submit" disabled={saving || !isFormValid(formData)}>
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Guardando...
+                    {tCommon('saving')}
                   </>
                 ) : editingCliente ? (
-                  'Guardar Cambios'
+                  t('saveChanges')
                 ) : (
-                  'Crear Cliente'
+                  t('createClient')
                 )}
               </Button>
             </DialogFooter>
@@ -756,14 +759,14 @@ export default function ClientesPage() {
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Eliminar Cliente</DialogTitle>
+            <DialogTitle>{t('deleteClient')}</DialogTitle>
             <DialogDescription>
-              ¿Estas seguro de que deseas eliminar este cliente? Esta accion no se puede deshacer.
+              {t('deleteConfirm')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -773,10 +776,10 @@ export default function ClientesPage() {
               {deleting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Eliminando...
+                  {tCommon('deleting')}
                 </>
               ) : (
-                'Eliminar'
+                tCommon('delete')
               )}
             </Button>
           </DialogFooter>

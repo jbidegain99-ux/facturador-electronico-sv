@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
+import { useTranslations } from 'next-intl';
 import {
   ChevronRight,
   ChevronDown,
@@ -54,18 +55,9 @@ const EMPTY_FORM: AccountForm = {
   description: '',
 };
 
-const ACCOUNT_TYPES = [
-  { value: 'ASSET', label: 'Activo' },
-  { value: 'LIABILITY', label: 'Pasivo' },
-  { value: 'EQUITY', label: 'Patrimonio' },
-  { value: 'INCOME', label: 'Ingreso' },
-  { value: 'EXPENSE', label: 'Gasto' },
-];
-
-const NORMAL_BALANCES = [
-  { value: 'DEBIT', label: 'Deudor' },
-  { value: 'CREDIT', label: 'Acreedor' },
-];
+// Labels moved inside component to use translations
+const ACCOUNT_TYPE_VALUES = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'];
+const NORMAL_BALANCE_VALUES = ['DEBIT', 'CREDIT'];
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('es-SV', {
@@ -76,6 +68,7 @@ function formatCurrency(amount: number): string {
 }
 
 function AccountTypeLabel({ type }: { type: string }) {
+  const t = useTranslations('accounting');
   const colors: Record<string, string> = {
     ASSET: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     LIABILITY: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
@@ -84,11 +77,11 @@ function AccountTypeLabel({ type }: { type: string }) {
     EXPENSE: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
   };
   const labels: Record<string, string> = {
-    ASSET: 'Activo',
-    LIABILITY: 'Pasivo',
-    EQUITY: 'Patrimonio',
-    INCOME: 'Ingreso',
-    EXPENSE: 'Gasto',
+    ASSET: t('assetType'),
+    LIABILITY: t('liabilityType'),
+    EQUITY: t('equityType'),
+    INCOME: t('incomeType'),
+    EXPENSE: t('expenseType'),
   };
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colors[type] || 'bg-gray-100 text-gray-800'}`}>
@@ -112,6 +105,8 @@ function AccountRow({
   onToggleActive: (id: string) => void;
   searchTerm: string;
 }) {
+  const t = useTranslations('accounting');
+  const tCommon = useTranslations('common');
   const hasChildren = account.children && account.children.length > 0;
   const isExpanded = expanded.has(account.id);
   const indent = (account.level - 1) * 24;
@@ -147,13 +142,13 @@ function AccountRow({
           <AccountTypeLabel type={account.accountType} />
         </td>
         <td className="px-4 py-2 text-sm text-center">
-          {account.normalBalance === 'DEBIT' ? 'Deudor' : 'Acreedor'}
+          {account.normalBalance === 'DEBIT' ? t('debitNature') : t('creditNature')}
         </td>
         <td className="px-4 py-2 text-sm text-center">
           {account.allowsPosting ? (
-            <span className="text-green-600">Si</span>
+            <span className="text-green-600">{tCommon('yes')}</span>
           ) : (
-            <span className="text-muted-foreground">No</span>
+            <span className="text-muted-foreground">{tCommon('no')}</span>
           )}
         </td>
         <td className="px-4 py-2 text-sm text-right font-mono">
@@ -165,7 +160,7 @@ function AccountRow({
               <button
                 onClick={() => onEdit(account)}
                 className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-                title="Editar"
+                title={tCommon('edit')}
               >
                 <Pencil className="h-4 w-4" />
               </button>
@@ -173,7 +168,7 @@ function AccountRow({
             <button
               onClick={() => onToggleActive(account.id)}
               className={`p-1 rounded hover:bg-muted ${account.isActive ? 'text-green-600' : 'text-red-600'}`}
-              title={account.isActive ? 'Desactivar' : 'Activar'}
+              title={account.isActive ? t('deactivate') : t('activate')}
             >
               <Power className="h-4 w-4" />
             </button>
@@ -196,6 +191,8 @@ function AccountRow({
 }
 
 export default function CuentasPage() {
+  const t = useTranslations('accounting');
+  const tCommon = useTranslations('common');
   const { features, loading: planLoading } = usePlanFeatures();
   const router = useRouter();
 
@@ -285,13 +282,13 @@ export default function CuentasPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        toastRef.current.success('Plan de cuentas sembrado', `Se crearon ${(json as { created?: number }).created ?? 0} cuentas`);
+        toastRef.current.success(t('seedSuccess'), `${(json as { created?: number }).created ?? 0}`);
         fetchAccounts();
       } else {
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al sembrar');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('saveError'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexion');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     } finally {
       setSeeding(false);
     }
@@ -329,16 +326,16 @@ export default function CuentasPage() {
         fetchAccounts();
       } else {
         const json = await res.json().catch(() => ({}));
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al cambiar estado');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('stateChangeError'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexion');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     }
   };
 
   const handleSave = async () => {
     if (!form.code || !form.name) {
-      toastRef.current.error('Error', 'Codigo y nombre son requeridos');
+      toastRef.current.error(tCommon('error'), t('codeAndNameRequired'));
       return;
     }
 
@@ -371,14 +368,14 @@ export default function CuentasPage() {
 
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        toastRef.current.success(editingId ? 'Cuenta actualizada' : 'Cuenta creada', `Cuenta ${form.code} - ${form.name}`);
+        toastRef.current.success(editingId ? t('accountUpdated') : t('accountCreated'), `${form.code} - ${form.name}`);
         setShowForm(false);
         fetchAccounts();
       } else {
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al guardar');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('saveError'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexion');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     } finally {
       setSaving(false);
     }
@@ -392,8 +389,8 @@ export default function CuentasPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Plan de Cuentas</h1>
-            <p className="text-muted-foreground">Catalogo de cuentas contables</p>
+            <h1 className="text-2xl font-bold">{t('chartOfAccounts')}</h1>
+            <p className="text-muted-foreground">{t('chartOfAccountsSubtitle')}</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -404,7 +401,7 @@ export default function CuentasPage() {
               className="inline-flex items-center gap-2 rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
             >
               {seeding ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {seeding ? 'Sembrando...' : 'Sembrar Plan SV'}
+              {seeding ? t('seeding') : t('seedPlan')}
             </button>
           )}
           <button
@@ -412,7 +409,7 @@ export default function CuentasPage() {
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="h-4 w-4" />
-            Nueva Cuenta
+            {t('newAccount')}
           </button>
         </div>
       </div>
@@ -423,7 +420,7 @@ export default function CuentasPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Buscar por codigo o nombre..."
+            placeholder={t('searchByCodeOrName')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full rounded-md border bg-background pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -431,11 +428,11 @@ export default function CuentasPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={handleExpandAll} className="text-sm text-muted-foreground hover:text-foreground">
-            Expandir todo
+            {t('expandAll')}
           </button>
           <span className="text-muted-foreground">|</span>
           <button onClick={handleCollapseAll} className="text-sm text-muted-foreground hover:text-foreground">
-            Colapsar todo
+            {t('collapseAll')}
           </button>
         </div>
       </div>
@@ -448,20 +445,20 @@ export default function CuentasPage() {
           </div>
         ) : accounts.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            <p className="text-lg font-medium">No hay cuentas contables</p>
-            <p className="text-sm mt-1">Siembra el plan de cuentas de El Salvador o crea cuentas manualmente</p>
+            <p className="text-lg font-medium">{t('noAccounts')}</p>
+            <p className="text-sm mt-1">{t('noAccountsDesc')}</p>
           </div>
         ) : (
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Codigo</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Nombre</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Tipo</th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Naturaleza</th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Movimientos</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Saldo</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-20">Acciones</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('codeCol')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('nameCol')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('typeCol')}</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">{t('nature')}</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">{t('movements')}</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">{t('balance')}</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-20">{tCommon('actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -486,12 +483,12 @@ export default function CuentasPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-card border rounded-lg shadow-lg w-full max-w-lg p-6 space-y-4">
             <h2 className="text-lg font-semibold">
-              {editingId ? 'Editar Cuenta' : 'Nueva Cuenta'}
+              {editingId ? t('editAccount') : t('newAccount')}
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">Codigo *</label>
+                <label className="text-sm font-medium">{t('codeRequired')}</label>
                 <input
                   type="text"
                   value={form.code}
@@ -501,22 +498,22 @@ export default function CuentasPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Nivel</label>
+                <label className="text-sm font-medium">{t('level')}</label>
                 <select
                   value={form.level}
                   onChange={e => setForm({ ...form, level: Number(e.target.value) })}
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
                 >
-                  <option value={1}>1 - Elemento</option>
-                  <option value={2}>2 - Rubro</option>
-                  <option value={3}>3 - Cuenta</option>
-                  <option value={4}>4 - Subcuenta</option>
+                  <option value={1}>{t('levelElement')}</option>
+                  <option value={2}>{t('levelCategory')}</option>
+                  <option value={3}>{t('levelAccount')}</option>
+                  <option value={4}>{t('levelSubaccount')}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium">Nombre *</label>
+              <label className="text-sm font-medium">{t('nameRequired')}</label>
               <input
                 type="text"
                 value={form.name}
@@ -527,13 +524,13 @@ export default function CuentasPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Cuenta Padre</label>
+              <label className="text-sm font-medium">{t('parentAccount')}</label>
               <select
                 value={form.parentId}
                 onChange={e => setForm({ ...form, parentId: e.target.value })}
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
               >
-                <option value="">-- Sin padre --</option>
+                <option value="">{t('noParent')}</option>
                 {flatAccounts.map(a => (
                   <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
                 ))}
@@ -542,26 +539,27 @@ export default function CuentasPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">Tipo de Cuenta</label>
+                <label className="text-sm font-medium">{t('accountType')}</label>
                 <select
                   value={form.accountType}
                   onChange={e => setForm({ ...form, accountType: e.target.value })}
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
                 >
-                  {ACCOUNT_TYPES.map(t => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
+                  {ACCOUNT_TYPE_VALUES.map(val => {
+                    const labelKeys: Record<string, string> = { ASSET: 'assetType', LIABILITY: 'liabilityType', EQUITY: 'equityType', INCOME: 'incomeType', EXPENSE: 'expenseType' };
+                    return <option key={val} value={val}>{t(labelKeys[val])}</option>;
+                  })}
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium">Saldo Normal</label>
+                <label className="text-sm font-medium">{t('normalBalance')}</label>
                 <select
                   value={form.normalBalance}
                   onChange={e => setForm({ ...form, normalBalance: e.target.value })}
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
                 >
-                  {NORMAL_BALANCES.map(n => (
-                    <option key={n.value} value={n.value}>{n.label}</option>
+                  {NORMAL_BALANCE_VALUES.map(val => (
+                    <option key={val} value={val}>{val === 'DEBIT' ? t('debitNature') : t('creditNature')}</option>
                   ))}
                 </select>
               </div>
@@ -576,12 +574,12 @@ export default function CuentasPage() {
                 className="rounded border-gray-300"
               />
               <label htmlFor="allowsPosting" className="text-sm">
-                Permite movimientos directos
+                {t('allowsDirectPostings')}
               </label>
             </div>
 
             <div>
-              <label className="text-sm font-medium">Descripcion</label>
+              <label className="text-sm font-medium">{tCommon('description')}</label>
               <textarea
                 value={form.description}
                 onChange={e => setForm({ ...form, description: e.target.value })}
@@ -595,7 +593,7 @@ export default function CuentasPage() {
                 onClick={() => setShowForm(false)}
                 className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
               >
-                Cancelar
+                {tCommon('cancel')}
               </button>
               <button
                 onClick={handleSave}
@@ -603,7 +601,7 @@ export default function CuentasPage() {
                 className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                {editingId ? 'Actualizar' : 'Crear'}
+                {editingId ? tCommon('save') : tCommon('create')}
               </button>
             </div>
           </div>

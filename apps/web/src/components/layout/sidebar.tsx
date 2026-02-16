@@ -21,18 +21,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
+import { useTranslations } from 'next-intl';
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, proBadge: false },
-  { name: 'Facturas', href: '/facturas', icon: FileText, proBadge: false },
-  { name: 'Cotizaciones', href: '/cotizaciones', icon: ClipboardList, proBadge: false },
-  { name: 'Recurrentes', href: '/facturas/recurrentes', icon: Repeat, proBadge: true },
-  { name: 'Reportes', href: '/reportes', icon: BarChart3, proBadge: false },
-  { name: 'Clientes', href: '/clientes', icon: Users, proBadge: false },
-  { name: 'Contabilidad', href: '/contabilidad', icon: BookOpen, proBadge: true },
-  { name: 'Catalogo', href: '/catalogo', icon: Package, proBadge: false },
-  { name: 'Soporte', href: '/soporte', icon: HelpCircle, proBadge: false },
-  { name: 'Configuracion', href: '/configuracion', icon: Settings, proBadge: false },
+type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'accounting' | 'catalog' | 'support' | 'settings';
+
+const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; proBadge: boolean }[] = [
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, proBadge: false },
+  { key: 'invoices', href: '/facturas', icon: FileText, proBadge: false },
+  { key: 'quotes', href: '/cotizaciones', icon: ClipboardList, proBadge: false },
+  { key: 'recurring', href: '/facturas/recurrentes', icon: Repeat, proBadge: true },
+  { key: 'reports', href: '/reportes', icon: BarChart3, proBadge: false },
+  { key: 'clients', href: '/clientes', icon: Users, proBadge: false },
+  { key: 'accounting', href: '/contabilidad', icon: BookOpen, proBadge: true },
+  { key: 'catalog', href: '/catalogo', icon: Package, proBadge: false },
+  { key: 'support', href: '/soporte', icon: HelpCircle, proBadge: false },
+  { key: 'settings', href: '/configuracion', icon: Settings, proBadge: false },
 ];
 
 export function Sidebar() {
@@ -40,6 +43,8 @@ export function Sidebar() {
   const { sidebarOpen, toggleSidebar } = useAppStore();
   const { features } = usePlanFeatures();
   const showProBadge = !features.recurringInvoices;
+  const t = useTranslations('nav');
+  const tCommon = useTranslations('common');
 
   return (
     <aside
@@ -94,7 +99,7 @@ export function Sidebar() {
 
           return (
             <Link
-              key={item.name}
+              key={item.key}
               href={item.href}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
@@ -107,10 +112,10 @@ export function Sidebar() {
               <item.icon className="h-5 w-5 shrink-0" />
               {sidebarOpen && (
                 <span className="flex items-center gap-2">
-                  {item.name}
+                  {t(item.key)}
                   {item.proBadge && showProBadge && (
                     <span className="text-[10px] font-bold bg-purple-600 text-white px-1.5 py-0.5 rounded-full leading-none">
-                      PRO
+                      {tCommon('pro')}
                     </span>
                   )}
                 </span>
@@ -124,10 +129,10 @@ export function Sidebar() {
       {sidebarOpen && (
         <div className="absolute bottom-4 left-4 right-4">
           <p className="text-xs text-muted-foreground">
-            v1.0.0 - El Salvador
+            {tCommon('version')}
           </p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-            by Republicode
+            {t('byRepubicode')}
           </p>
         </div>
       )}

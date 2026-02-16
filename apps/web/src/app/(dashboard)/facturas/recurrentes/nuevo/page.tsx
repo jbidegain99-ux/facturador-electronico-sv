@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/toast';
 import { ClienteSearch } from '@/components/facturas/cliente-search';
 import { CatalogSearch } from '@/components/facturas/catalog-search';
 import type { CatalogItem } from '@/components/facturas/catalog-search';
+import { useTranslations } from 'next-intl';
 import { ArrowLeft, Plus, Trash2, Save, Loader2, AlertCircle } from 'lucide-react';
 import type { Cliente } from '@/types';
 import Link from 'next/link';
@@ -33,6 +34,8 @@ const DIAS_SEMANA = [
 ];
 
 export default function NuevoRecurrentePage() {
+  const t = useTranslations('recurring');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const toast = useToast();
 
@@ -115,15 +118,15 @@ export default function NuevoRecurrentePage() {
     e.preventDefault();
 
     if (!cliente) {
-      toast.error('Seleccione un cliente');
+      toast.error(tCommon('required'));
       return;
     }
     if (!nombre.trim()) {
-      toast.error('Ingrese un nombre para el template');
+      toast.error(tCommon('required'));
       return;
     }
     if (items.some((i) => !i.descripcion.trim())) {
-      toast.error('Todos los items deben tener descripcion');
+      toast.error(tCommon('required'));
       return;
     }
 
@@ -170,10 +173,10 @@ export default function NuevoRecurrentePage() {
         throw new Error(err.message || 'Error al crear template');
       }
 
-      toast.success('Template creado exitosamente');
+      toast.success(tCommon('success'));
       router.push('/facturas/recurrentes');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al crear template');
+      toast.error(error instanceof Error ? error.message : tCommon('error'));
     } finally {
       setSaving(false);
     }
@@ -197,19 +200,19 @@ export default function NuevoRecurrentePage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Nuevo Template Recurrente</h1>
+            <h1 className="text-2xl font-bold">{t('newTemplate')}</h1>
           </div>
         </div>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <AlertCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
             <p className="text-muted-foreground text-center">
-              El servicio de facturas recurrentes no esta disponible aun.
+              {t('serviceUnavailable')}
             </p>
             <Link href="/facturas/recurrentes" className="mt-4">
               <Button variant="outline">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver
+                {tCommon('back')}
               </Button>
             </Link>
           </CardContent>
@@ -228,9 +231,9 @@ export default function NuevoRecurrentePage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Nuevo Template Recurrente</h1>
+          <h1 className="text-2xl font-bold">{t('newTemplate')}</h1>
           <p className="text-muted-foreground">
-            Configure la generacion automatica de facturas
+            {t('subtitle')}
           </p>
         </div>
       </div>
@@ -303,10 +306,10 @@ export default function NuevoRecurrentePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DAILY">Diario</SelectItem>
-                    <SelectItem value="WEEKLY">Semanal</SelectItem>
-                    <SelectItem value="MONTHLY">Mensual</SelectItem>
-                    <SelectItem value="YEARLY">Anual</SelectItem>
+                    <SelectItem value="DAILY">{t('freqDaily')}</SelectItem>
+                    <SelectItem value="WEEKLY">{t('freqWeekly')}</SelectItem>
+                    <SelectItem value="MONTHLY">{t('freqMonthly')}</SelectItem>
+                    <SelectItem value="YEARLY">{t('freqYearly')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -524,11 +527,11 @@ export default function NuevoRecurrentePage() {
         {/* Submit */}
         <div className="flex items-center justify-end gap-3">
           <Link href="/facturas/recurrentes">
-            <Button type="button" variant="outline">Cancelar</Button>
+            <Button type="button" variant="outline">{tCommon('cancel')}</Button>
           </Link>
           <Button type="submit" disabled={saving}>
             <Save className="mr-2 h-4 w-4" />
-            {saving ? 'Guardando...' : 'Crear Template'}
+            {saving ? tCommon('saving') : tCommon('create')}
           </Button>
         </div>
       </form>

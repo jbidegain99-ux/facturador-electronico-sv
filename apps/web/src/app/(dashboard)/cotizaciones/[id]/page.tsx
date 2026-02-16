@@ -44,6 +44,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
+import { useTranslations } from 'next-intl';
 import { formatCurrency } from '@/lib/utils';
 
 // -- Types ------------------------------------------------------------------
@@ -126,24 +127,24 @@ interface StatusConfig {
   className: string;
 }
 
-const STATUS_MAP: Record<string, StatusConfig> = {
-  DRAFT: { label: 'Borrador', variant: 'secondary', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
-  SENT: { label: 'Enviada', variant: 'default', className: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
-  PENDING_APPROVAL: { label: 'Pendiente Aprobacion', variant: 'default', className: 'bg-teal-600/20 text-teal-400 border-teal-600/30' },
-  APPROVED: { label: 'Aprobada', variant: 'default', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
-  PARTIALLY_APPROVED: { label: 'Parcialmente Aprobada', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
-  REJECTED: { label: 'Rechazada', variant: 'destructive', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
-  EXPIRED: { label: 'Expirada', variant: 'outline', className: 'bg-amber-600/20 text-amber-400 border-amber-600/30' },
-  CONVERTED: { label: 'Convertida', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
-  CANCELLED: { label: 'Cancelada', variant: 'secondary', className: 'bg-gray-700/20 text-gray-500 border-gray-700/30' },
-  CHANGES_REQUESTED: { label: 'Cambios Solicitados', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
-  REVISED: { label: 'Revisada', variant: 'default', className: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30' },
+const STATUS_STYLE_MAP: Record<string, { labelKey: string; variant: StatusConfig['variant']; className: string }> = {
+  DRAFT: { labelKey: 'statusDraft', variant: 'secondary', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
+  SENT: { labelKey: 'statusSent', variant: 'default', className: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
+  PENDING_APPROVAL: { labelKey: 'statusPending', variant: 'default', className: 'bg-teal-600/20 text-teal-400 border-teal-600/30' },
+  APPROVED: { labelKey: 'statusApproved', variant: 'default', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
+  PARTIALLY_APPROVED: { labelKey: 'statusPartial', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
+  REJECTED: { labelKey: 'statusRejected', variant: 'destructive', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
+  EXPIRED: { labelKey: 'statusExpired', variant: 'outline', className: 'bg-amber-600/20 text-amber-400 border-amber-600/30' },
+  CONVERTED: { labelKey: 'statusConverted', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
+  CANCELLED: { labelKey: 'statusCancelled', variant: 'secondary', className: 'bg-gray-700/20 text-gray-500 border-gray-700/30' },
+  CHANGES_REQUESTED: { labelKey: 'statusChangesRequested', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
+  REVISED: { labelKey: 'statusRevised', variant: 'default', className: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30' },
 };
 
-const APPROVAL_STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  APPROVED: { label: 'Aprobado', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
-  REJECTED: { label: 'Rechazado', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
-  PENDING: { label: 'Pendiente', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
+const APPROVAL_STYLE_MAP: Record<string, { labelKey: string; className: string }> = {
+  APPROVED: { labelKey: 'approvalApproved', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
+  REJECTED: { labelKey: 'approvalRejected', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
+  PENDING: { labelKey: 'approvalPending', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
 };
 
 function formatDate(dateStr: string): string {
@@ -181,6 +182,9 @@ export default function CotizacionDetailPage() {
   const toast = useToast();
   const toastRef = React.useRef(toast);
   toastRef.current = toast;
+  const t = useTranslations('quotes');
+  const tCommon = useTranslations('common');
+  const tInvoices = useTranslations('invoices');
 
   const [quote, setQuote] = React.useState<QuoteDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -210,7 +214,7 @@ export default function CotizacionDetailPage() {
       });
 
       if (!res.ok) {
-        toastRef.current.error('No se pudo cargar la cotizacion');
+        toastRef.current.error(t('cantLoadQuote'));
         router.push('/cotizaciones');
         return;
       }
@@ -219,7 +223,7 @@ export default function CotizacionDetailPage() {
       setQuote(data as QuoteDetail);
     } catch (err) {
       console.error('Error fetching quote:', err);
-      toastRef.current.error('Error al cargar la cotizacion');
+      toastRef.current.error(t('cantLoadQuote'));
     } finally {
       setLoading(false);
     }
@@ -283,12 +287,12 @@ export default function CotizacionDetailPage() {
         );
       }
 
-      toastRef.current.success('Accion realizada correctamente');
+      toastRef.current.success(t('actionSuccess'));
       fetchQuote();
       fetchStatusHistory();
     } catch (err) {
       toastRef.current.error(
-        err instanceof Error ? err.message : 'Error desconocido',
+        err instanceof Error ? err.message : tCommon('error'),
       );
     } finally {
       setActionLoading(false);
@@ -318,7 +322,7 @@ export default function CotizacionDetailPage() {
       }
 
       const result = await res.json();
-      toastRef.current.success('Cotizacion convertida a factura');
+      toastRef.current.success(t('convertSuccess'));
 
       if ((result as { invoice?: { id?: string } }).invoice?.id) {
         router.push(
@@ -329,7 +333,7 @@ export default function CotizacionDetailPage() {
       }
     } catch (err) {
       toastRef.current.error(
-        err instanceof Error ? err.message : 'Error desconocido',
+        err instanceof Error ? err.message : tCommon('error'),
       );
     } finally {
       setActionLoading(false);
@@ -357,11 +361,11 @@ export default function CotizacionDetailPage() {
         );
       }
 
-      toastRef.current.success('Cotizacion eliminada');
+      toastRef.current.success(t('deleteSuccess'));
       router.push('/cotizaciones');
     } catch (err) {
       toastRef.current.error(
-        err instanceof Error ? err.message : 'Error desconocido',
+        err instanceof Error ? err.message : tCommon('error'),
       );
     } finally {
       setActionLoading(false);
@@ -390,7 +394,7 @@ export default function CotizacionDetailPage() {
       }
 
       const result = await res.json();
-      toastRef.current.success('Nueva version creada');
+      toastRef.current.success(t('createNewVersion'));
 
       const newQuote = result as { id?: string };
       if (newQuote.id) {
@@ -400,7 +404,7 @@ export default function CotizacionDetailPage() {
       }
     } catch (err) {
       toastRef.current.error(
-        err instanceof Error ? err.message : 'Error desconocido',
+        err instanceof Error ? err.message : tCommon('error'),
       );
     } finally {
       setActionLoading(false);
@@ -410,8 +414,8 @@ export default function CotizacionDetailPage() {
   const handleCopyApprovalUrl = () => {
     if (!quote?.approvalUrl) return;
     navigator.clipboard.writeText(quote.approvalUrl).then(
-      () => toastRef.current.success('Enlace copiado al portapapeles'),
-      () => toastRef.current.error('No se pudo copiar el enlace'),
+      () => toastRef.current.success(t('copyApprovalLink')),
+      () => toastRef.current.error(tCommon('error')),
     );
   };
 
@@ -440,19 +444,19 @@ export default function CotizacionDetailPage() {
     return (
       <div className="text-center py-16">
         <p className="text-muted-foreground">
-          Cotizacion no encontrada
+          {t('quoteNotFound')}
         </p>
         <Button
           className="mt-4"
           onClick={() => router.push('/cotizaciones')}
         >
-          Volver a cotizaciones
+          {t('backToQuotes')}
         </Button>
       </div>
     );
   }
 
-  const statusConfig = STATUS_MAP[quote.status] || STATUS_MAP.DRAFT;
+  const statusConfig = STATUS_STYLE_MAP[quote.status] || STATUS_STYLE_MAP.DRAFT;
   const lineItems = Array.isArray(quote.lineItems) ? quote.lineItems : [];
 
   // -- Render ---------------------------------------------------------------
@@ -468,7 +472,7 @@ export default function CotizacionDetailPage() {
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Volver
+            {tCommon('back')}
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -485,10 +489,10 @@ export default function CotizacionDetailPage() {
                 variant={statusConfig.variant}
                 className={statusConfig.className}
               >
-                {statusConfig.label}
+                {t(statusConfig.labelKey)}
               </Badge>
               <span className="text-sm text-muted-foreground">
-                Valida hasta: {formatDate(quote.validUntil)}
+                {t('validUntilLabel')} {formatDate(quote.validUntil)}
               </span>
             </div>
           </div>
@@ -505,7 +509,7 @@ export default function CotizacionDetailPage() {
                 }
               >
                 <Pencil className="w-4 h-4 mr-2" />
-                Editar
+                {tCommon('edit')}
               </Button>
               <Button
                 className="btn-primary"
@@ -517,7 +521,7 @@ export default function CotizacionDetailPage() {
                 ) : (
                   <Send className="w-4 h-4 mr-2" />
                 )}
-                Enviar al Cliente
+                {t('sendToClient')}
               </Button>
               <Button
                 variant="ghost"
@@ -525,7 +529,7 @@ export default function CotizacionDetailPage() {
                 onClick={() => setShowDeleteDialog(true)}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Eliminar
+                {tCommon('delete')}
               </Button>
             </>
           )}
@@ -538,7 +542,7 @@ export default function CotizacionDetailPage() {
                   onClick={handleCopyApprovalUrl}
                 >
                   <LinkIcon className="w-4 h-4 mr-2" />
-                  Copiar enlace de aprobacion
+                  {t('copyApprovalLink')}
                 </Button>
               )}
               <Button
@@ -551,7 +555,7 @@ export default function CotizacionDetailPage() {
                 ) : (
                   <CheckCircle className="w-4 h-4 mr-2" />
                 )}
-                Marcar como Aprobada
+                {t('markApproved')}
               </Button>
               <Button
                 variant="ghost"
@@ -559,7 +563,7 @@ export default function CotizacionDetailPage() {
                 onClick={() => setShowRejectDialog(true)}
               >
                 <XCircle className="w-4 h-4 mr-2" />
-                Rechazar
+                {t('reject')}
               </Button>
               <Button
                 variant="ghost"
@@ -567,7 +571,7 @@ export default function CotizacionDetailPage() {
                 onClick={() => setShowCancelDialog(true)}
               >
                 <Ban className="w-4 h-4 mr-2" />
-                Cancelar
+                {tCommon('cancel')}
               </Button>
             </>
           )}
@@ -580,7 +584,7 @@ export default function CotizacionDetailPage() {
                 }
               >
                 <Pencil className="w-4 h-4 mr-2" />
-                Editar y Reenviar
+                {t('editAndResend')}
               </Button>
               <Button
                 className="bg-orange-600 hover:bg-orange-700 text-white"
@@ -592,7 +596,7 @@ export default function CotizacionDetailPage() {
                 ) : (
                   <Send className="w-4 h-4 mr-2" />
                 )}
-                Reenviar sin Cambios
+                {t('resendNoChanges')}
               </Button>
             </>
           )}
@@ -608,7 +612,7 @@ export default function CotizacionDetailPage() {
                 ) : (
                   <ArrowRight className="w-4 h-4 mr-2" />
                 )}
-                Convertir a Factura
+                {t('convertToInvoice')}
               </Button>
               <Button
                 variant="ghost"
@@ -616,7 +620,7 @@ export default function CotizacionDetailPage() {
                 onClick={() => setShowCancelDialog(true)}
               >
                 <Ban className="w-4 h-4 mr-2" />
-                Cancelar
+                {tCommon('cancel')}
               </Button>
             </>
           )}
@@ -631,7 +635,7 @@ export default function CotizacionDetailPage() {
               ) : (
                 <RefreshCw className="w-4 h-4 mr-2" />
               )}
-              Crear Nueva Version
+              {t('createNewVersion')}
             </Button>
           )}
           {quote.status === 'CONVERTED' &&
@@ -645,7 +649,7 @@ export default function CotizacionDetailPage() {
                 }
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Ver Factura
+                {t('viewInvoice')}
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             )}
@@ -656,7 +660,7 @@ export default function CotizacionDetailPage() {
       {quote.status === 'REJECTED' && quote.rejectionReason && (
         <div className="glass-card p-4 border-red-600/30">
           <p className="text-sm text-red-400">
-            <strong>Motivo de rechazo:</strong> {quote.rejectionReason}
+            <strong>{t('rejectionReason')}</strong> {quote.rejectionReason}
           </p>
         </div>
       )}
@@ -666,17 +670,17 @@ export default function CotizacionDetailPage() {
         <div className="glass-card p-5 border-orange-600/30">
           <div className="flex items-center gap-2 mb-3">
             <RefreshCw className="w-5 h-5 text-orange-400" />
-            <h2 className="font-semibold text-orange-400">El cliente solicito cambios</h2>
+            <h2 className="font-semibold text-orange-400">{t('changesRequested')}</h2>
           </div>
           {quote.clientNotes && (
             <div className="bg-orange-600/10 border border-orange-600/20 rounded-lg p-4 mb-3">
-              <p className="text-sm text-muted-foreground mb-1 font-medium">Comentario del cliente:</p>
+              <p className="text-sm text-muted-foreground mb-1 font-medium">{t('clientComment')}</p>
               <p className="text-foreground text-sm whitespace-pre-wrap">{quote.clientNotes}</p>
             </div>
           )}
           {lineItems.some((li) => li.approvalStatus === 'REJECTED') && (
             <div>
-              <p className="text-sm text-muted-foreground mb-2 font-medium">Items que el cliente desea eliminar:</p>
+              <p className="text-sm text-muted-foreground mb-2 font-medium">{t('itemsToRemove')}</p>
               <ul className="space-y-1">
                 {lineItems
                   .filter((li) => li.approvalStatus === 'REJECTED')
@@ -696,7 +700,7 @@ export default function CotizacionDetailPage() {
       {quote.status === 'CONVERTED' && quote.convertedAt && (
         <div className="glass-card p-4 border-purple-600/30">
           <p className="text-sm text-purple-400">
-            Convertida a factura el {formatDate(quote.convertedAt)}
+            {t('convertedAt', { date: formatDate(quote.convertedAt) })}
           </p>
         </div>
       )}
@@ -706,29 +710,29 @@ export default function CotizacionDetailPage() {
         <div className="glass-card p-5 border-green-600/30">
           <div className="flex items-center gap-2 mb-4">
             <Shield className="w-5 h-5 text-green-400" />
-            <h2 className="font-semibold text-foreground">Informacion de Aprobacion</h2>
+            <h2 className="font-semibold text-foreground">{t('approvalInfo')}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">Aprobado por</p>
+              <p className="text-sm text-muted-foreground">{t('approvedBy')}</p>
               <p className="text-foreground font-medium">{quote.approvedBy}</p>
             </div>
             {quote.approvedAt && (
               <div>
-                <p className="text-sm text-muted-foreground">Fecha de aprobacion</p>
+                <p className="text-sm text-muted-foreground">{t('approvalDate')}</p>
                 <p className="text-foreground">{formatDateTime(quote.approvedAt)}</p>
               </div>
             )}
             {quote.clientNotes && (
               <div className="sm:col-span-2">
-                <p className="text-sm text-muted-foreground">Notas del cliente</p>
+                <p className="text-sm text-muted-foreground">{t('clientNotes')}</p>
                 <p className="text-foreground text-sm whitespace-pre-wrap">{quote.clientNotes}</p>
               </div>
             )}
           </div>
           {quote.approvalUrl && (
             <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground mb-2">Enlace de aprobacion</p>
+              <p className="text-sm text-muted-foreground mb-2">{t('approvalLink')}</p>
               <div className="flex items-center gap-2">
                 <code className="text-xs text-foreground bg-background/50 px-3 py-1.5 rounded-md border border-border flex-1 truncate">
                   {quote.approvalUrl}
@@ -753,7 +757,7 @@ export default function CotizacionDetailPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <RefreshCw className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold text-foreground">Version {quote.version}</h3>
+              <h3 className="font-semibold text-foreground">{t('versionLabel', { version: quote.version })}</h3>
             </div>
             {quote.quoteGroupId && (
               <Button
@@ -767,17 +771,17 @@ export default function CotizacionDetailPage() {
                 ) : (
                   <ChevronDown className="w-4 h-4 mr-1" />
                 )}
-                Ver versiones
+                {t('viewVersions')}
               </Button>
             )}
           </div>
           {showVersions && (
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground">
-                Esta es la version {quote.version} de esta cotizacion.
+                {t('versionDesc', { version: quote.version })}
                 {quote.quoteGroupId && (
                   <span className="ml-1">
-                    Grupo: <code className="text-xs bg-background/50 px-1.5 py-0.5 rounded">{quote.quoteGroupId}</code>
+                    {t('group')} <code className="text-xs bg-background/50 px-1.5 py-0.5 rounded">{quote.quoteGroupId}</code>
                   </span>
                 )}
               </p>
@@ -790,25 +794,25 @@ export default function CotizacionDetailPage() {
       <div className="glass-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <User className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold text-foreground">Cliente</h2>
+          <h2 className="font-semibold text-foreground">{t('client')}</h2>
         </div>
         {quote.client ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">Nombre</p>
+              <p className="text-sm text-muted-foreground">{tCommon('name')}</p>
               <p className="text-foreground font-medium">
                 {quote.client.nombre}
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Documento</p>
+              <p className="text-sm text-muted-foreground">{tCommon('type')}</p>
               <p className="text-foreground">
                 {quote.client.numDocumento}
               </p>
             </div>
             {quote.client.correo && (
               <div>
-                <p className="text-sm text-muted-foreground">Correo</p>
+                <p className="text-sm text-muted-foreground">{tCommon('email')}</p>
                 <p className="text-foreground">{quote.client.correo}</p>
               </div>
             )}
@@ -817,19 +821,19 @@ export default function CotizacionDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {quote.clienteNombre && (
               <div>
-                <p className="text-sm text-muted-foreground">Nombre</p>
+                <p className="text-sm text-muted-foreground">{tCommon('name')}</p>
                 <p className="text-foreground font-medium">{quote.clienteNombre}</p>
               </div>
             )}
             {quote.clienteEmail && (
               <div>
-                <p className="text-sm text-muted-foreground">Correo</p>
+                <p className="text-sm text-muted-foreground">{tCommon('email')}</p>
                 <p className="text-foreground">{quote.clienteEmail}</p>
               </div>
             )}
             {!quote.clienteNombre && !quote.clienteEmail && (
               <p className="text-muted-foreground text-sm">
-                Cliente no encontrado
+                {t('clientNotFound')}
               </p>
             )}
           </div>
@@ -848,20 +852,20 @@ export default function CotizacionDetailPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-10">#</TableHead>
-              <TableHead>Descripcion</TableHead>
-              <TableHead className="text-right">Cant.</TableHead>
-              <TableHead className="text-right">Precio</TableHead>
-              <TableHead className="text-right">Desc.</TableHead>
-              <TableHead className="text-right">Impuesto</TableHead>
-              <TableHead className="text-right">Total</TableHead>
+              <TableHead>{tCommon('description')}</TableHead>
+              <TableHead className="text-right">{tInvoices('qty')}</TableHead>
+              <TableHead className="text-right">{tCommon('price')}</TableHead>
+              <TableHead className="text-right">{tCommon('discount')}</TableHead>
+              <TableHead className="text-right">{tCommon('tax')}</TableHead>
+              <TableHead className="text-right">{tCommon('total')}</TableHead>
               {showApprovalBadges && (
-                <TableHead className="text-center">Estado</TableHead>
+                <TableHead className="text-center">{tCommon('status')}</TableHead>
               )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {lineItems.map((item) => {
-              const approvalBadge = APPROVAL_STATUS_BADGE[item.approvalStatus] || APPROVAL_STATUS_BADGE.PENDING;
+              const approvalBadge = APPROVAL_STYLE_MAP[item.approvalStatus] || APPROVAL_STYLE_MAP.PENDING;
               const quantityDiffers =
                 item.approvedQuantity != null &&
                 item.approvedQuantity !== item.quantity;
@@ -883,7 +887,7 @@ export default function CotizacionDetailPage() {
                       )}
                       {item.approvalStatus === 'REJECTED' && item.rejectionReason && (
                         <p className="text-xs text-red-400 mt-1">
-                          Motivo: {item.rejectionReason}
+                          {t('rejectionReason')} {item.rejectionReason}
                         </p>
                       )}
                     </div>
@@ -892,7 +896,7 @@ export default function CotizacionDetailPage() {
                     <span>{item.quantity}</span>
                     {quantityDiffers && (
                       <span className="block text-xs text-green-400">
-                        Aprobada: {item.approvedQuantity}
+                        {t('statusApproved')}: {item.approvedQuantity}
                       </span>
                     )}
                   </TableCell>
@@ -916,7 +920,7 @@ export default function CotizacionDetailPage() {
                         variant="outline"
                         className={`text-xs ${approvalBadge.className}`}
                       >
-                        {approvalBadge.label}
+                        {t(approvalBadge.labelKey)}
                       </Badge>
                     </TableCell>
                   )}
@@ -930,20 +934,20 @@ export default function CotizacionDetailPage() {
         <div className="border-t border-border p-5">
           <div className="flex flex-col items-end space-y-2">
             <div className="flex justify-between w-60">
-              <span className="text-muted-foreground">Subtotal:</span>
+              <span className="text-muted-foreground">{tInvoices('subtotalLabel')}</span>
               <span className="font-medium">
                 {formatCurrency(Number(quote.subtotal))}
               </span>
             </div>
             <div className="flex justify-between w-60">
-              <span className="text-muted-foreground">IVA (13%):</span>
+              <span className="text-muted-foreground">{tInvoices('ivaLabel')}</span>
               <span className="font-medium">
                 {formatCurrency(Number(quote.taxAmount))}
               </span>
             </div>
             <div className="h-px bg-primary/30 w-60" />
             <div className="flex justify-between w-60">
-              <span className="text-lg font-semibold">TOTAL:</span>
+              <span className="text-lg font-semibold">{tInvoices('totalLabel')}</span>
               <span className="text-2xl font-bold text-primary">
                 {formatCurrency(Number(quote.total))}
               </span>
@@ -955,12 +959,12 @@ export default function CotizacionDetailPage() {
         {hasApprovedTotals && (
           <div className="border-t border-green-600/30 p-5 bg-green-600/5">
             <h3 className="text-sm font-medium text-green-400 uppercase tracking-wider mb-3">
-              Totales Aprobados
+              {t('approvedTotals')}
             </h3>
             <div className="flex flex-col items-end space-y-2">
               {quote.approvedSubtotal != null && (
                 <div className="flex justify-between w-60">
-                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="text-muted-foreground">{tInvoices('subtotalLabel')}</span>
                   <span className="font-medium text-green-400">
                     {formatCurrency(Number(quote.approvedSubtotal))}
                   </span>
@@ -968,7 +972,7 @@ export default function CotizacionDetailPage() {
               )}
               {quote.approvedTaxAmount != null && (
                 <div className="flex justify-between w-60">
-                  <span className="text-muted-foreground">IVA (13%):</span>
+                  <span className="text-muted-foreground">{tInvoices('ivaLabel')}</span>
                   <span className="font-medium text-green-400">
                     {formatCurrency(Number(quote.approvedTaxAmount))}
                   </span>
@@ -976,7 +980,7 @@ export default function CotizacionDetailPage() {
               )}
               <div className="h-px bg-green-600/30 w-60" />
               <div className="flex justify-between w-60">
-                <span className="text-lg font-semibold text-green-400">TOTAL APROBADO:</span>
+                <span className="text-lg font-semibold text-green-400">{t('approvedTotal')}</span>
                 <span className="text-2xl font-bold text-green-400">
                   {formatCurrency(Number(quote.approvedTotal))}
                 </span>
@@ -991,7 +995,7 @@ export default function CotizacionDetailPage() {
         {quote.terms && (
           <div className="glass-card p-5">
             <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              Terminos y Condiciones
+              {t('terms')}
             </h3>
             <p className="text-foreground text-sm whitespace-pre-wrap">
               {quote.terms}
@@ -1001,7 +1005,7 @@ export default function CotizacionDetailPage() {
         {quote.notes && (
           <div className="glass-card p-5">
             <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              Notas Internas
+              {t('internalNotesSection')}
             </h3>
             <p className="text-foreground text-sm whitespace-pre-wrap">
               {quote.notes}
@@ -1014,30 +1018,30 @@ export default function CotizacionDetailPage() {
       <div className="glass-card p-5">
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-foreground">Fechas</h3>
+          <h3 className="font-semibold text-foreground">{t('dates')}</h3>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
           <div>
-            <p className="text-muted-foreground">Creada</p>
+            <p className="text-muted-foreground">{t('created')}</p>
             <p className="text-foreground">
               {formatDate(quote.createdAt)}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Emision</p>
+            <p className="text-muted-foreground">{t('emission')}</p>
             <p className="text-foreground">
               {formatDate(quote.issueDate)}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Valida hasta</p>
+            <p className="text-muted-foreground">{t('validUntil')}</p>
             <p className="text-foreground">
               {formatDate(quote.validUntil)}
             </p>
           </div>
           {quote.sentAt && (
             <div>
-              <p className="text-muted-foreground">Enviada</p>
+              <p className="text-muted-foreground">{t('sent')}</p>
               <p className="text-foreground">
                 {formatDate(quote.sentAt)}
               </p>
@@ -1045,7 +1049,7 @@ export default function CotizacionDetailPage() {
           )}
           {quote.convertedAt && (
             <div>
-              <p className="text-muted-foreground">Convertida</p>
+              <p className="text-muted-foreground">{t('converted')}</p>
               <p className="text-foreground">
                 {formatDate(quote.convertedAt)}
               </p>
@@ -1058,21 +1062,21 @@ export default function CotizacionDetailPage() {
       <div className="glass-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Clock className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-foreground">Historial de Estados</h3>
+          <h3 className="font-semibold text-foreground">{t('statusHistory')}</h3>
         </div>
         {historyLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
         ) : statusHistory.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No hay historial de estados disponible.</p>
+          <p className="text-sm text-muted-foreground">{t('noHistory')}</p>
         ) : (
           <div className="relative">
             {/* Timeline line */}
             <div className="absolute left-3 top-2 bottom-2 w-px bg-border" />
             <div className="space-y-4">
               {statusHistory.map((entry) => {
-                const toConfig = STATUS_MAP[entry.toStatus];
+                const toConfig = STATUS_STYLE_MAP[entry.toStatus];
                 return (
                   <div key={entry.id} className="relative flex items-start gap-4 pl-8">
                     {/* Timeline dot */}
@@ -1083,25 +1087,25 @@ export default function CotizacionDetailPage() {
                           <>
                             <Badge
                               variant="outline"
-                              className={`text-xs ${(STATUS_MAP[entry.fromStatus] || STATUS_MAP.DRAFT).className}`}
+                              className={`text-xs ${(STATUS_STYLE_MAP[entry.fromStatus] || STATUS_STYLE_MAP.DRAFT).className}`}
                             >
-                              {(STATUS_MAP[entry.fromStatus] || STATUS_MAP.DRAFT).label}
+                              {t((STATUS_STYLE_MAP[entry.fromStatus] || STATUS_STYLE_MAP.DRAFT).labelKey)}
                             </Badge>
                             <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
                           </>
                         )}
                         <Badge
                           variant="outline"
-                          className={`text-xs ${(toConfig || STATUS_MAP.DRAFT).className}`}
+                          className={`text-xs ${(toConfig || STATUS_STYLE_MAP.DRAFT).className}`}
                         >
-                          {(toConfig || STATUS_MAP.DRAFT).label}
+                          {t((toConfig || STATUS_STYLE_MAP.DRAFT).labelKey)}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         <span>{formatDateTime(entry.createdAt)}</span>
                         {entry.actorType && (
                           <span>
-                            {entry.actorType === 'CLIENT' ? 'Cliente' : 'Usuario'}
+                            {entry.actorType === 'CLIENT' ? t('client') : tCommon('name')}
                             {entry.actorId ? `: ${entry.actorId}` : ''}
                           </span>
                         )}
@@ -1129,16 +1133,15 @@ export default function CotizacionDetailPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rechazar Cotizacion</DialogTitle>
+            <DialogTitle>{t('rejectQuote')}</DialogTitle>
             <DialogDescription>
-              Ingresa el motivo de rechazo para la cotizacion{' '}
-              {quote.quoteNumber}.
+              {t('rejectPrompt', { number: quote.quoteNumber })}
             </DialogDescription>
           </DialogHeader>
           <Textarea
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="Motivo de rechazo..."
+            placeholder={t('rejectPlaceholder')}
             rows={3}
           />
           <DialogFooter>
@@ -1146,7 +1149,7 @@ export default function CotizacionDetailPage() {
               variant="ghost"
               onClick={() => setShowRejectDialog(false)}
             >
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -1160,7 +1163,7 @@ export default function CotizacionDetailPage() {
               ) : (
                 <XCircle className="h-4 w-4 mr-2" />
               )}
-              Rechazar
+              {t('reject')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1173,11 +1176,9 @@ export default function CotizacionDetailPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Convertir a Factura</DialogTitle>
+            <DialogTitle>{t('convertQuote')}</DialogTitle>
             <DialogDescription>
-              Se creara una nueva factura con los mismos items de la
-              cotizacion {quote.quoteNumber}. Esta accion no se puede
-              deshacer.
+              {t('convertConfirm', { number: quote.quoteNumber })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1185,7 +1186,7 @@ export default function CotizacionDetailPage() {
               variant="ghost"
               onClick={() => setShowConvertDialog(false)}
             >
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button
               className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -1197,7 +1198,7 @@ export default function CotizacionDetailPage() {
               ) : (
                 <ArrowRight className="h-4 w-4 mr-2" />
               )}
-              Convertir a Factura
+              {t('convertToInvoice')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1210,10 +1211,9 @@ export default function CotizacionDetailPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Cotizacion</DialogTitle>
+            <DialogTitle>{t('deleteQuote')}</DialogTitle>
             <DialogDescription>
-              Estas seguro de que deseas eliminar la cotizacion{' '}
-              {quote.quoteNumber}? Esta accion no se puede deshacer.
+              {t('deleteConfirm', { number: quote.quoteNumber })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1221,7 +1221,7 @@ export default function CotizacionDetailPage() {
               variant="ghost"
               onClick={() => setShowDeleteDialog(false)}
             >
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -1233,7 +1233,7 @@ export default function CotizacionDetailPage() {
               ) : (
                 <Trash2 className="h-4 w-4 mr-2" />
               )}
-              Eliminar
+              {tCommon('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1246,10 +1246,9 @@ export default function CotizacionDetailPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cancelar Cotizacion</DialogTitle>
+            <DialogTitle>{t('cancelQuote')}</DialogTitle>
             <DialogDescription>
-              Estas seguro de que deseas cancelar la cotizacion{' '}
-              {quote.quoteNumber}?
+              {t('cancelConfirm', { number: quote.quoteNumber })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1257,7 +1256,7 @@ export default function CotizacionDetailPage() {
               variant="ghost"
               onClick={() => setShowCancelDialog(false)}
             >
-              Volver
+              {tCommon('back')}
             </Button>
             <Button
               variant="destructive"
@@ -1269,7 +1268,7 @@ export default function CotizacionDetailPage() {
               ) : (
                 <Ban className="h-4 w-4 mr-2" />
               )}
-              Cancelar Cotizacion
+              {t('cancelQuote')}
             </Button>
           </DialogFooter>
         </DialogContent>

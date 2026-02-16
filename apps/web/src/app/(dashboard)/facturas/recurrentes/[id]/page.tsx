@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/components/ui/toast';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { formatDate } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import {
   ArrowLeft,
   Save,
@@ -70,25 +71,11 @@ interface TemplateDetail {
   _count: { history: number };
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  ACTIVE: 'Activo',
-  PAUSED: 'Pausado',
-  SUSPENDED_ERROR: 'Suspendido',
-  CANCELLED: 'Cancelado',
-};
-
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'bg-green-100 text-green-800',
   PAUSED: 'bg-yellow-100 text-yellow-800',
   SUSPENDED_ERROR: 'bg-red-100 text-red-800',
   CANCELLED: 'bg-gray-100 text-gray-800',
-};
-
-const INTERVAL_LABELS: Record<string, string> = {
-  DAILY: 'Diario',
-  WEEKLY: 'Semanal',
-  MONTHLY: 'Mensual',
-  YEARLY: 'Anual',
 };
 
 const HISTORY_STATUS_COLORS: Record<string, string> = {
@@ -100,6 +87,8 @@ const HISTORY_STATUS_COLORS: Record<string, string> = {
 const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
 export default function RecurrenteDetallePage() {
+  const t = useTranslations('recurring');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -107,6 +96,20 @@ export default function RecurrenteDetallePage() {
   const toastRef = React.useRef(toast);
   toastRef.current = toast;
   const { confirm, ConfirmDialog } = useConfirm();
+
+  const STATUS_LABELS: Record<string, string> = {
+    ACTIVE: t('statusActive'),
+    PAUSED: t('statusPaused'),
+    SUSPENDED_ERROR: t('statusSuspended'),
+    CANCELLED: t('statusCancelled'),
+  };
+
+  const INTERVAL_LABELS: Record<string, string> = {
+    DAILY: t('freqDaily'),
+    WEEKLY: t('freqWeekly'),
+    MONTHLY: t('freqMonthly'),
+    YEARLY: t('freqYearly'),
+  };
 
   const [template, setTemplate] = React.useState<TemplateDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -133,10 +136,10 @@ export default function RecurrenteDetallePage() {
       );
       if (!res.ok) {
         if (res.status === 404) {
-          setFetchError('Template no encontrado o servicio no disponible.');
+          setFetchError(t('templateUnavailable'));
           return;
         }
-        throw new Error(`Error al cargar template (${res.status})`);
+        throw new Error(`${tCommon('error')} (${res.status})`);
       }
       const data: TemplateDetail = await res.json();
       setTemplate(data);
@@ -154,7 +157,7 @@ export default function RecurrenteDetallePage() {
         setItems([]);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error al cargar template';
+      const message = err instanceof Error ? err.message : tCommon('error');
       setFetchError(message);
       toastRef.current.error(message);
     } finally {
@@ -169,9 +172,9 @@ export default function RecurrenteDetallePage() {
   const handleAction = async (action: 'pause' | 'resume' | 'cancel' | 'trigger') => {
     if (action === 'cancel') {
       const ok = await confirm({
-        title: 'Cancelar Template',
-        description: 'Esta accion es irreversible. El template no generara mas facturas.',
-        confirmText: 'Cancelar Template',
+        title: t('cancelTemplate'),
+        description: t('cancelConfirm'),
+        confirmText: t('cancelTemplate'),
         variant: 'destructive',
       });
       if (!ok) return;
@@ -185,12 +188,12 @@ export default function RecurrenteDetallePage() {
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Error al ejecutar accion');
+        throw new Error(err.message || tCommon('error'));
       }
-      toast.success(`Accion ejecutada`);
+      toast.success(t('actionExecuted'));
       fetchTemplate();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error');
+      toast.error(error instanceof Error ? error.message : tCommon('error'));
     }
   };
 
@@ -222,14 +225,14 @@ export default function RecurrenteDetallePage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Error al guardar');
+        throw new Error(err.message || tCommon('error'));
       }
 
-      toast.success('Template actualizado');
+      toast.success(t('templateUpdated'));
       setEditing(false);
       fetchTemplate();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al guardar');
+      toast.error(error instanceof Error ? error.message : tCommon('error'));
     } finally {
       setSaving(false);
     }
@@ -272,9 +275,9 @@ export default function RecurrenteDetallePage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Template no disponible</h1>
+            <h1 className="text-2xl font-bold">{t('templateUnavailable')}</h1>
             <p className="text-muted-foreground mt-1">
-              {fetchError || 'No se pudo cargar el template.'}
+              {fetchError || t('couldNotLoad')}
             </p>
           </div>
         </div>
@@ -316,28 +319,28 @@ export default function RecurrenteDetallePage() {
             <>
               <Button variant="outline" size="sm" onClick={() => handleAction('trigger')}>
                 <Zap className="mr-1 h-4 w-4" />
-                Ejecutar Ahora
+                {t('executeNow')}
               </Button>
               <Button variant="outline" size="sm" onClick={() => handleAction('pause')}>
                 <Pause className="mr-1 h-4 w-4" />
-                Pausar
+                {t('pause')}
               </Button>
             </>
           )}
           {(template.status === 'PAUSED' || template.status === 'SUSPENDED_ERROR') && (
             <Button variant="outline" size="sm" onClick={() => handleAction('resume')}>
               <Play className="mr-1 h-4 w-4" />
-              Reanudar
+              {t('resume')}
             </Button>
           )}
           {template.status !== 'CANCELLED' && (
             <Button variant="destructive" size="sm" onClick={() => handleAction('cancel')}>
               <XCircle className="mr-1 h-4 w-4" />
-              Cancelar
+              {tCommon('cancel')}
             </Button>
           )}
           {!editing && template.status !== 'CANCELLED' && (
-            <Button size="sm" onClick={() => setEditing(true)}>Editar</Button>
+            <Button size="sm" onClick={() => setEditing(true)}>{tCommon('edit')}</Button>
           )}
         </div>
       </div>
@@ -347,7 +350,7 @@ export default function RecurrenteDetallePage() {
         <Card className="border-destructive">
           <CardContent className="p-4">
             <p className="text-sm font-medium text-destructive">
-              Error ({template.consecutiveFailures} fallo{template.consecutiveFailures > 1 ? 's' : ''} consecutivo{template.consecutiveFailures > 1 ? 's' : ''}):
+              {tCommon('error')} ({template.consecutiveFailures} {t('consecutiveFailures')}):
             </p>
             <p className="text-sm text-muted-foreground mt-1">{template.lastError}</p>
           </CardContent>
@@ -357,38 +360,38 @@ export default function RecurrenteDetallePage() {
       {/* Detail / Edit */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Configuracion</CardTitle>
+          <CardTitle className="text-lg">{t('configuration')}</CardTitle>
         </CardHeader>
         <CardContent>
           {editing ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Nombre</Label>
+                  <Label>{tCommon('name')}</Label>
                   <Input value={nombre} onChange={(e) => setNombre(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Modo</Label>
+                  <Label>{t('mode')}</Label>
                   <Select value={mode} onValueChange={setMode}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="AUTO_DRAFT">Crear Borrador</SelectItem>
-                      <SelectItem value="AUTO_SEND">Crear y Firmar</SelectItem>
+                      <SelectItem value="AUTO_DRAFT">{t('autoDraft')}</SelectItem>
+                      <SelectItem value="AUTO_SEND">{t('autoSend')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Descripcion</Label>
+                <Label>{tCommon('description')}</Label>
                 <Input value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Fecha Fin (opcional)</Label>
+                  <Label>{t('endDateOptional')}</Label>
                   <Input
                     type="date"
                     value={endDate}
@@ -404,14 +407,14 @@ export default function RecurrenteDetallePage() {
                         onChange={(e) => setAutoTransmit(e.target.checked)}
                         className="h-4 w-4 rounded border-gray-300"
                       />
-                      Transmitir a Hacienda
+                      {t('transmitToHacienda')}
                     </Label>
                   </div>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label>Notas</Label>
+                <Label>{tCommon('notes')}</Label>
                 <textarea
                   value={notas}
                   onChange={(e) => setNotas(e.target.value)}
@@ -423,10 +426,10 @@ export default function RecurrenteDetallePage() {
               {/* Editable items */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label>Items</Label>
+                  <Label>{t('itemsLabel')}</Label>
                   <Button type="button" variant="outline" size="sm" onClick={addItem}>
                     <Plus className="mr-1 h-3 w-3" />
-                    Agregar
+                    {t('addItem')}
                   </Button>
                 </div>
                 {items.map((item, index) => (
@@ -435,7 +438,7 @@ export default function RecurrenteDetallePage() {
                       <Input
                         value={item.descripcion}
                         onChange={(e) => updateItem(index, 'descripcion', e.target.value)}
-                        placeholder="Descripcion"
+                        placeholder={tCommon('description')}
                       />
                     </div>
                     <div className="col-span-2">
@@ -483,84 +486,84 @@ export default function RecurrenteDetallePage() {
 
               <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => { setEditing(false); fetchTemplate(); }}>
-                  Cancelar
+                  {tCommon('cancel')}
                 </Button>
                 <Button onClick={handleSave} disabled={saving}>
                   <Save className="mr-1 h-4 w-4" />
-                  {saving ? 'Guardando...' : 'Guardar'}
+                  {saving ? tCommon('saving') : tCommon('save')}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
               <div>
-                <span className="text-muted-foreground">Cliente:</span>
+                <span className="text-muted-foreground">{t('client')}:</span>
                 <p className="font-medium">{template.cliente.nombre}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Tipo DTE:</span>
-                <p className="font-medium">{template.tipoDte === '01' ? 'Factura' : 'Credito Fiscal'}</p>
+                <span className="text-muted-foreground">{t('dteType')}:</span>
+                <p className="font-medium">{template.tipoDte === '01' ? t('invoiceLabel') : t('creditFiscal')}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Frecuencia:</span>
+                <span className="text-muted-foreground">{t('frequency')}:</span>
                 <p className="font-medium">
                   {INTERVAL_LABELS[template.interval]}
                   {template.interval === 'WEEKLY' && template.dayOfWeek != null && ` (${DIAS_SEMANA[template.dayOfWeek]})`}
-                  {(template.interval === 'MONTHLY' || template.interval === 'YEARLY') && template.anchorDay && ` (dia ${template.anchorDay})`}
+                  {(template.interval === 'MONTHLY' || template.interval === 'YEARLY') && template.anchorDay && ` (${t('dayLabel')} ${template.anchorDay})`}
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">Modo:</span>
+                <span className="text-muted-foreground">{t('mode')}:</span>
                 <p className="font-medium">
-                  {template.mode === 'AUTO_DRAFT' ? 'Crear Borrador' : 'Crear y Firmar'}
-                  {template.autoTransmit && ' + Transmitir'}
+                  {template.mode === 'AUTO_DRAFT' ? t('autoDraft') : t('autoSend')}
+                  {template.autoTransmit && t('transmitSuffix')}
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">Proxima Ejecucion:</span>
+                <span className="text-muted-foreground">{t('nextExecutionLabel')}:</span>
                 <p className="font-medium">
                   {template.status === 'ACTIVE' ? formatDate(template.nextRunDate) : '-'}
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">Ultima Ejecucion:</span>
+                <span className="text-muted-foreground">{t('lastExecution')}:</span>
                 <p className="font-medium">
-                  {template.lastRunDate ? formatDate(template.lastRunDate) : 'Nunca'}
+                  {template.lastRunDate ? formatDate(template.lastRunDate) : t('never')}
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">Inicio:</span>
+                <span className="text-muted-foreground">{t('startDate')}:</span>
                 <p className="font-medium">{formatDate(template.startDate)}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Fin:</span>
-                <p className="font-medium">{template.endDate ? formatDate(template.endDate) : 'Sin fin'}</p>
+                <span className="text-muted-foreground">{t('endDate')}:</span>
+                <p className="font-medium">{template.endDate ? formatDate(template.endDate) : t('noEndDate')}</p>
               </div>
               {template.descripcion && (
                 <div className="col-span-2">
-                  <span className="text-muted-foreground">Descripcion:</span>
+                  <span className="text-muted-foreground">{tCommon('description')}:</span>
                   <p className="font-medium">{template.descripcion}</p>
                 </div>
               )}
               {template.notas && (
                 <div className="col-span-2">
-                  <span className="text-muted-foreground">Notas:</span>
+                  <span className="text-muted-foreground">{tCommon('notes')}:</span>
                   <p className="font-medium">{template.notas}</p>
                 </div>
               )}
 
               {/* Items table */}
               <div className="col-span-2 mt-2">
-                <span className="text-muted-foreground">Items:</span>
+                <span className="text-muted-foreground">{t('itemsLabel')}:</span>
                 <div className="mt-2 border rounded-md">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Descripcion</TableHead>
-                        <TableHead className="text-right">Cant.</TableHead>
-                        <TableHead className="text-right">Precio</TableHead>
-                        <TableHead className="text-right">Desc.</TableHead>
-                        <TableHead className="text-right">Subtotal</TableHead>
+                        <TableHead>{tCommon('description')}</TableHead>
+                        <TableHead className="text-right">{t('qtyShort')}</TableHead>
+                        <TableHead className="text-right">{tCommon('price')}</TableHead>
+                        <TableHead className="text-right">{t('discShort')}</TableHead>
+                        <TableHead className="text-right">{tCommon('subtotal')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -582,7 +585,7 @@ export default function RecurrenteDetallePage() {
                           return (
                             <TableRow>
                               <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                Error al leer items
+                                {t('itemsReadError')}
                               </TableCell>
                             </TableRow>
                           );
@@ -603,11 +606,11 @@ export default function RecurrenteDetallePage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <History className="h-5 w-5" />
-              Historial Reciente
+              {t('recentHistory')}
             </CardTitle>
             <Link href={`/facturas/recurrentes/${id}/historial`}>
               <Button variant="outline" size="sm">
-                Ver Todo ({template._count.history})
+                {t('viewAllCount', { count: template._count.history })}
               </Button>
             </Link>
           </div>
@@ -615,16 +618,16 @@ export default function RecurrenteDetallePage() {
         <CardContent className="p-0">
           {template.history.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">
-              No hay ejecuciones registradas
+              {t('noExecutions')}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Estado</TableHead>
+                  <TableHead>{tCommon('date')}</TableHead>
+                  <TableHead>{tCommon('status')}</TableHead>
                   <TableHead>DTE</TableHead>
-                  <TableHead>Error</TableHead>
+                  <TableHead>{tCommon('error')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -646,7 +649,7 @@ export default function RecurrenteDetallePage() {
                           href={`/facturas`}
                           className="text-primary hover:underline text-sm"
                         >
-                          Ver DTE
+                          {t('viewDte')}
                         </Link>
                       ) : (
                         '-'

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Mail,
   CheckCircle,
@@ -57,17 +58,19 @@ const providerLabels: Record<string, string> = {
   POSTMARK: 'Postmark',
   BREVO: 'Brevo',
   MAILTRAP: 'Mailtrap',
-  SMTP_GENERIC: 'SMTP Generico',
+  SMTP_GENERIC: 'SMTP',
 };
 
 const authMethodLabels: Record<string, string> = {
   API_KEY: 'API Key',
-  SMTP_BASIC: 'SMTP Basico',
+  SMTP_BASIC: 'SMTP',
   OAUTH2: 'OAuth 2.0',
   AWS_IAM: 'AWS IAM',
 };
 
 export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigProps) {
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('common');
   const [config, setConfig] = useState<EmailConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [testing, setTesting] = useState(false);
@@ -132,11 +135,11 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       const data = await res.json();
       setTestResult({
         success: data.success,
-        message: data.success ? 'Conexion exitosa' : data.error || 'Error de conexion',
+        message: data.success ? t('connectionSuccess') : data.error || t('connectionError'),
       });
       fetchConfig();
     } catch (err) {
-      setTestResult({ success: false, message: 'Error al probar conexion' });
+      setTestResult({ success: false, message: t('testConnectionError') });
     } finally {
       setTesting(false);
     }
@@ -144,7 +147,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
 
   const handleSendTestEmail = async () => {
     if (!testEmail) {
-      alert('Ingresa un correo de destino');
+      alert(t('enterTestEmail'));
       return;
     }
 
@@ -167,11 +170,11 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       const data = await res.json();
       setTestResult({
         success: data.success,
-        message: data.success ? 'Correo de prueba enviado' : data.error || 'Error al enviar',
+        message: data.success ? t('testEmailSent') : data.error || t('testEmailError'),
       });
       fetchConfig();
     } catch (err) {
-      setTestResult({ success: false, message: 'Error al enviar correo de prueba' });
+      setTestResult({ success: false, message: t('testEmailError') });
     } finally {
       setSendingTest(false);
     }
@@ -192,12 +195,12 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       if (res.ok) {
         setConfig(null);
         setShowDeleteConfirm(false);
-        alert('Configuracion eliminada');
+        alert(t('configDeleted'));
       } else {
-        alert('Error al eliminar configuracion');
+        alert(t('configDeleteError'));
       }
     } catch (err) {
-      alert('Error al eliminar configuracion');
+      alert(t('configDeleteError'));
     } finally {
       setDeleting(false);
     }
@@ -205,7 +208,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
 
   const handleSaveConfig = async () => {
     if (!apiKey || !fromEmail) {
-      alert('Completa los campos requeridos');
+      alert(t('completeRequired'));
       return;
     }
 
@@ -233,17 +236,17 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       if (res.ok) {
         setShowConfigModal(false);
         fetchConfig();
-        alert('Configuracion guardada correctamente');
+        alert(t('configSaved'));
         // Reset form
         setApiKey('');
         setFromEmail('');
         setFromName('');
       } else {
         const data = await res.json();
-        alert(data.message || 'Error al guardar configuracion');
+        alert(data.message || t('configSaveError'));
       }
     } catch (err) {
-      alert('Error al guardar configuracion');
+      alert(t('configSaveError'));
     } finally {
       setSaving(false);
     }
@@ -265,25 +268,25 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Mail className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-white">Configuracion de Email</h3>
+            <h3 className="text-lg font-semibold text-white">{t('emailConfig')}</h3>
           </div>
           {config ? (
             <div className="flex items-center gap-2">
               {config.isVerified ? (
                 <span className="flex items-center gap-1 text-xs text-green-400">
                   <CheckCircle className="w-3 h-3" />
-                  Verificado
+                  {t('verified')}
                 </span>
               ) : (
                 <span className="flex items-center gap-1 text-xs text-yellow-400">
                   <AlertTriangle className="w-3 h-3" />
-                  Sin verificar
+                  {t('notVerified')}
                 </span>
               )}
             </div>
           ) : (
             <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-500/20 text-yellow-400">
-              Sin configurar
+              {t('notConfigured')}
             </span>
           )}
         </div>
@@ -293,21 +296,21 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
             {/* Config Info */}
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">Proveedor:</span>
+                <span className="text-muted-foreground">{t('provider')}:</span>
                 <span className="ml-2 text-white">{providerLabels[config.provider] || config.provider}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Metodo:</span>
+                <span className="text-muted-foreground">{t('method')}:</span>
                 <span className="ml-2 text-white">{authMethodLabels[config.authMethod] || config.authMethod}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Remitente:</span>
+                <span className="text-muted-foreground">{t('sender')}:</span>
                 <span className="ml-2 text-white">{config.fromEmail}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Configurado por:</span>
+                <span className="text-muted-foreground">{t('configuredBy')}:</span>
                 <span className="ml-2 text-white">
-                  {config.configuredBy === 'REPUBLICODE' ? 'Admin' : 'Usuario'}
+                  {config.configuredBy === 'REPUBLICODE' ? t('adminBadge') : t('requester')}
                 </span>
               </div>
             </div>
@@ -330,7 +333,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
             <div className="flex gap-2">
               <input
                 type="email"
-                placeholder="Correo para prueba..."
+                placeholder={t('testEmailPlaceholder')}
                 value={testEmail}
                 onChange={(e) => setTestEmail(e.target.value)}
                 className="input-rc flex-1"
@@ -350,7 +353,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
                 ) : (
                   <TestTube className="w-4 h-4 mr-1" />
                 )}
-                Probar Conexion
+                {t('testConnection')}
               </Button>
               <Button
                 variant="outline"
@@ -363,7 +366,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
                 ) : (
                   <Send className="w-4 h-4 mr-1" />
                 )}
-                Enviar Prueba
+                {t('sendTest')}
               </Button>
               <Button
                 variant="outline"
@@ -371,7 +374,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
                 onClick={() => setShowConfigModal(true)}
               >
                 <Settings className="w-4 h-4 mr-1" />
-                Modificar
+                {t('modify')}
               </Button>
               <Button
                 variant="outline"
@@ -380,18 +383,18 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 <Trash2 className="w-4 h-4 mr-1" />
-                Eliminar
+                {tCommon('delete')}
               </Button>
             </div>
           </div>
         ) : (
           <div className="text-center py-4">
             <p className="text-sm text-muted-foreground mb-4">
-              Esta empresa no tiene configuracion de email.
+              {t('noEmailConfig')}
             </p>
             <Button onClick={() => setShowConfigModal(true)}>
               <Mail className="w-4 h-4 mr-2" />
-              Configurar Email
+              {t('configureEmail')}
             </Button>
           </div>
         )}
@@ -401,15 +404,15 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       <Dialog open={showConfigModal} onOpenChange={setShowConfigModal}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Configurar Email para {tenantName}</DialogTitle>
+            <DialogTitle>{t('configureEmailFor', { name: tenantName })}</DialogTitle>
             <DialogDescription>
-              Configura el servicio de email para esta empresa.
+              {t('configureEmailDesc')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Proveedor</label>
+              <label className="block text-sm font-medium mb-2">{t('provider')}</label>
               <Select value={provider} onValueChange={setProvider}>
                 <SelectTrigger>
                   <SelectValue />
@@ -421,37 +424,37 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
                   <SelectItem value="POSTMARK">Postmark</SelectItem>
                   <SelectItem value="BREVO">Brevo</SelectItem>
                   <SelectItem value="MAILTRAP">Mailtrap</SelectItem>
-                  <SelectItem value="SMTP_GENERIC">SMTP Generico</SelectItem>
+                  <SelectItem value="SMTP_GENERIC">SMTP</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Metodo de Autenticacion</label>
+              <label className="block text-sm font-medium mb-2">{t('authMethod')}</label>
               <Select value={authMethod} onValueChange={setAuthMethod}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="API_KEY">API Key</SelectItem>
-                  <SelectItem value="SMTP_BASIC">SMTP Basico</SelectItem>
+                  <SelectItem value="SMTP_BASIC">SMTP</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">API Key / Credenciales *</label>
+              <label className="block text-sm font-medium mb-2">{t('apiKeyCredentials')} *</label>
               <input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="API Key o contraseña SMTP"
+                placeholder="API Key / SMTP"
                 className="input-rc"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Correo Remitente *</label>
+              <label className="block text-sm font-medium mb-2">{t('senderEmail')} *</label>
               <input
                 type="email"
                 value={fromEmail}
@@ -462,7 +465,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Nombre Remitente</label>
+              <label className="block text-sm font-medium mb-2">{t('senderName')}</label>
               <input
                 type="text"
                 value={fromName}
@@ -475,13 +478,13 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConfigModal(false)}>
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button onClick={handleSaveConfig} disabled={saving}>
               {saving ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : null}
-              Guardar
+              {tCommon('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -491,14 +494,14 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Eliminar Configuracion</DialogTitle>
+            <DialogTitle>{t('deleteConfig')}</DialogTitle>
             <DialogDescription>
-              ¿Estas seguro de eliminar la configuracion de email? Esta accion no se puede deshacer.
+              {t('deleteConfigConfirm')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -510,7 +513,7 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
               ) : (
                 <Trash2 className="w-4 h-4 mr-2" />
               )}
-              Eliminar
+              {tCommon('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -12,7 +12,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Bell, User, LogOut, Settings, Info, X, ExternalLink, Megaphone, Zap, Shield, AlertTriangle, AlertCircle, CheckCheck } from 'lucide-react';
+import { Moon, Sun, Bell, User, LogOut, Settings, Info, X, ExternalLink, Megaphone, Zap, Shield, AlertTriangle, AlertCircle, CheckCheck, Globe } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { locales, localeNames, type Locale } from '@/i18n/config';
 
 interface SystemNotification {
   id: string;
@@ -45,7 +47,10 @@ const priorityStyles: Record<string, string> = {
 
 export function Header() {
   const router = useRouter();
-  const { tenant, user, theme, setTheme, setUser, setTenant } = useAppStore();
+  const { tenant, user, theme, setTheme, setUser, setTenant, locale, setLocale } = useAppStore();
+  const t = useTranslations('header');
+  const tAuth = useTranslations('auth');
+  const tCommon = useTranslations('common');
   const [notifications, setNotifications] = React.useState<SystemNotification[]>([]);
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [isOpen, setIsOpen] = React.useState(false);
@@ -166,7 +171,7 @@ export function Header() {
   };
 
   const getThemeLabel = () => {
-    return theme === 'dark' ? 'Oscuro' : 'Claro';
+    return theme === 'dark' ? t('dark') : t('light');
   };
 
   const handleLogout = () => {
@@ -218,14 +223,14 @@ export function Header() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-96">
             <DropdownMenuLabel className="flex items-center justify-between">
-              <span>Notificaciones</span>
+              <span>{t('notifications')}</span>
               {notifications.length > 0 && (
                 <button
                   onClick={dismissAll}
                   className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
                 >
                   <CheckCheck className="w-3 h-3" />
-                  Marcar todas como leidas
+                  {t('markAllRead')}
                 </button>
               )}
             </DropdownMenuLabel>
@@ -235,7 +240,7 @@ export function Header() {
                 <div className="py-8 text-center">
                   <Bell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    No hay notificaciones
+                    {t('noNotifications')}
                   </p>
                 </div>
               ) : (
@@ -269,7 +274,7 @@ export function Header() {
                             className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
                             onClick={() => setIsOpen(false)}
                           >
-                            {notification.actionLabel || 'Ver mas'}
+                            {notification.actionLabel || t('seeMore')}
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         )}
@@ -287,10 +292,30 @@ export function Header() {
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          title={`Tema: ${getThemeLabel()}`}
+          title={t('theme', { theme: getThemeLabel() })}
         >
           {getThemeIcon()}
         </Button>
+
+        {/* Language Switcher */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" title={t('language')}>
+              <Globe className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {locales.map((loc) => (
+              <DropdownMenuItem
+                key={loc}
+                onClick={() => setLocale(loc)}
+                className={locale === loc ? 'bg-muted font-medium' : ''}
+              >
+                {localeNames[loc]}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* User Menu */}
         <DropdownMenu>
@@ -300,26 +325,26 @@ export function Header() {
                 <User className="h-4 w-4" />
               </div>
               <span className="hidden md:inline-block">
-                {user?.name || 'Usuario'}
+                {user?.name || t('user')}
               </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user?.name || 'Usuario'}</p>
+                <p className="text-sm font-medium leading-none">{user?.name || t('user')}</p>
                 <p className="text-xs leading-none text-muted-foreground">{user?.email || ''}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push('/configuracion')}>
               <Settings className="mr-2 h-4 w-4" />
-              Configuracion
+              {t('settings')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Cerrar Sesion
+              {tAuth('logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

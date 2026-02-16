@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import {
   Building2,
   Users,
@@ -29,6 +30,8 @@ interface DashboardStats {
 }
 
 export default function AdminDashboardPage() {
+  const t = useTranslations('admin');
+  const tCommon = useTranslations('common');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -47,13 +50,13 @@ export default function AdminDashboardPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Error al cargar estadisticas');
+        throw new Error(t('statsError'));
       }
 
       const data = await res.json();
       setStats(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error');
+      setError(err instanceof Error ? err.message : tCommon('error'));
     } finally {
       setLoading(false);
     }
@@ -101,7 +104,7 @@ export default function AdminDashboardPage() {
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
         <p className="text-red-400">{error}</p>
         <button onClick={fetchStats} className="btn-primary mt-4">
-          Reintentar
+          {tCommon('retry')}
         </button>
       </div>
     );
@@ -111,8 +114,8 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Vista general del sistema</p>
+        <h1 className="text-3xl font-bold text-white">{t('dashboard')}</h1>
+        <p className="text-muted-foreground mt-1">{t('dashboardSubtitle')}</p>
       </div>
 
       {/* Stats Grid */}
@@ -120,7 +123,7 @@ export default function AdminDashboardPage() {
         <div className="glass-card p-6 card-hover">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Empresas</p>
+              <p className="text-sm text-muted-foreground">{t('totalCompanies')}</p>
               <p className="text-3xl font-bold text-white mt-1">{stats?.totalTenants || 0}</p>
             </div>
             <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
@@ -128,16 +131,16 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-1 mt-4 text-sm">
-            <span className="text-green-500">{stats?.activeTenants || 0} activas</span>
+            <span className="text-green-500">{stats?.activeTenants || 0} {t('activeLabel')}</span>
             <span className="text-muted-foreground">•</span>
-            <span className="text-red-500">{stats?.suspendedTenants || 0} suspendidas</span>
+            <span className="text-red-500">{stats?.suspendedTenants || 0} {t('suspendedLabel')}</span>
           </div>
         </div>
 
         <div className="glass-card p-6 card-hover">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Usuarios</p>
+              <p className="text-sm text-muted-foreground">{t('totalUsers')}</p>
               <p className="text-3xl font-bold text-white mt-1">{stats?.totalUsers || 0}</p>
             </div>
             <div className="w-12 h-12 rounded-xl gradient-secondary flex items-center justify-center">
@@ -145,14 +148,14 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-1 mt-4 text-sm text-muted-foreground">
-            Usuarios registrados en el sistema
+            {t('registeredUsers')}
           </div>
         </div>
 
         <div className="glass-card p-6 card-hover">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total DTEs</p>
+              <p className="text-sm text-muted-foreground">{t('totalDtes')}</p>
               <p className="text-3xl font-bold text-white mt-1">{stats?.totalDtes || 0}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
@@ -162,14 +165,14 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-1 mt-4 text-sm">
             <ArrowUpRight className="w-4 h-4 text-green-500" />
             <span className="text-green-500">{stats?.dtesThisMonth || 0}</span>
-            <span className="text-muted-foreground">este mes</span>
+            <span className="text-muted-foreground">{t('thisMonth')}</span>
           </div>
         </div>
 
         <div className="glass-card p-6 card-hover">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">En Prueba</p>
+              <p className="text-sm text-muted-foreground">{t('inTrial')}</p>
               <p className="text-3xl font-bold text-white mt-1">{stats?.trialTenants || 0}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
@@ -177,7 +180,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-1 mt-4 text-sm text-muted-foreground">
-            Empresas en plan de prueba
+            {t('trialCompanies')}
           </div>
         </div>
       </div>
@@ -186,7 +189,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* DTEs by Status */}
         <div className="glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">DTEs por Estado</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('dtesByStatus')}</h3>
           <div className="space-y-4">
             {stats?.dtesByStatus.map((item) => (
               <div key={item.status} className="flex items-center justify-between">
@@ -198,14 +201,14 @@ export default function AdminDashboardPage() {
               </div>
             ))}
             {(!stats?.dtesByStatus || stats.dtesByStatus.length === 0) && (
-              <p className="text-muted-foreground text-sm">No hay datos disponibles</p>
+              <p className="text-muted-foreground text-sm">{t('noData')}</p>
             )}
           </div>
         </div>
 
         {/* Tenants by Plan */}
         <div className="glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Empresas por Plan</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('companiesByPlan')}</h3>
           <div className="space-y-4">
             {stats?.tenantsByPlan.map((item) => (
               <div key={item.plan} className="flex items-center justify-between">
@@ -216,7 +219,7 @@ export default function AdminDashboardPage() {
               </div>
             ))}
             {(!stats?.tenantsByPlan || stats.tenantsByPlan.length === 0) && (
-              <p className="text-muted-foreground text-sm">No hay datos disponibles</p>
+              <p className="text-muted-foreground text-sm">{t('noData')}</p>
             )}
           </div>
         </div>
@@ -224,7 +227,7 @@ export default function AdminDashboardPage() {
 
       {/* Last 7 Days Chart */}
       <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">DTEs - Ultimos 7 Dias</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">{t('dtesLast7Days')}</h3>
         <div className="flex items-end justify-between h-40 gap-2">
           {stats?.last7Days.map((day, index) => {
             const maxCount = Math.max(...(stats?.last7Days.map(d => d.count) || [1]));
@@ -251,10 +254,10 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-white group-hover:text-primary transition-colors">
-                Ver Empresas
+                {t('viewCompanies')}
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Gestiona las empresas registradas
+                {t('manageCompanies')}
               </p>
             </div>
             <ArrowUpRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -265,10 +268,10 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-white group-hover:text-primary transition-colors">
-                Administradores
+                {t('administrators')}
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Gestiona los super administradores
+                {t('manageAdmins')}
               </p>
             </div>
             <ArrowUpRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -279,10 +282,10 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-white group-hover:text-primary transition-colors">
-                Configuracion
+                {t('systemSettings')}
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Ajustes del sistema
+                {t('systemSettingsDesc')}
               </p>
             </div>
             <ArrowUpRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />

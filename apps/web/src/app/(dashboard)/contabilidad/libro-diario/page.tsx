@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface JournalEntryLine {
   id: string;
@@ -86,15 +87,16 @@ function formatDate(dateStr: string): string {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const t = useTranslations('accounting');
   const styles: Record<string, string> = {
     DRAFT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
     POSTED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     VOIDED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   };
   const labels: Record<string, string> = {
-    DRAFT: 'Borrador',
-    POSTED: 'Contabilizada',
-    VOIDED: 'Anulada',
+    DRAFT: t('draftStatus'),
+    POSTED: t('postedStatus'),
+    VOIDED: t('voidedStatus'),
   };
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-800'}`}>
@@ -104,6 +106,8 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function LibroDiarioPage() {
+  const t = useTranslations('accounting');
+  const tCommon = useTranslations('common');
   const { features, loading: planLoading } = usePlanFeatures();
   const router = useRouter();
 
@@ -208,11 +212,11 @@ export default function LibroDiarioPage() {
 
   const handleSave = async () => {
     if (!form.description) {
-      toastRef.current.error('Error', 'La descripcion es requerida');
+      toastRef.current.error(tCommon('error'), t('descriptionRequiredError'));
       return;
     }
     if (!isBalanced) {
-      toastRef.current.error('Error', 'La partida no cuadra');
+      toastRef.current.error(tCommon('error'), t('entryNotBalanced'));
       return;
     }
 
@@ -244,7 +248,7 @@ export default function LibroDiarioPage() {
 
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        toastRef.current.success('Partida creada', `${(json as { entryNumber?: string }).entryNumber || ''}`);
+        toastRef.current.success(t('entryCreated'), `${(json as { entryNumber?: string }).entryNumber || ''}`);
         setShowForm(false);
         setForm({
           entryDate: new Date().toISOString().split('T')[0],
@@ -254,10 +258,10 @@ export default function LibroDiarioPage() {
         });
         fetchEntries();
       } else {
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al crear partida');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('createEntryError'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexion');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     } finally {
       setSaving(false);
     }
@@ -272,22 +276,22 @@ export default function LibroDiarioPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        toastRef.current.success('Partida contabilizada');
+        toastRef.current.success(t('entryPosted'));
         fetchEntries();
         setShowDetail(null);
       } else {
         const json = await res.json().catch(() => ({}));
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al contabilizar');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('postError'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexion');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     } finally {
       setPosting(null);
     }
   };
 
   const handleVoid = async (id: string) => {
-    const reason = prompt('Motivo de la anulacion:');
+    const reason = prompt(t('voidReason'));
     if (!reason) return;
 
     try {
@@ -301,15 +305,15 @@ export default function LibroDiarioPage() {
         body: JSON.stringify({ reason }),
       });
       if (res.ok) {
-        toastRef.current.success('Partida anulada');
+        toastRef.current.success(t('entryVoided'));
         fetchEntries();
         setShowDetail(null);
       } else {
         const json = await res.json().catch(() => ({}));
-        toastRef.current.error('Error', (json as { message?: string }).message || 'Error al anular');
+        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('voidError'));
       }
     } catch {
-      toastRef.current.error('Error', 'Error de conexion');
+      toastRef.current.error(tCommon('error'), t('connectionError'));
     }
   };
 
@@ -321,8 +325,8 @@ export default function LibroDiarioPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Libro Diario</h1>
-            <p className="text-muted-foreground">Partidas contables</p>
+            <h1 className="text-2xl font-bold">{t('journal')}</h1>
+            <p className="text-muted-foreground">{t('journalSubtitle')}</p>
           </div>
         </div>
         <button
@@ -330,7 +334,7 @@ export default function LibroDiarioPage() {
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" />
-          Nueva Partida
+          {t('newEntry')}
         </button>
       </div>
 
@@ -341,13 +345,13 @@ export default function LibroDiarioPage() {
           onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="">Todos los estados</option>
-          <option value="DRAFT">Borrador</option>
-          <option value="POSTED">Contabilizada</option>
-          <option value="VOIDED">Anulada</option>
+          <option value="">{t('allStatuses')}</option>
+          <option value="DRAFT">{t('draftStatus')}</option>
+          <option value="POSTED">{t('postedStatus')}</option>
+          <option value="VOIDED">{t('voidedStatus')}</option>
         </select>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-muted-foreground">Desde:</label>
+          <label className="text-sm text-muted-foreground">{t('fromDate')}</label>
           <input
             type="date"
             value={dateFrom}
@@ -356,7 +360,7 @@ export default function LibroDiarioPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-muted-foreground">Hasta:</label>
+          <label className="text-sm text-muted-foreground">{t('toDate')}</label>
           <input
             type="date"
             value={dateTo}
@@ -375,21 +379,21 @@ export default function LibroDiarioPage() {
         ) : !entries || entries.data.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-2 opacity-30" />
-            <p className="text-lg font-medium">No hay partidas contables</p>
-            <p className="text-sm mt-1">Crea tu primera partida con el boton de arriba</p>
+            <p className="text-lg font-medium">{t('noEntries')}</p>
+            <p className="text-sm mt-1">{t('noEntriesDesc')}</p>
           </div>
         ) : (
           <>
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">No. Partida</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Fecha</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Descripcion</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Estado</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Debe</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Haber</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-32">Acciones</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('entryNumber')}</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{tCommon('date')}</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{tCommon('description')}</th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">{tCommon('status')}</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">{t('debitCol')}</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">{t('creditColJournal')}</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-32">{tCommon('actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -414,7 +418,7 @@ export default function LibroDiarioPage() {
                             className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 disabled:opacity-50"
                           >
                             {posting === entry.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                            Contabilizar
+                            {t('post')}
                           </button>
                         )}
                         {entry.status === 'POSTED' && (
@@ -423,7 +427,7 @@ export default function LibroDiarioPage() {
                             className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
                           >
                             <X className="h-3 w-3" />
-                            Anular
+                            {t('void')}
                           </button>
                         )}
                       </div>
@@ -437,7 +441,7 @@ export default function LibroDiarioPage() {
             {entries.totalPages > 1 && (
               <div className="flex items-center justify-between border-t px-4 py-3">
                 <span className="text-sm text-muted-foreground">
-                  Mostrando {entries.data.length} de {entries.total}
+                  {t('showing', { showing: entries.data.length, total: entries.total })}
                 </span>
                 <div className="flex items-center gap-2">
                   <button
@@ -448,7 +452,7 @@ export default function LibroDiarioPage() {
                     <ChevronLeft className="h-4 w-4" />
                   </button>
                   <span className="text-sm">
-                    Pagina {entries.page} de {entries.totalPages}
+                    {t('pageOf', { page: entries.page, totalPages: entries.totalPages })}
                   </span>
                   <button
                     onClick={() => setPage(p => Math.min(entries.totalPages, p + 1))}
@@ -470,7 +474,7 @@ export default function LibroDiarioPage() {
           <div className="bg-card border rounded-lg shadow-lg w-full max-w-2xl p-6 space-y-4 max-h-[80vh] overflow-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold">Partida {showDetail.entryNumber}</h2>
+                <h2 className="text-lg font-semibold">{t('entry')} {showDetail.entryNumber}</h2>
                 <p className="text-sm text-muted-foreground">{formatDate(showDetail.entryDate)} - {showDetail.description}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -484,10 +488,10 @@ export default function LibroDiarioPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="px-3 py-2 text-left text-sm font-medium text-muted-foreground">Cuenta</th>
-                  <th className="px-3 py-2 text-left text-sm font-medium text-muted-foreground">Concepto</th>
-                  <th className="px-3 py-2 text-right text-sm font-medium text-muted-foreground">Debe</th>
-                  <th className="px-3 py-2 text-right text-sm font-medium text-muted-foreground">Haber</th>
+                  <th className="px-3 py-2 text-left text-sm font-medium text-muted-foreground">{t('account')}</th>
+                  <th className="px-3 py-2 text-left text-sm font-medium text-muted-foreground">{t('concept')}</th>
+                  <th className="px-3 py-2 text-right text-sm font-medium text-muted-foreground">{t('debitCol')}</th>
+                  <th className="px-3 py-2 text-right text-sm font-medium text-muted-foreground">{t('creditColJournal')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -508,7 +512,7 @@ export default function LibroDiarioPage() {
               </tbody>
               <tfoot>
                 <tr className="border-t font-semibold">
-                  <td colSpan={2} className="px-3 py-2 text-sm text-right">Totales:</td>
+                  <td colSpan={2} className="px-3 py-2 text-sm text-right">{t('totalsLabel')}</td>
                   <td className="px-3 py-2 text-sm text-right font-mono">{formatCurrency(Number(showDetail.totalDebit))}</td>
                   <td className="px-3 py-2 text-sm text-right font-mono">{formatCurrency(Number(showDetail.totalCredit))}</td>
                 </tr>
@@ -523,7 +527,7 @@ export default function LibroDiarioPage() {
                   className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
                 >
                   {posting === showDetail.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  Contabilizar
+                  {t('post')}
                 </button>
               )}
               {showDetail.status === 'POSTED' && (
@@ -532,14 +536,14 @@ export default function LibroDiarioPage() {
                   className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
                 >
                   <X className="h-4 w-4" />
-                  Anular
+                  {t('void')}
                 </button>
               )}
               <button
                 onClick={() => setShowDetail(null)}
                 className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
               >
-                Cerrar
+                {tCommon('close')}
               </button>
             </div>
           </div>
@@ -550,11 +554,11 @@ export default function LibroDiarioPage() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-card border rounded-lg shadow-lg w-full max-w-3xl p-6 space-y-4 max-h-[90vh] overflow-auto">
-            <h2 className="text-lg font-semibold">Nueva Partida Contable</h2>
+            <h2 className="text-lg font-semibold">{t('newAccountingEntry')}</h2>
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium">Fecha *</label>
+                <label className="text-sm font-medium">{t('dateRequired')}</label>
                 <input
                   type="date"
                   value={form.entryDate}
@@ -563,25 +567,25 @@ export default function LibroDiarioPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Tipo</label>
+                <label className="text-sm font-medium">{t('entryType')}</label>
                 <select
                   value={form.entryType}
                   onChange={e => setForm({ ...form, entryType: e.target.value })}
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
                 >
-                  <option value="MANUAL">Manual</option>
-                  <option value="ADJUSTMENT">Ajuste</option>
-                  <option value="CLOSING">Cierre</option>
+                  <option value="MANUAL">{t('manualType')}</option>
+                  <option value="ADJUSTMENT">{t('adjustmentType')}</option>
+                  <option value="CLOSING">{t('closingType')}</option>
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium">Descripcion *</label>
+                <label className="text-sm font-medium">{t('descriptionRequired')}</label>
                 <input
                   type="text"
                   value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm mt-1"
-                  placeholder="Concepto de la partida"
+                  placeholder={t('entryConceptPlaceholder')}
                 />
               </div>
             </div>
@@ -589,22 +593,22 @@ export default function LibroDiarioPage() {
             {/* Lines */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold">Lineas de la partida</h3>
+                <h3 className="text-sm font-semibold">{t('entryLines')}</h3>
                 <button
                   onClick={handleAddLine}
                   className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                 >
-                  <Plus className="h-3 w-3" /> Agregar linea
+                  <Plus className="h-3 w-3" /> {t('addLine')}
                 </button>
               </div>
 
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">Cuenta</th>
-                    <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">Concepto</th>
-                    <th className="px-2 py-2 text-right text-xs font-medium text-muted-foreground w-28">Debe</th>
-                    <th className="px-2 py-2 text-right text-xs font-medium text-muted-foreground w-28">Haber</th>
+                    <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">{t('account')}</th>
+                    <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">{t('concept')}</th>
+                    <th className="px-2 py-2 text-right text-xs font-medium text-muted-foreground w-28">{t('debitCol')}</th>
+                    <th className="px-2 py-2 text-right text-xs font-medium text-muted-foreground w-28">{t('creditColJournal')}</th>
                     <th className="px-2 py-2 w-10" />
                   </tr>
                 </thead>
@@ -617,7 +621,7 @@ export default function LibroDiarioPage() {
                           onChange={e => handleLineChange(idx, 'accountId', e.target.value)}
                           className="w-full rounded border bg-background px-2 py-1 text-sm"
                         >
-                          <option value="">Seleccionar...</option>
+                          <option value="">{t('selectAccount')}</option>
                           {accounts.map(a => (
                             <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
                           ))}
@@ -629,7 +633,7 @@ export default function LibroDiarioPage() {
                           value={line.description}
                           onChange={e => handleLineChange(idx, 'description', e.target.value)}
                           className="w-full rounded border bg-background px-2 py-1 text-sm"
-                          placeholder="Descripcion"
+                          placeholder={tCommon('description')}
                         />
                       </td>
                       <td className="px-2 py-1">
@@ -669,16 +673,16 @@ export default function LibroDiarioPage() {
                 </tbody>
                 <tfoot>
                   <tr className="border-t font-semibold">
-                    <td colSpan={2} className="px-2 py-2 text-sm text-right">Totales:</td>
+                    <td colSpan={2} className="px-2 py-2 text-sm text-right">{t('totalsLabel')}</td>
                     <td className="px-2 py-2 text-sm text-right font-mono">{formatCurrency(totalDebit)}</td>
                     <td className="px-2 py-2 text-sm text-right font-mono">{formatCurrency(totalCredit)}</td>
                     <td />
                   </tr>
                   <tr>
-                    <td colSpan={2} className="px-2 py-1 text-sm text-right">Diferencia:</td>
+                    <td colSpan={2} className="px-2 py-1 text-sm text-right">{t('difference')}</td>
                     <td colSpan={2} className={`px-2 py-1 text-sm text-right font-mono ${isBalanced ? 'text-green-600' : 'text-red-600'}`}>
                       {formatCurrency(totalDebit - totalCredit)}
-                      {isBalanced ? ' (Cuadra)' : ' (No cuadra)'}
+                      {isBalanced ? ` (${t('balancedLabel')})` : ` (${t('notBalancedLabel')})`}
                     </td>
                     <td />
                   </tr>
@@ -691,7 +695,7 @@ export default function LibroDiarioPage() {
                 onClick={() => setShowForm(false)}
                 className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
               >
-                Cancelar
+                {tCommon('cancel')}
               </button>
               <button
                 onClick={handleSave}
@@ -699,7 +703,7 @@ export default function LibroDiarioPage() {
                 className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                Crear Partida
+                {t('createEntry')}
               </button>
             </div>
           </div>

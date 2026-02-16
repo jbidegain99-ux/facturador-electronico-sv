@@ -15,6 +15,7 @@ import { HaciendaConfigBanner, useHaciendaStatus } from '@/components/HaciendaCo
 import { formatCurrency, formatDate, getTipoDteName } from '@/lib/utils';
 import { Plus, Search, Download, Eye, Ban, Copy, FileText, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { DTEStatus, TipoDte } from '@/types';
+import { useTranslations } from 'next-intl';
 import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
 
@@ -42,6 +43,9 @@ interface DTEResponse {
 }
 
 export default function FacturasPage() {
+  const t = useTranslations('invoices');
+  const tCommon = useTranslations('common');
+  const tStatuses = useTranslations('statuses');
   const toast = useToast();
   const { confirm, ConfirmDialog } = useConfirm();
   const { isConfigured: isHaciendaConfigured, isLoading: isLoadingHacienda, demoMode } = useHaciendaStatus();
@@ -66,7 +70,7 @@ export default function FacturasPage() {
   const fetchDTEs = React.useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setError('No hay sesion activa');
+      setError(tCommon('noSession'));
       setLoading(false);
       return;
     }
@@ -92,7 +96,7 @@ export default function FacturasPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error al cargar facturas (${res.status})`);
+        throw new Error(errorData.message || t('loadError'));
       }
 
       const data = await res.json();
@@ -106,7 +110,7 @@ export default function FacturasPage() {
       setError(null);
     } catch (err) {
       console.error('Error fetching DTEs:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar facturas');
+      setError(err instanceof Error ? err.message : t('loadError'));
     } finally {
       setLoading(false);
     }
@@ -163,7 +167,7 @@ export default function FacturasPage() {
         },
       });
 
-      if (!res.ok) throw new Error('Error al descargar');
+      if (!res.ok) throw new Error(t('downloadError'));
 
       const data = await res.json();
       const jsonStr = JSON.stringify(data.jsonOriginal || data, null, 2);
@@ -176,10 +180,10 @@ export default function FacturasPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('Documento descargado correctamente');
+      toast.success(t('downloadSuccess'));
     } catch (err) {
       console.error('Error downloading DTE:', err);
-      toast.error('Error al descargar el documento');
+      toast.error(t('downloadError'));
     }
   };
 
@@ -194,7 +198,7 @@ export default function FacturasPage() {
         },
       });
 
-      if (!res.ok) throw new Error('Error al generar el PDF');
+      if (!res.ok) throw new Error(t('pdfError'));
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -205,19 +209,19 @@ export default function FacturasPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('PDF descargado correctamente');
+      toast.success(t('pdfSuccess'));
     } catch (err) {
       console.error('Error downloading PDF:', err);
-      toast.error('Error al generar el PDF');
+      toast.error(t('pdfError'));
     }
   };
 
   const handleAnular = async (dte: DTE) => {
     const confirmed = await confirm({
-      title: 'Anular documento',
-      description: `¿Estás seguro que deseas anular el documento ${dte.numeroControl}? Esta acción no se puede deshacer.`,
-      confirmText: 'Sí, anular',
-      cancelText: 'Cancelar',
+      title: t('voidDocument'),
+      description: t('voidConfirm', { controlNumber: dte.numeroControl }),
+      confirmText: t('yesVoid'),
+      cancelText: tCommon('cancel'),
       variant: 'destructive',
     });
 
@@ -235,13 +239,13 @@ export default function FacturasPage() {
         },
       });
 
-      if (!res.ok) throw new Error('Error al anular el documento');
+      if (!res.ok) throw new Error(t('voidError'));
 
-      toast.success('Documento anulado correctamente');
+      toast.success(t('voidSuccess'));
       fetchDTEs(); // Refresh the list
     } catch (err) {
       console.error('Error anulando DTE:', err);
-      toast.error('Error al anular el documento');
+      toast.error(t('voidError'));
     }
   };
 
@@ -269,22 +273,22 @@ export default function FacturasPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Facturas</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Gestiona tus documentos tributarios electronicos
+            {t('subtitle')}
           </p>
         </div>
         {canCreateInvoice ? (
           <Link href="/facturas/nueva">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Nueva Factura
+              {t('newInvoice')}
             </Button>
           </Link>
         ) : (
-          <Button disabled title="Configura Hacienda primero">
+          <Button disabled title={t('configureFirst')}>
             <Plus className="mr-2 h-4 w-4" />
-            Nueva Factura
+            {t('newInvoice')}
           </Button>
         )}
       </div>
@@ -294,7 +298,7 @@ export default function FacturasPage() {
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
           {error}
           <Button variant="link" className="ml-2 text-red-700" onClick={fetchDTEs}>
-            Reintentar
+            {tCommon('retry')}
           </Button>
         </div>
       )}
@@ -302,7 +306,7 @@ export default function FacturasPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Filtros</CardTitle>
+          <CardTitle className="text-base">{tCommon('filter')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
@@ -310,7 +314,7 @@ export default function FacturasPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por numero, cliente o codigo..."
+                  placeholder={t('searchPlaceholder')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
@@ -322,8 +326,8 @@ export default function FacturasPage() {
                 <SelectValue placeholder="Tipo DTE" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los tipos</SelectItem>
-                <SelectItem value="01">Factura</SelectItem>
+                <SelectItem value="all">{t('allTypes')}</SelectItem>
+                <SelectItem value="01">{t('invoice')}</SelectItem>
                 <SelectItem value="03">Credito Fiscal</SelectItem>
                 <SelectItem value="05">Nota de Credito</SelectItem>
                 <SelectItem value="06">Nota de Debito</SelectItem>
@@ -334,12 +338,12 @@ export default function FacturasPage() {
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="PENDIENTE">Pendiente</SelectItem>
-                <SelectItem value="FIRMADO">Firmado</SelectItem>
-                <SelectItem value="PROCESADO">Procesado</SelectItem>
-                <SelectItem value="RECHAZADO">Rechazado</SelectItem>
-                <SelectItem value="ANULADO">Anulado</SelectItem>
+                <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                <SelectItem value="PENDIENTE">{tStatuses('pending')}</SelectItem>
+                <SelectItem value="FIRMADO">{tStatuses('signed')}</SelectItem>
+                <SelectItem value="PROCESADO">{tStatuses('processed')}</SelectItem>
+                <SelectItem value="RECHAZADO">{tStatuses('rejected')}</SelectItem>
+                <SelectItem value="ANULADO">{tStatuses('voided')}</SelectItem>
               </SelectContent>
             </Select>
             <PageSizeSelector value={limit} onChange={handleLimitChange} />
@@ -364,7 +368,7 @@ export default function FacturasPage() {
                         className="flex items-center hover:text-foreground transition-colors"
                         onClick={() => handleSort('createdAt')}
                       >
-                        Fecha
+                        {tCommon('date')}
                         {getSortIcon('createdAt')}
                       </button>
                     </TableHead>
@@ -373,23 +377,23 @@ export default function FacturasPage() {
                         className="flex items-center hover:text-foreground transition-colors"
                         onClick={() => handleSort('numeroControl')}
                       >
-                        Numero Control
+                        {t('controlNumber')}
                         {getSortIcon('numeroControl')}
                       </button>
                     </TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Cliente</TableHead>
+                    <TableHead>{tCommon('type')}</TableHead>
+                    <TableHead>{t('client')}</TableHead>
                     <TableHead className="text-right">
                       <button
                         className="flex items-center justify-end hover:text-foreground transition-colors ml-auto"
                         onClick={() => handleSort('totalPagar')}
                       >
-                        Total
+                        {tCommon('total')}
                         {getSortIcon('totalPagar')}
                       </button>
                     </TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>{tCommon('status')}</TableHead>
+                    <TableHead className="text-right">{tCommon('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -397,8 +401,8 @@ export default function FacturasPage() {
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         {search || filterTipo !== 'all' || filterStatus !== 'all'
-                          ? 'No se encontraron documentos con esos filtros'
-                          : 'No hay documentos emitidos. Crea tu primera factura.'}
+                          ? t('noDocsFilter')
+                          : t('noDocs')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -416,7 +420,7 @@ export default function FacturasPage() {
                         <TableCell>
                           <div>
                             <div className="font-medium">
-                              {dte.cliente?.nombre || 'Sin cliente'}
+                              {dte.cliente?.nombre || t('noClient')}
                             </div>
                             <div className="text-xs text-muted-foreground">
                               {dte.cliente?.numDocumento || '-'}
@@ -432,12 +436,12 @@ export default function FacturasPage() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             <Link href={`/facturas/${dte.id}`}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" title="Ver detalle">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title={t('viewDetail')}>
                                 <Eye className="h-4 w-4" />
                               </Button>
                             </Link>
                             <Link href={`/facturas/nueva?duplicate=${dte.id}`}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" title="Duplicar factura">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title={t('duplicate')}>
                                 <Copy className="h-4 w-4" />
                               </Button>
                             </Link>
@@ -446,7 +450,7 @@ export default function FacturasPage() {
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handleDownloadPdf(dte)}
-                              title="Descargar PDF"
+                              title={t('downloadPdf')}
                             >
                               <FileText className="h-4 w-4" />
                             </Button>
@@ -455,7 +459,7 @@ export default function FacturasPage() {
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handleDownload(dte.id)}
-                              title="Descargar JSON"
+                              title={t('downloadJson')}
                             >
                               <Download className="h-4 w-4" />
                             </Button>
@@ -464,7 +468,7 @@ export default function FacturasPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-destructive"
-                                title="Anular"
+                                title={t('void')}
                                 onClick={() => handleAnular(dte)}
                               >
                                 <Ban className="h-4 w-4" />

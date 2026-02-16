@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTranslations } from 'next-intl';
 
 interface SupportTicket {
   id: string;
@@ -81,6 +82,8 @@ const priorityLabels: Record<string, string> = {
 };
 
 export default function SoportePage() {
+  const ts = useTranslations('support');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -135,7 +138,7 @@ export default function SoportePage() {
       );
 
       if (!res.ok) {
-        throw new Error('Error al cargar tickets');
+        throw new Error(ts('noTickets'));
       }
 
       const data: TicketsResponse = await res.json();
@@ -143,11 +146,11 @@ export default function SoportePage() {
 
       // Client-side filter by tab (backend doesn't support status filter for tenant)
       if (activeTab === 'pending') {
-        filtered = filtered.filter(t => t.status === 'PENDING' || t.status === 'ASSIGNED');
+        filtered = filtered.filter(tk => tk.status === 'PENDING' || tk.status === 'ASSIGNED');
       } else if (activeTab === 'in_progress') {
-        filtered = filtered.filter(t => t.status === 'IN_PROGRESS' || t.status === 'WAITING_CUSTOMER');
+        filtered = filtered.filter(tk => tk.status === 'IN_PROGRESS' || tk.status === 'WAITING_CUSTOMER');
       } else if (activeTab === 'resolved') {
-        filtered = filtered.filter(t => t.status === 'RESOLVED' || t.status === 'CLOSED');
+        filtered = filtered.filter(tk => tk.status === 'RESOLVED' || tk.status === 'CLOSED');
       }
 
       setTickets(filtered);
@@ -184,8 +187,8 @@ export default function SoportePage() {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({ message: 'Error al crear ticket' }));
-        throw new Error(data.message || 'Error al crear ticket');
+        const data = await res.json().catch(() => ({ message: ts('createTicket') }));
+        throw new Error(data.message || ts('createTicket'));
       }
 
       // Reset form and refresh
@@ -240,82 +243,82 @@ export default function SoportePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Soporte</h1>
-          <p className="text-muted-foreground mt-1">Gestiona tus tickets de soporte</p>
+          <h1 className="text-3xl font-bold">{ts('title')}</h1>
+          <p className="text-muted-foreground mt-1">{ts('subtitle')}</p>
         </div>
         <Dialog open={showNewTicket} onOpenChange={setShowNewTicket}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Nuevo Ticket
+              {ts('newTicket')}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Nuevo Ticket de Soporte</DialogTitle>
+              <DialogTitle>{ts('newTicketTitle')}</DialogTitle>
               <DialogDescription>
-                Describe tu problema y nuestro equipo te ayudara lo antes posible.
+                {ts('newTicketDesc')}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreateTicket} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Tipo</label>
+                  <label className="block text-sm font-medium mb-1">{ts('typeLabel')}</label>
                   <Select value={newTicketType} onValueChange={setNewTicketType}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="GENERAL">General</SelectItem>
-                      <SelectItem value="TECHNICAL">Tecnico</SelectItem>
-                      <SelectItem value="BILLING">Facturacion</SelectItem>
-                      <SelectItem value="EMAIL_CONFIG">Config. Email</SelectItem>
-                      <SelectItem value="ONBOARDING">Onboarding</SelectItem>
+                      <SelectItem value="GENERAL">{ts('typeGeneral')}</SelectItem>
+                      <SelectItem value="TECHNICAL">{ts('typeTechnical')}</SelectItem>
+                      <SelectItem value="BILLING">{ts('typeBilling')}</SelectItem>
+                      <SelectItem value="EMAIL_CONFIG">{ts('typeEmail')}</SelectItem>
+                      <SelectItem value="ONBOARDING">{ts('typeOnboarding')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Prioridad</label>
+                  <label className="block text-sm font-medium mb-1">{ts('priorityLabel')}</label>
                   <Select value={newTicketPriority} onValueChange={setNewTicketPriority}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="LOW">Baja</SelectItem>
-                      <SelectItem value="MEDIUM">Media</SelectItem>
-                      <SelectItem value="HIGH">Alta</SelectItem>
-                      <SelectItem value="URGENT">Urgente</SelectItem>
+                      <SelectItem value="LOW">{ts('priorityLow')}</SelectItem>
+                      <SelectItem value="MEDIUM">{ts('priorityMedium')}</SelectItem>
+                      <SelectItem value="HIGH">{ts('priorityHigh')}</SelectItem>
+                      <SelectItem value="URGENT">{ts('priorityUrgent')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Asunto</label>
+                <label className="block text-sm font-medium mb-1">{ts('subjectLabel')}</label>
                 <input
                   type="text"
                   value={newTicketSubject}
                   onChange={(e) => setNewTicketSubject(e.target.value)}
-                  placeholder="Describe brevemente tu problema"
+                  placeholder={ts('subjectPlaceholder')}
                   required
                   className="block w-full rounded-lg border border-input bg-background py-2.5 px-4 text-foreground shadow-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Descripcion</label>
+                <label className="block text-sm font-medium mb-1">{ts('descriptionLabel')}</label>
                 <textarea
                   value={newTicketDescription}
                   onChange={(e) => setNewTicketDescription(e.target.value)}
-                  placeholder="Proporciona todos los detalles posibles..."
+                  placeholder={ts('descriptionPlaceholder')}
                   rows={4}
                   className="block w-full rounded-lg border border-input bg-background py-2.5 px-4 text-foreground shadow-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-colors"
                 />
               </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setShowNewTicket(false)}>
-                  Cancelar
+                  {tCommon('cancel')}
                 </Button>
                 <Button type="submit" disabled={creating || !newTicketSubject.trim()}>
-                  {creating ? 'Creando...' : 'Crear Ticket'}
+                  {creating ? tCommon('loading') : ts('createTicket')}
                 </Button>
               </div>
             </form>
@@ -331,8 +334,8 @@ export default function SoportePage() {
               <Clock className="w-5 h-5 text-yellow-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold">{tickets.filter(t => t.status === 'PENDING' || t.status === 'ASSIGNED').length}</div>
-              <div className="text-sm text-muted-foreground">Pendientes</div>
+              <div className="text-2xl font-bold">{tickets.filter(tk => tk.status === 'PENDING' || tk.status === 'ASSIGNED').length}</div>
+              <div className="text-sm text-muted-foreground">{ts('statsPending')}</div>
             </div>
           </div>
         </div>
@@ -342,8 +345,8 @@ export default function SoportePage() {
               <Loader2 className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold">{tickets.filter(t => t.status === 'IN_PROGRESS' || t.status === 'WAITING_CUSTOMER').length}</div>
-              <div className="text-sm text-muted-foreground">En Progreso</div>
+              <div className="text-2xl font-bold">{tickets.filter(tk => tk.status === 'IN_PROGRESS' || tk.status === 'WAITING_CUSTOMER').length}</div>
+              <div className="text-sm text-muted-foreground">{ts('statsInProgress')}</div>
             </div>
           </div>
         </div>
@@ -353,8 +356,8 @@ export default function SoportePage() {
               <CheckCircle className="w-5 h-5 text-green-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold">{tickets.filter(t => t.status === 'RESOLVED' || t.status === 'CLOSED').length}</div>
-              <div className="text-sm text-muted-foreground">Resueltos</div>
+              <div className="text-2xl font-bold">{tickets.filter(tk => tk.status === 'RESOLVED' || tk.status === 'CLOSED').length}</div>
+              <div className="text-sm text-muted-foreground">{ts('statsResolved')}</div>
             </div>
           </div>
         </div>
@@ -363,10 +366,10 @@ export default function SoportePage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setPage(1); }}>
         <TabsList>
-          <TabsTrigger value="all">Todos ({total})</TabsTrigger>
-          <TabsTrigger value="pending">Pendientes</TabsTrigger>
-          <TabsTrigger value="in_progress">En Progreso</TabsTrigger>
-          <TabsTrigger value="resolved">Resueltos</TabsTrigger>
+          <TabsTrigger value="all">{ts('tabAll')} ({total})</TabsTrigger>
+          <TabsTrigger value="pending">{ts('tabPending')}</TabsTrigger>
+          <TabsTrigger value="in_progress">{ts('tabInProgress')}</TabsTrigger>
+          <TabsTrigger value="resolved">{ts('tabResolved')}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -384,8 +387,8 @@ export default function SoportePage() {
         ) : tickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
             <Ticket className="w-12 h-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium">No tienes tickets</p>
-            <p className="text-sm mt-1">Crea un nuevo ticket si necesitas ayuda</p>
+            <p className="text-lg font-medium">{ts('noTickets')}</p>
+            <p className="text-sm mt-1">{ts('noTicketsDesc')}</p>
           </div>
         ) : (
           <>
@@ -394,11 +397,11 @@ export default function SoportePage() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">#</th>
-                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Asunto</th>
-                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Tipo</th>
-                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Estado</th>
-                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Prioridad</th>
-                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Fecha</th>
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">{ts('subjectLabel')}</th>
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">{ts('typeLabel')}</th>
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">{tCommon('status')}</th>
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">{ts('priorityLabel')}</th>
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">{tCommon('date')}</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
@@ -418,7 +421,7 @@ export default function SoportePage() {
                             {ticket._count.comments > 0 && (
                               <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                                 <MessageSquare className="w-3 h-3" />
-                                {ticket._count.comments} comentarios
+                                {ts('comments', { count: ticket._count.comments })}
                               </div>
                             )}
                           </div>
@@ -426,17 +429,17 @@ export default function SoportePage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-sm text-muted-foreground">
-                          {typeLabels[ticket.type] || ticket.type}
+                          {({ EMAIL_CONFIG: ts('typeEmail'), TECHNICAL: ts('typeTechnical'), BILLING: ts('typeBilling'), GENERAL: ts('typeGeneral'), ONBOARDING: ts('typeOnboarding') } as Record<string, string>)[ticket.type] || ticket.type}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(ticket.status)}`}>
-                          {statusLabels[ticket.status] || ticket.status}
+                          {({ PENDING: ts('statusPending'), ASSIGNED: ts('statusAssigned'), IN_PROGRESS: ts('statusInProgress'), WAITING_CUSTOMER: ts('statusWaiting'), RESOLVED: ts('statusResolved'), CLOSED: ts('statusClosed') } as Record<string, string>)[ticket.status] || ticket.status}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityBadge(ticket.priority)}`}>
-                          {priorityLabels[ticket.priority] || ticket.priority}
+                          {({ LOW: ts('priorityLow'), MEDIUM: ts('priorityMedium'), HIGH: ts('priorityHigh'), URGENT: ts('priorityUrgent') } as Record<string, string>)[ticket.priority] || ticket.priority}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -459,7 +462,7 @@ export default function SoportePage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t">
                 <div className="text-sm text-muted-foreground">
-                  Pagina {page} de {totalPages}
+                  {tCommon('page', { page, totalPages })}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button

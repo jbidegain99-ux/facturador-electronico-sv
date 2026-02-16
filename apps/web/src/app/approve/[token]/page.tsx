@@ -397,18 +397,20 @@ export default function QuoteApprovalPage() {
     setSubmitting(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const lineItems = Object.entries(decisions).map(([id, decision]) => ({
-        id,
-        approvalStatus: decision.approvalStatus,
-        approvedQuantity:
-          decision.approvalStatus === 'APPROVED'
-            ? decision.approvedQuantity
-            : undefined,
-        rejectionReason:
-          decision.approvalStatus === 'REJECTED' && decision.rejectionReason.trim()
-            ? decision.rejectionReason.trim()
-            : undefined,
-      }));
+      const lineItems = Object.entries(decisions).map(([id, decision]) => {
+        const item = quote?.lineItems.find((li) => li.id === id);
+        const base: { id: string; approvalStatus: string; approvedQuantity?: number; rejectionReason?: string } = {
+          id,
+          approvalStatus: decision.approvalStatus,
+        };
+        if (decision.approvalStatus === 'APPROVED') {
+          base.approvedQuantity = decision.approvedQuantity ?? item?.quantity ?? 1;
+        }
+        if (decision.approvalStatus === 'REJECTED' && decision.rejectionReason.trim()) {
+          base.rejectionReason = decision.rejectionReason.trim();
+        }
+        return base;
+      });
 
       const res = await fetch(`${apiUrl}/quotes/public/approve/${token}`, {
         method: 'POST',

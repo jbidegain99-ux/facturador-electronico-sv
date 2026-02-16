@@ -35,7 +35,7 @@ jobs:
         run: npx prisma generate --schema=apps/api/prisma/schema.prisma
 
       - name: Build API
-        run: npm run build --workspace=@facturador/api
+        run: npx turbo build --filter=@facturador/api
 
       - name: Zip artifact for deployment
         run: |

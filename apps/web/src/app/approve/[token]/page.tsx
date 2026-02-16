@@ -262,7 +262,7 @@ export default function QuoteApprovalPage() {
         for (const item of data.lineItems) {
           initialDecisions[item.id] = {
             approvalStatus: 'APPROVED',
-            approvedQuantity: item.quantity,
+            approvedQuantity: Number(item.quantity),
             rejectionReason: '',
           };
         }
@@ -299,7 +299,7 @@ export default function QuoteApprovalPage() {
           ...current,
           approvalStatus: newStatus,
           approvedQuantity:
-            newStatus === 'APPROVED' ? (item?.quantity ?? null) : null,
+            newStatus === 'APPROVED' ? Number(item?.quantity ?? 1) : null,
           rejectionReason: newStatus === 'APPROVED' ? '' : current.rejectionReason,
         },
       };
@@ -404,7 +404,7 @@ export default function QuoteApprovalPage() {
           approvalStatus: decision.approvalStatus,
         };
         if (decision.approvalStatus === 'APPROVED') {
-          base.approvedQuantity = decision.approvedQuantity ?? item?.quantity ?? 1;
+          base.approvedQuantity = Number(decision.approvedQuantity ?? item?.quantity ?? 1);
         }
         if (decision.approvalStatus === 'REJECTED' && decision.rejectionReason.trim()) {
           base.rejectionReason = decision.rejectionReason.trim();

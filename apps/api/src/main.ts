@@ -12,12 +12,12 @@ async function bootstrap() {
 
   // Habilitar CORS - support both CORS_ORIGIN (singular) and CORS_ORIGINS (plural)
   const corsEnv = process.env.CORS_ORIGINS || process.env.CORS_ORIGIN;
+  const isProduction = process.env.NODE_ENV === 'production';
   const allowedOrigins = corsEnv
-    ? corsEnv.split(',').map((o) => o.trim())
-    : [
-        'https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net',
-        'http://localhost:3000',
-      ];
+    ? corsEnv.split(',').map((o) => o.trim()).filter((o) => isProduction ? !o.includes('localhost') : true)
+    : isProduction
+      ? ['https://facturador-web-sv.azurewebsites.net']
+      : ['https://facturador-web-sv.azurewebsites.net', 'http://localhost:3000'];
 
   app.enableCors({
     origin: allowedOrigins,
@@ -32,7 +32,6 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   // Only expose Swagger in non-production environments
-  const isProduction = process.env.NODE_ENV === 'production';
   if (!isProduction) {
     const config = new DocumentBuilder()
       .setTitle('Facturador Electronico SV API')

@@ -20,6 +20,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { TenantEmailConfig } from '@/components/admin/tenant-email-config';
+import { TenantHaciendaConfig } from '@/components/admin/tenant-hacienda-config';
 import { TenantPlanManager } from '@/components/admin/tenant-plan-manager';
 
 interface SupportTicket {
@@ -354,6 +355,9 @@ export default function TenantDetailPage() {
 
           {/* Email Configuration */}
           <TenantEmailConfig tenantId={tenant.id} tenantName={tenant.nombre} />
+
+          {/* Hacienda Configuration */}
+          <TenantHaciendaConfig tenantId={tenant.id} tenantName={tenant.nombre} />
 
           {/* Plan Management */}
           <TenantPlanManager tenantId={tenant.id} tenantName={tenant.nombre} />

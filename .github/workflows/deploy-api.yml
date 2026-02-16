@@ -6,13 +6,15 @@ on:
       - main
     paths:
       - 'apps/api/**'
+      - 'packages/**'
       - 'package.json'
       - 'package-lock.json'
   workflow_dispatch:
 
 env:
   AZURE_WEBAPP_NAME: facturador-api-sv
-  NODE_VERSION: '20.x'
+  ACR_NAME: republicodeacr
+  IMAGE_NAME: facturador-api
 
 jobs:
   build-and-deploy:
@@ -22,36 +24,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma client
-        run: npx prisma generate --schema=apps/api/prisma/schema.prisma
-
-      - name: Build API
-        run: npx turbo build --filter=@facturador/api
-
-      - name: Zip artifact for deployment
-        run: |
-          cd apps/api
-          zip -r ../../api-build.zip dist package.json node_modules prisma
-
       - name: Login to Azure
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: api-build.zip
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest \
+            -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -f apps/api/Dockerfile .
+          docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Restart App Service
+        run: az webapp restart --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group facturador-sv-rg
 
       - name: Logout from Azure
         run: az logout

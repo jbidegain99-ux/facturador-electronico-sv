@@ -125,7 +125,7 @@ export class Microsoft365Adapter extends BaseEmailAdapter {
     };
   }
 
-  private async getValidAccessToken(): Promise<string> {
+  protected async getValidAccessToken(): Promise<string> {
     // Check if current token is still valid
     if (
       this.config.oauth2AccessToken &&

@@ -315,6 +315,27 @@ class ClientCredentialsMsGraphAdapter extends Microsoft365Adapter {
   }
 
   /**
+   * Override getValidAccessToken to bypass the parent's refresh token check.
+   * Client_credentials flow doesn't use refresh tokens.
+   */
+  protected async getValidAccessToken(): Promise<string> {
+    // Check if cached token in config is still valid
+    if (
+      this.config.oauth2AccessToken &&
+      this.config.oauth2TokenExpiry &&
+      new Date(this.config.oauth2TokenExpiry) > new Date()
+    ) {
+      return this.config.oauth2AccessToken;
+    }
+
+    // Get a new token via client_credentials flow
+    const token = await this.defaultEmailService.getClientCredentialsToken();
+    this.config.oauth2AccessToken = token;
+    this.config.oauth2TokenExpiry = new Date(Date.now() + 3500 * 1000);
+    return token;
+  }
+
+  /**
    * Override to use client_credentials token instead of delegated OAuth
    */
   async refreshOAuthToken() {

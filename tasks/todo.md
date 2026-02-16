@@ -753,9 +753,20 @@ Implementar sistema completo de gestión de productos/servicios con catálogo, p
 - [x] Tenant name display in header
 - [x] Error handling hardening (19 files)
 
+## Completed — 2026-02-16 (Post-Migration Sprint Part 1)
+- [x] 1.1: DB cleanup script created (apps/api/prisma/cleanup-junk-tenants.ts)
+- [x] 1.2: CORS hardened (localhost filtered in production), HTTPS CLI commands ready
+- [x] 1.3: MH token persistence in HaciendaEnvironmentConfig (DB read/write + memory cache)
+- [x] 1.4: Fix admin support ticket detail page (SelectItem empty value + JSON.parse safety)
+- [x] 1.5: EmailSendLog recording in DefaultEmailService + schema updated (tenantId, configId optional)
+- [x] 1.6: Deleted dte.service.ts.backup, moved prompt-migracion to tasks/
+- [x] Deploy workflows updated to Docker build+push (done 2026-02-16 pre-sprint)
+- [x] Email delivery fixed (client_credentials flow + dummy refresh token)
+- [x] Quote approval fixed (approvedQuantity Decimal→Number, FRONTEND_URL configured)
+
 ## Next Up
-- [ ] Repo cleanup (.gitignore, remove coverage from tracking)
-- [ ] Deploy recurring-invoices API (needs Redis on Azure)
-- [ ] Pagination on /facturas page
-- [ ] FASE 1: Product/service catalog
-- [ ] Phase 1: Invoice wizard single-page redesign
+- [ ] Run cleanup script against production DB
+- [ ] Run `prisma db push` to apply EmailSendLog schema changes
+- [ ] Run Azure CLI: httpsOnly=true + CORS cleanup
+- [ ] Deploy API + Web with Part 1 changes
+- [ ] Part 2-7 of post-migration sprint (see prompt-post-migracion.md)

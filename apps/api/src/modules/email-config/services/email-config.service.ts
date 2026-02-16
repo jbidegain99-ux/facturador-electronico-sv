@@ -244,6 +244,7 @@ export class EmailConfigService {
     // Log the send attempt
     await this.prisma.emailSendLog.create({
       data: {
+        tenantId,
         configId: config.id,
         recipientEmail: dto.recipientEmail,
         subject: dto.subject || 'Prueba de Configuración de Email',
@@ -316,6 +317,7 @@ export class EmailConfigService {
     // Log the send
     await this.prisma.emailSendLog.create({
       data: {
+        tenantId,
         configId: config.id,
         dteId,
         recipientEmail: recipients[0],
@@ -367,6 +369,7 @@ export class EmailConfigService {
     // Log the send
     await this.prisma.emailSendLog.create({
       data: {
+        tenantId,
         configId: config.id,
         dteId,
         recipientEmail: recipients[0],

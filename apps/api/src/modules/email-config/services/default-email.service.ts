@@ -58,13 +58,14 @@ export class DefaultEmailService {
     params: SendEmailParams,
   ): Promise<SendEmailResult> {
     try {
-      const { adapter, isTenantAdapter } = await this.getAdapterWithMetadata(tenantId);
+      const { adapter, isTenantAdapter, configId } = await this.getAdapterWithMetadata(tenantId);
       const result = await adapter.sendEmail(params);
 
       if (result.success) {
         this.logger.log(
           `Email sent to ${Array.isArray(params.to) ? params.to.join(', ') : params.to} for tenant ${tenantId}`,
         );
+        this.logEmailSend(tenantId, params, result, isTenantAdapter ? 'tenant' : 'republicode-default', configId);
         return result;
       }
 
@@ -73,12 +74,14 @@ export class DefaultEmailService {
         this.logger.warn(
           `Tenant adapter failed for ${tenantId}: ${result.errorMessage}. Falling back to Republicode default.`,
         );
+        this.logEmailSend(tenantId, params, result, 'tenant-failed', configId);
         return this.sendWithFallback(params, 'sendEmail', tenantId);
       }
 
       this.logger.warn(
         `Email failed for tenant ${tenantId}: ${result.errorMessage}`,
       );
+      this.logEmailSend(tenantId, params, result, 'republicode-default', configId);
       return result;
     } catch (error) {
       const errorMessage =
@@ -86,7 +89,9 @@ export class DefaultEmailService {
       this.logger.error(
         `Email send error for tenant ${tenantId}: ${errorMessage}`,
       );
-      return { success: false, errorMessage };
+      const result: SendEmailResult = { success: false, errorMessage };
+      this.logEmailSend(tenantId, params, result, 'error');
+      return result;
     }
   }
 
@@ -99,13 +104,14 @@ export class DefaultEmailService {
     params: SendEmailWithAttachmentParams,
   ): Promise<SendEmailResult> {
     try {
-      const { adapter, isTenantAdapter } = await this.getAdapterWithMetadata(tenantId);
+      const { adapter, isTenantAdapter, configId } = await this.getAdapterWithMetadata(tenantId);
       const result = await adapter.sendEmailWithAttachment(params);
 
       if (result.success) {
         this.logger.log(
           `Email with ${params.attachments.length} attachment(s) sent to ${Array.isArray(params.to) ? params.to.join(', ') : params.to} for tenant ${tenantId}`,
         );
+        this.logEmailSend(tenantId, params, result, isTenantAdapter ? 'tenant' : 'republicode-default', configId);
         return result;
       }
 
@@ -114,12 +120,14 @@ export class DefaultEmailService {
         this.logger.warn(
           `Tenant adapter (with attachments) failed for ${tenantId}: ${result.errorMessage}. Falling back to Republicode default.`,
         );
+        this.logEmailSend(tenantId, params, result, 'tenant-failed', configId);
         return this.sendWithFallback(params, 'sendEmailWithAttachment', tenantId);
       }
 
       this.logger.warn(
         `Email with attachments failed for tenant ${tenantId}: ${result.errorMessage}`,
       );
+      this.logEmailSend(tenantId, params, result, 'republicode-default', configId);
       return result;
     } catch (error) {
       const errorMessage =
@@ -127,7 +135,9 @@ export class DefaultEmailService {
       this.logger.error(
         `Email with attachments error for tenant ${tenantId}: ${errorMessage}`,
       );
-      return { success: false, errorMessage };
+      const result: SendEmailResult = { success: false, errorMessage };
+      this.logEmailSend(tenantId, params, result, 'error');
+      return result;
     }
   }
 
@@ -136,7 +146,7 @@ export class DefaultEmailService {
    */
   private async getAdapterWithMetadata(
     tenantId: string,
-  ): Promise<{ adapter: IEmailAdapter; isTenantAdapter: boolean }> {
+  ): Promise<{ adapter: IEmailAdapter; isTenantAdapter: boolean; configId: string | null }> {
     const tenantConfig = await this.prisma.tenantEmailConfig.findUnique({
       where: { tenantId },
     });
@@ -148,6 +158,7 @@ export class DefaultEmailService {
       return {
         adapter: this.adapterFactory.createAdapter(tenantConfig),
         isTenantAdapter: true,
+        configId: tenantConfig.id,
       };
     }
 
@@ -157,6 +168,7 @@ export class DefaultEmailService {
     return {
       adapter: this.createDefaultAdapter(),
       isTenantAdapter: false,
+      configId: null,
     };
   }
 
@@ -248,6 +260,35 @@ export class DefaultEmailService {
 
     // Use a custom adapter that supports client_credentials flow
     return new ClientCredentialsMsGraphAdapter(config, this);
+  }
+
+  /**
+   * Log email send to EmailSendLog table (fire-and-forget).
+   */
+  private logEmailSend(
+    tenantId: string,
+    params: SendEmailParams | SendEmailWithAttachmentParams,
+    result: SendEmailResult,
+    provider: string,
+    configId?: string | null,
+  ): void {
+    const recipientEmail = Array.isArray(params.to) ? params.to.join(', ') : params.to;
+    this.prisma.emailSendLog
+      .create({
+        data: {
+          tenantId,
+          configId: configId || undefined,
+          recipientEmail,
+          subject: params.subject,
+          provider,
+          status: result.success ? 'SENT' : 'FAILED',
+          providerMessageId: result.messageId,
+          errorMessage: result.errorMessage,
+        },
+      })
+      .catch((err: Error) => {
+        this.logger.warn(`Failed to log email send: ${err.message}`);
+      });
   }
 
   /**

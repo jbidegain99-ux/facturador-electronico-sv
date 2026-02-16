@@ -3,6 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { Quote, QuoteLineItem } from '@prisma/client';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import {
+  quoteSentTemplate,
+  quoteUpdatedTemplate,
+  quoteChangesRequestedTemplate,
+  quoteApprovedTenantTemplate,
+  quoteApprovedClientTemplate,
+  quoteRejectedTemplate,
+  quoteReminderTemplate,
+} from '../email-config/templates';
 
 type QuoteWithLineItems = Quote & { lineItems?: QuoteLineItem[] };
 
@@ -27,19 +36,46 @@ export class QuoteEmailService {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
     const approvalLink = `${frontendUrl}/approve/${quote.approvalToken}`;
 
+    const lineItems = (quote.lineItems || []).map((li) => ({
+      description: li.description,
+      quantity: Number(li.quantity),
+      unitPrice: Number(li.unitPrice),
+      lineTotal: Number(li.lineTotal),
+    }));
+
+    // Use updated template if version > 1 (quote was revised)
+    const isRevised = quote.version > 1;
+    const { html, text } = isRevised
+      ? quoteUpdatedTemplate({
+          quoteNumber: quote.quoteNumber,
+          clienteNombre: quote.clienteNombre || 'Cliente',
+          version: quote.version,
+          total: Number(quote.total),
+          subtotal: Number(quote.subtotal),
+          taxAmount: Number(quote.taxAmount),
+          validUntil: quote.validUntil,
+          approvalLink,
+          lineItems,
+        })
+      : quoteSentTemplate({
+          quoteNumber: quote.quoteNumber,
+          clienteNombre: quote.clienteNombre || 'Cliente',
+          total: Number(quote.total),
+          subtotal: Number(quote.subtotal),
+          taxAmount: Number(quote.taxAmount),
+          validUntil: quote.validUntil,
+          approvalLink,
+          lineItems,
+          terms: quote.terms,
+        });
+
     const result = await this.defaultEmailService.sendEmail(quote.tenantId, {
       to: quote.clienteEmail,
-      subject: `Cotización ${quote.quoteNumber}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Cotización ${quote.quoteNumber}</h2>
-          <p>Estimado/a ${quote.clienteNombre},</p>
-          <p>Le enviamos la cotización solicitada por un total de <strong>$${quote.total}</strong>.</p>
-          <p>Esta cotización es válida hasta el <strong>${quote.validUntil ? new Date(quote.validUntil).toLocaleDateString('es-SV') : 'N/A'}</strong>.</p>
-          ${approvalLink ? `<p><a href="${approvalLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Ver y Aprobar Cotización</a></p>` : ''}
-          <p style="color: #666; font-size: 12px;">Este correo fue enviado automáticamente por Facturador Electrónico SV.</p>
-        </div>
-      `,
+      subject: isRevised
+        ? `Cotización Actualizada ${quote.quoteNumber}`
+        : `Cotización ${quote.quoteNumber}`,
+      html,
+      text,
     });
 
     if (!result.success) {
@@ -52,32 +88,78 @@ export class QuoteEmailService {
   }
 
   async notifyQuoteApproval(quote: Quote): Promise<boolean> {
-    // Notify the tenant that the quote was approved
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+
+    // Send confirmation to client
+    if (quote.clienteEmail) {
+      const { html: clientHtml, text: clientText } =
+        quoteApprovedClientTemplate({
+          quoteNumber: quote.quoteNumber,
+          clienteNombre: quote.clienteNombre || 'Cliente',
+          total: Number(quote.total),
+        });
+
+      await this.defaultEmailService.sendEmail(quote.tenantId, {
+        to: quote.clienteEmail,
+        subject: `Cotización ${quote.quoteNumber} - Aprobación Confirmada`,
+        html: clientHtml,
+        text: clientText,
+      });
+    }
+
+    // Notify tenant users
+    const tenantUsers = await this.prisma.user.findMany({
+      where: { tenantId: quote.tenantId },
+      select: { email: true },
+      take: 5,
+    });
+
+    const recipientEmail =
+      tenantUsers[0]?.email || quote.clienteEmail || '';
+
+    const { html, text } = quoteApprovedTenantTemplate({
+      quoteNumber: quote.quoteNumber,
+      clienteNombre: quote.clienteNombre || 'Cliente',
+      approvedBy: quote.approvedBy,
+      total: Number(quote.total),
+      approvedAt: quote.approvedAt,
+      quoteLink: `${frontendUrl}/cotizaciones/${quote.id}`,
+    });
+
     const result = await this.defaultEmailService.sendEmail(quote.tenantId, {
-      to: quote.clienteEmail || '',
+      to: recipientEmail,
       subject: `Cotización ${quote.quoteNumber} - Aprobada`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Cotización Aprobada</h2>
-          <p>La cotización <strong>${quote.quoteNumber}</strong> ha sido aprobada${quote.approvedBy ? ` por ${quote.approvedBy}` : ''}.</p>
-        </div>
-      `,
+      html,
+      text,
     });
 
     return result.success;
   }
 
   async notifyQuoteRejection(quote: Quote): Promise<boolean> {
+    // Get tenant users to notify
+    const tenantUsers = await this.prisma.user.findMany({
+      where: { tenantId: quote.tenantId },
+      select: { email: true },
+      take: 5,
+    });
+
+    const recipientEmail =
+      tenantUsers[0]?.email || quote.clienteEmail || '';
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+
+    const { html, text } = quoteRejectedTemplate({
+      quoteNumber: quote.quoteNumber,
+      clienteNombre: quote.clienteNombre || 'Cliente',
+      rejectionReason: quote.rejectionReason,
+      quoteLink: `${frontendUrl}/cotizaciones/${quote.id}`,
+    });
+
     const result = await this.defaultEmailService.sendEmail(quote.tenantId, {
-      to: quote.clienteEmail || '',
+      to: recipientEmail,
       subject: `Cotización ${quote.quoteNumber} - Rechazada`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Cotización Rechazada</h2>
-          <p>La cotización <strong>${quote.quoteNumber}</strong> ha sido rechazada.</p>
-          ${quote.rejectionReason ? `<p><strong>Razón:</strong> ${quote.rejectionReason}</p>` : ''}
-        </div>
-      `,
+      html,
+      text,
     });
 
     return result.success;
@@ -88,19 +170,9 @@ export class QuoteEmailService {
     removedItemIds: string[],
     comments: string,
   ): Promise<boolean> {
-    // Build list of removed item descriptions
     const removedDescriptions = (quote.lineItems || [])
       .filter((li) => removedItemIds.includes(li.id))
       .map((li) => li.description);
-
-    const removedItemsHtml = removedDescriptions.length > 0
-      ? `
-        <p><strong>Items que el cliente desea eliminar:</strong></p>
-        <ul>
-          ${removedDescriptions.map((d) => `<li style="color: #dc2626;">${d}</li>`).join('')}
-        </ul>
-      `
-      : '';
 
     // Get tenant users to notify
     const tenantUsers = await this.prisma.user.findMany({
@@ -109,27 +181,25 @@ export class QuoteEmailService {
       take: 5,
     });
 
-    const recipientEmail = tenantUsers[0]?.email || quote.clienteEmail || '';
+    const recipientEmail =
+      tenantUsers[0]?.email || quote.clienteEmail || '';
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
     const quoteLink = `${frontendUrl}/cotizaciones/${quote.id}`;
 
+    const { html, text } = quoteChangesRequestedTemplate({
+      quoteNumber: quote.quoteNumber,
+      clienteNombre: quote.clienteNombre || 'Cliente',
+      comments,
+      removedItems: removedDescriptions,
+      quoteLink,
+    });
+
     const result = await this.defaultEmailService.sendEmail(quote.tenantId, {
       to: recipientEmail,
       subject: `Cotización ${quote.quoteNumber} - Cambios Solicitados`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #d97706;">El cliente solicitó cambios en la cotización</h2>
-          <p>El cliente <strong>${quote.clienteNombre}</strong> ha solicitado cambios en la cotización <strong>${quote.quoteNumber}</strong>.</p>
-          <div style="background: #fffbeb; border: 1px solid #fbbf24; border-radius: 8px; padding: 16px; margin: 16px 0;">
-            <p style="margin: 0;"><strong>Comentario del cliente:</strong></p>
-            <p style="margin: 8px 0 0 0;">${comments}</p>
-          </div>
-          ${removedItemsHtml}
-          <p><a href="${quoteLink}" style="background-color: #d97706; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Revisar y Actualizar Cotización</a></p>
-          <p style="color: #666; font-size: 12px;">Revise los cambios solicitados, actualice la cotización y reenvíela al cliente.</p>
-        </div>
-      `,
+      html,
+      text,
     });
 
     return result.success;
@@ -146,18 +216,19 @@ export class QuoteEmailService {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
     const approvalLink = `${frontendUrl}/approve/${quote.approvalToken}`;
 
+    const { html, text } = quoteReminderTemplate({
+      quoteNumber: quote.quoteNumber,
+      clienteNombre: quote.clienteNombre || 'Cliente',
+      total: Number(quote.total),
+      validUntil: quote.validUntil,
+      approvalLink,
+    });
+
     const result = await this.defaultEmailService.sendEmail(quote.tenantId, {
       to: quote.clienteEmail,
       subject: `Recordatorio: Cotización ${quote.quoteNumber} pendiente`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Recordatorio de Cotización</h2>
-          <p>Estimado/a ${quote.clienteNombre},</p>
-          <p>Le recordamos que tiene pendiente la cotización <strong>${quote.quoteNumber}</strong> por un total de <strong>$${quote.total}</strong>.</p>
-          <p>Esta cotización es válida hasta el <strong>${quote.validUntil ? new Date(quote.validUntil).toLocaleDateString('es-SV') : 'N/A'}</strong>.</p>
-          ${approvalLink ? `<p><a href="${approvalLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Ver Cotización</a></p>` : ''}
-        </div>
-      `,
+      html,
+      text,
     });
 
     return result.success;

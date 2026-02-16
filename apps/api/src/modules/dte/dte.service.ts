@@ -18,6 +18,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { SignerService } from '../signer/signer.service';
 import { MhAuthService } from '../mh-auth/mh-auth.service';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
+import { invoiceSentTemplate } from '../email-config/templates';
 import { PdfService } from './pdf.service';
 import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
 import { DTE_VERSIONS, TipoDte } from '@facturador/shared';
@@ -416,24 +417,21 @@ export class DteService {
     const nombreReceptor = (receptor?.nombre as string) || 'Cliente';
     const nombreEmisor = tenant?.nombre || 'Facturador Electrónico SV';
 
+    const { html, text } = invoiceSentTemplate({
+      tipoLabel,
+      numeroControl: dte.numeroControl,
+      codigoGeneracion: dte.codigoGeneracion,
+      totalPagar: `$${Number(dte.totalPagar).toFixed(2)}`,
+      selloRecepcion: dte.selloRecepcion,
+      nombreReceptor,
+      nombreEmisor,
+    });
+
     const result = await this.defaultEmailService.sendEmailWithAttachment(dte.tenantId, {
       to: correoReceptor,
       subject: `${tipoLabel} ${dte.numeroControl} - ${nombreEmisor}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>${tipoLabel} Electrónica</h2>
-          <p>Estimado/a ${nombreReceptor},</p>
-          <p>Adjunto encontrará su ${tipoLabel.toLowerCase()} electrónica con los siguientes datos:</p>
-          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-            <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Número de Control</td><td style="padding: 8px; border: 1px solid #ddd;">${dte.numeroControl}</td></tr>
-            <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Código de Generación</td><td style="padding: 8px; border: 1px solid #ddd;">${dte.codigoGeneracion}</td></tr>
-            <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Total</td><td style="padding: 8px; border: 1px solid #ddd;">$${Number(dte.totalPagar).toFixed(2)}</td></tr>
-            ${dte.selloRecepcion ? `<tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Sello de Recepción</td><td style="padding: 8px; border: 1px solid #ddd;">${dte.selloRecepcion}</td></tr>` : ''}
-          </table>
-          <p>Este documento ha sido procesado exitosamente por el Ministerio de Hacienda de El Salvador.</p>
-          <p style="color: #666; font-size: 12px;">Enviado por ${nombreEmisor} a través de Facturador Electrónico SV.</p>
-        </div>
-      `,
+      html,
+      text,
       attachments: [{
         filename,
         content: pdfBuffer.toString('base64'),

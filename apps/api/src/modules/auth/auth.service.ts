@@ -14,6 +14,7 @@ import { RegisterDto } from './dto/register.dto';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AuditAction, AuditModule } from '../audit-logs/dto';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
+import { passwordResetTemplate } from '../email-config/templates';
 
 @Injectable()
 export class AuthService {
@@ -314,25 +315,17 @@ export class AuthService {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
     const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
 
+    const { html, text } = passwordResetTemplate({
+      nombre: user.nombre,
+      resetLink,
+    });
+
     const tenantId = user.tenantId || 'system';
     const emailResult = await this.defaultEmailService.sendEmail(tenantId, {
       to: user.email,
       subject: 'Restablecer contraseña - Facturador Electrónico SV',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Restablecer contraseña</h2>
-          <p>Hola ${user.nombre},</p>
-          <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
-          <p>
-            <a href="${resetLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-              Restablecer contraseña
-            </a>
-          </p>
-          <p>Este enlace expira en <strong>1 hora</strong>.</p>
-          <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
-          <p style="color: #666; font-size: 12px;">Facturador Electrónico SV</p>
-        </div>
-      `,
+      html,
+      text,
     });
 
     if (!emailResult.success) {

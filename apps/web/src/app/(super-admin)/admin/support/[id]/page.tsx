@@ -161,7 +161,7 @@ export default function TicketDetailPage() {
       setTicket(data);
       setStatus(data.status);
       setPriority(data.priority);
-      setAssignedToId(data.assignedTo?.id || '');
+      setAssignedToId(data.assignedTo?.id || '__none__');
       setResolution(data.resolution || '');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error');
@@ -194,10 +194,12 @@ export default function TicketDetailPage() {
       setSaving(true);
       const token = localStorage.getItem('token');
 
-      const body: any = {};
+      const body: Record<string, string | null> = {};
       if (status !== ticket?.status) body.status = status;
       if (priority !== ticket?.priority) body.priority = priority;
-      if (assignedToId !== (ticket?.assignedTo?.id || '')) body.assignedToId = assignedToId || null;
+      const currentAssignedId = ticket?.assignedTo?.id || '';
+      const newAssignedId = assignedToId === '__none__' ? '' : assignedToId;
+      if (newAssignedId !== currentAssignedId) body.assignedToId = newAssignedId || null;
       if (resolution !== (ticket?.resolution || '')) body.resolution = resolution;
 
       if (Object.keys(body).length === 0) {
@@ -348,7 +350,13 @@ export default function TicketDetailPage() {
               <div className="mt-4 pt-4 border-t border-border">
                 <h4 className="text-sm font-medium text-white mb-2">Informacion adicional</h4>
                 <pre className="text-xs text-muted-foreground bg-black/20 p-3 rounded-lg overflow-auto">
-                  {JSON.stringify(JSON.parse(ticket.metadata), null, 2)}
+                  {(() => {
+                    try {
+                      return JSON.stringify(JSON.parse(ticket.metadata as string), null, 2);
+                    } catch {
+                      return ticket.metadata;
+                    }
+                  })()}
                 </pre>
               </div>
             )}
@@ -539,7 +547,7 @@ export default function TicketDetailPage() {
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin asignar</SelectItem>
+                    <SelectItem value="__none__">Sin asignar</SelectItem>
                     {admins.map((admin) => (
                       <SelectItem key={admin.id} value={admin.id}>
                         {admin.nombre}

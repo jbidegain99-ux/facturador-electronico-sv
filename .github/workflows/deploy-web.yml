@@ -6,13 +6,15 @@ on:
       - main
     paths:
       - 'apps/web/**'
+      - 'packages/**'
       - 'package.json'
       - 'package-lock.json'
   workflow_dispatch:
 
 env:
   AZURE_WEBAPP_NAME: facturador-web-sv
-  NODE_VERSION: '20.x'
+  ACR_NAME: republicodeacr
+  IMAGE_NAME: facturador-web
 
 jobs:
   build-and-deploy:
@@ -22,35 +24,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build web app
-        run: npm run build --workspace=@facturador/web
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-
-      - name: Zip artifact for deployment
-        run: |
-          cd apps/web
-          zip -r ../../web-build.zip .next package.json next.config.js public node_modules
-
       - name: Login to Azure
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: web-build.zip
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=https://facturador-api-sv.azurewebsites.net/api/v1 \
+            -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest \
+            -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -f apps/web/Dockerfile .
+          docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Restart App Service
+        run: az webapp restart --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group facturador-sv-rg
 
       - name: Logout from Azure
         run: az logout

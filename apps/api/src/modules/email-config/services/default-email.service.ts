@@ -238,6 +238,9 @@ export class DefaultEmailService {
       oauth2ClientId: clientId,
       oauth2ClientSecret: clientSecret,
       oauth2TenantId: tenantId,
+      // Dummy refresh token so parent's getValidAccessToken() passes the check
+      // and calls refreshOAuthToken() which is overridden for client_credentials
+      oauth2RefreshToken: 'client_credentials_flow',
       fromEmail,
       fromName,
       timeoutSeconds: 30,

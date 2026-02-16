@@ -45,46 +45,40 @@ export class DefaultEmailService {
    * Falls back to Republicode default if tenant has no config.
    */
   async getAdapterForTenant(tenantId: string): Promise<IEmailAdapter> {
-    // 1. Check if tenant has their own email config
-    const tenantConfig = await this.prisma.tenantEmailConfig.findUnique({
-      where: { tenantId },
-    });
-
-    if (tenantConfig?.isActive) {
-      this.logger.debug(
-        `Using tenant email config (${tenantConfig.provider}) for tenant ${tenantId}`,
-      );
-      return this.adapterFactory.createAdapter(tenantConfig);
-    }
-
-    // 2. Fall back to Republicode default
-    this.logger.debug(
-      `No tenant email config for ${tenantId}, using Republicode default`,
-    );
-    return this.createDefaultAdapter();
+    const { adapter } = await this.getAdapterWithMetadata(tenantId);
+    return adapter;
   }
 
   /**
-   * Send an email for a tenant (auto-resolves which adapter to use)
+   * Send an email for a tenant (auto-resolves which adapter to use).
+   * If the tenant's own adapter fails, falls back to Republicode default.
    */
   async sendEmail(
     tenantId: string,
     params: SendEmailParams,
   ): Promise<SendEmailResult> {
     try {
-      const adapter = await this.getAdapterForTenant(tenantId);
+      const { adapter, isTenantAdapter } = await this.getAdapterWithMetadata(tenantId);
       const result = await adapter.sendEmail(params);
 
       if (result.success) {
         this.logger.log(
           `Email sent to ${Array.isArray(params.to) ? params.to.join(', ') : params.to} for tenant ${tenantId}`,
         );
-      } else {
-        this.logger.warn(
-          `Email failed for tenant ${tenantId}: ${result.errorMessage}`,
-        );
+        return result;
       }
 
+      // If tenant adapter failed, try fallback to Republicode default
+      if (isTenantAdapter) {
+        this.logger.warn(
+          `Tenant adapter failed for ${tenantId}: ${result.errorMessage}. Falling back to Republicode default.`,
+        );
+        return this.sendWithFallback(params, 'sendEmail', tenantId);
+      }
+
+      this.logger.warn(
+        `Email failed for tenant ${tenantId}: ${result.errorMessage}`,
+      );
       return result;
     } catch (error) {
       const errorMessage =
@@ -97,23 +91,106 @@ export class DefaultEmailService {
   }
 
   /**
-   * Send an email with attachments for a tenant
+   * Send an email with attachments for a tenant.
+   * If the tenant's own adapter fails, falls back to Republicode default.
    */
   async sendEmailWithAttachment(
     tenantId: string,
     params: SendEmailWithAttachmentParams,
   ): Promise<SendEmailResult> {
     try {
-      const adapter = await this.getAdapterForTenant(tenantId);
+      const { adapter, isTenantAdapter } = await this.getAdapterWithMetadata(tenantId);
       const result = await adapter.sendEmailWithAttachment(params);
 
       if (result.success) {
         this.logger.log(
           `Email with ${params.attachments.length} attachment(s) sent to ${Array.isArray(params.to) ? params.to.join(', ') : params.to} for tenant ${tenantId}`,
         );
-      } else {
+        return result;
+      }
+
+      // If tenant adapter failed, try fallback to Republicode default
+      if (isTenantAdapter) {
         this.logger.warn(
-          `Email with attachments failed for tenant ${tenantId}: ${result.errorMessage}`,
+          `Tenant adapter (with attachments) failed for ${tenantId}: ${result.errorMessage}. Falling back to Republicode default.`,
+        );
+        return this.sendWithFallback(params, 'sendEmailWithAttachment', tenantId);
+      }
+
+      this.logger.warn(
+        `Email with attachments failed for tenant ${tenantId}: ${result.errorMessage}`,
+      );
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(
+        `Email with attachments error for tenant ${tenantId}: ${errorMessage}`,
+      );
+      return { success: false, errorMessage };
+    }
+  }
+
+  /**
+   * Get adapter for tenant along with metadata about whether it's a tenant-specific adapter.
+   */
+  private async getAdapterWithMetadata(
+    tenantId: string,
+  ): Promise<{ adapter: IEmailAdapter; isTenantAdapter: boolean }> {
+    const tenantConfig = await this.prisma.tenantEmailConfig.findUnique({
+      where: { tenantId },
+    });
+
+    if (tenantConfig?.isActive) {
+      this.logger.debug(
+        `Using tenant email config (${tenantConfig.provider}) for tenant ${tenantId}`,
+      );
+      return {
+        adapter: this.adapterFactory.createAdapter(tenantConfig),
+        isTenantAdapter: true,
+      };
+    }
+
+    this.logger.debug(
+      `No tenant email config for ${tenantId}, using Republicode default`,
+    );
+    return {
+      adapter: this.createDefaultAdapter(),
+      isTenantAdapter: false,
+    };
+  }
+
+  /**
+   * Fallback: send using Republicode default adapter when tenant adapter fails.
+   */
+  private async sendWithFallback(
+    params: SendEmailParams,
+    method: 'sendEmail',
+    tenantId: string,
+  ): Promise<SendEmailResult>;
+  private async sendWithFallback(
+    params: SendEmailWithAttachmentParams,
+    method: 'sendEmailWithAttachment',
+    tenantId: string,
+  ): Promise<SendEmailResult>;
+  private async sendWithFallback(
+    params: SendEmailParams | SendEmailWithAttachmentParams,
+    method: 'sendEmail' | 'sendEmailWithAttachment',
+    tenantId: string,
+  ): Promise<SendEmailResult> {
+    try {
+      const fallbackAdapter = this.createDefaultAdapter();
+      const result = method === 'sendEmailWithAttachment'
+        ? await fallbackAdapter.sendEmailWithAttachment(params as SendEmailWithAttachmentParams)
+        : await fallbackAdapter.sendEmail(params);
+
+      if (result.success) {
+        this.logger.log(
+          `Email sent via Republicode fallback for tenant ${tenantId}`,
+        );
+      } else {
+        this.logger.error(
+          `Republicode fallback also failed for tenant ${tenantId}: ${result.errorMessage}`,
         );
       }
 
@@ -122,7 +199,7 @@ export class DefaultEmailService {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
-        `Email with attachments error for tenant ${tenantId}: ${errorMessage}`,
+        `Republicode fallback error for tenant ${tenantId}: ${errorMessage}`,
       );
       return { success: false, errorMessage };
     }

@@ -54,7 +54,8 @@ export class EmailConfigService {
   }
 
   /**
-   * Create or update email configuration for a tenant
+   * Create or update email configuration for a tenant.
+   * OAuth providers are created as inactive until tokens are verified.
    */
   async upsertConfig(
     tenantId: string,
@@ -69,11 +70,24 @@ export class EmailConfigService {
     // Encrypt sensitive fields
     const encryptedData = this.encryptSensitiveFields(dto);
 
+    // OAuth providers must NOT be created as active without tokens
+    const isOAuthProvider = dto.provider === EmailProvider.MICROSOFT_365
+      || dto.provider === EmailProvider.GOOGLE_WORKSPACE;
+    const isOAuthWithoutTokens = isOAuthProvider && !dto.oauth2ClientSecret;
+    const forceInactive = isOAuthWithoutTokens ? { isActive: false } : {};
+
+    if (isOAuthWithoutTokens) {
+      this.logger.warn(
+        `OAuth provider ${dto.provider} for tenant ${tenantId} created as inactive: missing OAuth credentials. Complete OAuth flow to activate.`,
+      );
+    }
+
     if (existing) {
       return this.prisma.tenantEmailConfig.update({
         where: { tenantId },
         data: {
           ...encryptedData,
+          ...forceInactive,
           isVerified: false, // Reset verification on config change
           updatedAt: new Date(),
         },
@@ -84,6 +98,7 @@ export class EmailConfigService {
       data: {
         tenantId,
         ...encryptedData,
+        ...forceInactive,
         configuredBy,
         configuredByUserId,
       },
@@ -387,10 +402,38 @@ export class EmailConfigService {
       );
     }
 
+    if (isActive) {
+      this.validateOAuthTokensForActivation(config);
+    }
+
     return this.prisma.tenantEmailConfig.update({
       where: { tenantId },
       data: { isActive },
     });
+  }
+
+  /**
+   * Validates that OAuth-based providers have the required tokens before activation.
+   * Prevents configs with missing refresh tokens from being activated.
+   */
+  private validateOAuthTokensForActivation(config: TenantEmailConfig): void {
+    const isOAuthProvider = config.provider === EmailProvider.MICROSOFT_365
+      || config.provider === EmailProvider.GOOGLE_WORKSPACE;
+    if (!isOAuthProvider) {
+      return;
+    }
+
+    if (!config.oauth2ClientId || !config.oauth2ClientSecret) {
+      throw new BadRequestException(
+        'Cannot activate OAuth2 configuration: missing Client ID or Client Secret.',
+      );
+    }
+
+    if (!config.oauth2RefreshToken && !config.oauth2AccessToken) {
+      throw new BadRequestException(
+        'Cannot activate OAuth2 configuration: missing OAuth tokens. Please complete the OAuth flow first.',
+      );
+    }
   }
 
   /**

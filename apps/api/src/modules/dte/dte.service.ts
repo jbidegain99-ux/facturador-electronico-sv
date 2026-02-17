@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException, Optional, Inject, forwardRef } from '@nestjs/common';
 declare global {
   interface String {
     hashCode(): number;
@@ -18,6 +18,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { SignerService } from '../signer/signer.service';
 import { MhAuthService } from '../mh-auth/mh-auth.service';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { invoiceSentTemplate } from '../email-config/templates';
 import { PdfService } from './pdf.service';
 import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
@@ -45,6 +46,7 @@ export class DteService {
     private mhAuthService: MhAuthService,
     private defaultEmailService: DefaultEmailService,
     private pdfService: PdfService,
+    @Optional() @Inject(forwardRef(() => WebhooksService)) private webhooksService: WebhooksService | null,
   ) {}
 
   /**
@@ -178,6 +180,16 @@ export class DteService {
 
       await this.logDteAction(dte.id, 'CREATED', { jsonOriginal });
 
+      // Trigger webhook (fire-and-forget)
+      this.triggerWebhook(tenantId, 'dte.created', {
+        dteId: dte.id,
+        codigoGeneracion: dte.codigoGeneracion,
+        numeroControl: dte.numeroControl,
+        tipoDte: dte.tipoDte,
+        totalPagar: Number(dte.totalPagar),
+        estado: dte.estado,
+      }, dte.id);
+
       return dte;
     } catch (error) {
       this.logger.error(`Failed to create DTE: ${error instanceof Error ? error.message : error}`);
@@ -241,6 +253,13 @@ export class DteService {
       demoMode: this.isDemoMode(dte.tenant),
     });
 
+    // Trigger webhook (fire-and-forget)
+    this.triggerWebhook(dte.tenantId, 'dte.signed', {
+      dteId: dte.id,
+      codigoGeneracion: dte.codigoGeneracion,
+      estado: 'FIRMADO',
+    }, dte.id);
+
     return updated;
   }
 
@@ -284,6 +303,16 @@ export class DteService {
       this.sendDteEmail(updated, dte.tenant).catch((err) =>
         this.logger.error(`Failed to send DTE email for ${dteId}: ${err instanceof Error ? err.message : err}`),
       );
+
+      // Trigger webhook for successful transmission (fire-and-forget)
+      this.triggerWebhook(dte.tenantId, 'dte.approved', {
+        dteId: dte.id,
+        codigoGeneracion: dte.codigoGeneracion,
+        selloRecibido: demoResponse.selloRecibido,
+        estado: 'PROCESADO',
+        fechaAprobacion: demoResponse.fhProcesamiento,
+        demoMode: true,
+      }, dte.id);
 
       return updated;
     }
@@ -336,6 +365,15 @@ export class DteService {
         this.logger.error(`Failed to send DTE email for ${dteId}: ${err instanceof Error ? err.message : err}`),
       );
 
+      // Trigger webhook for successful transmission (fire-and-forget)
+      this.triggerWebhook(dte.tenantId, 'dte.approved', {
+        dteId: dte.id,
+        codigoGeneracion: dte.codigoGeneracion,
+        selloRecibido: response.selloRecibido,
+        estado: 'PROCESADO',
+        fechaAprobacion: response.fhProcesamiento,
+      }, dte.id);
+
       return updated;
     } catch (error) {
       // Re-throw NestJS HTTP exceptions as-is (e.g. InternalServerErrorException from JSON parse)
@@ -356,6 +394,15 @@ export class DteService {
       });
 
       await this.logDteAction(dteId, 'TRANSMISSION_ERROR', { error: errorMessage, observaciones });
+
+      // Trigger webhook for rejection (fire-and-forget)
+      this.triggerWebhook(dte.tenantId, 'dte.rejected', {
+        dteId: dte.id,
+        codigoGeneracion: dte.codigoGeneracion,
+        estado: 'RECHAZADO',
+        error: errorMessage,
+        observaciones,
+      }, dte.id);
 
       // Wrap MH errors as BadRequestException with descriptive message
       if (error instanceof MHReceptionError) {
@@ -608,6 +655,21 @@ export class DteService {
       // Logging failures should never crash the main DTE operation
       this.logger.error(`Failed to log DTE action [${accion}] for ${dteId}: ${logError instanceof Error ? logError.message : logError}`);
     }
+  }
+
+  /**
+   * Fire-and-forget webhook trigger. Errors are logged but never thrown.
+   */
+  private triggerWebhook(
+    tenantId: string,
+    eventType: string,
+    data: Record<string, unknown>,
+    correlationId: string,
+  ): void {
+    if (!this.webhooksService) return;
+    this.webhooksService.triggerEvent({ tenantId, eventType, data, correlationId }).catch((err) =>
+      this.logger.error(`Webhook trigger failed for ${eventType}: ${err instanceof Error ? err.message : err}`),
+    );
   }
 
   // =====================

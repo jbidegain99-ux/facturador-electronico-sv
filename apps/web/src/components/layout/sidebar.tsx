@@ -17,13 +17,14 @@ import {
   Package,
   ClipboardList,
   BookOpen,
+  Webhook,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { useTranslations } from 'next-intl';
 
-type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'accounting' | 'catalog' | 'support' | 'settings';
+type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'accounting' | 'catalog' | 'webhooks' | 'support' | 'settings';
 
 const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; proBadge: boolean }[] = [
   { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, proBadge: false },
@@ -34,6 +35,7 @@ const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; pro
   { key: 'clients', href: '/clientes', icon: Users, proBadge: false },
   { key: 'accounting', href: '/contabilidad', icon: BookOpen, proBadge: true },
   { key: 'catalog', href: '/catalogo', icon: Package, proBadge: false },
+  { key: 'webhooks', href: '/webhooks', icon: Webhook, proBadge: true },
   { key: 'support', href: '/soporte', icon: HelpCircle, proBadge: false },
   { key: 'settings', href: '/configuracion', icon: Settings, proBadge: false },
 ];

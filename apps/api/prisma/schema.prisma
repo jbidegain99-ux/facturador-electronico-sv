@@ -75,6 +75,9 @@ model Tenant {
   accountingAccounts  AccountingAccount[]
   journalEntries      JournalEntry[]
   accountMappingRules AccountMappingRule[]
+
+  // Webhooks
+  webhookEndpoints    WebhookEndpoint[]
 }
 
 model User {
@@ -1283,4 +1286,111 @@ model AccountMappingRule {
   @@index([tenantId, operation])
   @@index([tenantId, isActive])
   @@map("account_mapping_rules")
+}
+
+// ============================================================================
+// WEBHOOKS SYSTEM - OUTBOUND/INBOUND NOTIFICATIONS
+// ============================================================================
+
+// Configuración de webhook endpoints por tenant
+model WebhookEndpoint {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Configuración básica
+  name        String
+  url         String   @db.NVarChar(500)
+  isActive    Boolean  @default(true)
+  secretKey   String   @db.NVarChar(500) // Para HMAC signature
+
+  // Configuración avanzada
+  timeoutMs   Int      @default(30000)
+  maxRetries  Int      @default(5)
+  retryDelayMs Int     @default(1000)
+
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastUsedAt  DateTime?
+
+  // Relaciones
+  subscribedEvents WebhookEndpointEvent[]
+  deliveries       WebhookDelivery[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, isActive])
+  @@map("webhook_endpoints")
+}
+
+// Eventos disponibles para webhooks (catálogo global)
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  eventType   String   @unique // "dte.created", "dte.approved", etc.
+  description String   @db.NVarChar(500)
+
+  createdAt   DateTime @default(now())
+
+  // Relaciones
+  endpointSubscriptions WebhookEndpointEvent[]
+  deliveries            WebhookDelivery[]
+
+  @@map("webhook_events")
+}
+
+// Tabla puente: qué eventos tiene suscrito cada endpoint
+model WebhookEndpointEvent {
+  endpointId String
+  eventId    String
+
+  endpoint   WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  event      WebhookEvent    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([endpointId, eventId])
+  @@map("webhook_endpoint_events")
+}
+
+// Log inmutable de todas las entregas de webhook
+model WebhookDelivery {
+  id              String   @id @default(cuid())
+
+  // Referencias
+  tenantId        String
+  endpointId      String
+  eventId         String
+  endpoint        WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  event           WebhookEvent    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  // Identificación única para idempotencia
+  idempotencyKey  String   @unique @db.NVarChar(64)
+
+  // Payload enviado
+  payload         String   @db.NVarChar(Max) // JSON serializado
+  headers         String   @db.NVarChar(Max) // JSON de headers
+
+  // Estado de entrega
+  status          String   @default("PENDING") // PENDING, SENDING, DELIVERED, FAILED, DEAD_LETTER, CANCELLED
+  attemptCount    Int      @default(0)
+  maxAttempts     Int      @default(5)
+
+  // Respuesta recibida
+  responseStatus  Int?
+  responseHeaders String?  @db.NVarChar(Max)
+  responseBody    String?  @db.NVarChar(Max)
+
+  // Timing
+  sentAt          DateTime?
+  completedAt     DateTime?
+  nextRetryAt     DateTime?
+
+  // Error tracking
+  errorMessage    String?  @db.NVarChar(Max)
+
+  // Metadata
+  createdAt       DateTime @default(now())
+
+  @@index([tenantId, status])
+  @@index([endpointId, createdAt])
+  @@index([status, nextRetryAt])
+  @@map("webhook_deliveries")
 }

@@ -6,7 +6,7 @@ on:
       test_url:
         description: 'URL to test against'
         required: true
-        default: 'https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net'
+        default: 'https://facturador-web-sv.azurewebsites.net'
       project:
         description: 'Playwright project to run'
         required: false

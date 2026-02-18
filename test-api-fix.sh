@@ -55,8 +55,8 @@ echo ""
 
 # 4. Test en producción
 echo -e "${YELLOW}[4/5] Testeando en producción...${NC}"
-APP_URL="https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net"
-API_URL="https://facturador-api-sv-gvavh8heb5c5gkc9.eastus2-01.azurewebsites.net/api/v1"
+APP_URL="https://facturador-web-sv.azurewebsites.net"
+API_URL="https://facturador-api-sv.azurewebsites.net/api/v1"
 
 # Test login endpoint (debe retornar 400 o 401, no 404)
 LOGIN_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL/auth/login" \

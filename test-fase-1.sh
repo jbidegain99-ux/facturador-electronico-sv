@@ -5,7 +5,7 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-URL="https://facturador-web-sv-chayeth5a0h2abcf.eastus2-01.azurewebsites.net"
+URL="https://facturador-web-sv.azurewebsites.net"
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  TEST FASE 1 - FUNCIONALIDADES${NC}"

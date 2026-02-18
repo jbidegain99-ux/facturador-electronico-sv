@@ -8,17 +8,21 @@ import {
   Logger,
   UnauthorizedException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../../../common/decorators/public.decorator';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { WebhooksService } from '../webhooks.service';
+import { DteService } from '../../dte/dte.service';
 import * as crypto from 'crypto';
 
 interface WellnestCustomerData {
   name: string;
   email: string;
   phone?: string;
+  tipoDocumento?: string;
+  numDocumento?: string;
 }
 
 interface WellnestPurchasePayload {
@@ -35,14 +39,23 @@ interface WellnestPurchasePayload {
   customerData: WellnestCustomerData;
 }
 
+interface InboundWebhookResponse {
+  status: number;
+  data: {
+    dteId: string;
+    codigoGeneracion: string;
+    message: string;
+  };
+}
+
 @ApiTags('Webhooks Inbound')
-@Controller('api/v1/webhooks/inbound')
+@Controller('webhooks/inbound')
 export class InboundWebhooksController {
   private readonly logger = new Logger(InboundWebhooksController.name);
 
   constructor(
     private prisma: PrismaService,
-    private webhooksService: WebhooksService,
+    @Inject(forwardRef(() => DteService)) private dteService: DteService,
   ) {}
 
   /**
@@ -52,16 +65,16 @@ export class InboundWebhooksController {
    */
   @Public()
   @Post('wellnest/:tenantId')
-  @ApiOperation({ summary: 'Receive Wellnest purchase webhook' })
+  @ApiOperation({ summary: 'Receive Wellnest purchase webhook and create DTE' })
   async handleWellnestPurchase(
     @Param('tenantId') tenantId: string,
     @Body() payload: WellnestPurchasePayload,
     @Headers('x-webhook-signature-256') signature?: string,
     @Headers('x-webhook-timestamp') timestamp?: string,
-  ) {
-    this.logger.log(`Received Wellnest webhook for tenant ${tenantId}`);
+  ): Promise<InboundWebhookResponse> {
+    this.logger.log(`Received Wellnest webhook for tenant ${tenantId}, purchaseId=${payload.purchaseId}`);
 
-    // Validate tenant exists
+    // 1. Validate tenant exists
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
     });
@@ -70,14 +83,14 @@ export class InboundWebhooksController {
       throw new UnauthorizedException('Tenant no encontrado');
     }
 
-    // Validate payload
+    // 2. Validate required payload fields
     if (!payload.purchaseId || !payload.amount || !payload.customerData?.name) {
-      throw new BadRequestException('Payload incompleto: purchaseId, amount y customerData.name son requeridos');
+      throw new BadRequestException(
+        'Payload incompleto: purchaseId, amount y customerData.name son requeridos',
+      );
     }
 
-    // Verify HMAC signature if provided
-    // The tenant's inbound webhook secret would be stored in config.
-    // For now, if signature header is present, we validate it.
+    // 3. Verify HMAC signature if provided
     if (signature) {
       const webhookSecret = process.env.WELLNEST_WEBHOOK_SECRET;
       if (webhookSecret) {
@@ -92,16 +105,47 @@ export class InboundWebhooksController {
       }
     }
 
+    // 4. Check timestamp freshness (reject if older than 5 minutes)
+    if (timestamp) {
+      const timestampSec = parseInt(timestamp, 10);
+      const nowSec = Math.floor(Date.now() / 1000);
+      const maxAge = 300; // 5 minutes
+      if (Math.abs(nowSec - timestampSec) > maxAge) {
+        throw new UnauthorizedException('Timestamp del webhook expirado');
+      }
+    }
+
+    // 5. Idempotency check - prevent duplicate DTEs for the same purchase
+    const existingDte = await this.prisma.dTE.findFirst({
+      where: {
+        tenantId,
+        jsonOriginal: { contains: payload.purchaseId },
+      },
+    });
+
+    if (existingDte) {
+      this.logger.warn(`Duplicate webhook for purchaseId=${payload.purchaseId}, returning existing DTE`);
+      return {
+        status: HttpStatus.OK,
+        data: {
+          dteId: existingDte.id,
+          codigoGeneracion: existingDte.codigoGeneracion,
+          message: 'DTE ya existe para esta compra',
+        },
+      };
+    }
+
     try {
-      // Build DTE data for the purchase
-      const now = new Date();
-      const fecha = now.toISOString().split('T')[0];
-      const hora = now.toTimeString().split(' ')[0];
+      // 6. Build the DTE data structure expected by DteService.createDte()
       const discount = payload.discountApplied ?? 0;
       const ventaGravada = payload.amount - discount;
       const ivaRate = 0.13;
       const totalIva = Math.round(ventaGravada * ivaRate * 100) / 100;
       const totalPagar = Math.round((ventaGravada + totalIva) * 100) / 100;
+
+      const now = new Date(payload.purchaseDate || Date.now());
+      const fecha = now.toISOString().split('T')[0];
+      const hora = now.toTimeString().split(' ')[0];
 
       const dteData: Record<string, unknown> = {
         identificacion: {
@@ -127,87 +171,48 @@ export class InboundWebhooksController {
           codEstable: '0000',
           codPuntoVentaMH: '0000',
           codPuntoVenta: '0000',
-          direccion: (() => { try { return JSON.parse(tenant.direccion); } catch { return {}; } })(),
         },
         receptor: {
-          tipoDocumento: '36',
-          numDocumento: '',
+          tipoDocumento: payload.customerData.tipoDocumento || '36',
+          numDocumento: payload.customerData.numDocumento || '',
           nombre: payload.customerData.name,
           correo: payload.customerData.email,
           telefono: payload.customerData.phone?.replace(/-/g, '') || '',
           direccion: {},
         },
-        cuerpoDocumento: [{
-          numItem: 1,
-          tipoItem: 2, // Servicio
-          cantidad: 1,
-          codigo: payload.packageId,
-          descripcion: `Paquete de ${payload.creditsTotal} clases - Wellnest Studio`,
-          precioUni: payload.amount,
-          montoDescu: discount,
-          ventaGravada,
-          noGravado: 0,
-        }],
+        cuerpoDocumento: [
+          {
+            numItem: 1,
+            tipoItem: 2, // Servicio
+            cantidad: 1,
+            codigo: payload.packageId,
+            descripcion: `Paquete de ${payload.creditsTotal} clases - Wellnest Studio`,
+            precioUni: payload.amount,
+            montoDescu: discount,
+            ventaGravada,
+            noGravado: 0,
+          },
+        ],
         resumen: {
           totalGravada: ventaGravada,
           totalIva,
           subTotalVentas: ventaGravada,
           totalPagar,
           totalLetras: '',
-          condicionOperacion: 1,
+          condicionOperacion: 1, // Contado
         },
         extension: {
-          observaciones: `Wellnest Purchase: ${payload.purchaseId}`,
+          observaciones: `Wellnest Purchase: ${payload.purchaseId} | Payment: ${payload.paymentMethod}`,
         },
       };
 
-      // Import DteService dynamically to avoid circular dependency
-      // The DTE is created via Prisma directly here for simplicity
-      const { DteService } = await import('../../dte/dte.service');
+      // 7. Use DteService to create the DTE properly
+      //    This handles: correlativo, numeroControl, client auto-creation, logging, webhook trigger
+      const dte = await this.dteService.createDte(tenantId, '01', dteData);
 
-      // Use Prisma to create the DTE directly (simpler than injecting DteService which has many deps)
-      const { v4: uuidv4 } = await import('uuid');
-      const codigoGeneracion = uuidv4().toUpperCase();
-      const numeroControl = `DTE-01-WN00P001-${Date.now().toString().padStart(15, '0')}`;
-
-      const dte = await this.prisma.dTE.create({
-        data: {
-          tenantId,
-          tipoDte: '01',
-          codigoGeneracion,
-          numeroControl,
-          jsonOriginal: JSON.stringify({
-            ...dteData,
-            identificacion: {
-              ...(dteData.identificacion as Record<string, unknown>),
-              codigoGeneracion,
-              numeroControl,
-            },
-          }),
-          totalGravada: ventaGravada,
-          totalIva,
-          totalPagar,
-          estado: 'PENDIENTE',
-        },
-      });
-
-      // Trigger outbound webhook for dte.created
-      await this.webhooksService.triggerEvent({
-        tenantId,
-        eventType: 'dte.created',
-        data: {
-          dteId: dte.id,
-          codigoGeneracion: dte.codigoGeneracion,
-          numeroControl: dte.numeroControl,
-          tipoDocumento: '01',
-          montoTotal: totalPagar,
-          external_reference: payload.purchaseId,
-          source: 'wellnest',
-        },
-        correlationId: dte.id,
-      });
-
-      this.logger.log(`DTE created for Wellnest purchase ${payload.purchaseId}: ${dte.id}`);
+      this.logger.log(
+        `DTE created for Wellnest purchase ${payload.purchaseId}: id=${dte.id}, codigo=${dte.codigoGeneracion}`,
+      );
 
       return {
         status: HttpStatus.OK,
@@ -219,12 +224,15 @@ export class InboundWebhooksController {
       };
     } catch (error) {
       this.logger.error(
-        `Error processing Wellnest webhook: ${error instanceof Error ? error.message : String(error)}`,
+        `Error processing Wellnest webhook for purchase ${payload.purchaseId}: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
   }
 
+  /**
+   * Verify HMAC-SHA256 signature using timing-safe comparison
+   */
   private verifySignature(payload: string, signature: string, secret: string): boolean {
     const expectedSignature = crypto
       .createHmac('sha256', secret)

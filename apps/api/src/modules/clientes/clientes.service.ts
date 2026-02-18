@@ -143,8 +143,9 @@ export class ClientesService {
       updateData.direccion = JSON.stringify(updateClienteDto.direccion);
     }
 
+    // Use findFirst+update pattern to enforce tenant isolation
     const cliente = await this.prisma.cliente.update({
-      where: { id },
+      where: { id: existingCliente.id },
       data: updateData,
     });
 
@@ -158,9 +159,9 @@ export class ClientesService {
     // Verify cliente belongs to tenant
     await this.findOne(tenantId, id);
 
-    // Check if cliente has associated DTEs
+    // Check if cliente has associated DTEs (tenant-scoped)
     const dtesCount = await this.prisma.dTE.count({
-      where: { clienteId: id },
+      where: { clienteId: id, tenantId },
     });
 
     if (dtesCount > 0) {

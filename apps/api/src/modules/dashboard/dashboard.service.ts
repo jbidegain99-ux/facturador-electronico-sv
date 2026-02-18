@@ -183,7 +183,7 @@ export class DashboardService {
 
     const clientNames = clientIds.length > 0
       ? await this.prisma.cliente.findMany({
-          where: { id: { in: clientIds } },
+          where: { id: { in: clientIds }, tenantId },
           select: { id: true, nombre: true },
         })
       : [];

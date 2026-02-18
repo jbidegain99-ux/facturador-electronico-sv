@@ -215,12 +215,12 @@ export class QuotesService {
       this.prisma.quote.count({ where }),
     ]);
 
-    // Resolve client details
+    // Resolve client details (tenant-scoped)
     const clientIds = [...new Set(rawData.map((q) => q.clienteId))];
     const clients =
       clientIds.length > 0
         ? await this.prisma.cliente.findMany({
-            where: { id: { in: clientIds } },
+            where: { id: { in: clientIds }, tenantId },
             select: {
               id: true,
               nombre: true,

@@ -139,8 +139,9 @@ export class DteService {
             existingCliente.correo !== ((receptor.correo as string) || null) ||
             existingCliente.telefono !== ((receptor.telefono as string) || null)) {
           this.logger.log(`Updating existing client ${existingCliente.id} with new details`);
-          await this.prisma.cliente.update({
-            where: { id: existingCliente.id },
+          // existingCliente was found via tenant-scoped query, safe to update by id
+          await this.prisma.cliente.updateMany({
+            where: { id: existingCliente.id, tenantId },
             data: {
               nombre: receptorNombre,
               correo: (receptor.correo as string) || null,
@@ -1079,10 +1080,10 @@ export class DteService {
       take: limit,
     });
 
-    // Get client names
+    // Get client names (tenant-scoped)
     const clientIds = stats.map((s: typeof stats[0]) => s.clienteId).filter(Boolean) as string[];
     const clients = await this.prisma.cliente.findMany({
-      where: { id: { in: clientIds } },
+      where: { id: { in: clientIds }, tenantId },
       select: { id: true, nombre: true, numDocumento: true },
     });
 

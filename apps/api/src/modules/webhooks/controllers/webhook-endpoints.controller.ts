@@ -38,7 +38,7 @@ interface UpdateEndpointBody {
 
 @ApiTags('Webhooks')
 @ApiBearerAuth()
-@Controller('api/v1/webhooks/endpoints')
+@Controller('webhooks/endpoints')
 export class WebhookEndpointsController {
   constructor(
     private prisma: PrismaService,

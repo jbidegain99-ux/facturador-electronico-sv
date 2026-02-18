@@ -1,129 +1,250 @@
 'use client';
 
-import { Webhook, Clock, Zap, Lock, RefreshCw, FileText, Send, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  BarChart3,
+  RefreshCw,
+  Webhook,
+  Building2,
+} from 'lucide-react';
 
-export default function WebhooksPage() {
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface TenantWebhookSummary {
+  tenantId: string;
+  tenantName: string;
+  endpointCount: number;
+  activeEndpoints: number;
+  totalDeliveries: number;
+  successfulDeliveries: number;
+  failedDeliveries: number;
+}
+
+// ─── API helpers ─────────────────────────────────────────────────────────────
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+function authHeaders(): Record<string, string> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
+
+export default function AdminWebhooksPage() {
+  const [summaries, setSummaries] = useState<TenantWebhookSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalEndpoints, setTotalEndpoints] = useState(0);
+  const [totalActive, setTotalActive] = useState(0);
+  const [totalDelivered, setTotalDelivered] = useState(0);
+  const [totalFailed, setTotalFailed] = useState(0);
+
+  const loadData = useCallback(async () => {
+    try {
+      // Fetch all tenants with webhook data
+      const res = await fetch(`${API_BASE}/admin/webhooks/summary`, {
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        // If admin endpoint doesn't exist yet, show empty state
+        setSummaries([]);
+        return;
+      }
+      const json = await res.json().catch(() => ({ data: [] }));
+      const data: TenantWebhookSummary[] = Array.isArray(json.data) ? json.data : [];
+      setSummaries(data);
+
+      // Calculate totals
+      let endpoints = 0, active = 0, delivered = 0, failed = 0;
+      for (const s of data) {
+        endpoints += s.endpointCount;
+        active += s.activeEndpoints;
+        delivered += s.successfulDeliveries;
+        failed += s.failedDeliveries;
+      }
+      setTotalEndpoints(endpoints);
+      setTotalActive(active);
+      setTotalDelivered(delivered);
+      setTotalFailed(failed);
+    } catch {
+      setSummaries([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+        <Skeleton className="h-64" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Webhooks</h1>
-          <p className="text-muted-foreground mt-1">
-            Integraciones y notificaciones en tiempo real
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Webhook className="h-8 w-8" />
+            Webhooks — Admin
+          </h1>
+          <p className="text-muted-foreground">
+            Vista global de webhooks de todos los tenants
           </p>
         </div>
+        <Button variant="outline" size="sm" onClick={() => { setLoading(true); loadData(); }}>
+          <RefreshCw className="h-4 w-4 mr-1" />
+          Actualizar
+        </Button>
       </div>
 
-      {/* Coming Soon Banner */}
-      <div className="glass-card p-8 text-center">
-        <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
-          <Webhook className="w-10 h-10 text-primary" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Próximamente</h2>
-        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          El sistema de webhooks permitirá integrar el facturador con sistemas externos.
-          Recibe notificaciones en tiempo real sobre eventos del sistema.
-        </p>
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-full text-sm">
-          <Clock className="w-4 h-4" />
-          En desarrollo
-        </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Endpoints Totales</CardTitle>
+            <Webhook className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalEndpoints}</div>
+            <p className="text-xs text-muted-foreground">{totalActive} activos</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tenants con Webhooks</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summaries.length}</div>
+            <p className="text-xs text-muted-foreground">tenants configurados</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Entregas Exitosas</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{totalDelivered}</div>
+            <p className="text-xs text-muted-foreground">total histórico</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Entregas Fallidas</CardTitle>
+            <XCircle className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{totalFailed}</div>
+            <p className="text-xs text-muted-foreground">requieren atención</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Preview Features */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-blue-500/10">
-              <Zap className="w-5 h-5 text-blue-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-white">Eventos en Tiempo Real</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Recibe notificaciones instantáneas sobre DTEs emitidos, rechazados,
-            nuevos clientes y cambios en el sistema.
-          </p>
-        </div>
-
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-green-500/10">
-              <Lock className="w-5 h-5 text-green-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-white">Seguridad</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Firmas HMAC para verificar autenticidad. Tokens secretos por webhook
-            y reintentos automáticos con backoff.
-          </p>
-        </div>
-
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-purple-500/10">
-              <ExternalLink className="w-5 h-5 text-purple-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-white">Integraciones</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Conecta con ERPs, CRMs, sistemas contables y cualquier aplicación
-            que soporte webhooks.
-          </p>
-        </div>
-      </div>
-
-      {/* Supported Events Preview */}
-      <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Eventos Disponibles (Preview)</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[
-            { event: 'dte.created', desc: 'DTE creado' },
-            { event: 'dte.signed', desc: 'DTE firmado' },
-            { event: 'dte.transmitted', desc: 'DTE transmitido' },
-            { event: 'dte.accepted', desc: 'DTE aceptado por MH' },
-            { event: 'dte.rejected', desc: 'DTE rechazado por MH' },
-            { event: 'cliente.created', desc: 'Cliente creado' },
-            { event: 'cliente.updated', desc: 'Cliente actualizado' },
-            { event: 'user.login', desc: 'Inicio de sesión' },
-            { event: 'plan.limit_warning', desc: 'Advertencia de límite' },
-          ].map((item) => (
-            <div key={item.event} className="p-3 rounded-lg bg-white/5 flex items-center gap-3">
-              <Send className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <div className="text-sm font-mono text-primary">{item.event}</div>
-                <div className="text-xs text-muted-foreground">{item.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Simulated Config */}
-      <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Configuración (Simulado)</h3>
-        <div className="space-y-4">
-          <div className="p-4 rounded-lg bg-white/5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-gray-500" />
-              <div>
-                <div className="text-white">Mi Webhook de Prueba</div>
-                <div className="text-xs text-muted-foreground font-mono">
-                  https://api.ejemplo.com/webhooks/facturador
-                </div>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Sin configurar
-            </div>
-          </div>
-          <Button variant="outline" disabled className="w-full">
-            <Webhook className="w-4 h-4 mr-2" />
-            Configurar Webhook
-          </Button>
-        </div>
-      </div>
+      {/* Tenants Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Webhooks por Tenant</CardTitle>
+          <CardDescription>Resumen de configuración de webhooks por empresa</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tenant</TableHead>
+                <TableHead>Endpoints</TableHead>
+                <TableHead>Activos</TableHead>
+                <TableHead>Entregas</TableHead>
+                <TableHead>Exitosas</TableHead>
+                <TableHead>Fallidas</TableHead>
+                <TableHead>Tasa de Éxito</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {summaries.map((s) => {
+                const rate = s.totalDeliveries > 0
+                  ? ((s.successfulDeliveries / s.totalDeliveries) * 100).toFixed(1)
+                  : '—';
+                return (
+                  <TableRow key={s.tenantId}>
+                    <TableCell className="font-medium">{s.tenantName}</TableCell>
+                    <TableCell>{s.endpointCount}</TableCell>
+                    <TableCell>
+                      <Badge variant={s.activeEndpoints > 0 ? 'default' : 'secondary'}>
+                        {s.activeEndpoints}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{s.totalDeliveries}</TableCell>
+                    <TableCell className="text-green-600">{s.successfulDeliveries}</TableCell>
+                    <TableCell className="text-red-600">{s.failedDeliveries}</TableCell>
+                    <TableCell>
+                      {rate === '—' ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className={
+                            parseFloat(rate) >= 90
+                              ? 'border-green-300 text-green-700 dark:text-green-400'
+                              : parseFloat(rate) >= 50
+                                ? 'border-yellow-300 text-yellow-700 dark:text-yellow-400'
+                                : 'border-red-300 text-red-700 dark:text-red-400'
+                          }
+                        >
+                          {rate}%
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {summaries.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <Webhook className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        Ningún tenant ha configurado webhooks aún
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

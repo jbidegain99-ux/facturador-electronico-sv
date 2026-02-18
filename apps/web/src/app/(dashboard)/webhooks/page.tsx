@@ -134,7 +134,7 @@ export default function WebhooksPage() {
 
   const loadEndpoints = useCallback(async () => {
     try {
-      const res = await api<{ data: WebhookEndpoint[] }>('/api/v1/webhooks/endpoints');
+      const res = await api<{ data: WebhookEndpoint[] }>('/webhooks/endpoints');
       setEndpoints(res.data);
     } catch {
       toastRef.current.error(t('errorLoadingEndpoints'));
@@ -143,7 +143,7 @@ export default function WebhooksPage() {
 
   const loadStats = useCallback(async () => {
     try {
-      const res = await api<{ data: WebhookStats }>('/api/v1/webhooks/stats?days=7');
+      const res = await api<{ data: WebhookStats }>('/webhooks/stats?days=7');
       setStats(res.data);
     } catch {
       // Stats are optional
@@ -152,7 +152,7 @@ export default function WebhooksPage() {
 
   const loadDeliveries = useCallback(async () => {
     try {
-      const res = await api<{ data: WebhookDelivery[] }>('/api/v1/webhooks/deliveries?limit=50');
+      const res = await api<{ data: WebhookDelivery[] }>('/webhooks/deliveries?limit=50');
       setDeliveries(res.data);
     } catch {
       toastRef.current.error(t('errorLoadingDeliveries'));
@@ -161,7 +161,7 @@ export default function WebhooksPage() {
 
   const loadEvents = useCallback(async () => {
     try {
-      const res = await api<{ data: WebhookEventOption[] }>('/api/v1/webhooks/events');
+      const res = await api<{ data: WebhookEventOption[] }>('/webhooks/events');
       setAvailableEvents(res.data);
     } catch {
       // Events are optional
@@ -176,7 +176,7 @@ export default function WebhooksPage() {
 
   const toggleEndpoint = async (endpointId: string, currentActive: boolean) => {
     try {
-      await api(`/api/v1/webhooks/endpoints/${endpointId}`, {
+      await api(`/webhooks/endpoints/${endpointId}`, {
         method: 'PUT',
         body: JSON.stringify({ isActive: !currentActive }),
       });
@@ -189,7 +189,7 @@ export default function WebhooksPage() {
 
   const deleteEndpoint = async (endpointId: string) => {
     try {
-      await api(`/api/v1/webhooks/endpoints/${endpointId}`, { method: 'DELETE' });
+      await api(`/webhooks/endpoints/${endpointId}`, { method: 'DELETE' });
       await loadEndpoints();
       toastRef.current.success(t('endpointDeleted'));
     } catch {
@@ -199,7 +199,7 @@ export default function WebhooksPage() {
 
   const testEndpoint = async (endpointId: string) => {
     try {
-      await api(`/api/v1/webhooks/test/${endpointId}`, { method: 'POST' });
+      await api(`/webhooks/test/${endpointId}`, { method: 'POST' });
       toastRef.current.success(t('testSent'));
       setTimeout(() => loadDeliveries(), 2000);
     } catch {
@@ -209,7 +209,7 @@ export default function WebhooksPage() {
 
   const retryDelivery = async (deliveryId: string) => {
     try {
-      await api(`/api/v1/webhooks/deliveries/${deliveryId}/retry`, { method: 'POST' });
+      await api(`/webhooks/deliveries/${deliveryId}/retry`, { method: 'POST' });
       toastRef.current.success(t('retryQueued'));
       setTimeout(() => loadDeliveries(), 2000);
     } catch {
@@ -576,7 +576,7 @@ function CreateEndpointDialog({
 
     setSaving(true);
     try {
-      const res = await api<{ data: { secretKey: string } }>('/api/v1/webhooks/endpoints', {
+      const res = await api<{ data: { secretKey: string } }>('/webhooks/endpoints', {
         method: 'POST',
         body: JSON.stringify({ name, url, events: selectedEvents }),
       });

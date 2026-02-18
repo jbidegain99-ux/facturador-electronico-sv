@@ -16,7 +16,7 @@ import { WebhookDeliveryService } from '../webhook-delivery.service';
 
 @ApiTags('Webhooks')
 @ApiBearerAuth()
-@Controller('api/v1/webhooks')
+@Controller('webhooks')
 export class WebhookDeliveriesController {
   constructor(
     private prisma: PrismaService,

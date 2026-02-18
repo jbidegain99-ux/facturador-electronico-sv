@@ -220,6 +220,7 @@
     "duplicate": "Duplicate invoice",
     "downloadPdf": "Download PDF",
     "downloadJson": "Download JSON",
+    "sendEmail": "Send Email",
     "void": "Void",
     "voidDocument": "Void document",
     "voidConfirm": "Are you sure you want to void document {controlNumber}? This action cannot be undone.",

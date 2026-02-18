@@ -612,6 +612,104 @@ export class DteService {
     });
   }
 
+  /**
+   * Manually trigger email sending for a DTE (for testing or resending).
+   * Works regardless of DTE status — no Hacienda approval required.
+   */
+  async sendEmailManually(
+    id: string,
+    tenantId: string,
+    overrideEmail?: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const dte = await this.prisma.dTE.findFirst({
+      where: { id, tenantId },
+      include: { tenant: true },
+    });
+
+    if (!dte) {
+      throw new NotFoundException('DTE no encontrado');
+    }
+
+    // Parse receptor email
+    let parsedData: Record<string, unknown>;
+    try {
+      parsedData = typeof dte.jsonOriginal === 'string'
+        ? JSON.parse(dte.jsonOriginal)
+        : dte.jsonOriginal;
+    } catch {
+      throw new BadRequestException('No se pudo parsear jsonOriginal del DTE');
+    }
+
+    const receptor = parsedData.receptor as Record<string, unknown> | undefined;
+    const correoReceptor = overrideEmail || (receptor?.correo as string | undefined);
+
+    if (!correoReceptor) {
+      throw new BadRequestException(
+        'El DTE no tiene correo de receptor. Proporcione un correo en el body: { "email": "correo@ejemplo.com" }',
+      );
+    }
+
+    // If override email provided, patch it into the parsed data for the template
+    if (overrideEmail && receptor) {
+      receptor.correo = overrideEmail;
+      parsedData.receptor = receptor;
+    }
+
+    // Generate PDF
+    const pdfBuffer = await this.pdfService.generateInvoicePdf({
+      id: dte.id,
+      codigoGeneracion: dte.codigoGeneracion,
+      numeroControl: dte.numeroControl,
+      tipoDte: dte.tipoDte,
+      estado: dte.estado,
+      data: parsedData,
+      createdAt: dte.createdAt,
+      tenant: dte.tenant ? {
+        nombre: dte.tenant.nombre,
+        nit: dte.tenant.nit,
+        nrc: dte.tenant.nrc,
+        direccion: dte.tenant.direccion ?? undefined,
+        telefono: dte.tenant.telefono,
+        correo: dte.tenant.correo,
+      } : undefined,
+    });
+
+    const tipoLabel = dte.tipoDte === '01' ? 'Factura' : dte.tipoDte === '03' ? 'Comprobante de Crédito Fiscal' : dte.tipoDte === '11' ? 'Factura de Exportación' : 'Documento Tributario';
+    const filename = `${tipoLabel}-${dte.numeroControl || dte.codigoGeneracion}.pdf`;
+    const nombreReceptor = (receptor?.nombre as string) || 'Cliente';
+    const nombreEmisor = dte.tenant?.nombre || 'Facturador Electrónico SV';
+
+    const { html, text } = invoiceSentTemplate({
+      tipoLabel,
+      numeroControl: dte.numeroControl,
+      codigoGeneracion: dte.codigoGeneracion,
+      totalPagar: `$${Number(dte.totalPagar).toFixed(2)}`,
+      selloRecepcion: dte.selloRecepcion,
+      nombreReceptor,
+      nombreEmisor,
+    });
+
+    const result = await this.defaultEmailService.sendEmailWithAttachment(dte.tenantId, {
+      to: correoReceptor,
+      subject: `${tipoLabel} ${dte.numeroControl} - ${nombreEmisor}`,
+      html,
+      text,
+      attachments: [{
+        filename,
+        content: pdfBuffer.toString('base64'),
+        contentType: 'application/pdf',
+      }],
+    });
+
+    if (result.success) {
+      this.logger.log(`Manual DTE email sent to ${correoReceptor} for DTE ${dte.numeroControl}`);
+      return { success: true, message: `Email enviado a ${correoReceptor}` };
+    } else {
+      this.logger.warn(`Manual DTE email failed for ${dte.numeroControl}: ${result.errorMessage}`);
+      return { success: false, message: `Error al enviar email: ${result.errorMessage}` };
+    }
+  }
+
   async findOneWithTenant(id: string, tenantId?: string) {
     if (tenantId) {
       return this.prisma.dTE.findFirst({

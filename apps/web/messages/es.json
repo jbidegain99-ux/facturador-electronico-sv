@@ -220,6 +220,7 @@
     "duplicate": "Duplicar factura",
     "downloadPdf": "Descargar PDF",
     "downloadJson": "Descargar JSON",
+    "sendEmail": "Enviar Email",
     "void": "Anular",
     "voidDocument": "Anular documento",
     "voidConfirm": "¿Estas seguro que deseas anular el documento {controlNumber}? Esta accion no se puede deshacer.",

@@ -21,6 +21,7 @@ import {
   Loader2,
   AlertCircle,
   FileText,
+  Mail,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
@@ -80,6 +81,8 @@ export default function FacturaDetallePage() {
   const [error, setError] = React.useState<string | null>(null);
   const [anulando, setAnulando] = React.useState(false);
   const [downloadingPdf, setDownloadingPdf] = React.useState(false);
+  const [sendingEmail, setSendingEmail] = React.useState(false);
+  const [emailResult, setEmailResult] = React.useState<{ success: boolean; message: string } | null>(null);
 
   const dteId = params.id as string;
 
@@ -206,6 +209,43 @@ export default function FacturaDetallePage() {
     }
   };
 
+  const handleSendEmail = async () => {
+    if (!dte) return;
+
+    setSendingEmail(true);
+    setEmailResult(null);
+    const token = localStorage.getItem('token');
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}/send-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+
+      const data = await res.json().catch(() => ({ success: false, message: 'Error de conexion' }));
+
+      if (!res.ok) {
+        const errMsg = (data as { message?: string }).message || 'Error al enviar email';
+        setEmailResult({ success: false, message: errMsg });
+        return;
+      }
+
+      const result = data as { success: boolean; message: string };
+      setEmailResult(result);
+    } catch (err) {
+      setEmailResult({
+        success: false,
+        message: err instanceof Error ? err.message : 'Error al enviar email',
+      });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const parseNumber = (value: string | number): number => {
     if (typeof value === 'number') return value;
     return parseFloat(value) || 0;
@@ -288,6 +328,14 @@ export default function FacturaDetallePage() {
             <Download className="mr-2 h-4 w-4" />
             {t('downloadJson')}
           </Button>
+          <Button variant="outline" onClick={handleSendEmail} disabled={sendingEmail}>
+            {sendingEmail ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Mail className="mr-2 h-4 w-4" />
+            )}
+            {t('sendEmail')}
+          </Button>
           {dte.estado === 'PROCESADO' && (
             <Button variant="destructive" onClick={handleAnular} disabled={anulando}>
               {anulando ? (
@@ -300,6 +348,20 @@ export default function FacturaDetallePage() {
           )}
         </div>
       </div>
+
+      {/* Email result feedback */}
+      {emailResult && (
+        <div
+          className={cn(
+            'px-4 py-3 rounded-lg border text-sm',
+            emailResult.success
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400',
+          )}
+        >
+          {emailResult.message}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content */}

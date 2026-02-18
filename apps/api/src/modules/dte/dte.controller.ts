@@ -197,6 +197,16 @@ export class DteController {
     res.end(pdfBuffer);
   }
 
+  @Post(':id/send-email')
+  @ApiOperation({ summary: 'Enviar email del DTE manualmente (para pruebas o reenvio)' })
+  sendEmail(
+    @Request() req: AuthRequest,
+    @Param('id') id: string,
+    @Body() body: { email?: string },
+  ) {
+    return this.dteService.sendEmailManually(id, req.user.tenantId, body?.email);
+  }
+
   @Post(':id/anular')
   @ApiOperation({ summary: 'Anular DTE' })
   anular(

@@ -25,13 +25,31 @@ interface ClienteSearchProps {
   tipoDte?: '01' | '03';
 }
 
-const RECENT_CLIENTS_KEY = 'factura-recent-clients';
+const RECENT_CLIENTS_PREFIX = 'factura-recent-clients';
 const MAX_RECENT_CLIENTS = 5;
+
+/** Build a tenant-scoped localStorage key to prevent cross-tenant leakage */
+function getRecentClientsKey(): string {
+  if (typeof window === 'undefined') return RECENT_CLIENTS_PREFIX;
+  try {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Extract payload from JWT to get tenantId
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.tenantId) {
+        return `${RECENT_CLIENTS_PREFIX}-${payload.tenantId}`;
+      }
+    }
+  } catch {
+    // Fall through to default
+  }
+  return RECENT_CLIENTS_PREFIX;
+}
 
 function getRecentClients(): Cliente[] {
   if (typeof window === 'undefined') return [];
   try {
-    const stored = localStorage.getItem(RECENT_CLIENTS_KEY);
+    const stored = localStorage.getItem(getRecentClientsKey());
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
@@ -43,10 +61,11 @@ function addRecentClient(cliente: Cliente): void {
   if (cliente.id === 'consumidor-final') return;
 
   try {
+    const key = getRecentClientsKey();
     const recents = getRecentClients().filter((c) => c.id !== cliente.id);
     recents.unshift(cliente);
     localStorage.setItem(
-      RECENT_CLIENTS_KEY,
+      key,
       JSON.stringify(recents.slice(0, MAX_RECENT_CLIENTS))
     );
   } catch {
@@ -71,8 +90,12 @@ export function ClienteSearch({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Load recent clients on mount
+  // Load recent clients on mount and clean up old un-scoped key
   React.useEffect(() => {
+    // Remove old global key that leaked across tenants
+    try {
+      localStorage.removeItem(RECENT_CLIENTS_PREFIX);
+    } catch { /* ignore */ }
     setRecentClients(getRecentClients());
   }, []);
 

@@ -72,7 +72,15 @@ export class InboundWebhooksController {
     @Headers('x-webhook-signature-256') signature?: string,
     @Headers('x-webhook-timestamp') timestamp?: string,
   ): Promise<InboundWebhookResponse> {
+    this.logger.log('=== WEBHOOK DEBUG START ===');
     this.logger.log(`Received Wellnest webhook for tenant ${tenantId}, purchaseId=${payload.purchaseId}`);
+    this.logger.log(`Raw payload: ${JSON.stringify(payload, null, 2)}`);
+    this.logger.log(`Customer data received: ${JSON.stringify(payload.customerData, null, 2)}`);
+    this.logger.log(`customerData.name = "${payload.customerData?.name}"`);
+    this.logger.log(`customerData.email = "${payload.customerData?.email}"`);
+    this.logger.log(`customerData.phone = "${payload.customerData?.phone}"`);
+    this.logger.log(`customerData.numDocumento = "${payload.customerData?.numDocumento}"`);
+    this.logger.log('=== WEBHOOK DEBUG END ===');
 
     // 1. Validate tenant exists
     const tenant = await this.prisma.tenant.findUnique({
@@ -208,6 +216,12 @@ export class InboundWebhooksController {
 
       // 7. Use DteService to create the DTE properly
       //    This handles: correlativo, numeroControl, client auto-creation, logging, webhook trigger
+      this.logger.log(`=== DTE DATA BEING SENT TO createDte ===`);
+      this.logger.log(`receptor.nombre = "${(dteData.receptor as Record<string, unknown>)?.nombre}"`);
+      this.logger.log(`receptor.correo = "${(dteData.receptor as Record<string, unknown>)?.correo}"`);
+      this.logger.log(`receptor.telefono = "${(dteData.receptor as Record<string, unknown>)?.telefono}"`);
+      this.logger.log(`receptor.numDocumento = "${(dteData.receptor as Record<string, unknown>)?.numDocumento}"`);
+      this.logger.log(`=== END DTE DATA ===`);
       const dte = await this.dteService.createDte(tenantId, '01', dteData);
 
       this.logger.log(

@@ -110,45 +110,75 @@ export class DteService {
     let clienteId: string | undefined;
     const receptor = data.receptor as Record<string, unknown> | undefined;
     if (receptor?.nombre) {
+      const receptorNombre = receptor.nombre as string;
+      const receptorNumDoc = (receptor.numDocumento as string) || '';
+      const hasNumDocumento = receptorNumDoc.length > 0;
+
+      this.logger.log(`Client lookup: nombre="${receptorNombre}", numDocumento="${receptorNumDoc}", hasNumDoc=${hasNumDocumento}`);
+
+      // Build search criteria: only match by numDocumento if it's non-empty
+      const orConditions: Array<Record<string, string>> = [];
+      if (hasNumDocumento) {
+        orConditions.push({ numDocumento: receptorNumDoc });
+      }
+      orConditions.push({ nombre: receptorNombre });
+
       const existingCliente = await this.prisma.cliente.findFirst({
         where: {
           tenantId,
-          OR: [
-            { numDocumento: receptor.numDocumento as string },
-            { nombre: receptor.nombre as string },
-          ].filter(c => Object.values(c)[0]),
+          OR: orConditions,
         },
       });
 
       if (existingCliente) {
+        this.logger.log(`Found existing client: id=${existingCliente.id}, nombre="${existingCliente.nombre}", numDocumento="${existingCliente.numDocumento}"`);
         clienteId = existingCliente.id;
+
+        // Update client details if they've changed (e.g. email, phone)
+        if (existingCliente.nombre !== receptorNombre ||
+            existingCliente.correo !== ((receptor.correo as string) || null) ||
+            existingCliente.telefono !== ((receptor.telefono as string) || null)) {
+          this.logger.log(`Updating existing client ${existingCliente.id} with new details`);
+          await this.prisma.cliente.update({
+            where: { id: existingCliente.id },
+            data: {
+              nombre: receptorNombre,
+              correo: (receptor.correo as string) || null,
+              telefono: (receptor.telefono as string) || null,
+            },
+          }).catch(err => this.logger.warn(`Failed to update client: ${err instanceof Error ? err.message : err}`));
+        }
       } else {
-        // Create new client from receptor data, handling unique constraint violations
+        // Create new client from receptor data
+        // When numDocumento is empty, generate a unique placeholder to avoid unique constraint collisions
+        const numDocumentoForDb = hasNumDocumento ? receptorNumDoc : `AUTO-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
         try {
           const newCliente = await this.prisma.cliente.create({
             data: {
               tenantId,
               tipoDocumento: (receptor.tipoDocumento as string) || '13',
-              numDocumento: (receptor.numDocumento as string) || '',
-              nombre: receptor.nombre as string,
+              numDocumento: numDocumentoForDb,
+              nombre: receptorNombre,
               nrc: (receptor.nrc as string) || null,
               telefono: (receptor.telefono as string) || null,
               correo: (receptor.correo as string) || null,
               direccion: JSON.stringify(receptor.direccion || {}),
             },
           });
+          this.logger.log(`Created new client: id=${newCliente.id}, nombre="${newCliente.nombre}", numDocumento="${newCliente.numDocumento}"`);
           clienteId = newCliente.id;
         } catch (clientError) {
-          // If unique constraint violation, try to find the existing client
+          // If unique constraint violation on a real numDocumento, find by that document
           if (clientError instanceof Prisma.PrismaClientKnownRequestError && clientError.code === 'P2002') {
-            this.logger.warn(`Client unique constraint hit during DTE creation, finding existing client`);
-            const retryCliente = await this.prisma.cliente.findFirst({
-              where: {
-                tenantId,
-                numDocumento: (receptor.numDocumento as string) || '',
-              },
-            });
-            clienteId = retryCliente?.id;
+            this.logger.warn(`Client unique constraint hit for numDocumento="${receptorNumDoc}", finding by document`);
+            if (hasNumDocumento) {
+              const retryCliente = await this.prisma.cliente.findFirst({
+                where: { tenantId, numDocumento: receptorNumDoc },
+              });
+              clienteId = retryCliente?.id;
+            }
+            // If no numDocumento, don't retry - the auto-generated one shouldn't collide
           } else {
             this.logger.error(`Failed to create client during DTE: ${clientError instanceof Error ? clientError.message : clientError}`);
             // Don't fail DTE creation if client creation fails - proceed without clienteId

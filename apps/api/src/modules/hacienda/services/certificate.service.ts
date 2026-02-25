@@ -18,9 +18,38 @@ export class CertificateService {
    * @param password - The certificate password (required for .p12/.pfx, optional for PEM/DER)
    * @returns Certificate information
    */
+  /**
+   * Detect the type of certificate file
+   */
+  detectCertificateType(buffer: Buffer): {
+    type: 'MH_XML' | 'PKCS12' | 'PEM' | 'DER';
+    requiresPassword: boolean;
+  } {
+    const content = buffer.toString('utf8');
+
+    if (content.includes('<CertificadoMH>')) {
+      return { type: 'MH_XML', requiresPassword: false };
+    }
+
+    if (content.includes('-----BEGIN')) {
+      return { type: 'PEM', requiresPassword: false };
+    }
+
+    // Check base64 (likely DER without headers)
+    const trimmed = content.trim();
+    const isBase64 =
+      /^[A-Za-z0-9+/=\s]+$/.test(trimmed) && trimmed.length > 100;
+    if (isBase64) {
+      return { type: 'DER', requiresPassword: false };
+    }
+
+    // Default to PKCS12 (.p12/.pfx) which requires password
+    return { type: 'PKCS12', requiresPassword: true };
+  }
+
   async parseCertificate(
     buffer: Buffer,
-    password: string,
+    password?: string,
   ): Promise<CertificateInfo> {
     // Try to detect file type
     const content = buffer.toString('utf8');
@@ -61,7 +90,12 @@ export class CertificateService {
       this.logger.debug(`DER parsing failed: ${error instanceof Error ? error.message : 'Unknown'}, trying PKCS#12 format`);
     }
 
-    // Try PKCS#12 format (.p12, .pfx)
+    // Try PKCS#12 format (.p12, .pfx) - requires password
+    if (!password) {
+      throw new BadRequestException(
+        'Se requiere contraseña para certificados .p12/.pfx',
+      );
+    }
     return this.parsePkcs12Certificate(buffer, password);
   }
 
@@ -323,7 +357,7 @@ export class CertificateService {
    */
   async validateCertificate(
     buffer: Buffer,
-    password: string,
+    password?: string,
   ): Promise<{ valid: boolean; message: string; info: CertificateInfo }> {
     const info = await this.parseCertificate(buffer, password);
     const now = new Date();
@@ -372,7 +406,7 @@ export class CertificateService {
    */
   async extractSigningKeys(
     buffer: Buffer,
-    password: string,
+    password?: string,
   ): Promise<{
     privateKey: jose.KeyLike;
     publicKey: jose.KeyLike;
@@ -386,7 +420,13 @@ export class CertificateService {
       return this.extractSigningKeysFromHaciendaXml(content, password);
     }
 
-    // Try PKCS#12 format
+    // Try PKCS#12 format - requires password
+    if (!password) {
+      throw new BadRequestException(
+        'Se requiere contraseña para certificados .p12/.pfx',
+      );
+    }
+
     try {
       const p12Base64 = buffer.toString('base64');
       const p12Der = forge.util.decode64(p12Base64);
@@ -526,7 +566,7 @@ export class CertificateService {
    */
   async signPayload<T extends object>(
     buffer: Buffer,
-    password: string,
+    password: string | undefined,
     payload: T,
   ): Promise<string> {
     const { privateKey, certificate, algorithm } = await this.extractSigningKeys(buffer, password);
@@ -567,7 +607,7 @@ export class CertificateService {
    */
   async verifySignature(
     buffer: Buffer,
-    password: string,
+    password: string | undefined,
     jws: string,
   ): Promise<{ valid: boolean; payload: unknown }> {
     try {

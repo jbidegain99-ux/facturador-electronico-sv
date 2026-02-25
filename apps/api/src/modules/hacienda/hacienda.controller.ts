@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { HaciendaService } from './hacienda.service';
+import { CertificateService } from './services/certificate.service';
 import {
   ConfigureEnvironmentDto,
   SwitchEnvironmentDto,
@@ -44,7 +45,10 @@ import { HaciendaEnvironment } from './interfaces';
 @ApiBearerAuth()
 @ApiTags('Hacienda Configuration')
 export class HaciendaController {
-  constructor(private readonly haciendaService: HaciendaService) {}
+  constructor(
+    private readonly haciendaService: HaciendaService,
+    private readonly certificateService: CertificateService,
+  ) {}
 
   // ===== CONFIGURATION =====
 
@@ -74,12 +78,12 @@ export class HaciendaController {
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['certificate', 'environment', 'apiUser', 'apiPassword', 'certificatePassword'],
+      required: ['certificate', 'environment', 'apiUser', 'apiPassword'],
       properties: {
         certificate: {
           type: 'string',
           format: 'binary',
-          description: 'Archivo de certificado .p12 o .pfx',
+          description: 'Archivo de certificado .p12, .pfx, .crt, .cer, .pem o .xml',
         },
         environment: {
           type: 'string',
@@ -96,7 +100,7 @@ export class HaciendaController {
         },
         certificatePassword: {
           type: 'string',
-          description: 'Contraseña del certificado',
+          description: 'Contraseña del certificado (requerida para .p12/.pfx, opcional para XML del MH)',
         },
       },
     },
@@ -125,14 +129,14 @@ export class HaciendaController {
     }
 
     // Validate file extension
-    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem'];
+    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem', '.xml'];
     const fileExt = certificate.originalname
       .toLowerCase()
       .slice(certificate.originalname.lastIndexOf('.'));
 
     if (!allowedExtensions.includes(fileExt)) {
       throw new BadRequestException(
-        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer o .pem',
+        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer, .pem o .xml',
       );
     }
 
@@ -150,6 +154,78 @@ export class HaciendaController {
       certificate.buffer,
       certificate.originalname,
     );
+  }
+
+  @Post('certificates/detect-type')
+  @UseInterceptors(FileInterceptor('certificate'))
+  @ApiOperation({
+    summary: 'Detectar tipo de certificado y extraer información previa',
+    description: 'Analiza un archivo de certificado y retorna su tipo, si requiere contraseña, y una vista previa de la información',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['certificate'],
+      properties: {
+        certificate: {
+          type: 'string',
+          format: 'binary',
+          description: 'Archivo de certificado',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Tipo de certificado detectado' })
+  async detectCertificateType(
+    @CurrentUser() user: CurrentUserData,
+    @UploadedFile() certificate: Express.Multer.File,
+  ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Usuario no tiene tenant asignado');
+    }
+
+    if (!certificate) {
+      throw new BadRequestException('Se requiere el archivo de certificado');
+    }
+
+    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem', '.xml'];
+    const fileExt = certificate.originalname
+      .toLowerCase()
+      .slice(certificate.originalname.lastIndexOf('.'));
+
+    if (!allowedExtensions.includes(fileExt)) {
+      throw new BadRequestException(
+        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer, .pem o .xml',
+      );
+    }
+
+    const detection = this.certificateService.detectCertificateType(
+      certificate.buffer,
+    );
+
+    // Try to extract preview info for XML certificates (no password needed)
+    let preview: { nit: string | null; organizationName: string; validTo: Date } | null = null;
+    if (!detection.requiresPassword) {
+      try {
+        const info = await this.certificateService.parseCertificate(
+          certificate.buffer,
+        );
+        preview = {
+          nit: info.nit,
+          organizationName: info.subject,
+          validTo: info.validTo,
+        };
+      } catch {
+        // Preview extraction failed, that's ok
+      }
+    }
+
+    return {
+      type: detection.type,
+      requiresPassword: detection.requiresPassword,
+      preview,
+    };
   }
 
   @Post('validate-connection')
@@ -244,12 +320,12 @@ export class HaciendaController {
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['certificate', 'apiUser', 'apiPassword', 'certificatePassword'],
+      required: ['certificate', 'apiUser', 'apiPassword'],
       properties: {
         certificate: {
           type: 'string',
           format: 'binary',
-          description: 'Archivo de certificado .p12 o .pfx',
+          description: 'Archivo de certificado .p12, .pfx, .crt, .cer, .pem o .xml',
         },
         apiUser: {
           type: 'string',
@@ -261,7 +337,7 @@ export class HaciendaController {
         },
         certificatePassword: {
           type: 'string',
-          description: 'Contraseña del certificado',
+          description: 'Contraseña del certificado (requerida para .p12/.pfx, no necesaria para XML del MH)',
         },
       },
     },
@@ -293,14 +369,14 @@ export class HaciendaController {
     }
 
     // Validate file extension
-    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem'];
+    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem', '.xml'];
     const fileExt = certificate.originalname
       .toLowerCase()
       .slice(certificate.originalname.lastIndexOf('.'));
 
     if (!allowedExtensions.includes(fileExt)) {
       throw new BadRequestException(
-        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer o .pem',
+        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer, .pem o .xml',
       );
     }
 

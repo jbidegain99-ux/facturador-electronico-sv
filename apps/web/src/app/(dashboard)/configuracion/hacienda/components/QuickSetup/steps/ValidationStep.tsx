@@ -72,7 +72,9 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
       // Prepare form data
       const formData = new FormData();
       formData.append('certificate', data.certificate!);
-      formData.append('certificatePassword', data.certificatePassword);
+      if (data.certificatePassword) {
+        formData.append('certificatePassword', data.certificatePassword);
+      }
       formData.append('environment', data.environment!);
       formData.append('apiUser', data.apiUser);
       formData.append('apiPassword', data.apiPassword);

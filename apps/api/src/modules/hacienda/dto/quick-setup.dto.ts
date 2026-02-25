@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsNotEmpty,
+  IsOptional,
   IsEnum,
   MinLength,
   MaxLength,
@@ -42,13 +43,13 @@ export class QuickSetupDto {
   @MaxLength(50, { message: 'La contraseña no puede exceder 50 caracteres' })
   apiPassword: string;
 
-  @ApiProperty({
-    description: 'Certificate password for the .p12/.pfx file',
+  @ApiPropertyOptional({
+    description: 'Certificate password (required for .p12/.pfx, not needed for MH XML certificates)',
     example: 'CertPassword123',
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'La contraseña del certificado es requerida' })
-  certificatePassword: string;
+  certificatePassword?: string;
 }
 
 /**

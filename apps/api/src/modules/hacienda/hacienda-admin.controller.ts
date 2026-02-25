@@ -52,13 +52,13 @@ export class HaciendaAdminController {
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['certificate', 'environment', 'apiUser', 'apiPassword', 'certificatePassword'],
+      required: ['certificate', 'environment', 'apiUser', 'apiPassword'],
       properties: {
         certificate: { type: 'string', format: 'binary' },
         environment: { type: 'string', enum: ['TEST', 'PRODUCTION'] },
         apiUser: { type: 'string' },
         apiPassword: { type: 'string' },
-        certificatePassword: { type: 'string' },
+        certificatePassword: { type: 'string', description: 'Requerida para .p12/.pfx, opcional para XML del MH' },
       },
     },
   })
@@ -72,14 +72,14 @@ export class HaciendaAdminController {
       throw new BadRequestException('Se requiere el archivo de certificado');
     }
 
-    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem'];
+    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem', '.xml'];
     const fileExt = certificate.originalname
       .toLowerCase()
       .slice(certificate.originalname.lastIndexOf('.'));
 
     if (!allowedExtensions.includes(fileExt)) {
       throw new BadRequestException(
-        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer o .pem',
+        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer, .pem o .xml',
       );
     }
 
@@ -117,14 +117,14 @@ export class HaciendaAdminController {
       throw new BadRequestException('Se requiere el archivo de certificado');
     }
 
-    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem'];
+    const allowedExtensions = ['.p12', '.pfx', '.crt', '.cer', '.pem', '.xml'];
     const fileExt = certificate.originalname
       .toLowerCase()
       .slice(certificate.originalname.lastIndexOf('.'));
 
     if (!allowedExtensions.includes(fileExt)) {
       throw new BadRequestException(
-        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer o .pem',
+        'El archivo debe ser un certificado .p12, .pfx, .crt, .cer, .pem o .xml',
       );
     }
 

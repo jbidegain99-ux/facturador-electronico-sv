@@ -151,9 +151,9 @@ export class HaciendaService {
         apiPasswordEncrypted: this.encryptionService.encrypt(dto.apiPassword),
         certificateP12: certificateBuffer,
         certificateFileName,
-        certificatePasswordEnc: this.encryptionService.encrypt(
-          dto.certificatePassword,
-        ),
+        certificatePasswordEnc: dto.certificatePassword
+          ? this.encryptionService.encrypt(dto.certificatePassword)
+          : null,
         certificateValidUntil: validation.info.validTo,
         certificateNit: validation.info.nit,
         certificateSubject: validation.info.subject,
@@ -320,7 +320,9 @@ export class HaciendaService {
         apiPasswordEncrypted: this.encryptionService.encrypt(dto.apiPassword),
         certificateP12: certificateBuffer,
         certificateFileName,
-        certificatePasswordEnc: this.encryptionService.encrypt(dto.certificatePassword),
+        certificatePasswordEnc: dto.certificatePassword
+          ? this.encryptionService.encrypt(dto.certificatePassword)
+          : null,
         certificateValidUntil: certValidation.info.validTo,
         certificateNit: certValidation.info.nit,
         certificateSubject: certValidation.info.subject,
@@ -676,15 +678,13 @@ export class HaciendaService {
     if (!testConfig.certificateP12) {
       throw new BadRequestException('Certificado no configurado');
     }
-    if (!testConfig.certificatePasswordEnc) {
-      throw new BadRequestException('Contraseña del certificado no configurada');
-    }
 
     const certificateBuffer = Buffer.from(testConfig.certificateP12);
 
-    const certificatePassword = this.encryptionService.decrypt(
-      testConfig.certificatePasswordEnc,
-    );
+    // Password is optional for MH XML certificates
+    const certificatePassword = testConfig.certificatePasswordEnc
+      ? this.encryptionService.decrypt(testConfig.certificatePasswordEnc)
+      : undefined;
 
     // Build emisor data from tenant
     const emisor: EmisorData = {
@@ -773,7 +773,7 @@ export class HaciendaService {
     emisor: EmisorData,
     token: string,
     certificateBuffer: Buffer,
-    certificatePassword: string,
+    certificatePassword: string | undefined,
   ): Promise<any> {
     // Get next correlativo
     const existingRecords = await this.prisma.haciendaTestRecord.count({
@@ -898,7 +898,7 @@ export class HaciendaService {
     emisor: EmisorData,
     token: string,
     certificateBuffer: Buffer,
-    certificatePassword: string,
+    certificatePassword: string | undefined,
   ): Promise<any> {
     // Find the original test record
     const originalRecord = await this.prisma.haciendaTestRecord.findFirst({

@@ -49,6 +49,7 @@ export function EnvironmentConfig({
   const [apiPassword, setApiPassword] = React.useState('');
   const [certificatePassword, setCertificatePassword] = React.useState('');
   const [certificateFile, setCertificateFile] = React.useState<File | null>(null);
+  const [certNeedsPassword, setCertNeedsPassword] = React.useState(true);
 
   // UI state
   const [saving, setSaving] = React.useState(false);
@@ -60,17 +61,37 @@ export function EnvironmentConfig({
     if (file) {
       // Validate file extension
       const ext = file.name.toLowerCase().split('.').pop();
-      const allowedExtensions = ['p12', 'pfx', 'crt', 'cer', 'pem'];
+      const allowedExtensions = ['p12', 'pfx', 'crt', 'cer', 'pem', 'xml'];
       if (!ext || !allowedExtensions.includes(ext)) {
-        toast.error('El archivo debe ser .p12, .pfx, .crt, .cer o .pem');
+        toast.error('El archivo debe ser .p12, .pfx, .crt, .cer, .pem o .xml');
         return;
       }
       setCertificateFile(file);
+
+      // Detect certificate type
+      const formData = new FormData();
+      formData.append('certificate', file);
+      const authToken = localStorage.getItem('token');
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/hacienda/certificates/detect-type`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authToken}` },
+        body: formData,
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data && !data.requiresPassword) {
+            setCertificatePassword('');
+            setCertNeedsPassword(false);
+          } else {
+            setCertNeedsPassword(true);
+          }
+        })
+        .catch(() => setCertNeedsPassword(true));
     }
   };
 
   const handleSave = async () => {
-    if (!apiUser || !apiPassword || !certificatePassword) {
+    if (!apiUser || !apiPassword || (certNeedsPassword && !certificatePassword)) {
       toast.error('Complete todos los campos requeridos');
       return;
     }
@@ -86,7 +107,9 @@ export function EnvironmentConfig({
       const formData = new FormData();
       formData.append('apiUser', apiUser);
       formData.append('apiPassword', apiPassword);
-      formData.append('certificatePassword', certificatePassword);
+      if (certificatePassword) {
+        formData.append('certificatePassword', certificatePassword);
+      }
       if (certificateFile) {
         formData.append('certificate', certificateFile);
       }
@@ -211,7 +234,7 @@ export function EnvironmentConfig({
               Certificado Digital
             </CardTitle>
             <CardDescription>
-              Cargue el certificado .p12, .pfx o .crt proporcionado por Hacienda para el ambiente de {environmentLabel.toLowerCase()}
+              Cargue el certificado .p12, .pfx, .crt o .xml proporcionado por Hacienda para el ambiente de {environmentLabel.toLowerCase()}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -241,7 +264,7 @@ export function EnvironmentConfig({
                   ref={fileInputRef}
                   id="certificate"
                   type="file"
-                  accept=".p12,.pfx,.crt,.cer,.pem"
+                  accept=".p12,.pfx,.crt,.cer,.pem,.xml"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
@@ -262,17 +285,26 @@ export function EnvironmentConfig({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="certPassword">Contraseña del certificado</Label>
-              <Input
-                id="certPassword"
-                type="password"
-                value={certificatePassword}
-                onChange={(e) => setCertificatePassword(e.target.value)}
-                placeholder="Ingrese la contraseña del certificado"
-                disabled={saving}
-              />
-            </div>
+            {certNeedsPassword ? (
+              <div className="space-y-2">
+                <Label htmlFor="certPassword">Contraseña del certificado</Label>
+                <Input
+                  id="certPassword"
+                  type="password"
+                  value={certificatePassword}
+                  onChange={(e) => setCertificatePassword(e.target.value)}
+                  placeholder="Ingrese la contraseña del certificado"
+                  disabled={saving}
+                />
+              </div>
+            ) : certificateFile ? (
+              <Alert className="bg-green-500/10 border-green-500/20">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="ml-2">
+                  Certificado XML del MH detectado &mdash; no requiere contraseña
+                </AlertDescription>
+              </Alert>
+            ) : null}
           </CardContent>
         </Card>
 

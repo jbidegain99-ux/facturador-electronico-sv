@@ -1,12 +1,26 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { DefaultEmailService } from '../email-config/services/default-email.service';
+import {
+  ticketCreatedTemplate,
+  ticketReplyTemplate,
+  ticketStatusChangedTemplate,
+  ticketNewAdminTemplate,
+} from '../email-config/templates';
 import { CreateTicketDto, TicketPriority } from './dto/create-ticket.dto';
 import { UpdateTicketDto, TicketStatus } from './dto/update-ticket.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
 export class SupportService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(SupportService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private defaultEmailService: DefaultEmailService,
+    private configService: ConfigService,
+  ) {}
 
   // ============ TICKET NUMBER GENERATION ============
   private async generateTicketNumber(): Promise<string> {
@@ -65,6 +79,57 @@ export class SupportService {
         newValue: `Ticket creado: ${data.subject}`,
       },
     });
+
+    // Send confirmation email to requester (fire-and-forget)
+    const createdEmail = ticketCreatedTemplate({
+      ticketNumber: ticket.ticketNumber,
+      subject: ticket.subject,
+      type: ticket.type,
+      priority: ticket.priority,
+      nombreUsuario: ticket.requester.nombre,
+    });
+
+    this.defaultEmailService
+      .sendEmail(tenantId, {
+        to: ticket.requester.email,
+        subject: `Ticket #${ticket.ticketNumber} creado - ${ticket.subject}`,
+        html: createdEmail.html,
+        text: createdEmail.text,
+      })
+      .catch((err: Error) => {
+        this.logger.error(`Failed to send ticket-created email for ${ticket.ticketNumber}: ${err.message}`);
+      });
+
+    // Notify super admins (fire-and-forget)
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+    const adminEmailData = ticketNewAdminTemplate({
+      ticketNumber: ticket.ticketNumber,
+      subject: ticket.subject,
+      type: ticket.type,
+      priority: ticket.priority,
+      tenantName: ticket.tenant.nombre,
+      requesterName: ticket.requester.nombre,
+      adminLink: `${frontendUrl}/admin/support/${ticket.id}`,
+    });
+
+    this.getSuperAdmins()
+      .then((admins) => {
+        for (const admin of admins) {
+          this.defaultEmailService
+            .sendEmail('system', {
+              to: admin.email,
+              subject: `Nuevo ticket #${ticket.ticketNumber} - ${ticket.subject}`,
+              html: adminEmailData.html,
+              text: adminEmailData.text,
+            })
+            .catch((err: Error) => {
+              this.logger.error(`Failed to send admin notification to ${admin.email}: ${err.message}`);
+            });
+        }
+      })
+      .catch((err: Error) => {
+        this.logger.error(`Failed to fetch super admins for ticket notification: ${err.message}`);
+      });
 
     return ticket;
   }
@@ -420,6 +485,30 @@ export class SupportService {
       ),
     ]);
 
+    // Send status change email if status was updated (fire-and-forget)
+    if (data.status && data.status !== ticket.status) {
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+      const statusEmail = ticketStatusChangedTemplate({
+        ticketNumber: ticket.ticketNumber,
+        subject: ticket.subject,
+        oldStatus: ticket.status,
+        newStatus: data.status,
+        resolution: data.resolution || ticket.resolution,
+        ticketLink: `${frontendUrl}/soporte/${ticketId}`,
+      });
+
+      this.defaultEmailService
+        .sendEmail(ticket.tenantId, {
+          to: updatedTicket.requester.email,
+          subject: `Ticket #${ticket.ticketNumber} actualizado - ${data.status}`,
+          html: statusEmail.html,
+          text: statusEmail.text,
+        })
+        .catch((err: Error) => {
+          this.logger.error(`Failed to send status-change email for ${ticket.ticketNumber}: ${err.message}`);
+        });
+    }
+
     return updatedTicket;
   }
 
@@ -453,6 +542,41 @@ export class SupportService {
         newValue: data.isInternal ? 'Nota interna agregada' : 'Respuesta agregada',
       },
     });
+
+    // Send reply notification to requester for public comments (fire-and-forget)
+    if (!data.isInternal) {
+      const ticketWithRequester = await this.prisma.supportTicket.findUnique({
+        where: { id: ticketId },
+        select: {
+          ticketNumber: true,
+          subject: true,
+          tenantId: true,
+          requester: { select: { email: true } },
+        },
+      });
+
+      if (ticketWithRequester) {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+        const replyEmail = ticketReplyTemplate({
+          ticketNumber: ticketWithRequester.ticketNumber,
+          subject: ticketWithRequester.subject,
+          commentContent: data.content,
+          authorName: comment.author.nombre,
+          ticketLink: `${frontendUrl}/soporte/${ticketId}`,
+        });
+
+        this.defaultEmailService
+          .sendEmail(ticketWithRequester.tenantId, {
+            to: ticketWithRequester.requester.email,
+            subject: `Respuesta en ticket #${ticketWithRequester.ticketNumber} - ${ticketWithRequester.subject}`,
+            html: replyEmail.html,
+            text: replyEmail.text,
+          })
+          .catch((err: Error) => {
+            this.logger.error(`Failed to send reply email for ${ticketWithRequester.ticketNumber}: ${err.message}`);
+          });
+      }
+    }
 
     return comment;
   }

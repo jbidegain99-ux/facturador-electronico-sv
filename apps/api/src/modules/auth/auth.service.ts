@@ -14,7 +14,7 @@ import { RegisterDto } from './dto/register.dto';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AuditAction, AuditModule } from '../audit-logs/dto';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
-import { passwordResetTemplate } from '../email-config/templates';
+import { passwordResetTemplate, welcomeTemplate } from '../email-config/templates';
 
 @Injectable()
 export class AuthService {
@@ -245,6 +245,26 @@ export class AuthService {
       userAgent,
       success: true,
     });
+
+    // Send welcome email (fire-and-forget)
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+    const { html, text } = welcomeTemplate({
+      nombreUsuario: result.user.nombre,
+      nombreEmpresa: result.tenant.nombre,
+      email: result.user.email,
+      dashboardLink: `${frontendUrl}/dashboard`,
+    });
+
+    this.defaultEmailService
+      .sendEmail(result.tenant.id, {
+        to: result.user.email,
+        subject: 'Bienvenido a Facturo - Facturador Electrónico SV',
+        html,
+        text,
+      })
+      .catch((err: Error) => {
+        this.logger.error(`Failed to send welcome email to ${result.user.email}: ${err.message}`);
+      });
 
     return {
       message: 'Empresa registrada exitosamente',

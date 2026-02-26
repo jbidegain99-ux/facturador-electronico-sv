@@ -40,8 +40,13 @@ jobs:
           docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: Restart App Service
-        run: az webapp restart --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group facturador-sv-rg
+      - name: Update container image and restart App Service
+        run: |
+          az webapp config container set \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --resource-group facturador-sv-rg \
+            --container-image-name ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          az webapp restart --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group facturador-sv-rg
 
       - name: Logout from Azure
         run: az logout

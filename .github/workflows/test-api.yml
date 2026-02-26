@@ -1,16 +1,19 @@
 name: API Tests
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
       - 'apps/api/**'
       - 'packages/**'
+      - '.github/workflows/test-api.yml'
   pull_request:
     branches: [main]
     paths:
       - 'apps/api/**'
       - 'packages/**'
+      - '.github/workflows/test-api.yml'
 
 jobs:
   test:

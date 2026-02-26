@@ -36,3 +36,24 @@ export type { InvoiceSentData } from './invoice-sent';
 // Auth template
 export { passwordResetTemplate } from './password-reset';
 export type { PasswordResetData } from './password-reset';
+
+// Welcome template
+export { welcomeTemplate } from './welcome';
+export type { WelcomeData } from './welcome';
+
+// Payment template
+export { paymentReceiptTemplate } from './payment-receipt';
+export type { PaymentReceiptData } from './payment-receipt';
+
+// Support ticket templates
+export { ticketCreatedTemplate } from './ticket-created';
+export type { TicketCreatedData } from './ticket-created';
+
+export { ticketReplyTemplate } from './ticket-reply';
+export type { TicketReplyData } from './ticket-reply';
+
+export { ticketStatusChangedTemplate } from './ticket-status-changed';
+export type { TicketStatusChangedData } from './ticket-status-changed';
+
+export { ticketNewAdminTemplate } from './ticket-new-admin';
+export type { TicketNewAdminData } from './ticket-new-admin';

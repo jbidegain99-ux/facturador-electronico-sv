@@ -96,8 +96,10 @@ export class SupportService {
         html: createdEmail.html,
         text: createdEmail.text,
       })
-      .catch((err: Error) => {
-        this.logger.error(`Failed to send ticket-created email for ${ticket.ticketNumber}: ${err.message}`);
+      .then((result) => {
+        if (!result.success) {
+          this.logger.error(`Failed to send ticket-created email for ${ticket.ticketNumber}: ${result.errorMessage}`);
+        }
       });
 
     // Notify super admins (fire-and-forget)
@@ -122,8 +124,10 @@ export class SupportService {
               html: adminEmailData.html,
               text: adminEmailData.text,
             })
-            .catch((err: Error) => {
-              this.logger.error(`Failed to send admin notification to ${admin.email}: ${err.message}`);
+            .then((result) => {
+              if (!result.success) {
+                this.logger.error(`Failed to send admin notification to ${admin.email}: ${result.errorMessage}`);
+              }
             });
         }
       })
@@ -504,8 +508,10 @@ export class SupportService {
           html: statusEmail.html,
           text: statusEmail.text,
         })
-        .catch((err: Error) => {
-          this.logger.error(`Failed to send status-change email for ${ticket.ticketNumber}: ${err.message}`);
+        .then((result) => {
+          if (!result.success) {
+            this.logger.error(`Failed to send status-change email for ${ticket.ticketNumber}: ${result.errorMessage}`);
+          }
         });
     }
 
@@ -572,8 +578,10 @@ export class SupportService {
             html: replyEmail.html,
             text: replyEmail.text,
           })
-          .catch((err: Error) => {
-            this.logger.error(`Failed to send reply email for ${ticketWithRequester.ticketNumber}: ${err.message}`);
+          .then((result) => {
+            if (!result.success) {
+              this.logger.error(`Failed to send reply email for ${ticketWithRequester.ticketNumber}: ${result.errorMessage}`);
+            }
           });
       }
     }

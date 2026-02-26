@@ -507,7 +507,6 @@ export default function RegisterPage() {
       }
 
       setSuccess(true);
-      setTimeout(() => router.push('/login'), 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('registerError'));
     } finally {
@@ -519,10 +518,24 @@ export default function RegisterPage() {
     return (
       <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="rounded-md bg-green-50 p-4">
-            <p className="text-center text-green-700">
-              {t('registerSuccess')}
+          <div className="rounded-lg bg-card p-8 shadow text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              {t('checkYourEmail')}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {t('registerSuccessDesc')}
             </p>
+            <Link
+              href="/login"
+              className="text-sm text-primary hover:text-primary/80 transition-colors"
+            >
+              {t('goToLogin')}
+            </Link>
           </div>
         </div>
       </div>

@@ -95,6 +95,11 @@ model User {
   passwordResetToken     String?
   passwordResetExpiresAt DateTime?
 
+  // Email verification
+  emailVerified                Boolean   @default(false)
+  emailVerificationToken       String?
+  emailVerificationExpiresAt   DateTime?
+
   // Support tickets relations
   assignedTickets   SupportTicket[]   @relation("AssignedTickets")
   requestedTickets  SupportTicket[]   @relation("RequestedTickets")

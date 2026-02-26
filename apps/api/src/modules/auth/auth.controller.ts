@@ -7,6 +7,8 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { Public } from '../../common/decorators/public.decorator';
 
 interface AuthRequest extends Request {
@@ -52,6 +54,23 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   async getProfile(@Request() req: AuthRequest) {
     return this.authService.getProfile(req.user.id);
+  }
+
+  @Public()
+  @Post('verify-email')
+  @ApiOperation({ summary: 'Verificar correo electrónico con token' })
+  @ApiResponse({ status: 200, description: 'Correo verificado' })
+  @ApiResponse({ status: 400, description: 'Token inválido o expirado' })
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.authService.verifyEmail(dto.token);
+  }
+
+  @Public()
+  @Post('resend-verification')
+  @ApiOperation({ summary: 'Reenviar correo de verificación' })
+  @ApiResponse({ status: 200, description: 'Solicitud procesada' })
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerification(dto.email);
   }
 
   @Public()

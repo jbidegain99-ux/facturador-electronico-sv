@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -14,7 +15,11 @@ import { RegisterDto } from './dto/register.dto';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AuditAction, AuditModule } from '../audit-logs/dto';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
-import { passwordResetTemplate, welcomeTemplate } from '../email-config/templates';
+import {
+  passwordResetTemplate,
+  welcomeTemplate,
+  emailVerificationTemplate,
+} from '../email-config/templates';
 
 @Injectable()
 export class AuthService {
@@ -120,6 +125,15 @@ export class AuthService {
       throw error;
     }
 
+    // Check email verification
+    if (!user.emailVerified) {
+      throw new ForbiddenException({
+        message: 'Debes verificar tu correo electrónico antes de iniciar sesión',
+        emailNotVerified: true,
+        email: user.email,
+      });
+    }
+
     const payload = {
       sub: user.id,
       email: user.email,
@@ -194,6 +208,10 @@ export class AuthService {
     // Hash password
     const hashedPassword = await this.hashPassword(user.password);
 
+    // Generate email verification token
+    const emailVerificationToken = randomBytes(32).toString('hex');
+    const emailVerificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     // Create tenant and user in a transaction
     const result = await this.prisma.$transaction(async (tx: typeof this.prisma) => {
       // Create tenant
@@ -214,7 +232,7 @@ export class AuthService {
         },
       });
 
-      // Create admin user
+      // Create admin user with email verification fields
       const newUser = await tx.user.create({
         data: {
           nombre: user.nombre,
@@ -222,6 +240,9 @@ export class AuthService {
           password: hashedPassword,
           rol: 'ADMIN',
           tenantId: newTenant.id,
+          emailVerified: false,
+          emailVerificationToken,
+          emailVerificationExpiresAt,
         },
       });
 
@@ -246,28 +267,32 @@ export class AuthService {
       success: true,
     });
 
-    // Send welcome email (fire-and-forget)
+    // Send verification email (await to ensure delivery)
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
-    const { html, text } = welcomeTemplate({
+    const verificationLink = `${frontendUrl}/verify-email/${emailVerificationToken}`;
+
+    const { html, text } = emailVerificationTemplate({
       nombreUsuario: result.user.nombre,
       nombreEmpresa: result.tenant.nombre,
-      email: result.user.email,
-      dashboardLink: `${frontendUrl}/dashboard`,
+      verificationLink,
     });
 
-    this.defaultEmailService
-      .sendEmail(result.tenant.id, {
-        to: result.user.email,
-        subject: 'Bienvenido a Facturo - Facturador Electrónico SV',
-        html,
-        text,
-      })
-      .catch((err: Error) => {
-        this.logger.error(`Failed to send welcome email to ${result.user.email}: ${err.message}`);
-      });
+    const emailResult = await this.defaultEmailService.sendEmail(result.tenant.id, {
+      to: result.user.email,
+      subject: 'Confirma tu correo - Facturador Electrónico SV',
+      html,
+      text,
+    });
+
+    if (!emailResult.success) {
+      this.logger.error(`Failed to send verification email to ${result.user.email}: ${emailResult.errorMessage}`);
+    } else {
+      this.logger.log(`Verification email sent to ${result.user.email}`);
+    }
 
     return {
-      message: 'Empresa registrada exitosamente',
+      message: 'Empresa registrada exitosamente. Revisa tu correo para verificar tu cuenta.',
+      emailSent: emailResult.success,
       tenant: {
         id: result.tenant.id,
         nombre: result.tenant.nombre,
@@ -302,6 +327,135 @@ export class AuthService {
         nit: user.tenant.nit,
       } : null,
     };
+  }
+
+  /**
+   * Verify email address using token from verification email.
+   */
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        emailVerificationToken: token,
+        emailVerificationExpiresAt: { gt: new Date() },
+      },
+      include: { tenant: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Token de verificación inválido o expirado');
+    }
+
+    if (user.emailVerified) {
+      return { message: 'El correo ya fue verificado anteriormente' };
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpiresAt: null,
+      },
+    });
+
+    this.logger.log(`Email verified for user ${user.email}`);
+
+    // Send welcome email now that verification is complete
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+    const { html, text } = welcomeTemplate({
+      nombreUsuario: user.nombre,
+      nombreEmpresa: user.tenant?.nombre || '',
+      email: user.email,
+      dashboardLink: `${frontendUrl}/dashboard`,
+    });
+
+    this.defaultEmailService
+      .sendEmail(user.tenantId || 'system', {
+        to: user.email,
+        subject: 'Bienvenido a Facturo - Facturador Electrónico SV',
+        html,
+        text,
+      })
+      .then((result) => {
+        if (!result.success) {
+          this.logger.error(`Failed to send welcome email to ${user.email}: ${result.errorMessage}`);
+        }
+      });
+
+    return { message: 'Correo verificado exitosamente' };
+  }
+
+  /**
+   * Resend verification email. Rate-limited to 1 per 2 minutes.
+   * Always returns success to avoid user enumeration.
+   */
+  async resendVerification(email: string): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { tenant: true },
+    });
+
+    if (!user) {
+      // Don't reveal whether the email exists
+      return { message: 'Si el correo existe, recibirás un nuevo enlace de verificación' };
+    }
+
+    if (user.emailVerified) {
+      return { message: 'Si el correo existe, recibirás un nuevo enlace de verificación' };
+    }
+
+    // Rate limit: check if token was generated less than 2 minutes ago
+    if (user.emailVerificationExpiresAt) {
+      const tokenCreatedAt = new Date(
+        user.emailVerificationExpiresAt.getTime() - 24 * 60 * 60 * 1000,
+      );
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+      if (tokenCreatedAt > twoMinutesAgo) {
+        throw new BadRequestException(
+          'Debes esperar al menos 2 minutos entre solicitudes de verificación',
+        );
+      }
+    }
+
+    // Generate new token
+    const emailVerificationToken = randomBytes(32).toString('hex');
+    const emailVerificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken,
+        emailVerificationExpiresAt,
+      },
+    });
+
+    // Send verification email
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+    const verificationLink = `${frontendUrl}/verify-email/${emailVerificationToken}`;
+
+    const { html, text } = emailVerificationTemplate({
+      nombreUsuario: user.nombre,
+      nombreEmpresa: user.tenant?.nombre || '',
+      verificationLink,
+    });
+
+    const emailResult = await this.defaultEmailService.sendEmail(
+      user.tenantId || 'system',
+      {
+        to: user.email,
+        subject: 'Confirma tu correo - Facturador Electrónico SV',
+        html,
+        text,
+      },
+    );
+
+    if (!emailResult.success) {
+      this.logger.error(`Failed to resend verification email to ${email}: ${emailResult.errorMessage}`);
+    } else {
+      this.logger.log(`Verification email resent to ${email}`);
+    }
+
+    return { message: 'Si el correo existe, recibirás un nuevo enlace de verificación' };
   }
 
   /**

@@ -33,9 +33,12 @@ export type { QuoteReminderData } from './quote-reminder';
 export { invoiceSentTemplate } from './invoice-sent';
 export type { InvoiceSentData } from './invoice-sent';
 
-// Auth template
+// Auth templates
 export { passwordResetTemplate } from './password-reset';
 export type { PasswordResetData } from './password-reset';
+
+export { emailVerificationTemplate } from './email-verification';
+export type { EmailVerificationData } from './email-verification';
 
 // Welcome template
 export { welcomeTemplate } from './welcome';

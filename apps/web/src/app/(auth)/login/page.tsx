@@ -14,11 +14,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailNotVerified, setEmailNotVerified] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resendDone, setResendDone] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setEmailNotVerified(false);
+    setResendDone(false);
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
@@ -29,6 +35,14 @@ export default function LoginPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
+
+        // Handle email not verified
+        if (res.status === 403 && errorData.emailNotVerified) {
+          setEmailNotVerified(true);
+          setUnverifiedEmail(errorData.email || email);
+          return;
+        }
+
         throw new Error(errorData.message || t('invalidCredentials'));
       }
 
@@ -48,6 +62,24 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    if (resending) return;
+    setResending(true);
+
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/resend-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+      setResendDone(true);
+    } catch {
+      setResendDone(true);
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8 bg-background">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
@@ -63,6 +95,24 @@ export default function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-sm">
         <form className="space-y-6" onSubmit={handleSubmit}>
+          {emailNotVerified && (
+            <div className="rounded-md p-4 border bg-amber-500/10 border-amber-500/20">
+              <p className="text-sm text-amber-600 mb-3">{t('emailNotVerified')}</p>
+              {!resendDone ? (
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resending}
+                  className="text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50"
+                >
+                  {resending ? '...' : t('resendVerification')}
+                </button>
+              ) : (
+                <p className="text-sm text-green-600">{t('resendSuccess')}</p>
+              )}
+            </div>
+          )}
+
           {error && (
             <div className={`rounded-md p-4 border ${error.includes('bloqueada') ? 'bg-amber-500/10 border-amber-500/20' : 'bg-destructive/10 border-destructive/20'}`}>
               <p className={`text-sm ${error.includes('bloqueada') ? 'text-amber-500' : 'text-destructive'}`}>{error}</p>

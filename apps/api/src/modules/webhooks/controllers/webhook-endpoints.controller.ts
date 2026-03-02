@@ -10,9 +10,12 @@ import {
   HttpStatus,
   BadRequestException,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { PlanFeatureGuard } from '../../plans/guards/plan-feature.guard';
+import { RequireFeature } from '../../plans/decorators/require-feature.decorator';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { WebhooksService } from '../webhooks.service';
 import * as crypto from 'crypto';
@@ -39,6 +42,8 @@ interface UpdateEndpointBody {
 @ApiTags('Webhooks')
 @ApiBearerAuth()
 @Controller('webhooks/endpoints')
+@UseGuards(PlanFeatureGuard)
+@RequireFeature('webhooks')
 export class WebhookEndpointsController {
   constructor(
     private prisma: PrismaService,

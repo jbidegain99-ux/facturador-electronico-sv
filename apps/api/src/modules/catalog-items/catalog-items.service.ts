@@ -70,7 +70,7 @@ export class CatalogItemsService {
       where: { id: tenantId },
       select: { plan: true },
     });
-    return tenant?.plan ?? 'DEMO';
+    return tenant?.plan ?? 'STARTER';
   }
 
   async countItems(tenantId: string): Promise<number> {

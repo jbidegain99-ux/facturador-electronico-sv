@@ -94,7 +94,7 @@ export class AccountingService {
       where: { id: tenantId },
       select: { plan: true },
     });
-    return tenant?.plan ?? 'DEMO';
+    return tenant?.plan ?? 'STARTER';
   }
 
   // ================================================================

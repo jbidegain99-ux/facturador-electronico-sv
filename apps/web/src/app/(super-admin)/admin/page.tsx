@@ -77,9 +77,7 @@ export default function AdminDashboardPage() {
 
   const getPlanColor = (plan: string) => {
     switch (plan) {
-      case 'TRIAL':
-        return 'badge-info';
-      case 'BASIC':
+      case 'STARTER':
         return 'badge-warning';
       case 'PROFESSIONAL':
         return 'badge-success';

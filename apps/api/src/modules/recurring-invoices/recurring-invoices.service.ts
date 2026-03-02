@@ -26,7 +26,7 @@ export class RecurringInvoicesService {
       where: { id: tenantId },
       select: { plan: true },
     });
-    return tenant?.plan ?? 'DEMO';
+    return tenant?.plan ?? 'STARTER';
   }
 
   async create(tenantId: string, dto: CreateTemplateDto): Promise<RecurringInvoiceTemplate> {

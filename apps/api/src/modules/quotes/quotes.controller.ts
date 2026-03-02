@@ -9,6 +9,7 @@ import {
   Query,
   ForbiddenException,
   Ip,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -21,6 +22,8 @@ import {
   CurrentUserData,
 } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { PlanFeatureGuard } from '../plans/guards/plan-feature.guard';
+import { RequireFeature } from '../plans/decorators/require-feature.decorator';
 import { QuotesService } from './quotes.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
@@ -76,6 +79,8 @@ export class QuotesPublicController {
 @ApiTags('quotes')
 @Controller('quotes')
 @ApiBearerAuth()
+@UseGuards(PlanFeatureGuard)
+@RequireFeature('quotes_b2b')
 export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
 

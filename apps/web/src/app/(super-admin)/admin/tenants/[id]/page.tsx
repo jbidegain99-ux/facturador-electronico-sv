@@ -194,8 +194,7 @@ export default function TenantDetailPage() {
 
   const getPlanBadge = (plan: string) => {
     const badges: Record<string, string> = {
-      TRIAL: 'badge-info',
-      BASIC: 'badge-warning',
+      STARTER: 'badge-warning',
       PROFESSIONAL: 'badge-success',
       ENTERPRISE: 'bg-purple-500/20 text-purple-400',
     };
@@ -308,10 +307,9 @@ export default function TenantDetailPage() {
                   onChange={(e) => setPlan(e.target.value)}
                   className="input-rc"
                 >
-                  <option value="TRIAL">{t('planTrial')}</option>
-                  <option value="BASIC">{t('planBasic')}</option>
-                  <option value="PRO">{t('planPro')}</option>
-                  <option value="ENTERPRISE">{t('planEnterprise')}</option>
+                  <option value="STARTER">Starter</option>
+                  <option value="PROFESSIONAL">Professional</option>
+                  <option value="ENTERPRISE">Enterprise</option>
                 </select>
               </div>
               <div>

@@ -184,9 +184,8 @@ export default function TenantsPage() {
 
   const getPlanBadge = (plan: string) => {
     const badges: Record<string, string> = {
-      TRIAL: 'badge-info',
-      BASIC: 'badge-warning',
-      PRO: 'badge-success',
+      STARTER: 'badge-warning',
+      PROFESSIONAL: 'badge-success',
       ENTERPRISE: 'bg-purple-500/20 text-purple-400',
     };
     return badges[plan] || 'badge-info';
@@ -239,10 +238,9 @@ export default function TenantsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">{t('allPlans')}</SelectItem>
-              <SelectItem value="TRIAL">{t('planTrial')}</SelectItem>
-              <SelectItem value="BASIC">{t('planBasic')}</SelectItem>
-              <SelectItem value="PRO">{t('planPro')}</SelectItem>
-              <SelectItem value="ENTERPRISE">{t('planEnterprise')}</SelectItem>
+              <SelectItem value="STARTER">Starter</SelectItem>
+              <SelectItem value="PROFESSIONAL">Professional</SelectItem>
+              <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
             </SelectContent>
           </Select>
           <Select

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { FeatureGate } from '@/components/plan-features/FeatureGate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -232,6 +233,7 @@ export default function WebhooksPage() {
   }
 
   return (
+    <FeatureGate feature="webhooks" featureName="Webhooks" planRequired="Empresarial">
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
@@ -483,6 +485,7 @@ export default function WebhooksPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </FeatureGate>
   );
 }
 

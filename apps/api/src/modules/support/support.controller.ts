@@ -6,10 +6,16 @@ import {
   Body,
   Param,
   Query,
+  Res,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { Response } from 'express';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../super-admin/guards/super-admin.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -17,6 +23,24 @@ import { SupportService } from './support.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { existsSync, mkdirSync } from 'fs';
+import { join, extname } from 'path';
+import { randomUUID } from 'crypto';
+
+const UPLOADS_DIR = join(process.cwd(), 'uploads', 'tickets');
+
+// Ensure upload directory exists
+if (!existsSync(UPLOADS_DIR)) {
+  mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+const ticketFileStorage = diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+  filename: (_req, file, cb) => {
+    const uniqueName = `${randomUUID()}${extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
 
 interface CurrentUserData {
   id: string;
@@ -87,6 +111,56 @@ export class SupportController {
       throw new BadRequestException('Solo usuarios de una empresa pueden comentar tickets');
     }
     return this.supportService.addUserComment(user.tenantId, id, user.id, data);
+  }
+
+  @Post(':id/attachments')
+  @ApiOperation({ summary: 'Subir archivo adjunto a un ticket' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file', { storage: ticketFileStorage, limits: { fileSize: 10 * 1024 * 1024 } }))
+  uploadAttachment(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden adjuntar archivos');
+    }
+    if (!file) {
+      throw new BadRequestException('No se proporcionó un archivo');
+    }
+    return this.supportService.addAttachment(id, user.id, user.tenantId, {
+      fileName: file.originalname,
+      fileUrl: file.filename,
+      fileSize: file.size,
+      mimeType: file.mimetype,
+    });
+  }
+
+  @Get(':id/attachments')
+  @ApiOperation({ summary: 'Listar archivos adjuntos de un ticket' })
+  getAttachments(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+  ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden ver archivos');
+    }
+    return this.supportService.getAttachments(id, user.tenantId);
+  }
+
+  @Get('attachments/:attachmentId/download')
+  @ApiOperation({ summary: 'Descargar archivo adjunto' })
+  async downloadAttachment(
+    @CurrentUser() user: CurrentUserData,
+    @Param('attachmentId') attachmentId: string,
+    @Res() res: Response,
+  ) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de una empresa pueden descargar archivos');
+    }
+    const attachment = await this.supportService.getAttachmentById(attachmentId, user.tenantId);
+    const filePath = join(UPLOADS_DIR, attachment.fileUrl);
+    res.download(filePath, attachment.fileName);
   }
 }
 
@@ -176,5 +250,42 @@ export class AdminSupportController {
     @Body() data: CreateCommentDto,
   ) {
     return this.supportService.addAdminComment(id, user.id, data);
+  }
+
+  @Post(':id/attachments')
+  @ApiOperation({ summary: 'Subir archivo adjunto a un ticket (Admin)' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file', { storage: ticketFileStorage, limits: { fileSize: 10 * 1024 * 1024 } }))
+  uploadAttachment(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No se proporcionó un archivo');
+    }
+    return this.supportService.addAttachment(id, user.id, null, {
+      fileName: file.originalname,
+      fileUrl: file.filename,
+      fileSize: file.size,
+      mimeType: file.mimetype,
+    });
+  }
+
+  @Get(':id/attachments')
+  @ApiOperation({ summary: 'Listar archivos adjuntos de un ticket (Admin)' })
+  getAttachments(@Param('id') id: string) {
+    return this.supportService.getAttachments(id, null);
+  }
+
+  @Get('attachments/:attachmentId/download')
+  @ApiOperation({ summary: 'Descargar archivo adjunto' })
+  async downloadAttachment(
+    @Param('attachmentId') attachmentId: string,
+    @Res() res: Response,
+  ) {
+    const attachment = await this.supportService.getAttachmentById(attachmentId, null);
+    const filePath = join(UPLOADS_DIR, attachment.fileUrl);
+    res.download(filePath, attachment.fileName);
   }
 }

@@ -7,9 +7,12 @@ import {
   HttpStatus,
   BadRequestException,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { PlanFeatureGuard } from '../../plans/guards/plan-feature.guard';
+import { RequireFeature } from '../../plans/decorators/require-feature.decorator';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { WebhooksService } from '../webhooks.service';
 import { WebhookDeliveryService } from '../webhook-delivery.service';
@@ -17,6 +20,8 @@ import { WebhookDeliveryService } from '../webhook-delivery.service';
 @ApiTags('Webhooks')
 @ApiBearerAuth()
 @Controller('webhooks')
+@UseGuards(PlanFeatureGuard)
+@RequireFeature('webhooks')
 export class WebhookDeliveriesController {
   constructor(
     private prisma: PrismaService,

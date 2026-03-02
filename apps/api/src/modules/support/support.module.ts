@@ -4,9 +4,10 @@ import { SupportController, AdminSupportController } from './support.controller'
 import { SupportService } from './support.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { EmailConfigModule } from '../email-config/email-config.module';
+import { PlansModule } from '../plans/plans.module';
 
 @Module({
-  imports: [PrismaModule, EmailConfigModule, ConfigModule],
+  imports: [PrismaModule, EmailConfigModule, ConfigModule, PlansModule],
   controllers: [SupportController, AdminSupportController],
   providers: [SupportService],
   exports: [SupportService],

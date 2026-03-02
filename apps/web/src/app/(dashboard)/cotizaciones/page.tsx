@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { FeatureGate } from '@/components/plan-features/FeatureGate';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -360,6 +361,7 @@ export default function CotizacionesPage() {
   // ── Render ─────────────────────────────────────────────────────────
 
   return (
+    <FeatureGate feature="quotes_b2b" featureName="Cotizaciones" planRequired="Profesional">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -702,5 +704,6 @@ export default function CotizacionesPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </FeatureGate>
   );
 }

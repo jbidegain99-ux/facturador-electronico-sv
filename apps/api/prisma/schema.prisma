@@ -78,6 +78,9 @@ model Tenant {
 
   // Webhooks
   webhookEndpoints    WebhookEndpoint[]
+
+  // Feature usage tracking
+  featureUsage        TenantFeatureUsage[]
 }
 
 model User {
@@ -105,6 +108,7 @@ model User {
   requestedTickets  SupportTicket[]   @relation("RequestedTickets")
   ticketComments    TicketComment[]   @relation("TicketComments")
   ticketActivities  TicketActivity[]  @relation("TicketActivities")
+  ticketAttachments TicketAttachment[] @relation("TicketAttachments")
 
   @@index([tenantId])
 }
@@ -537,6 +541,11 @@ model SupportTicket {
   resolution    String?   @db.NVarChar(Max)
   resolvedAt    DateTime?
 
+  // SLA
+  slaResponseHours Int?
+  slaDeadline      DateTime?
+  respondedAt      DateTime?
+
   // Timestamps
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -544,6 +553,7 @@ model SupportTicket {
   // Relaciones
   comments      TicketComment[]
   activities    TicketActivity[]
+  attachments   TicketAttachment[]
 
   @@index([tenantId])
   @@index([status])
@@ -581,6 +591,24 @@ model TicketActivity {
   newValue    String?
 
   createdAt   DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+model TicketAttachment {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  fileName    String        @db.NVarChar(255)
+  fileUrl     String        @db.NVarChar(500)
+  fileSize    Int
+  mimeType    String        @db.NVarChar(100)
+
+  uploadedById String
+  uploadedBy   User         @relation("TicketAttachments", fields: [uploadedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  createdAt   DateTime      @default(now())
 
   @@index([ticketId])
 }
@@ -633,7 +661,7 @@ model CatalogoItem {
 
 model Plan {
   id              String    @id @default(cuid())
-  codigo          String    @unique // DEMO, TRIAL, BASIC, PRO, ENTERPRISE
+  codigo          String    @unique // DEMO, TRIAL, STARTER, PROFESSIONAL, ENTERPRISE
   nombre          String    @db.NVarChar(100)
   descripcion     String?   @db.NVarChar(500)
 
@@ -656,8 +684,52 @@ model Plan {
 
   tenants         Tenant[]  @relation("TenantPlan")
 
+  // Feature gating relations
+  planFeatures    PlanFeature[]
+  supportConfig   PlanSupportConfig?
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+model PlanFeature {
+  id          String  @id @default(cuid())
+  planCode    String
+  featureCode String
+  enabled     Boolean @default(true)
+
+  plan        Plan    @relation(fields: [planCode], references: [codigo], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([planCode, featureCode])
+  @@map("plan_features")
+}
+
+model PlanSupportConfig {
+  id                    String  @id @default(cuid())
+  planCode              String  @unique
+  ticketSupportEnabled  Boolean @default(false)
+  ticketResponseHours   Int     @default(72)
+  phoneSupportEnabled   Boolean @default(false)
+  phoneSupportHours     String?
+  accountManagerEnabled Boolean @default(false)
+
+  plan                  Plan    @relation(fields: [planCode], references: [codigo], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("plan_support_config")
+}
+
+model TenantFeatureUsage {
+  id          String    @id @default(cuid())
+  tenantId    String
+  featureCode String
+  usageCount  Int       @default(0)
+  usageLimit  Int?
+  resetDate   DateTime?
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenantId, featureCode])
+  @@map("tenant_feature_usage")
 }
 
 // ============================================================================

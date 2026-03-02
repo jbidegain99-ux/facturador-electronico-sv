@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { DteModule } from '../dte/dte.module';
+import { PlansModule } from '../plans/plans.module';
 import { WebhooksService } from './webhooks.service';
 import { WebhookDeliveryService } from './webhook-delivery.service';
 import { WebhookEndpointsController } from './controllers/webhook-endpoints.controller';
@@ -9,7 +10,7 @@ import { InboundWebhooksController } from './controllers/inbound.controller';
 import { WebhookAdminController } from './controllers/webhook-admin.controller';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => DteModule)],
+  imports: [PrismaModule, forwardRef(() => DteModule), PlansModule],
   providers: [WebhooksService, WebhookDeliveryService],
   controllers: [
     WebhookEndpointsController,

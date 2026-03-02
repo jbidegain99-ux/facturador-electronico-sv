@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Plus,
   Loader2,
+  Shield,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useTranslations } from 'next-intl';
+import { usePlanSupport } from '@/hooks/use-plan-support';
 
 interface SupportTicket {
   id: string;
@@ -42,6 +44,8 @@ interface SupportTicket {
   status: string;
   priority: string;
   createdAt: string;
+  slaDeadline: string | null;
+  respondedAt: string | null;
   _count: {
     comments: number;
   };
@@ -81,11 +85,47 @@ const priorityLabels: Record<string, string> = {
   URGENT: 'Urgente',
 };
 
+type SlaStatus = 'none' | 'ok' | 'warning' | 'breached' | 'met';
+
+function getSlaStatus(ticket: SupportTicket): SlaStatus {
+  if (!ticket.slaDeadline) return 'none';
+
+  // Already responded
+  if (ticket.respondedAt) return 'met';
+
+  // Ticket is resolved/closed
+  if (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') return 'met';
+
+  const deadline = new Date(ticket.slaDeadline).getTime();
+  const now = Date.now();
+  const hoursRemaining = (deadline - now) / (1000 * 60 * 60);
+
+  if (hoursRemaining < 0) return 'breached';
+  if (hoursRemaining < 4) return 'warning';
+  return 'ok';
+}
+
+function getSlaIndicator(status: SlaStatus): { color: string; label: string } {
+  switch (status) {
+    case 'ok':
+      return { color: 'bg-green-500', label: 'SLA OK' };
+    case 'warning':
+      return { color: 'bg-yellow-500', label: 'SLA proximo' };
+    case 'breached':
+      return { color: 'bg-red-500', label: 'SLA vencido' };
+    case 'met':
+      return { color: 'bg-blue-500', label: 'SLA cumplido' };
+    default:
+      return { color: '', label: '' };
+  }
+}
+
 export default function SoportePage() {
   const ts = useTranslations('support');
   const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { config: supportConfig } = usePlanSupport();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -363,6 +403,16 @@ export default function SoportePage() {
         </div>
       </div>
 
+      {/* SLA Info */}
+      {supportConfig.ticketSupportEnabled && supportConfig.ticketResponseHours > 0 && (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+          <Shield className="w-5 h-5 text-primary flex-shrink-0" />
+          <span className="text-sm">
+            <span className="font-medium">SLA de respuesta:</span> {supportConfig.ticketResponseHours} horas
+          </span>
+        </div>
+      )}
+
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setPage(1); }}>
         <TabsList>
@@ -401,6 +451,7 @@ export default function SoportePage() {
                     <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">{ts('typeLabel')}</th>
                     <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">{tCommon('status')}</th>
                     <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">{ts('priorityLabel')}</th>
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">SLA</th>
                     <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">{tCommon('date')}</th>
                     <th className="px-4 py-3"></th>
                   </tr>
@@ -441,6 +492,19 @@ export default function SoportePage() {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityBadge(ticket.priority)}`}>
                           {({ LOW: ts('priorityLow'), MEDIUM: ts('priorityMedium'), HIGH: ts('priorityHigh'), URGENT: ts('priorityUrgent') } as Record<string, string>)[ticket.priority] || ticket.priority}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {(() => {
+                          const sla = getSlaStatus(ticket);
+                          if (sla === 'none') return <span className="text-xs text-muted-foreground">—</span>;
+                          const indicator = getSlaIndicator(sla);
+                          return (
+                            <span className="flex items-center gap-1.5">
+                              <span className={`w-2 h-2 rounded-full ${indicator.color}`} />
+                              <span className="text-xs">{indicator.label}</span>
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         {new Date(ticket.createdAt).toLocaleDateString('es', {

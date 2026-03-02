@@ -12,16 +12,11 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../super-admin/guards/super-admin.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { PlansService } from './plans.service';
+import { PlanFeaturesService } from './services/plan-features.service';
+import { PlanSupportService } from './services/plan-support.service';
 import { CreatePlanDto, UpdatePlanDto, AssignPlanDto } from './dto';
-
-interface CurrentUserData {
-  id: string;
-  email: string;
-  tenantId: string | null;
-  rol: string;
-}
 
 @ApiTags('Plans')
 @ApiBearerAuth()
@@ -99,7 +94,11 @@ export class PlansAdminController {
 @Controller('plans')
 @UseGuards(JwtAuthGuard)
 export class PlansController {
-  constructor(private readonly plansService: PlansService) {}
+  constructor(
+    private readonly plansService: PlansService,
+    private readonly planFeaturesService: PlanFeaturesService,
+    private readonly planSupportService: PlanSupportService,
+  ) {}
 
   @Get('active')
   @ApiOperation({ summary: 'Listar planes activos (para usuarios)' })
@@ -123,5 +122,47 @@ export class PlansController {
       throw new BadRequestException('Solo usuarios de empresas pueden consultar features del plan');
     }
     return this.plansService.getTenantFeatures(user.tenantId);
+  }
+
+  @Get('current')
+  @ApiOperation({ summary: 'Obtener info completa del plan + uso del tenant actual' })
+  async getCurrentPlan(@CurrentUser() user: CurrentUserData) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de empresas pueden consultar su plan');
+    }
+    return this.planFeaturesService.getTenantUsageInfo(user.tenantId);
+  }
+
+  @Get('tenant/features')
+  @ApiOperation({ summary: 'Obtener lista de features habilitados del tenant actual' })
+  async getTenantFeatures(@CurrentUser() user: CurrentUserData) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de empresas pueden consultar features');
+    }
+    const planCode = await this.planFeaturesService.getTenantPlanCode(user.tenantId);
+    const enabledFeatures = await this.planFeaturesService.getPlanFeatures(planCode);
+    return { planCode, features: enabledFeatures };
+  }
+
+  @Get('tenant/support')
+  @ApiOperation({ summary: 'Obtener configuración de soporte del plan del tenant' })
+  async getTenantSupport(@CurrentUser() user: CurrentUserData) {
+    if (!user.tenantId) {
+      throw new BadRequestException('Solo usuarios de empresas pueden consultar soporte');
+    }
+    const planCode = await this.planFeaturesService.getTenantPlanCode(user.tenantId);
+    const config = await this.planSupportService.getSupportConfig(planCode);
+    return { planCode, ...config };
+  }
+
+  @Get(':code')
+  @ApiOperation({ summary: 'Obtener detalles públicos de un plan por código' })
+  async getPlanByCode(@Param('code') code: string) {
+    const plan = await this.plansService.findByCode(code.toUpperCase());
+    if (!plan) {
+      throw new BadRequestException(`Plan con código ${code} no encontrado`);
+    }
+    const enabledFeatures = await this.planFeaturesService.getPlanFeatures(plan.codigo);
+    return { ...plan, enabledFeatures };
   }
 }

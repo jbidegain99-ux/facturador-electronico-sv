@@ -8,6 +8,7 @@ import {
   Query,
   ForbiddenException,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AccountingService } from './accounting.service';
@@ -20,11 +21,14 @@ import {
   SimulateInvoiceDto,
 } from './dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
-import { getPlanFeatures } from '../../common/plan-features';
+import { PlanFeatureGuard } from '../plans/guards/plan-feature.guard';
+import { RequireFeature } from '../plans/decorators/require-feature.decorator';
 
 @ApiTags('accounting')
 @Controller('accounting')
 @ApiBearerAuth()
+@UseGuards(PlanFeatureGuard)
+@RequireFeature('accounting')
 export class AccountingController {
   private readonly logger = new Logger(AccountingController.name);
 
@@ -37,16 +41,6 @@ export class AccountingController {
     return user.tenantId;
   }
 
-  private async ensureAccountingAccess(tenantId: string): Promise<void> {
-    const planCode = await this.service.getTenantPlanCode(tenantId);
-    const features = getPlanFeatures(planCode);
-    if (!features.accounting) {
-      throw new ForbiddenException(
-        'El módulo contable requiere el plan Pro. Actualiza tu plan para acceder.',
-      );
-    }
-  }
-
   // ================================================================
   // CHART OF ACCOUNTS
   // ================================================================
@@ -56,7 +50,7 @@ export class AccountingController {
   @ApiResponse({ status: 201, description: 'Cuentas sembradas' })
   async seedChartOfAccounts(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     this.logger.log(`Seeding chart of accounts for tenant ${tenantId}`);
     return this.service.seedChartOfAccounts(tenantId);
   }
@@ -65,7 +59,7 @@ export class AccountingController {
   @ApiOperation({ summary: 'Obtener plan de cuentas (árbol)' })
   async getChartOfAccounts(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.getChartOfAccounts(tenantId);
   }
 
@@ -73,7 +67,7 @@ export class AccountingController {
   @ApiOperation({ summary: 'Obtener lista plana de cuentas activas' })
   async getAccountsList(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.getAccountsList(tenantId);
   }
 
@@ -81,7 +75,7 @@ export class AccountingController {
   @ApiOperation({ summary: 'Obtener cuentas que permiten movimientos' })
   async getPostableAccounts(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.getPostableAccounts(tenantId);
   }
 
@@ -93,7 +87,7 @@ export class AccountingController {
     @Body() dto: CreateAccountDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.createAccount(tenantId, dto);
   }
 
@@ -105,7 +99,7 @@ export class AccountingController {
     @Body() dto: UpdateAccountDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.updateAccount(tenantId, id, dto);
   }
 
@@ -116,7 +110,7 @@ export class AccountingController {
     @Param('id') id: string,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.toggleAccountActive(tenantId, id);
   }
 
@@ -132,7 +126,7 @@ export class AccountingController {
     @Body() dto: CreateJournalEntryDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.createJournalEntry(tenantId, dto, user.id);
   }
 
@@ -149,7 +143,7 @@ export class AccountingController {
     @Query() query: QueryJournalDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.getJournalEntries(tenantId, query);
   }
 
@@ -160,7 +154,7 @@ export class AccountingController {
     @Param('id') id: string,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.getJournalEntry(tenantId, id);
   }
 
@@ -171,7 +165,7 @@ export class AccountingController {
     @Param('id') id: string,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.postJournalEntry(tenantId, id, user.id);
   }
 
@@ -183,7 +177,7 @@ export class AccountingController {
     @Body('reason') reason: string,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.voidJournalEntry(tenantId, id, user.id, reason);
   }
 
@@ -193,35 +187,41 @@ export class AccountingController {
 
   @Get('reports/trial-balance')
   @ApiOperation({ summary: 'Balanza de comprobación' })
+  @UseGuards(PlanFeatureGuard)
+  @RequireFeature('advanced_reports')
   async getTrialBalance(
     @CurrentUser() user: CurrentUserData,
     @Query() query: ReportQueryDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.getTrialBalance(tenantId, query.dateTo);
   }
 
   @Get('reports/balance-sheet')
   @ApiOperation({ summary: 'Balance general' })
   @ApiQuery({ name: 'dateTo', required: false, description: 'Fecha corte (asOfDate)' })
+  @UseGuards(PlanFeatureGuard)
+  @RequireFeature('advanced_reports')
   async getBalanceSheet(
     @CurrentUser() user: CurrentUserData,
     @Query() query: ReportQueryDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.getBalanceSheet(tenantId, query.dateTo);
   }
 
   @Get('reports/income-statement')
   @ApiOperation({ summary: 'Estado de resultados' })
+  @UseGuards(PlanFeatureGuard)
+  @RequireFeature('advanced_reports')
   async getIncomeStatement(
     @CurrentUser() user: CurrentUserData,
     @Query() query: ReportQueryDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.getIncomeStatement(tenantId, query.dateFrom, query.dateTo);
   }
 
@@ -230,12 +230,14 @@ export class AccountingController {
   @ApiQuery({ name: 'accountId', required: true })
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
+  @UseGuards(PlanFeatureGuard)
+  @RequireFeature('advanced_reports')
   async getGeneralLedger(
     @CurrentUser() user: CurrentUserData,
     @Query() query: ReportQueryDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
 
     if (!query.accountId) {
       throw new ForbiddenException('Se requiere accountId');
@@ -256,7 +258,7 @@ export class AccountingController {
     @Body() dto: SimulateInvoiceDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.simulateInvoiceImpact(tenantId, dto);
   }
 
@@ -264,7 +266,7 @@ export class AccountingController {
   @ApiOperation({ summary: 'Resumen del dashboard contable' })
   async getDashboard(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
-    await this.ensureAccountingAccess(tenantId);
+
     return this.service.getDashboardSummary(tenantId);
   }
 }

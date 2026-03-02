@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
 import {
@@ -11,6 +12,7 @@ import {
 import { CreateTicketDto, TicketPriority } from './dto/create-ticket.dto';
 import { UpdateTicketDto, TicketStatus } from './dto/update-ticket.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { PlanSupportService } from '../plans/services/plan-support.service';
 
 @Injectable()
 export class SupportService {
@@ -20,6 +22,7 @@ export class SupportService {
     private prisma: PrismaService,
     private defaultEmailService: DefaultEmailService,
     private configService: ConfigService,
+    private planSupportService: PlanSupportService,
   ) {}
 
   // ============ TICKET NUMBER GENERATION ============
@@ -52,6 +55,19 @@ export class SupportService {
   ) {
     const ticketNumber = await this.generateTicketNumber();
 
+    // Calculate SLA deadline based on plan
+    let slaResponseHours: number | null = null;
+    let slaDeadline: Date | null = null;
+    try {
+      const responseHours = await this.planSupportService.getTicketResponseTime(tenantId);
+      if (responseHours > 0) {
+        slaResponseHours = responseHours;
+        slaDeadline = new Date(Date.now() + responseHours * 60 * 60 * 1000);
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to calculate SLA for tenant ${tenantId}: ${(err as Error).message}`);
+    }
+
     const ticket = await this.prisma.supportTicket.create({
       data: {
         ticketNumber,
@@ -63,6 +79,8 @@ export class SupportService {
         metadata: data.metadata,
         priority: data.priority || TicketPriority.MEDIUM,
         status: TicketStatus.PENDING,
+        slaResponseHours,
+        slaDeadline,
       },
       include: {
         tenant: { select: { nombre: true } },
@@ -259,7 +277,7 @@ export class SupportService {
     const { page = 1, limit = 20, status, priority, assignedToId, tenantId, type, search } = params;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.SupportTicketWhereInput = {};
 
     if (status) where.status = status;
     if (priority) where.priority = priority;
@@ -409,8 +427,8 @@ export class SupportService {
       throw new NotFoundException('Ticket no encontrado');
     }
 
-    const updates: any = {};
-    const activities: any[] = [];
+    const updates: Prisma.SupportTicketUncheckedUpdateInput = {};
+    const activities: Prisma.TicketActivityUncheckedCreateInput[] = [];
 
     // Track status change
     if (data.status && data.status !== ticket.status) {
@@ -539,6 +557,18 @@ export class SupportService {
       },
     });
 
+    // Set respondedAt on first public staff response (for SLA tracking)
+    if (!data.isInternal && !ticket.respondedAt) {
+      this.prisma.supportTicket
+        .update({
+          where: { id: ticketId },
+          data: { respondedAt: new Date() },
+        })
+        .catch((err: Error) => {
+          this.logger.error(`Failed to set respondedAt for ticket ${ticketId}: ${err.message}`);
+        });
+    }
+
     // Create activity
     await this.prisma.ticketActivity.create({
       data: {
@@ -606,5 +636,90 @@ export class SupportService {
         assignedTo: { select: { nombre: true } },
       },
     });
+  }
+
+  // ============ FILE ATTACHMENTS ============
+
+  async addAttachment(
+    ticketId: string,
+    userId: string,
+    tenantId: string | null,
+    file: { fileName: string; fileUrl: string; fileSize: number; mimeType: string },
+  ) {
+    const ticket = await this.prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket no encontrado');
+    }
+
+    // Tenant users can only attach to their own tickets
+    if (tenantId && ticket.tenantId !== tenantId) {
+      throw new ForbiddenException('No tienes acceso a este ticket');
+    }
+
+    const attachment = await this.prisma.ticketAttachment.create({
+      data: {
+        ticketId,
+        uploadedById: userId,
+        fileName: file.fileName,
+        fileUrl: file.fileUrl,
+        fileSize: file.fileSize,
+        mimeType: file.mimeType,
+      },
+    });
+
+    await this.prisma.ticketActivity.create({
+      data: {
+        ticketId,
+        actorId: userId,
+        action: 'ATTACHMENT_ADDED',
+        newValue: `Archivo adjunto: ${file.fileName}`,
+      },
+    });
+
+    return attachment;
+  }
+
+  async getAttachments(ticketId: string, tenantId: string | null) {
+    const ticket = await this.prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket no encontrado');
+    }
+
+    if (tenantId && ticket.tenantId !== tenantId) {
+      throw new ForbiddenException('No tienes acceso a este ticket');
+    }
+
+    return this.prisma.ticketAttachment.findMany({
+      where: { ticketId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        uploadedBy: { select: { nombre: true } },
+      },
+    });
+  }
+
+  async getAttachmentById(attachmentId: string, tenantId: string | null) {
+    const attachment = await this.prisma.ticketAttachment.findUnique({
+      where: { id: attachmentId },
+      include: {
+        ticket: { select: { tenantId: true } },
+      },
+    });
+
+    if (!attachment) {
+      throw new NotFoundException('Archivo no encontrado');
+    }
+
+    if (tenantId && attachment.ticket.tenantId !== tenantId) {
+      throw new ForbiddenException('No tienes acceso a este archivo');
+    }
+
+    return attachment;
   }
 }

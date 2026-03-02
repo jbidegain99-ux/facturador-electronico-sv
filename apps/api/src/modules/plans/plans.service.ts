@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePlanDto, UpdatePlanDto } from './dto';
-import { getPlanFeatures, normalizePlanCode, PlanFeatures } from '../../common/plan-features';
+import { getPlanFeatures, normalizePlanCode, PlanFeatures, PLAN_CONFIGS, PlanCode } from '../../common/plan-features';
 
 @Injectable()
 export class PlansService {
@@ -227,7 +227,7 @@ export class PlansService {
       where: { id: tenantId },
       select: { plan: true },
     });
-    const rawPlanCode = tenant?.plan ?? 'DEMO';
+    const rawPlanCode = tenant?.plan ?? 'STARTER';
     const planCode = normalizePlanCode(rawPlanCode);
     return { ...getPlanFeatures(planCode), planCode };
   }
@@ -276,98 +276,83 @@ export class PlansService {
   }
 
   async seedDefaultPlans() {
-    const defaultPlans = [
+    const planDefinitions = [
       {
-        codigo: 'DEMO',
-        nombre: 'Demo',
-        descripcion: 'Plan de demostración con funcionalidad limitada',
-        maxDtesPerMonth: 10,
-        maxUsers: 1,
-        maxClientes: 10,
-        maxStorageMb: 100,
-        features: JSON.stringify(['facturacion_basica']),
-        orden: 0,
+        codigo: PlanCode.STARTER,
+        nombre: 'Starter',
+        descripcion: 'Perfecto para pequenas empresas comenzando con facturacion electronica',
+        maxDtesPerMonth: PLAN_CONFIGS.STARTER.limits.dtes,
+        maxUsers: PLAN_CONFIGS.STARTER.limits.users,
+        maxClientes: PLAN_CONFIGS.STARTER.limits.customers,
+        maxStorageMb: PLAN_CONFIGS.STARTER.limits.storage * 1024,
+        features: JSON.stringify(
+          Object.entries(PLAN_CONFIGS.STARTER.features)
+            .filter(([, v]) => v)
+            .map(([k]) => k),
+        ),
+        precioMensual: PLAN_CONFIGS.STARTER.price.monthly,
+        precioAnual: PLAN_CONFIGS.STARTER.price.yearly,
+        orden: 1,
         isDefault: true,
       },
       {
-        codigo: 'TRIAL',
-        nombre: 'Prueba',
-        descripcion: 'Plan de prueba por 30 días',
-        maxDtesPerMonth: 50,
-        maxUsers: 2,
-        maxClientes: 50,
-        maxStorageMb: 250,
-        features: JSON.stringify(['facturacion_basica', 'reportes_basicos']),
-        orden: 1,
-      },
-      {
-        codigo: 'BASIC',
-        nombre: 'Básico',
-        descripcion: 'Plan básico para pequeñas empresas',
-        maxDtesPerMonth: 100,
-        maxUsers: 3,
-        maxClientes: 100,
-        maxStorageMb: 500,
-        features: JSON.stringify(['facturacion_basica', 'reportes_basicos', 'soporte_email']),
-        precioMensual: 29.99,
-        precioAnual: 299.99,
+        codigo: PlanCode.PROFESSIONAL,
+        nombre: 'Professional',
+        descripcion: 'Para empresas en crecimiento que necesitan herramientas avanzadas',
+        maxDtesPerMonth: PLAN_CONFIGS.PROFESSIONAL.limits.dtes,
+        maxUsers: PLAN_CONFIGS.PROFESSIONAL.limits.users,
+        maxClientes: PLAN_CONFIGS.PROFESSIONAL.limits.customers,
+        maxStorageMb: PLAN_CONFIGS.PROFESSIONAL.limits.storage * 1024,
+        features: JSON.stringify(
+          Object.entries(PLAN_CONFIGS.PROFESSIONAL.features)
+            .filter(([, v]) => v)
+            .map(([k]) => k),
+        ),
+        precioMensual: PLAN_CONFIGS.PROFESSIONAL.price.monthly,
+        precioAnual: PLAN_CONFIGS.PROFESSIONAL.price.yearly,
         orden: 2,
       },
       {
-        codigo: 'PRO',
-        nombre: 'Profesional',
-        descripcion: 'Plan profesional con funcionalidades avanzadas',
-        maxDtesPerMonth: 500,
-        maxUsers: 10,
-        maxClientes: 500,
-        maxStorageMb: 2000,
-        features: JSON.stringify([
-          'facturacion_basica',
-          'reportes_avanzados',
-          'soporte_prioritario',
-          'api_access',
-          'multi_sucursal',
-          'recurring_invoices',
-        ]),
-        precioMensual: 79.99,
-        precioAnual: 799.99,
+        codigo: PlanCode.ENTERPRISE,
+        nombre: 'Enterprise',
+        descripcion: 'Solucion completa sin limites para grandes organizaciones',
+        maxDtesPerMonth: PLAN_CONFIGS.ENTERPRISE.limits.dtes,
+        maxUsers: PLAN_CONFIGS.ENTERPRISE.limits.users,
+        maxClientes: PLAN_CONFIGS.ENTERPRISE.limits.customers,
+        maxStorageMb: PLAN_CONFIGS.ENTERPRISE.limits.storage,
+        features: JSON.stringify(
+          Object.entries(PLAN_CONFIGS.ENTERPRISE.features)
+            .filter(([, v]) => v)
+            .map(([k]) => k),
+        ),
+        precioMensual: PLAN_CONFIGS.ENTERPRISE.price.monthly,
+        precioAnual: PLAN_CONFIGS.ENTERPRISE.price.yearly,
         orden: 3,
-      },
-      {
-        codigo: 'ENTERPRISE',
-        nombre: 'Empresarial',
-        descripcion: 'Plan empresarial sin límites',
-        maxDtesPerMonth: -1,
-        maxUsers: -1,
-        maxClientes: -1,
-        maxStorageMb: -1,
-        features: JSON.stringify([
-          'facturacion_basica',
-          'reportes_avanzados',
-          'soporte_dedicado',
-          'api_access',
-          'multi_sucursal',
-          'integraciones',
-          'white_label',
-          'recurring_invoices',
-        ]),
-        precioMensual: 199.99,
-        precioAnual: 1999.99,
-        orden: 4,
       },
     ];
 
     const results = [];
-    for (const planData of defaultPlans) {
-      const existing = await this.findByCode(planData.codigo);
-      if (!existing) {
-        const plan = await this.prisma.plan.create({ data: planData });
-        results.push({ action: 'created', plan });
-      } else {
-        results.push({ action: 'exists', plan: existing });
-      }
+    for (const planData of planDefinitions) {
+      const plan = await this.prisma.plan.upsert({
+        where: { codigo: planData.codigo },
+        create: planData,
+        update: {
+          nombre: planData.nombre,
+          descripcion: planData.descripcion,
+          maxDtesPerMonth: planData.maxDtesPerMonth,
+          maxUsers: planData.maxUsers,
+          maxClientes: planData.maxClientes,
+          maxStorageMb: planData.maxStorageMb,
+          features: planData.features,
+          precioMensual: planData.precioMensual,
+          precioAnual: planData.precioAnual,
+          orden: planData.orden,
+          isDefault: planData.isDefault,
+        },
+      });
+      results.push({ action: 'upserted', plan });
     }
 
-    return results;
+    return { message: '3 planes creados/actualizados exitosamente', plans: results };
   }
 }

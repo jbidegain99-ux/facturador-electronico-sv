@@ -11,9 +11,23 @@ import {
   Send,
   AlertCircle,
   CheckCircle,
+  Paperclip,
+  Download,
+  FileText,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
+
+interface TicketAttachment {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  createdAt: string;
+  uploadedBy: { nombre: string };
+}
 
 interface TicketDetail {
   id: string;
@@ -24,6 +38,9 @@ interface TicketDetail {
   status: string;
   priority: string;
   resolution: string | null;
+  slaResponseHours: number | null;
+  slaDeadline: string | null;
+  respondedAt: string | null;
   createdAt: string;
   updatedAt: string;
   resolvedAt: string | null;
@@ -75,9 +92,12 @@ export default function TicketDetailPage() {
   const [error, setError] = useState('');
   const [newComment, setNewComment] = useState('');
   const [addingComment, setAddingComment] = useState(false);
+  const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchTicket();
+    fetchAttachments();
   }, [params.id]);
 
   const fetchTicket = async () => {
@@ -104,6 +124,59 @@ export default function TicketDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchAttachments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${baseUrl}/support-tickets/${params.id}/attachments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => []);
+        if (Array.isArray(data)) setAttachments(data);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const token = localStorage.getItem('token');
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch(`${baseUrl}/support-tickets/${params.id}/attachments`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as Record<string, string>).message || 'Error al subir archivo');
+      }
+
+      fetchAttachments();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al subir archivo');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const handleAddComment = async (e: React.FormEvent) => {
@@ -332,6 +405,51 @@ export default function TicketDetailPage() {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Attachments */}
+          <div className="bg-card rounded-lg border p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Paperclip className="w-5 h-5" />
+              Archivos adjuntos ({attachments.length})
+            </h3>
+            <div className="space-y-2 mb-4">
+              {attachments.map((att) => (
+                <a
+                  key={att.id}
+                  href={`${process.env.NEXT_PUBLIC_API_URL}/support-tickets/attachments/${att.id}/download`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors text-sm group"
+                >
+                  <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{att.fileName}</div>
+                    <div className="text-xs text-muted-foreground">{formatFileSize(att.fileSize)}</div>
+                  </div>
+                  <Download className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </a>
+              ))}
+              {attachments.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-2">Sin archivos adjuntos</p>
+              )}
+            </div>
+            {!isResolved && (
+              <label className="flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline">
+                {uploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Paperclip className="w-4 h-4" />
+                )}
+                {uploading ? 'Subiendo...' : 'Adjuntar archivo'}
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                />
+              </label>
+            )}
           </div>
 
           {/* Dates */}

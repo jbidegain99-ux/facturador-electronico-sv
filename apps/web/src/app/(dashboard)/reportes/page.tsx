@@ -351,20 +351,24 @@ export default function ReportesPage() {
           {/* Summary Cards */}
           {summary && (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
+              <Card className="card-metric card-metric-indigo">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('dtesToday')}</CardTitle>
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <div className="card-icon-wrapper">
+                    <FileText className="h-4 w-4" />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{summary.dtesHoy}</div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="card-metric card-metric-purple">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('dtesMonth')}</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <div className="card-icon-wrapper">
+                    <TrendingUp className="h-4 w-4" />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{summary.dtesMes}</div>
@@ -374,10 +378,12 @@ export default function ReportesPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="card-metric card-metric-sky">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('totalBilled')}</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <div className="card-icon-wrapper">
+                    <DollarSign className="h-4 w-4" />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(summary.totalFacturado)}</div>
@@ -387,13 +393,15 @@ export default function ReportesPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="card-metric card-metric-emerald">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('rejected')}</CardTitle>
-                  <FileText className="h-4 w-4 text-destructive" />
+                  <div className="card-icon-wrapper">
+                    <FileText className="h-4 w-4" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-destructive">{summary.rechazados}</div>
+                  <div className="text-2xl font-bold">{summary.rechazados}</div>
                   <p className="text-xs text-muted-foreground">{t('needAttention')}</p>
                 </CardContent>
               </Card>

@@ -255,10 +255,12 @@ export default function DashboardPage() {
           {/* ── Stat Cards ── */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {/* Facturas este mes */}
-            <Card>
+            <Card className="card-metric card-metric-purple">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t('invoicesThisMonth')}</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
+                <div className="card-icon-wrapper">
+                  <FileText className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.totalInvoicesThisMonth ?? 0}</div>
@@ -272,10 +274,12 @@ export default function DashboardPage() {
             </Card>
 
             {/* Ingresos este mes */}
-            <Card>
+            <Card className="card-metric card-metric-indigo">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t('revenueThisMonth')}</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <div className="card-icon-wrapper">
+                  <DollarSign className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -291,10 +295,12 @@ export default function DashboardPage() {
             </Card>
 
             {/* Clientes totales */}
-            <Card>
+            <Card className="card-metric card-metric-sky">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t('clientsTotal')}</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <div className="card-icon-wrapper">
+                  <Users className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.totalClients ?? 0}</div>
@@ -309,10 +315,12 @@ export default function DashboardPage() {
             </Card>
 
             {/* Catalogo items */}
-            <Card>
+            <Card className="card-metric card-metric-emerald">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t('catalogTotal')}</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
+                <div className="card-icon-wrapper">
+                  <Package className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.totalCatalogItems ?? 0}</div>

@@ -7,9 +7,9 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-[rgba(30,30,45,0.6)] backdrop-blur-md border-white/[0.1] border-l-2 border-l-primary/50 shadow-[0_4px_24px_rgba(0,0,0,0.3)] hover:bg-[rgba(40,40,60,0.7)] hover:border-primary/60 hover:shadow-[0_8px_32px_rgba(139,92,246,0.25)]',
-        glass: 'bg-[rgba(30,30,45,0.5)] backdrop-blur-xl border-white/[0.12] border-l-2 border-l-primary/40 hover:bg-[rgba(40,40,60,0.6)] hover:border-primary/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]',
-        elevated: 'bg-[rgba(35,35,55,0.7)] backdrop-blur-xl border-white/[0.15] border-l-2 border-l-primary/60 shadow-lg hover:bg-[rgba(45,45,65,0.8)] hover:shadow-[0_12px_40px_rgba(139,92,246,0.3)]',
+        default: 'bg-card border-border shadow-sm border-l-2 border-l-primary/50 hover:shadow-md hover:border-primary/60 dark:bg-[rgba(30,30,45,0.6)] dark:backdrop-blur-md dark:border-white/[0.1] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)] dark:hover:bg-[rgba(40,40,60,0.7)] dark:hover:border-primary/60 dark:hover:shadow-[0_8px_32px_rgba(139,92,246,0.25)]',
+        glass: 'bg-card border-border shadow-sm border-l-2 border-l-primary/40 hover:shadow-md hover:border-primary/50 dark:bg-[rgba(30,30,45,0.5)] dark:backdrop-blur-xl dark:border-white/[0.12] dark:hover:bg-[rgba(40,40,60,0.6)] dark:hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]',
+        elevated: 'bg-card border-border shadow-md border-l-2 border-l-primary/60 hover:shadow-lg dark:bg-[rgba(35,35,55,0.7)] dark:backdrop-blur-xl dark:border-white/[0.15] dark:shadow-lg dark:hover:bg-[rgba(45,45,65,0.8)] dark:hover:shadow-[0_12px_40px_rgba(139,92,246,0.3)]',
         solid: 'bg-card border-border shadow-sm border-l-2 border-l-primary/30',
         outline: 'bg-transparent border-border border-l-2 border-l-primary/20',
         ghost: 'bg-transparent border-transparent',

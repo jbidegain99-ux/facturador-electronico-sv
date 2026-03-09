@@ -571,7 +571,7 @@ export default function CuentasPage() {
                 id="allowsPosting"
                 checked={form.allowsPosting}
                 onChange={e => setForm({ ...form, allowsPosting: e.target.checked })}
-                className="rounded border-gray-300"
+                className="rounded border-border"
               />
               <label htmlFor="allowsPosting" className="text-sm">
                 {t('allowsDirectPostings')}

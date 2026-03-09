@@ -219,19 +219,19 @@ export default function TicketDetailPage() {
       IN_PROGRESS: 'bg-purple-500/20 text-purple-400',
       WAITING_CUSTOMER: 'bg-orange-500/20 text-orange-400',
       RESOLVED: 'bg-green-500/20 text-green-400',
-      CLOSED: 'bg-gray-500/20 text-gray-400',
+      CLOSED: 'bg-muted text-muted-foreground',
     };
-    return badges[status] || 'bg-gray-500/20 text-gray-400';
+    return badges[status] || 'bg-muted text-muted-foreground';
   };
 
   const getPriorityBadge = (priority: string) => {
     const badges: Record<string, string> = {
-      LOW: 'bg-gray-500/20 text-gray-400',
+      LOW: 'bg-muted text-muted-foreground',
       MEDIUM: 'bg-blue-500/20 text-blue-400',
       HIGH: 'bg-orange-500/20 text-orange-400',
       URGENT: 'bg-red-500/20 text-red-400',
     };
-    return badges[priority] || 'bg-gray-500/20 text-gray-400';
+    return badges[priority] || 'bg-muted text-muted-foreground';
   };
 
   if (loading) {

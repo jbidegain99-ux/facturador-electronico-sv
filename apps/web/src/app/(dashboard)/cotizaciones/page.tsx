@@ -94,7 +94,7 @@ interface StatusConfig {
 }
 
 const STATUS_STYLE_MAP: Record<string, { labelKey: string; variant: StatusConfig['variant']; className: string }> = {
-  DRAFT: { labelKey: 'statusDraft', variant: 'secondary', className: 'bg-gray-600/20 text-gray-400 border-gray-600/30' },
+  DRAFT: { labelKey: 'statusDraft', variant: 'secondary', className: 'bg-muted text-muted-foreground border-border' },
   SENT: { labelKey: 'statusSent', variant: 'default', className: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
   PENDING_APPROVAL: { labelKey: 'statusPending', variant: 'default', className: 'bg-teal-600/20 text-teal-400 border-teal-600/30' },
   APPROVED: { labelKey: 'statusApproved', variant: 'default', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
@@ -102,7 +102,7 @@ const STATUS_STYLE_MAP: Record<string, { labelKey: string; variant: StatusConfig
   REJECTED: { labelKey: 'statusRejected', variant: 'destructive', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
   EXPIRED: { labelKey: 'statusExpired', variant: 'outline', className: 'bg-amber-600/20 text-amber-400 border-amber-600/30' },
   CONVERTED: { labelKey: 'statusConverted', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
-  CANCELLED: { labelKey: 'statusCancelled', variant: 'secondary', className: 'bg-gray-700/20 text-gray-500 border-gray-700/30' },
+  CANCELLED: { labelKey: 'statusCancelled', variant: 'secondary', className: 'bg-muted text-muted-foreground border-border' },
   CHANGES_REQUESTED: { labelKey: 'statusChangesRequested', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
   REVISED: { labelKey: 'statusRevised', variant: 'default', className: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30' },
 };
@@ -507,7 +507,7 @@ export default function CotizacionesPage() {
                       <span className="inline-flex items-center gap-1.5">
                         {quote.quoteNumber}
                         {quote.version != null && quote.version > 1 && (
-                          <span className="inline-flex items-center rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground leading-none">
+                          <span className="inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground leading-none">
                             v{quote.version}
                           </span>
                         )}

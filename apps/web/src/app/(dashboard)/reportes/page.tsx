@@ -177,7 +177,7 @@ export default function ReportesPage() {
     FIRMADO: 'bg-blue-500',
     PENDIENTE: 'bg-yellow-500',
     RECHAZADO: 'bg-red-500',
-    ANULADO: 'bg-gray-500',
+    ANULADO: 'bg-muted-foreground',
   };
 
   // Type colors for pie chart

@@ -101,7 +101,7 @@ function StatusBadge({ status }: { status: string }) {
     VOIDED: t('voidedStatus'),
   };
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-800'}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[status] || 'bg-muted text-muted-foreground'}`}>
       {labels[status] || status}
     </span>
   );
@@ -124,7 +124,7 @@ function OriginBadge({ entry }: { entry: JournalEntry }) {
     MANUAL: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
     AUTOMATIC: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
     ADJUSTMENT: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    CLOSING: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+    CLOSING: 'bg-muted text-muted-foreground',
   };
   const labels: Record<string, string> = {
     MANUAL: 'Manual',
@@ -134,7 +134,7 @@ function OriginBadge({ entry }: { entry: JournalEntry }) {
   };
 
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[entry.entryType] || 'bg-gray-100 text-gray-800'}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[entry.entryType] || 'bg-muted text-muted-foreground'}`}>
       {labels[entry.entryType] || entry.entryType}
     </span>
   );

@@ -365,6 +365,23 @@
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(139, 92, 246, 0.06));
     border-left: 3px solid #8b5cf6;
   }
+
+  /* Light mode sidebar container — subtle shadow instead of harsh border */
+  .light aside.border-r {
+    border-color: hsl(var(--border));
+    box-shadow: 2px 0 8px rgba(124, 58, 237, 0.06);
+  }
+
+  /* Light mode nav active — used by sidebar.tsx */
+  .light .nav-active {
+    background: hsl(var(--accent)) !important;
+    color: hsl(var(--primary)) !important;
+    border-left: 3px solid hsl(var(--primary));
+    font-weight: 600;
+  }
+  .light .nav-active svg {
+    color: hsl(var(--primary)) !important;
+  }
 }
 
 @layer utilities {
@@ -422,19 +439,19 @@
     pointer-events: none;
   }
   .light .card-metric-purple {
-    background: #7C3AED;
+    background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%);
     box-shadow: 0 4px 24px rgba(124, 58, 237, 0.35);
   }
   .light .card-metric-indigo {
-    background: #4F46E5;
+    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
     box-shadow: 0 4px 24px rgba(79, 70, 229, 0.32);
   }
   .light .card-metric-sky {
-    background: #0EA5E9;
+    background: linear-gradient(135deg, #0EA5E9 0%, #38BDF8 100%);
     box-shadow: 0 4px 24px rgba(14, 165, 233, 0.30);
   }
   .light .card-metric-emerald {
-    background: #10B981;
+    background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
     box-shadow: 0 4px 24px rgba(16, 185, 129, 0.30);
   }
 

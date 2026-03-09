@@ -26,18 +26,18 @@ import { useTranslations } from 'next-intl';
 
 type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'accounting' | 'catalog' | 'webhooks' | 'support' | 'settings';
 
-const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; proBadge: boolean }[] = [
-  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, proBadge: false },
-  { key: 'invoices', href: '/facturas', icon: FileText, proBadge: false },
-  { key: 'quotes', href: '/cotizaciones', icon: ClipboardList, proBadge: false },
-  { key: 'recurring', href: '/facturas/recurrentes', icon: Repeat, proBadge: true },
-  { key: 'reports', href: '/reportes', icon: BarChart3, proBadge: false },
-  { key: 'clients', href: '/clientes', icon: Users, proBadge: false },
-  { key: 'accounting', href: '/contabilidad', icon: BookOpen, proBadge: true },
-  { key: 'catalog', href: '/catalogo', icon: Package, proBadge: false },
-  { key: 'webhooks', href: '/webhooks', icon: Webhook, proBadge: true },
-  { key: 'support', href: '/soporte', icon: HelpCircle, proBadge: false },
-  { key: 'settings', href: '/configuracion', icon: Settings, proBadge: false },
+const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; proBadge: boolean; iconColor: string }[] = [
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, proBadge: false, iconColor: 'text-purple-600' },
+  { key: 'invoices', href: '/facturas', icon: FileText, proBadge: false, iconColor: 'text-blue-600' },
+  { key: 'quotes', href: '/cotizaciones', icon: ClipboardList, proBadge: false, iconColor: 'text-teal-500' },
+  { key: 'recurring', href: '/facturas/recurrentes', icon: Repeat, proBadge: true, iconColor: 'text-cyan-500' },
+  { key: 'reports', href: '/reportes', icon: BarChart3, proBadge: false, iconColor: 'text-orange-500' },
+  { key: 'clients', href: '/clientes', icon: Users, proBadge: false, iconColor: 'text-blue-500' },
+  { key: 'accounting', href: '/contabilidad', icon: BookOpen, proBadge: true, iconColor: 'text-emerald-500' },
+  { key: 'catalog', href: '/catalogo', icon: Package, proBadge: false, iconColor: 'text-amber-500' },
+  { key: 'webhooks', href: '/webhooks', icon: Webhook, proBadge: true, iconColor: 'text-indigo-500' },
+  { key: 'support', href: '/soporte', icon: HelpCircle, proBadge: false, iconColor: 'text-pink-500' },
+  { key: 'settings', href: '/configuracion', icon: Settings, proBadge: false, iconColor: 'text-gray-500' },
 ];
 
 export function Sidebar() {
@@ -106,12 +106,12 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'nav-active bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                 !sidebarOpen && 'justify-center px-2'
               )}
             >
-              <item.icon className="h-5 w-5 shrink-0" />
+              <item.icon className={cn('h-5 w-5 shrink-0', !isActive && item.iconColor)} />
               {sidebarOpen && (
                 <span className="flex items-center gap-2">
                   {t(item.key)}

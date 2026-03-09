@@ -12,7 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Bell, User, LogOut, Settings, Info, X, ExternalLink, Megaphone, Zap, Shield, AlertTriangle, AlertCircle, CheckCheck, Globe } from 'lucide-react';
+import { Bell, User, LogOut, Settings, Info, X, ExternalLink, Megaphone, Zap, Shield, AlertTriangle, AlertCircle, CheckCheck, Globe } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTranslations } from 'next-intl';
 import { locales, localeNames, type Locale } from '@/i18n/config';
 
@@ -47,7 +48,7 @@ const priorityStyles: Record<string, string> = {
 
 export function Header() {
   const router = useRouter();
-  const { tenant, user, theme, setTheme, setUser, setTenant, locale, setLocale } = useAppStore();
+  const { tenant, user, setUser, setTenant, locale, setLocale } = useAppStore();
   const t = useTranslations('header');
   const tAuth = useTranslations('auth');
   const tCommon = useTranslations('common');
@@ -160,18 +161,6 @@ export function Header() {
     } catch (err) {
       console.warn('[Header] Error dismissing all notifications:', err);
     }
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
-  const getThemeIcon = () => {
-    return theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />;
-  };
-
-  const getThemeLabel = () => {
-    return theme === 'dark' ? t('dark') : t('light');
   };
 
   const handleLogout = () => {
@@ -288,14 +277,7 @@ export function Header() {
         </DropdownMenu>
 
         {/* Theme Toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleTheme}
-          title={t('theme', { theme: getThemeLabel() })}
-        >
-          {getThemeIcon()}
-        </Button>
+        <ThemeToggle />
 
         {/* Language Switcher */}
         <DropdownMenu>

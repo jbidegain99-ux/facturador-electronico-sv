@@ -284,7 +284,7 @@ export function CompanyInfoStep({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
+        <Card className="relative z-10">
           <CardHeader>
             <CardTitle>Datos Fiscales</CardTitle>
             <CardDescription>

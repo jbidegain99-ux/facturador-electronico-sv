@@ -1,9 +1,7 @@
-# FACTURADOR ELECTRÓNICO SV - TODO MASTER
+# RC001 QA Issues - Plan de Trabajo
 
-**ÚLTIMA ACTUALIZACIÓN:** 2026-02-09
-**FASE ACTUAL:** Fase 1 (Fase 0 completada ✅)
-**DEPLOY ACTUAL:** API v17, Web v26
-**ESTADO:** Producción funcional
+**ÚLTIMA ACTUALIZACIÓN:** 2026-03-09
+**OBJETIVO:** Resolver 21 issues del reporte RC001
 
 ## ✅ FASE 0 - COMPLETADA (2026-02-08)
 - 14/14 Issues QA resueltos

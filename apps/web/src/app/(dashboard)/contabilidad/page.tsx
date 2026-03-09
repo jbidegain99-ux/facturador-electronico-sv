@@ -23,6 +23,7 @@ import {
   FlaskConical,
   AlertTriangle,
   Check,
+  Settings2,
 } from 'lucide-react';
 
 interface DashboardData {
@@ -168,6 +169,7 @@ export default function ContabilidadPage() {
     { name: t('ledger'), href: '/contabilidad/libro-mayor', icon: BookOpen, description: t('ledgerDesc') },
     { name: t('balanceSheet'), href: '/contabilidad/balance', icon: Landmark, description: t('balanceSheetDesc') },
     { name: t('incomeStatement'), href: '/contabilidad/resultados', icon: PieChart, description: t('incomeStatementDesc') },
+    { name: 'Configuración Contable', href: '/contabilidad/configuracion', icon: Settings2, description: 'Automatización DTE → Partida' },
   ];
 
   if (!planLoading && !features.accounting) {

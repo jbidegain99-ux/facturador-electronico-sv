@@ -4,3 +4,5 @@ export { CreateJournalEntryDto, JournalEntryLineDto } from './create-journal-ent
 export { QueryJournalDto } from './query-journal.dto';
 export { ReportQueryDto } from './report-query.dto';
 export { SimulateInvoiceDto } from './simulate-invoice.dto';
+export { UpdateAccountingConfigDto } from './update-accounting-config.dto';
+export { UpsertMappingDto, MappingConfigDto, MappingLineDto } from './upsert-mapping.dto';

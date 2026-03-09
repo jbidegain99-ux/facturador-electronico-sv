@@ -153,6 +153,12 @@ export function CertificateStep({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // If certificate already exists and user didn't upload a new one, allow continuing
+    if (hasCertificate && !formData.certificate) {
+      onSubmit({ certificate: '', password: '', skipUpload: true });
+      return;
+    }
+
     if (!formData.certificate) {
       setError('Debe seleccionar un archivo de certificado');
       return;
@@ -192,7 +198,7 @@ export function CertificateStep({
         <Alert className="border-green-500 bg-green-500/10">
           <CheckCircle2 className="h-4 w-4 text-green-500" />
           <AlertDescription className="text-green-700 dark:text-green-400">
-            Ya tiene un certificado configurado. Puede actualizarlo si lo desea.
+            Ya tiene un certificado configurado. Puede continuar sin cambios o subir uno nuevo para actualizarlo.
           </AlertDescription>
         </Alert>
       )}
@@ -426,7 +432,7 @@ export function CertificateStep({
               </>
             ) : (
               <>
-                Continuar
+                {hasCertificate && !formData.certificate ? 'Continuar sin cambios' : 'Continuar'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}

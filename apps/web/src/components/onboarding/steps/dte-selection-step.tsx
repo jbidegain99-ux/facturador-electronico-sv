@@ -84,6 +84,13 @@ export function DteSelectionStep({
     return new Set(COMMON_TYPES);
   });
 
+  // Update selection when navigating back to this step with saved data
+  React.useEffect(() => {
+    if (selectedTypes.length > 0) {
+      setSelected(new Set(selectedTypes.map((t) => t.dteType)));
+    }
+  }, [selectedTypes]);
+
   const toggleType = (type: DteType) => {
     setSelected((prev) => {
       const next = new Set(prev);

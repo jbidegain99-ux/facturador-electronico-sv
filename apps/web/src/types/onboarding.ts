@@ -189,6 +189,7 @@ export interface CertificateForm {
   expiryDate?: string;
   privateKey?: string; // base64 - private key for separate mode
   uploadMode?: 'combined' | 'separate';
+  skipUpload?: boolean; // true when user already has a certificate and doesn't want to re-upload
 }
 
 export interface ApiCredentialsForm {

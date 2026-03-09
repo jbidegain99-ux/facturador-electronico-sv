@@ -12,6 +12,7 @@ import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AuditAction, AuditModule } from '../audit-logs/dto';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
@@ -570,5 +571,50 @@ export class AuthService {
     this.logger.log(`Password reset completed for user ${user.email}`);
 
     return { message: 'Contraseña restablecida exitosamente' };
+  }
+
+  /**
+   * Change password for an authenticated user.
+   * Verifies the current password before updating.
+   */
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException('La contraseña actual es incorrecta');
+    }
+
+    // Hash new password and update
+    const hashedPassword = await this.hashPassword(dto.newPassword);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    // Audit log
+    await this.auditLogsService.log({
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.nombre,
+      userRole: user.rol,
+      tenantId: user.tenantId || undefined,
+      action: AuditAction.UPDATE,
+      module: AuditModule.AUTH,
+      description: `Usuario ${user.email} cambió su contraseña`,
+      success: true,
+    });
+
+    this.logger.log(`Password changed for user ${user.email}`);
+
+    return { message: 'Contraseña cambiada exitosamente' };
   }
 }

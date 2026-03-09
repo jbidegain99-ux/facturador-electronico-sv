@@ -9,9 +9,10 @@ import { SignerModule } from '../signer/signer.module';
 import { MhAuthModule } from '../mh-auth/mh-auth.module';
 import { EmailConfigModule } from '../email-config/email-config.module';
 import { WebhooksModule } from '../webhooks/webhooks.module';
+import { AccountingModule } from '../accounting/accounting.module';
 
 @Module({
-  imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, forwardRef(() => WebhooksModule)],
+  imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, forwardRef(() => WebhooksModule), forwardRef(() => AccountingModule)],
   controllers: [DteController],
   providers: [DteBuilderService, DteValidatorService, DteService, PdfService],
   exports: [DteBuilderService, DteValidatorService, DteService, PdfService],

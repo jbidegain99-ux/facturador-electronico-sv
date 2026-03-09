@@ -157,6 +157,11 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
   };
 
   const handleTestCertificate = async (formData: CertificateForm) => {
+    // If user already has cert and chose to skip, just complete the step
+    if (formData.skipUpload) {
+      await handleCompleteStep('TEST_CERTIFICATE');
+      return;
+    }
     setLoading(true);
     try {
       const result = await apiCall('/test-certificate', 'POST', formData);
@@ -170,6 +175,11 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
   };
 
   const handleProdCertificate = async (formData: CertificateForm) => {
+    // If user already has cert and chose to skip, just complete the step
+    if (formData.skipUpload) {
+      await handleCompleteStep('PROD_CERTIFICATE');
+      return;
+    }
     setLoading(true);
     try {
       const result = await apiCall('/prod-certificate', 'POST', formData);

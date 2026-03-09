@@ -81,6 +81,10 @@ model Tenant {
 
   // Feature usage tracking
   featureUsage        TenantFeatureUsage[]
+
+  // Accounting automation
+  autoJournalEnabled  Boolean   @default(false)
+  autoJournalTrigger  String    @default("ON_APPROVED") @db.NVarChar(20)
 }
 
 model User {
@@ -1356,6 +1360,7 @@ model AccountMappingRule {
   creditAccount   AccountingAccount @relation("CreditRules", fields: [creditAccountId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   isActive        Boolean           @default(true)
+  mappingConfig   String?           @db.NVarChar(Max)
 
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt

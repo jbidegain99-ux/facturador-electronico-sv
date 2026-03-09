@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -19,10 +20,14 @@ import {
   QueryJournalDto,
   ReportQueryDto,
   SimulateInvoiceDto,
+  UpdateAccountingConfigDto,
+  UpsertMappingDto,
 } from './dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { PlanFeatureGuard } from '../plans/guards/plan-feature.guard';
 import { RequireFeature } from '../plans/decorators/require-feature.decorator';
+import { PrismaService } from '../../prisma/prisma.service';
+import { DEFAULT_MAPPINGS } from './default-mappings.data';
 
 @ApiTags('accounting')
 @Controller('accounting')
@@ -32,13 +37,184 @@ import { RequireFeature } from '../plans/decorators/require-feature.decorator';
 export class AccountingController {
   private readonly logger = new Logger(AccountingController.name);
 
-  constructor(private service: AccountingService) {}
+  constructor(
+    private service: AccountingService,
+    private prisma: PrismaService,
+  ) {}
 
   private ensureTenant(user: CurrentUserData): string {
     if (!user.tenantId) {
       throw new ForbiddenException('Usuario no tiene tenant asignado');
     }
     return user.tenantId;
+  }
+
+  // ================================================================
+  // ACCOUNTING AUTOMATION CONFIG
+  // ================================================================
+
+  @Get('config')
+  @ApiOperation({ summary: 'Obtener configuración de automatización contable' })
+  async getConfig(@CurrentUser() user: CurrentUserData) {
+    const tenantId = this.ensureTenant(user);
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { autoJournalEnabled: true, autoJournalTrigger: true },
+    });
+    return tenant ?? { autoJournalEnabled: false, autoJournalTrigger: 'ON_APPROVED' };
+  }
+
+  @Patch('config')
+  @ApiOperation({ summary: 'Actualizar configuración de automatización contable' })
+  async updateConfig(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: UpdateAccountingConfigDto,
+  ) {
+    const tenantId = this.ensureTenant(user);
+    const data: Record<string, unknown> = {};
+    if (dto.autoJournalEnabled !== undefined) data.autoJournalEnabled = dto.autoJournalEnabled;
+    if (dto.autoJournalTrigger !== undefined) data.autoJournalTrigger = dto.autoJournalTrigger;
+
+    return this.prisma.tenant.update({
+      where: { id: tenantId },
+      data,
+      select: { autoJournalEnabled: true, autoJournalTrigger: true },
+    });
+  }
+
+  // ================================================================
+  // ACCOUNT MAPPING RULES
+  // ================================================================
+
+  @Get('mappings')
+  @ApiOperation({ summary: 'Listar reglas de mapeo contable' })
+  async getMappings(@CurrentUser() user: CurrentUserData) {
+    const tenantId = this.ensureTenant(user);
+    return this.prisma.accountMappingRule.findMany({
+      where: { tenantId },
+      include: {
+        debitAccount: { select: { id: true, code: true, name: true } },
+        creditAccount: { select: { id: true, code: true, name: true } },
+      },
+      orderBy: { operation: 'asc' },
+    });
+  }
+
+  @Post('mappings')
+  @ApiOperation({ summary: 'Crear o actualizar regla de mapeo (upsert por operación)' })
+  @ApiResponse({ status: 201, description: 'Mapeo creado/actualizado' })
+  async upsertMapping(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: UpsertMappingDto,
+  ) {
+    const tenantId = this.ensureTenant(user);
+
+    const existing = await this.prisma.accountMappingRule.findFirst({
+      where: { tenantId, operation: dto.operation },
+    });
+
+    const mappingConfig = dto.mappingConfig ? JSON.stringify(dto.mappingConfig) : null;
+
+    if (existing) {
+      return this.prisma.accountMappingRule.update({
+        where: { id: existing.id },
+        data: {
+          description: dto.description,
+          debitAccountId: dto.debitAccountId,
+          creditAccountId: dto.creditAccountId,
+          mappingConfig,
+        },
+        include: {
+          debitAccount: { select: { id: true, code: true, name: true } },
+          creditAccount: { select: { id: true, code: true, name: true } },
+        },
+      });
+    }
+
+    return this.prisma.accountMappingRule.create({
+      data: {
+        tenantId,
+        operation: dto.operation,
+        description: dto.description,
+        debitAccountId: dto.debitAccountId,
+        creditAccountId: dto.creditAccountId,
+        mappingConfig,
+      },
+      include: {
+        debitAccount: { select: { id: true, code: true, name: true } },
+        creditAccount: { select: { id: true, code: true, name: true } },
+      },
+    });
+  }
+
+  @Delete('mappings/:id')
+  @ApiOperation({ summary: 'Eliminar regla de mapeo' })
+  async deleteMapping(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+  ) {
+    const tenantId = this.ensureTenant(user);
+    const rule = await this.prisma.accountMappingRule.findFirst({
+      where: { id, tenantId },
+    });
+
+    if (!rule) {
+      throw new ForbiddenException('Regla de mapeo no encontrada');
+    }
+
+    await this.prisma.accountMappingRule.delete({ where: { id } });
+    return { deleted: true };
+  }
+
+  @Post('mappings/seed')
+  @ApiOperation({ summary: 'Generar mapeos predeterminados para El Salvador' })
+  @ApiResponse({ status: 201, description: 'Mapeos predeterminados creados' })
+  async seedMappings(@CurrentUser() user: CurrentUserData) {
+    const tenantId = this.ensureTenant(user);
+    let created = 0;
+    let skipped = 0;
+
+    for (const mapping of DEFAULT_MAPPINGS) {
+      // Check if mapping already exists
+      const existing = await this.prisma.accountMappingRule.findFirst({
+        where: { tenantId, operation: mapping.operation },
+      });
+
+      if (existing) {
+        skipped++;
+        continue;
+      }
+
+      // Find accounts by code
+      const debitAccount = await this.prisma.accountingAccount.findUnique({
+        where: { tenantId_code: { tenantId, code: mapping.debitCode } },
+      });
+      const creditAccount = await this.prisma.accountingAccount.findUnique({
+        where: { tenantId_code: { tenantId, code: mapping.creditCode } },
+      });
+
+      if (!debitAccount || !creditAccount) {
+        this.logger.warn(
+          `Skipping seed for ${mapping.operation}: accounts ${mapping.debitCode}/${mapping.creditCode} not found`,
+        );
+        skipped++;
+        continue;
+      }
+
+      await this.prisma.accountMappingRule.create({
+        data: {
+          tenantId,
+          operation: mapping.operation,
+          description: mapping.description,
+          debitAccountId: debitAccount.id,
+          creditAccountId: creditAccount.id,
+          mappingConfig: JSON.stringify(mapping.mappingConfig),
+        },
+      });
+      created++;
+    }
+
+    return { created, skipped, total: DEFAULT_MAPPINGS.length };
   }
 
   // ================================================================

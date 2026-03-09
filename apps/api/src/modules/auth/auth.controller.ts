@@ -9,6 +9,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Public } from '../../common/decorators/public.decorator';
 
 interface AuthRequest extends Request {
@@ -90,5 +91,15 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordDto, @Req() req: ExpressRequest) {
     const ipAddress = req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
     return this.authService.resetPassword(dto.token, dto.password, ipAddress);
+  }
+
+  @Post('change-password')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cambiar contraseña del usuario autenticado' })
+  @ApiResponse({ status: 200, description: 'Contraseña cambiada exitosamente' })
+  @ApiResponse({ status: 400, description: 'Contraseña actual incorrecta' })
+  @ApiResponse({ status: 401, description: 'No autenticado' })
+  async changePassword(@Request() req: AuthRequest, @Body() dto: ChangePasswordDto) {
+    return this.authService.changePassword(req.user.id, dto);
   }
 }

@@ -19,6 +19,7 @@ import { SignerService } from '../signer/signer.service';
 import { MhAuthService } from '../mh-auth/mh-auth.service';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { AccountingAutomationService } from '../accounting/accounting-automation.service';
 import { invoiceSentTemplate } from '../email-config/templates';
 import { PdfService } from './pdf.service';
 import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
@@ -47,6 +48,7 @@ export class DteService {
     private defaultEmailService: DefaultEmailService,
     private pdfService: PdfService,
     @Optional() @Inject(forwardRef(() => WebhooksService)) private webhooksService: WebhooksService | null,
+    @Optional() @Inject(forwardRef(() => AccountingAutomationService)) private accountingAutomation: AccountingAutomationService | null,
   ) {}
 
   /**
@@ -221,6 +223,9 @@ export class DteService {
         estado: dte.estado,
       }, dte.id);
 
+      // Trigger accounting entry on creation (fire-and-forget)
+      this.triggerAccountingEntry(dte.id, tenantId, 'ON_CREATED');
+
       return dte;
     } catch (error) {
       this.logger.error(`Failed to create DTE: ${error instanceof Error ? error.message : error}`);
@@ -345,6 +350,9 @@ export class DteService {
         demoMode: true,
       }, dte.id);
 
+      // Trigger accounting entry on approval (fire-and-forget)
+      this.triggerAccountingEntry(dte.id, dte.tenantId, 'ON_APPROVED');
+
       return updated;
     }
 
@@ -404,6 +412,9 @@ export class DteService {
         estado: 'PROCESADO',
         fechaAprobacion: response.fhProcesamiento,
       }, dte.id);
+
+      // Trigger accounting entry on approval (fire-and-forget)
+      this.triggerAccountingEntry(dte.id, dte.tenantId, 'ON_APPROVED');
 
       return updated;
     } catch (error) {
@@ -751,6 +762,9 @@ export class DteService {
 
     await this.logDteAction(dteId, 'ANULADO', { motivo });
 
+    // Trigger accounting reversal (fire-and-forget)
+    this.triggerAccountingReversal(dteId, dte.tenantId);
+
     return updated;
   }
 
@@ -798,6 +812,26 @@ export class DteService {
     if (!this.webhooksService) return;
     this.webhooksService.triggerEvent({ tenantId, eventType, data, correlationId }).catch((err) =>
       this.logger.error(`Webhook trigger failed for ${eventType}: ${err instanceof Error ? err.message : err}`),
+    );
+  }
+
+  /**
+   * Fire-and-forget accounting entry generation. Errors are logged but never thrown.
+   */
+  private triggerAccountingEntry(dteId: string, tenantId: string, trigger: string): void {
+    if (!this.accountingAutomation) return;
+    this.accountingAutomation.generateFromDTE(dteId, tenantId, trigger).catch((err) =>
+      this.logger.error(`Accounting auto-entry failed for DTE ${dteId}: ${err instanceof Error ? err.message : err}`),
+    );
+  }
+
+  /**
+   * Fire-and-forget accounting reversal. Errors are logged but never thrown.
+   */
+  private triggerAccountingReversal(dteId: string, tenantId: string): void {
+    if (!this.accountingAutomation) return;
+    this.accountingAutomation.reverseFromDTE(dteId, tenantId).catch((err) =>
+      this.logger.error(`Accounting reversal failed for DTE ${dteId}: ${err instanceof Error ? err.message : err}`),
     );
   }
 

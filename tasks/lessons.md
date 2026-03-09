@@ -1,7 +1,22 @@
 # Lecciones Aprendidas - Facturador Electrónico SV
 
-**Fecha de inicio:** 7 de febrero de 2026  
+**Fecha de inicio:** 7 de febrero de 2026
 **Propósito:** Este archivo registra patrones de error y sus soluciones para prevenir repetición
+
+## RC001 Session (2026-03-09)
+
+### Prisma include consistency for wizard state
+- When returning onboarding state from ANY endpoint, ALWAYS include `{ dteTypes: true, steps: true, testProgress: true }`. Missing `dteTypes` caused DTEs to reset to defaults when navigating back.
+
+### React useState initial value trap
+- `useState(initialValue)` only reads the value ONCE at mount time. If the prop changes (e.g., from API call when navigating back), the state won't update.
+- Fix: Add `useEffect` that watches the relevant data props and calls `setFormData(...)` when they change.
+
+### Issue 13 was not actually blocked
+- Backend had full forgot-password/reset-password flow implemented. Frontend pages existed too. QA marked it "blocked" without verifying. Always check code before trusting QA status.
+
+### Issue 14 was already implemented
+- Account lockout (5 attempts, 15 min) was fully in the backend + frontend had amber styling for "bloqueada" errors. QA may not have tested it.
 
 ---
 

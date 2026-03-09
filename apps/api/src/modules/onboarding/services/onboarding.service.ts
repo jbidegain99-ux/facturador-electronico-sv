@@ -150,7 +150,7 @@ export class OnboardingService {
   async getProgress(tenantId: string) {
     const onboarding = await this.prisma.tenantOnboarding.findUnique({
       where: { tenantId },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     if (!onboarding) {
@@ -270,7 +270,7 @@ export class OnboardingService {
         emailHacienda: dto.emailHacienda,
         telefonoHacienda: dto.telefonoHacienda,
       },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     // Update step record
@@ -306,7 +306,7 @@ export class OnboardingService {
         haciendaUser: dto.haciendaUser,
         haciendaPassword: encryptedPassword,
       },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     // Update step record
@@ -437,7 +437,7 @@ export class OnboardingService {
         testCertPassword: encryptedPassword,
         testCertExpiry: dto.expiryDate ? new Date(dto.expiryDate) : null,
       },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     await this.upsertStepRecord(onboarding.id, 'TEST_CERTIFICATE', {
@@ -491,7 +491,7 @@ export class OnboardingService {
         prodCertPassword: encryptedPassword,
         prodCertExpiry: dto.expiryDate ? new Date(dto.expiryDate) : null,
       },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     await this.upsertStepRecord(onboarding.id, 'PROD_CERTIFICATE', {
@@ -528,7 +528,7 @@ export class OnboardingService {
         testEnvironmentUrl:
           dto.environmentUrl || 'https://apitest.dtes.mh.gob.sv',
       },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     await this.upsertStepRecord(onboarding.id, 'API_CREDENTIALS_TEST', {
@@ -556,7 +556,7 @@ export class OnboardingService {
         prodApiPassword: encryptedPassword,
         prodEnvironmentUrl: dto.environmentUrl || 'https://api.dtes.mh.gob.sv',
       },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     await this.upsertStepRecord(onboarding.id, 'API_CREDENTIALS_PROD', {
@@ -615,7 +615,7 @@ export class OnboardingService {
 
     const updated = await this.prisma.tenantOnboarding.findUnique({
       where: { tenantId },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     return this.formatOnboardingResponse(updated!);
@@ -637,7 +637,7 @@ export class OnboardingService {
     const updated = await this.prisma.tenantOnboarding.update({
       where: { tenantId },
       data: { currentStep: dto.step },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     return this.formatOnboardingResponse(updated);
@@ -703,7 +703,7 @@ export class OnboardingService {
 
     const updated = await this.prisma.tenantOnboarding.findUnique({
       where: { tenantId },
-      include: { steps: true },
+      include: { dteTypes: true, steps: true, testProgress: true },
     });
 
     return this.formatOnboardingResponse(updated!);

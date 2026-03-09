@@ -63,6 +63,14 @@ export interface MockPrismaClient {
     findMany: jest.Mock;
     count: jest.Mock;
   };
+  accountMappingRule: {
+    findMany: jest.Mock;
+    findFirst: jest.Mock;
+    findUnique: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    delete: jest.Mock;
+  };
   planFeature: {
     findUnique: jest.Mock;
     findMany: jest.Mock;
@@ -138,6 +146,14 @@ export function createMockPrismaService(): MockPrismaClient {
     journalEntryLine: {
       findMany: jest.fn().mockResolvedValue([]),
       count: jest.fn().mockResolvedValue(0),
+    },
+    accountMappingRule: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findFirst: jest.fn().mockResolvedValue(null),
+      findUnique: jest.fn().mockResolvedValue(null),
+      create: jest.fn().mockResolvedValue({}),
+      update: jest.fn().mockResolvedValue({}),
+      delete: jest.fn().mockResolvedValue({}),
     },
     planFeature: {
       findUnique: jest.fn().mockResolvedValue(null),

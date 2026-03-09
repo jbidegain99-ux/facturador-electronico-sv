@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { MaskedInput } from '@/components/ui/masked-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { HelpCircle } from 'lucide-react';
+import { Eye, EyeOff, HelpCircle } from 'lucide-react';
 
 // Catálogo de Departamentos de El Salvador
 const DEPARTAMENTOS = [
@@ -388,7 +388,7 @@ const ACTIVIDADES_ECONOMICAS = [
 function CharCounter({ length, max }: { length: number; max: number }) {
   const isNearLimit = length > max * 0.9;
   return (
-    <span className={`text-xs ${isNearLimit ? 'text-red-500' : 'text-gray-400'}`}>
+    <span className={`text-xs ${isNearLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
       {length}/{max}
     </span>
   );
@@ -403,6 +403,9 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [municipiosDisponibles, setMunicipiosDisponibles] = useState<{ codigo: string; nombre: string }[]>([]);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   const [formData, setFormData] = useState({
     // Datos de la empresa
@@ -455,16 +458,17 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setFieldErrors({});
 
     if (formData.adminPassword !== formData.adminPasswordConfirm) {
-      setError(t('passwordMismatch'));
+      setFieldErrors({ adminPasswordConfirm: t('passwordMismatch') });
       setLoading(false);
       return;
     }
 
     // Validate empresa and admin emails are different
     if (formData.correo.toLowerCase().trim() === formData.adminEmail.toLowerCase().trim()) {
-      setError(t('emailDifferent'));
+      setFieldErrors({ adminEmail: t('emailDifferent') });
       setLoading(false);
       return;
     }
@@ -545,29 +549,29 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
-        <h2 className="mt-6 text-xl sm:text-2xl font-bold leading-9 tracking-tight text-gray-900 text-center sm:text-left">
+        <h2 className="mt-6 text-xl sm:text-2xl font-bold leading-9 tracking-tight text-foreground text-center sm:text-left">
           {t('registerTitle')}
         </h2>
-        <p className="mt-2 text-sm sm:text-base text-gray-600 text-center sm:text-left">
+        <p className="mt-2 text-sm sm:text-base text-muted-foreground text-center sm:text-left">
           {t('registerSubtitle')}
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
-        <form className="space-y-6 bg-white p-8 shadow rounded-lg" onSubmit={handleSubmit}>
+        <form className="space-y-6 bg-card p-8 shadow rounded-lg" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="rounded-md bg-destructive/10 p-4">
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
 
           {/* Datos de la Empresa */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">{t('companyData')}</h3>
+            <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">{t('companyData')}</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <div className="flex justify-between items-center">
-                  <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="nombre" className="block text-sm font-medium text-foreground">
                     {t('businessName')} *
                   </label>
                   <CharCounter length={formData.nombre.length} max={200} />
@@ -580,11 +584,11 @@ export default function RegisterPage() {
                   maxLength={200}
                   value={formData.nombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 />
               </div>
               <div>
-                <label htmlFor="nombreComercial" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="nombreComercial" className="block text-sm font-medium text-foreground">
                   {t('tradeName')}
                 </label>
                 <input
@@ -594,11 +598,11 @@ export default function RegisterPage() {
                   maxLength={200}
                   value={formData.nombreComercial}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 />
               </div>
               <div>
-                <label htmlFor="nit" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="nit" className="block text-sm font-medium text-foreground">
                   NIT *
                 </label>
                 <MaskedInput
@@ -609,11 +613,11 @@ export default function RegisterPage() {
                   placeholder="0000-000000-000-0"
                   value={formData.nit}
                   onValueChange={(masked) => setFormData(prev => ({ ...prev, nit: masked }))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 />
               </div>
               <div>
-                <label htmlFor="nrc" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="nrc" className="block text-sm font-medium text-foreground">
                   NRC *
                 </label>
                 <MaskedInput
@@ -624,18 +628,18 @@ export default function RegisterPage() {
                   placeholder="000000-0"
                   value={formData.nrc}
                   onValueChange={(masked) => setFormData(prev => ({ ...prev, nrc: masked }))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 />
               </div>
               <div className="sm:col-span-2">
                 <div className="flex items-center gap-2">
-                  <label htmlFor="actividadEcon" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="actividadEcon" className="block text-sm font-medium text-foreground">
                     {t('economicActivity')} *
                   </label>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger type="button">
-                        <HelpCircle className="h-4 w-4 text-gray-400" />
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className="max-w-xs">
@@ -651,7 +655,7 @@ export default function RegisterPage() {
                   required
                   value={formData.actividadEcon}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 >
                   <option value="">{t('selectActivity')}</option>
                   {ACTIVIDADES_ECONOMICAS.map((act) => (
@@ -662,7 +666,7 @@ export default function RegisterPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="telefono" className="block text-sm font-medium text-foreground">
                   {tCommon('phone')} *
                 </label>
                 <MaskedInput
@@ -673,11 +677,11 @@ export default function RegisterPage() {
                   placeholder="0000-0000"
                   value={formData.telefono}
                   onValueChange={(masked) => setFormData(prev => ({ ...prev, telefono: masked }))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 />
               </div>
               <div>
-                <label htmlFor="correo" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="correo" className="block text-sm font-medium text-foreground">
                   {t('companyEmail')} *
                 </label>
                 <input
@@ -688,7 +692,7 @@ export default function RegisterPage() {
                   maxLength={100}
                   value={formData.correo}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 />
               </div>
             </div>
@@ -696,10 +700,10 @@ export default function RegisterPage() {
 
           {/* Direccion */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">{t('companyAddress')}</h3>
+            <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">{t('companyAddress')}</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="departamento" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="departamento" className="block text-sm font-medium text-foreground">
                   {t('department')} *
                 </label>
                 <select
@@ -708,7 +712,7 @@ export default function RegisterPage() {
                   required
                   value={formData.departamento}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 >
                   <option value="">{t('selectDepartment')}</option>
                   {DEPARTAMENTOS.map((dep) => (
@@ -719,7 +723,7 @@ export default function RegisterPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="municipio" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="municipio" className="block text-sm font-medium text-foreground">
                   {t('municipality')} *
                 </label>
                 <select
@@ -729,7 +733,7 @@ export default function RegisterPage() {
                   value={formData.municipio}
                   onChange={handleChange}
                   disabled={!formData.departamento}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900 disabled:bg-gray-100"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground disabled:bg-muted"
                 >
                   <option value="">
                     {formData.departamento ? t('selectMunicipality') : t('selectDepartmentFirst')}
@@ -743,7 +747,7 @@ export default function RegisterPage() {
               </div>
               <div className="sm:col-span-2">
                 <div className="flex justify-between items-center">
-                  <label htmlFor="complemento" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="complemento" className="block text-sm font-medium text-foreground">
                     {t('fullAddress')} *
                   </label>
                   <CharCounter length={formData.complemento.length} max={500} />
@@ -757,7 +761,7 @@ export default function RegisterPage() {
                   placeholder={t('addressPlaceholder')}
                   value={formData.complemento}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 />
               </div>
             </div>
@@ -765,10 +769,10 @@ export default function RegisterPage() {
 
           {/* Usuario Administrador */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">{t('adminUser')}</h3>
+            <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">{t('adminUser')}</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="adminNombre" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="adminNombre" className="block text-sm font-medium text-foreground">
                   {t('fullName')} *
                 </label>
                 <input
@@ -779,11 +783,11 @@ export default function RegisterPage() {
                   maxLength={200}
                   value={formData.adminNombre}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 />
               </div>
               <div>
-                <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="adminEmail" className="block text-sm font-medium text-foreground">
                   {t('emailLabel')} *
                 </label>
                 <input
@@ -794,40 +798,60 @@ export default function RegisterPage() {
                   maxLength={100}
                   value={formData.adminEmail}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
+                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
                 />
+                {fieldErrors.adminEmail && <p className="text-sm text-destructive mt-1">{fieldErrors.adminEmail}</p>}
               </div>
               <div>
-                <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="adminPassword" className="block text-sm font-medium text-foreground">
                   {t('passwordLabel')} *
                 </label>
-                <input
-                  type="password"
-                  name="adminPassword"
-                  id="adminPassword"
-                  required
-                  minLength={8}
-                  maxLength={128}
-                  value={formData.adminPassword}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
-                />
+                <div className="mt-1 relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="adminPassword"
+                    id="adminPassword"
+                    required
+                    minLength={8}
+                    maxLength={128}
+                    value={formData.adminPassword}
+                    onChange={handleChange}
+                    className="block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 pr-10 border bg-background text-foreground"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div>
-                <label htmlFor="adminPasswordConfirm" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="adminPasswordConfirm" className="block text-sm font-medium text-foreground">
                   {t('confirmPassword')} *
                 </label>
-                <input
-                  type="password"
-                  name="adminPasswordConfirm"
-                  id="adminPasswordConfirm"
-                  required
-                  minLength={8}
-                  maxLength={128}
-                  value={formData.adminPasswordConfirm}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white text-gray-900"
-                />
+                <div className="mt-1 relative">
+                  <input
+                    type={showPasswordConfirm ? 'text' : 'password'}
+                    name="adminPasswordConfirm"
+                    id="adminPasswordConfirm"
+                    required
+                    minLength={8}
+                    maxLength={128}
+                    value={formData.adminPasswordConfirm}
+                    onChange={handleChange}
+                    className="block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 pr-10 border bg-background text-foreground"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPasswordConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {fieldErrors.adminPasswordConfirm && <p className="text-sm text-destructive mt-1">{fieldErrors.adminPasswordConfirm}</p>}
               </div>
             </div>
           </div>
@@ -842,7 +866,7 @@ export default function RegisterPage() {
               className="mt-1"
               required
             />
-            <label htmlFor="acceptTerms" className="text-sm text-gray-600">
+            <label htmlFor="acceptTerms" className="text-sm text-muted-foreground">
               {t('acceptTerms')}{' '}
               <a href="/terminos" target="_blank" className="text-purple-600 hover:underline">
                 {t('termsAndConditions')}
@@ -865,7 +889,7 @@ export default function RegisterPage() {
           </div>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           {t('hasAccount')}{' '}
           <Link href="/login" className="font-semibold leading-6 text-primary hover:text-primary/80">
             {t('loginTitle')}

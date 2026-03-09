@@ -34,6 +34,8 @@ interface JournalEntry {
   description: string;
   status: string;
   entryType: string;
+  sourceType: string | null;
+  sourceDocumentId: string | null;
   totalDebit: number;
   totalCredit: number;
   lines: JournalEntryLine[];
@@ -105,6 +107,39 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function OriginBadge({ entry }: { entry: JournalEntry }) {
+  if (entry.sourceType === 'DTE' && entry.entryType === 'AUTOMATIC') {
+    return (
+      <Link
+        href={`/facturacion?id=${entry.sourceDocumentId || ''}`}
+        onClick={e => e.stopPropagation()}
+        className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 hover:underline"
+      >
+        Auto (DTE)
+      </Link>
+    );
+  }
+
+  const styles: Record<string, string> = {
+    MANUAL: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    AUTOMATIC: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    ADJUSTMENT: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    CLOSING: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+  };
+  const labels: Record<string, string> = {
+    MANUAL: 'Manual',
+    AUTOMATIC: 'Auto',
+    ADJUSTMENT: 'Ajuste',
+    CLOSING: 'Cierre',
+  };
+
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[entry.entryType] || 'bg-gray-100 text-gray-800'}`}>
+      {labels[entry.entryType] || entry.entryType}
+    </span>
+  );
+}
+
 export default function LibroDiarioPage() {
   const t = useTranslations('accounting');
   const tCommon = useTranslations('common');
@@ -122,6 +157,7 @@ export default function LibroDiarioPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
+  const [entryTypeFilter, setEntryTypeFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -145,6 +181,7 @@ export default function LibroDiarioPage() {
 
       const params = new URLSearchParams({ page: String(page), limit: '20' });
       if (statusFilter) params.set('status', statusFilter);
+      if (entryTypeFilter) params.set('entryType', entryTypeFilter);
       if (dateFrom) params.set('dateFrom', dateFrom);
       if (dateTo) params.set('dateTo', dateTo);
 
@@ -162,7 +199,7 @@ export default function LibroDiarioPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, dateFrom, dateTo]);
+  }, [page, statusFilter, entryTypeFilter, dateFrom, dateTo]);
 
   const fetchAccounts = useCallback(async () => {
     try {
@@ -350,6 +387,17 @@ export default function LibroDiarioPage() {
           <option value="POSTED">{t('postedStatus')}</option>
           <option value="VOIDED">{t('voidedStatus')}</option>
         </select>
+        <select
+          value={entryTypeFilter}
+          onChange={e => { setEntryTypeFilter(e.target.value); setPage(1); }}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="">Todos los tipos</option>
+          <option value="MANUAL">Manual</option>
+          <option value="AUTOMATIC">Automático (DTE)</option>
+          <option value="ADJUSTMENT">Ajuste</option>
+          <option value="CLOSING">Cierre</option>
+        </select>
         <div className="flex items-center gap-2">
           <label className="text-sm text-muted-foreground">{t('fromDate')}</label>
           <input
@@ -391,6 +439,7 @@ export default function LibroDiarioPage() {
                   <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{tCommon('date')}</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{tCommon('description')}</th>
                   <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">{tCommon('status')}</th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Origen</th>
                   <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">{t('debitCol')}</th>
                   <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">{t('creditColJournal')}</th>
                   <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-32">{tCommon('actions')}</th>
@@ -407,6 +456,7 @@ export default function LibroDiarioPage() {
                     <td className="px-4 py-2 text-sm">{formatDate(entry.entryDate)}</td>
                     <td className="px-4 py-2 text-sm max-w-xs truncate">{entry.description}</td>
                     <td className="px-4 py-2 text-center"><StatusBadge status={entry.status} /></td>
+                    <td className="px-4 py-2 text-center"><OriginBadge entry={entry} /></td>
                     <td className="px-4 py-2 text-sm text-right font-mono">{formatCurrency(Number(entry.totalDebit))}</td>
                     <td className="px-4 py-2 text-sm text-right font-mono">{formatCurrency(Number(entry.totalCredit))}</td>
                     <td className="px-4 py-2">

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,7 +82,7 @@ const ACTIVIDADES_ECONOMICAS = [
   { codigo: '96091', descripcion: 'Otras actividades de servicios personales n.c.p.' },
 ];
 
-// Searchable dropdown for Actividad Económica
+// Searchable dropdown for Actividad Económica — uses Portal to escape stacking context
 function ActivitySearchDropdown({
   value,
   onChange,
@@ -93,7 +94,9 @@ function ActivitySearchDropdown({
 }) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
 
   const filtered = React.useMemo(() => {
     if (!search) return ACTIVIDADES_ECONOMICAS;
@@ -107,22 +110,59 @@ function ActivitySearchDropdown({
 
   const selectedActivity = ACTIVIDADES_ECONOMICAS.find((a) => a.codigo === value);
 
-  // Close on outside click
+  // Position the portal dropdown below the trigger button
+  const updatePosition = React.useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPos({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, []);
+
+  // Close on outside click (checks both trigger and portal dropdown)
   React.useEffect(() => {
+    if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        triggerRef.current && !triggerRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  }, [open]);
+
+  // Close on scroll/resize to avoid stale positioning
+  React.useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [open]);
+
+  const handleOpen = () => {
+    if (!open) {
+      updatePosition();
+    }
+    setOpen(!open);
+  };
 
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={handleOpen}
         className={`flex h-10 w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
           error ? 'border-red-500' : 'border-input'
         }`}
@@ -135,8 +175,18 @@ function ActivitySearchDropdown({
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </button>
 
-      {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
+      {open && ReactDOM.createPortal(
+        <div
+          ref={dropdownRef}
+          className="rounded-md border bg-popover shadow-lg"
+          style={{
+            position: 'absolute',
+            top: pos.top,
+            left: pos.left,
+            width: pos.width,
+            zIndex: 9999,
+          }}
+        >
           <div className="p-2">
             <div className="flex items-center gap-2 border rounded-md px-2">
               <Search className="h-4 w-4 text-muted-foreground" />
@@ -177,7 +227,8 @@ function ActivitySearchDropdown({
               ))
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -284,7 +335,7 @@ export function CompanyInfoStep({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card className="relative z-10">
+        <Card>
           <CardHeader>
             <CardTitle>Datos Fiscales</CardTitle>
             <CardDescription>

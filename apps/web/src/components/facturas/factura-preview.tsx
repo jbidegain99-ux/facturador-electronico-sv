@@ -73,7 +73,7 @@ export function FacturaPreview({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden bg-[#0f0f1a] border-border">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden bg-card border-border">
         <DialogHeader className="border-b border-border pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

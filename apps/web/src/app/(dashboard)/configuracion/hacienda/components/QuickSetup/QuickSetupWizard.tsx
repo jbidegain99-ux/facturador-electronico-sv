@@ -147,7 +147,7 @@ export function QuickSetupWizard({ onBack, onComplete }: QuickSetupWizardProps) 
                   'w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all',
                   step.id < currentStep && 'bg-green-500 text-white',
                   step.id === currentStep && 'bg-purple-600 text-white ring-4 ring-purple-600/20',
-                  step.id > currentStep && 'bg-slate-700 text-slate-400'
+                  step.id > currentStep && 'bg-muted text-muted-foreground'
                 )}
               >
                 {step.id < currentStep ? (
@@ -172,7 +172,7 @@ export function QuickSetupWizard({ onBack, onComplete }: QuickSetupWizardProps) 
               <div
                 className={cn(
                   'flex-1 h-0.5 mx-2 md:mx-4',
-                  step.id < currentStep ? 'bg-green-500' : 'bg-slate-700'
+                  step.id < currentStep ? 'bg-green-500' : 'bg-muted'
                 )}
               />
             )}

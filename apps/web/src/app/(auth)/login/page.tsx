@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Eye, EyeOff } from 'lucide-react';
 import { FacturoLogo } from '@/components/brand';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -83,7 +84,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8 bg-background">
+    <div className="relative flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8 bg-background">
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         {/* Logo */}
         <div className="flex justify-center mb-6">

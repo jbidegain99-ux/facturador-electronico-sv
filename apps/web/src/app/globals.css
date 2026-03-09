@@ -147,9 +147,10 @@
   }
 
   .light .glass-card {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-left: 2px solid rgba(139, 92, 246, 0.4);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid hsl(var(--border));
+    border-left: 2px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 24px rgba(124, 58, 237, 0.08);
   }
 
   .glass-card:hover {
@@ -160,8 +161,9 @@
   }
 
   .light .glass-card:hover {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.95);
     border-color: rgba(139, 92, 246, 0.3);
+    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.12);
   }
 
   /* Gradient Text */
@@ -212,6 +214,16 @@
     background: rgba(139, 92, 246, 0.1);
   }
 
+  .light .btn-secondary {
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+  .light .btn-secondary:hover {
+    border-color: hsl(var(--primary));
+    color: hsl(var(--primary));
+    background: rgba(124, 58, 237, 0.05);
+  }
+
   /* Input Styles */
   .input-rc {
     @apply w-full px-4 py-3 rounded-lg bg-background text-foreground transition-all duration-200;
@@ -252,6 +264,10 @@
   .card-hover:hover {
     transform: translateY(-4px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .light .card-hover:hover {
+    box-shadow: 0 20px 40px rgba(124, 58, 237, 0.1);
   }
 
   /* Gradient Backgrounds */

@@ -68,7 +68,7 @@ export default function AdminSetupPage() {
     return (
       <div className="flex min-h-screen flex-col justify-center items-center px-6 py-12">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="mt-4 text-gray-600">{t('checkingSystem')}</p>
+        <p className="mt-4 text-muted-foreground">{t('checkingSystem')}</p>
       </div>
     );
   }
@@ -80,8 +80,8 @@ export default function AdminSetupPage() {
           <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('systemConfigured')}</h2>
-          <p className="text-gray-600 mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-2">{t('systemConfigured')}</h2>
+          <p className="text-muted-foreground mb-6">
             {t('systemConfiguredDesc')}
           </p>
           <Link
@@ -101,10 +101,10 @@ export default function AdminSetupPage() {
         <div className="mx-auto w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
           <Shield className="w-8 h-8 text-blue-600" />
         </div>
-        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-foreground">
           {t('adminSetupTitle')}
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-muted-foreground">
           {t('adminSetupSubtitle')}
         </p>
       </div>
@@ -127,7 +127,7 @@ export default function AdminSetupPage() {
             )}
 
             <div>
-              <label htmlFor="nombre" className="block text-sm font-medium leading-6 text-gray-900">
+              <label htmlFor="nombre" className="block text-sm font-medium leading-6 text-foreground">
                 {t('fullName')}
               </label>
               <div className="mt-2">
@@ -138,14 +138,14 @@ export default function AdminSetupPage() {
                   required
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 px-3"
+                  className="block w-full rounded-md border-0 py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 px-3"
                   placeholder="Juan Perez"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+              <label htmlFor="email" className="block text-sm font-medium leading-6 text-foreground">
                 {t('emailLabel')}
               </label>
               <div className="mt-2">
@@ -157,14 +157,14 @@ export default function AdminSetupPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 px-3"
+                  className="block w-full rounded-md border-0 py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 px-3"
                   placeholder="admin@empresa.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
+              <label htmlFor="password" className="block text-sm font-medium leading-6 text-foreground">
                 {t('passwordLabel')}
               </label>
               <div className="mt-2">
@@ -177,7 +177,7 @@ export default function AdminSetupPage() {
                   minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 px-3"
+                  className="block w-full rounded-md border-0 py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 px-3"
                   placeholder={t('minChars')}
                 />
               </div>
@@ -195,7 +195,7 @@ export default function AdminSetupPage() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           {t('adminSetupNote')}
         </p>
       </div>

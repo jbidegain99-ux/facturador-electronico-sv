@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { MaskedInput } from '@/components/ui/masked-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Eye, EyeOff, HelpCircle } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 // Catálogo de Departamentos de El Salvador
 const DEPARTAMENTOS = [
@@ -547,7 +548,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
+    <div className="relative flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
         <h2 className="mt-6 text-xl sm:text-2xl font-bold leading-9 tracking-tight text-foreground text-center sm:text-left">
           {t('registerTitle')}

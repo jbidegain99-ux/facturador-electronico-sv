@@ -63,7 +63,7 @@ const STATUS_DISPLAY: Record<string, StatusDisplay> = {
     label: 'Borrador',
     bgClass: 'bg-gray-500/20',
     textClass: 'text-gray-400',
-    borderClass: 'border-gray-500/30',
+    borderClass: 'border-border',
   },
   SENT: {
     label: 'Pendiente de Aprobacion',
@@ -105,7 +105,7 @@ const STATUS_DISPLAY: Record<string, StatusDisplay> = {
     label: 'Cancelada',
     bgClass: 'bg-gray-500/20',
     textClass: 'text-gray-500',
-    borderClass: 'border-gray-500/30',
+    borderClass: 'border-border',
   },
   CHANGES_REQUESTED: {
     label: 'Cambios Solicitados',
@@ -699,7 +699,7 @@ export default function QuoteApprovalPage() {
                               type="checkbox"
                               checked={isRemoved}
                               onChange={() => toggleItemRemoval(item.id)}
-                              className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-red-500 focus:ring-red-500/40 focus:ring-offset-0 cursor-pointer"
+                              className="w-4 h-4 rounded border-border bg-background text-red-500 focus:ring-red-500/40 focus:ring-offset-0 cursor-pointer"
                             />
                           </label>
                         </td>
@@ -767,7 +767,7 @@ export default function QuoteApprovalPage() {
                           type="checkbox"
                           checked={isRemoved}
                           onChange={() => toggleItemRemoval(item.id)}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-red-500 focus:ring-red-500/40 focus:ring-offset-0 cursor-pointer"
+                          className="w-4 h-4 rounded border-border bg-background text-red-500 focus:ring-red-500/40 focus:ring-offset-0 cursor-pointer"
                         />
                       </label>
                     )}

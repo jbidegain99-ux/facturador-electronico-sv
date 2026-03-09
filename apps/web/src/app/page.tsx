@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { FileText, Shield, Zap, Building2, CheckCircle, ArrowRight } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function Home() {
   return (
@@ -12,12 +13,13 @@ export default function Home() {
             <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
               <FileText className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-white">Facturador SV</span>
+            <span className="text-xl font-bold text-foreground">Facturador SV</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="btn-secondary text-sm px-4 py-2">
               Iniciar Sesion
             </Link>
+            <ThemeToggle />
             <Link href="/register" className="btn-primary text-sm px-4 py-2">
               Registrarse
             </Link>
@@ -38,7 +40,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="text-white">Facturacion Electronica</span>
+            <span className="text-foreground">Facturacion Electronica</span>
             <br />
             <span className="gradient-text">para El Salvador</span>
           </h1>
@@ -81,7 +83,7 @@ export default function Home() {
       <section className="py-24 relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
+            <h2 className="text-4xl font-bold text-foreground mb-4">
               Todo lo que necesitas para facturar
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -95,7 +97,7 @@ export default function Home() {
               <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center mb-6">
                 <FileText className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Todos los DTEs</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Todos los DTEs</h3>
               <p className="text-muted-foreground">
                 Facturas, Creditos Fiscales, Notas de Credito, Notas de Debito,
                 Comprobantes de Retencion y mas.
@@ -107,7 +109,7 @@ export default function Home() {
               <div className="w-14 h-14 rounded-xl gradient-secondary flex items-center justify-center mb-6">
                 <Shield className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Firma Digital</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Firma Digital</h3>
               <p className="text-muted-foreground">
                 Firma automatica de documentos con tu certificado digital.
                 Seguridad y autenticidad garantizada.
@@ -119,7 +121,7 @@ export default function Home() {
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-6">
                 <Zap className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Transmision al MH</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Transmision al MH</h3>
               <p className="text-muted-foreground">
                 Envio automatico al Ministerio de Hacienda.
                 Recibe el sello de recepcion en segundos.
@@ -131,7 +133,7 @@ export default function Home() {
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center mb-6">
                 <Building2 className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Multi-Empresa</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Multi-Empresa</h3>
               <p className="text-muted-foreground">
                 Gestiona multiples empresas desde una sola cuenta.
                 Ideal para contadores y despachos.
@@ -143,7 +145,7 @@ export default function Home() {
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mb-6">
                 <CheckCircle className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Validacion en Tiempo Real</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Validacion en Tiempo Real</h3>
               <p className="text-muted-foreground">
                 Valida tus documentos antes de enviarlos.
                 Evita rechazos y errores costosos.
@@ -157,7 +159,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Reportes y Estadisticas</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Reportes y Estadisticas</h3>
               <p className="text-muted-foreground">
                 Dashboard con metricas en tiempo real.
                 Exporta reportes para tu contabilidad.
@@ -171,7 +173,7 @@ export default function Home() {
       <section className="py-24 relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
+            <h2 className="text-4xl font-bold text-foreground mb-4">
               Planes para cada necesidad
             </h2>
             <p className="text-muted-foreground text-lg">
@@ -183,7 +185,7 @@ export default function Home() {
             {/* Trial Plan */}
             <div className="glass-card p-8">
               <div className="text-lg font-medium text-muted-foreground mb-2">Prueba</div>
-              <div className="text-4xl font-bold text-white mb-1">Gratis</div>
+              <div className="text-4xl font-bold text-foreground mb-1">Gratis</div>
               <div className="text-sm text-muted-foreground mb-6">Para siempre</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -210,7 +212,7 @@ export default function Home() {
                 Popular
               </div>
               <div className="text-lg font-medium text-muted-foreground mb-2">Profesional</div>
-              <div className="text-4xl font-bold text-white mb-1">$29<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
+              <div className="text-4xl font-bold text-foreground mb-1">$29<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
               <div className="text-sm text-muted-foreground mb-6">Facturado mensualmente</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -238,7 +240,7 @@ export default function Home() {
             {/* Enterprise Plan */}
             <div className="glass-card p-8">
               <div className="text-lg font-medium text-muted-foreground mb-2">Empresa</div>
-              <div className="text-4xl font-bold text-white mb-1">$99<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
+              <div className="text-4xl font-bold text-foreground mb-1">$99<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
               <div className="text-sm text-muted-foreground mb-6">Facturado mensualmente</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -270,7 +272,7 @@ export default function Home() {
       <section className="py-24 relative">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <div className="glass-card p-12 glow-primary">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Comienza a facturar hoy
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
@@ -293,12 +295,12 @@ export default function Home() {
               <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
                 <FileText className="w-4 h-4 text-white" />
               </div>
-              <span className="font-semibold text-white">Facturador SV</span>
+              <span className="font-semibold text-foreground">Facturador SV</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link href="#" className="hover:text-white transition-colors">Terminos</Link>
-              <Link href="#" className="hover:text-white transition-colors">Privacidad</Link>
-              <Link href="#" className="hover:text-white transition-colors">Soporte</Link>
+              <Link href="#" className="hover:text-foreground transition-colors">Terminos</Link>
+              <Link href="#" className="hover:text-foreground transition-colors">Privacidad</Link>
+              <Link href="#" className="hover:text-foreground transition-colors">Soporte</Link>
             </div>
             <div className="text-sm text-muted-foreground">
               Powered by <span className="gradient-text font-semibold">Republicode</span>

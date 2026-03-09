@@ -138,17 +138,17 @@ function ActivitySearchDropdown({
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  // Close on scroll/resize to avoid stale positioning
+  // Reposition on scroll/resize so the dropdown follows the trigger
   React.useEffect(() => {
     if (!open) return;
-    const close = () => setOpen(false);
-    window.addEventListener('scroll', close, true);
-    window.addEventListener('resize', close);
+    const reposition = () => updatePosition();
+    window.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
     return () => {
-      window.removeEventListener('scroll', close, true);
-      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
     };
-  }, [open]);
+  }, [open, updatePosition]);
 
   const handleOpen = () => {
     if (!open) {

@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
-import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle, FileUp } from 'lucide-react';
+import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle, FileUp, Image } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { LogoUpload } from '@/components/settings/logo-upload';
 
 const NRC_PATTERN = /^\d{1,7}(-\d)?$/;
 const PHONE_PATTERN = /^\d{4}-\d{4}$/;
@@ -54,6 +55,7 @@ interface TenantData {
   telefono: string;
   correo: string;
   nombreComercial?: string;
+  logoUrl?: string | null;
 }
 
 export default function ConfiguracionPage() {
@@ -67,6 +69,7 @@ export default function ConfiguracionPage() {
   const [success, setSuccess] = React.useState<string | null>(null);
   const [demoMode, setDemoMode] = React.useState(false);
   const [togglingDemo, setTogglingDemo] = React.useState(false);
+  const [logoUrl, setLogoUrl] = React.useState<string | null>(null);
 
   // Form state
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
@@ -121,6 +124,7 @@ export default function ConfiguracionPage() {
           direccion: data.direccion || { departamento: '', municipio: '', complemento: '' },
         });
         setTenant(data);
+        setLogoUrl(data.logoUrl ?? null);
 
         if (statusRes.ok) {
           const statusData = await statusRes.json();
@@ -508,6 +512,27 @@ export default function ConfiguracionPage() {
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
             </Link>
+          </CardContent>
+        </Card>
+
+        {/* Branding / Logo */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Image className="h-5 w-5" />
+              Branding
+              <Badge className="ml-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">PRO</Badge>
+            </CardTitle>
+            <CardDescription>
+              Personaliza tu marca con tu logo en las facturas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LogoUpload
+              currentLogoUrl={logoUrl}
+              onUploadSuccess={(url) => setLogoUrl(url)}
+              onDeleteSuccess={() => setLogoUrl(null)}
+            />
           </CardContent>
         </Card>
 

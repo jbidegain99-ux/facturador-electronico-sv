@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException, Optional, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException, Optional, Inject, forwardRef, ForbiddenException } from '@nestjs/common';
 declare global {
   interface String {
     hashCode(): number;
@@ -20,6 +20,7 @@ import { MhAuthService } from '../mh-auth/mh-auth.service';
 import { DefaultEmailService } from '../email-config/services/default-email.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { AccountingAutomationService } from '../accounting/accounting-automation.service';
+import { SucursalesService } from '../sucursales/sucursales.service';
 import { invoiceSentTemplate } from '../email-config/templates';
 import { PdfService } from './pdf.service';
 import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
@@ -49,6 +50,7 @@ export class DteService {
     private pdfService: PdfService,
     @Optional() @Inject(forwardRef(() => WebhooksService)) private webhooksService: WebhooksService | null,
     @Optional() @Inject(forwardRef(() => AccountingAutomationService)) private accountingAutomation: AccountingAutomationService | null,
+    @Optional() private sucursalesService: SucursalesService | null,
   ) {}
 
   /**
@@ -90,7 +92,7 @@ export class DteService {
 
     const codigoGeneracion = uuidv4().toUpperCase();
     const correlativo = await this.getNextCorrelativo(tenantId, tipoDte);
-    const numeroControl = this.generateNumeroControl(tenantId, tipoDte, correlativo);
+    const numeroControl = await this.generateNumeroControl(tenantId, tipoDte, correlativo);
 
     const identificacionData = (data.identificacion as Record<string, unknown>) || {};
     const jsonOriginal = {
@@ -738,12 +740,18 @@ export class DteService {
   }
 
   async anularDte(dteId: string, motivo: string, tenantId?: string) {
+    if (!motivo || motivo.trim().length < 10) {
+      throw new BadRequestException('El motivo de anulación debe tener al menos 10 caracteres');
+    }
+
     const dte = tenantId
       ? await this.prisma.dTE.findFirst({
           where: { id: dteId, tenantId },
+          include: { tenant: true },
         })
       : await this.prisma.dTE.findUnique({
           where: { id: dteId },
+          include: { tenant: true },
         });
 
     if (!dte) {
@@ -754,18 +762,56 @@ export class DteService {
       throw new BadRequestException('El DTE ya está anulado');
     }
 
+    // Only allow cancellation for PENDIENTE, FIRMADO, PROCESADO states
+    const cancelableStates: string[] = [DTEStatus.PENDIENTE, DTEStatus.FIRMADO, DTEStatus.PROCESADO];
+    if (!cancelableStates.includes(dte.estado)) {
+      throw new BadRequestException(`No se puede anular un DTE en estado ${dte.estado}`);
+    }
+
+    const fechaAnulacion = new Date();
+    let selloAnulacion: string | null = null;
+    let descripcionMh = `Anulado: ${motivo}`;
+
+    // If the DTE was PROCESADO by Hacienda, we should note that MH anulation
+    // should be done via /transmitter/anular endpoint with MH credentials.
+    // The local anulation marks it locally; MH anulation requires separate step.
+    if (dte.estado === DTEStatus.PROCESADO && dte.selloRecepcion) {
+      descripcionMh = `Anulado localmente: ${motivo}. Requiere anulación en Hacienda via transmitter.`;
+      this.logger.warn(
+        `DTE ${dteId} (${dte.codigoGeneracion}) anulado localmente pero tiene sello MH. ` +
+        `Se recomienda enviar anulación a Hacienda.`,
+      );
+    }
+
     const updated = await this.prisma.dTE.update({
       where: { id: dteId },
       data: {
         estado: DTEStatus.ANULADO,
-        descripcionMh: `Anulado: ${motivo}`,
+        descripcionMh,
+        motivoAnulacion: motivo.trim(),
+        fechaAnulacion,
+        selloAnulacion,
       },
     });
 
-    await this.logDteAction(dteId, 'ANULADO', { motivo });
+    await this.logDteAction(dteId, 'ANULADO', {
+      motivo,
+      estadoAnterior: dte.estado,
+      teniaSelloMh: !!dte.selloRecepcion,
+      fechaAnulacion: fechaAnulacion.toISOString(),
+    });
 
     // Trigger accounting reversal (fire-and-forget)
     this.triggerAccountingReversal(dteId, dte.tenantId);
+
+    // Trigger webhook (fire-and-forget)
+    this.triggerWebhook(dte.tenantId, 'dte.anulado', {
+      dteId,
+      codigoGeneracion: dte.codigoGeneracion,
+      numeroControl: dte.numeroControl,
+      motivo,
+      estadoAnterior: dte.estado,
+    }, dteId);
 
     return updated;
   }
@@ -782,9 +828,30 @@ export class DteService {
     return match ? parseInt(match[1], 10) + 1 : 1;
   }
 
-  private generateNumeroControl(tenantId: string, tipoDte: string, correlativo: number): string {
-    const establecimiento = `M${String(Math.abs(tenantId.hashCode() % 999) + 1).padStart(3, '0')}P001`; // TODO: Get from tenant config
-    return `DTE-${tipoDte}-${establecimiento}-${correlativo.toString().padStart(15, '0')}`;
+  private async generateNumeroControl(
+    tenantId: string,
+    tipoDte: string,
+    correlativo: number,
+    sucursalId?: string,
+    puntoVentaId?: string,
+  ): Promise<string> {
+    let codEstablecimiento = 'M001P001'; // Default fallback
+
+    if (this.sucursalesService) {
+      try {
+        codEstablecimiento = await this.sucursalesService.getCodEstablecimiento(
+          tenantId,
+          sucursalId,
+          puntoVentaId,
+        );
+      } catch (err) {
+        this.logger.warn(`Failed to get codEstablecimiento for tenant ${tenantId}: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+
+    // Ensure 8 chars (M###P###)
+    const codPadded = codEstablecimiento.padStart(8, '0').slice(0, 8);
+    return `DTE-${tipoDte}-${codPadded}-${correlativo.toString().padStart(15, '0')}`;
   }
 
   private async logDteAction(dteId: string, accion: string, data: Record<string, unknown>) {

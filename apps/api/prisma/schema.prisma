@@ -85,6 +85,13 @@ model Tenant {
   // Accounting automation
   autoJournalEnabled  Boolean   @default(false)
   autoJournalTrigger  String    @default("ON_APPROVED") @db.NVarChar(20)
+
+  // Establecimiento por defecto (para tenants sin multi-sucursal)
+  codEstableMH    String?   @db.NVarChar(4)
+  codPuntoVentaMH String?   @db.NVarChar(4)
+
+  // Sucursales
+  sucursales      Sucursal[]
 }
 
 model User {
@@ -158,6 +165,18 @@ model DTE {
   totalIva         Decimal   @db.Decimal(12, 2)
   totalPagar       Decimal   @db.Decimal(12, 2)
   intentosEnvio    Int       @default(0)
+
+  // Anulacion
+  motivoAnulacion String?   @db.NVarChar(500)
+  fechaAnulacion  DateTime?
+  selloAnulacion  String?
+
+  // Sucursal / Punto de venta
+  sucursalId      String?
+  sucursal        Sucursal?  @relation(fields: [sucursalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  puntoVentaId    String?
+  puntoVenta      PuntoVenta? @relation(fields: [puntoVentaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
   createdAt        DateTime  @default(now())
   logs             DTELog[]
 
@@ -167,6 +186,7 @@ model DTE {
   @@index([tenantId, estado, createdAt])
   @@index([tenantId, clienteId])
   @@index([clienteId])
+  @@index([sucursalId])
 }
 
 model DTELog {
@@ -180,6 +200,56 @@ model DTELog {
   createdAt DateTime @default(now())
 
   @@index([dteId])
+}
+
+// ============================================================================
+// SUCURSALES Y PUNTOS DE VENTA
+// ============================================================================
+
+model Sucursal {
+  id                String       @id @default(cuid())
+  tenantId          String
+  tenant            Tenant       @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  nombre            String       @db.NVarChar(200)
+  codEstableMH      String?      @db.NVarChar(4)   // Codigo MH (ej: "M001")
+  codEstable        String?      @db.NVarChar(10)   // Codigo interno
+  tipoEstablecimiento String     @default("02")     // CAT-011: 01=Sucursal, 02=Casa Matriz
+  direccion         String       @db.NVarChar(Max)
+  departamento      String?      @db.NVarChar(2)
+  municipio         String?      @db.NVarChar(2)
+  telefono          String?
+  correo            String?
+  esPrincipal       Boolean      @default(false)
+  activa            Boolean      @default(true)
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  puntosVenta       PuntoVenta[]
+  dtes              DTE[]
+
+  @@unique([tenantId, codEstableMH])
+  @@index([tenantId])
+}
+
+model PuntoVenta {
+  id                String     @id @default(cuid())
+  sucursalId        String
+  sucursal          Sucursal   @relation(fields: [sucursalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  nombre            String     @db.NVarChar(200)
+  codPuntoVentaMH   String?    @db.NVarChar(4)   // Codigo MH (ej: "P001")
+  codPuntoVenta     String?    @db.NVarChar(15)   // Codigo interno
+  activo            Boolean    @default(true)
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  dtes              DTE[]
+
+  @@unique([sucursalId, codPuntoVentaMH])
+  @@index([sucursalId])
 }
 
 // ============================================================================

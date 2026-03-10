@@ -28,6 +28,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { QuotesModule } from './modules/quotes/quotes.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
+import { SucursalesModule } from './modules/sucursales/sucursales.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
@@ -80,6 +81,7 @@ const imports = [
   QuotesModule,
   AccountingModule,
   WebhooksModule,
+  SucursalesModule,
 ];
 
 @Module({

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
+import { AnularDteDialog } from '@/components/dte/anular-dte-dialog';
 import { formatCurrency, formatDateTime, getTipoDteName } from '@/lib/utils';
 import {
   ArrowLeft,
@@ -80,6 +81,7 @@ export default function FacturaDetallePage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [anulando, setAnulando] = React.useState(false);
+  const [showAnularDialog, setShowAnularDialog] = React.useState(false);
   const [downloadingPdf, setDownloadingPdf] = React.useState(false);
   const [sendingEmail, setSendingEmail] = React.useState(false);
   const [emailResult, setEmailResult] = React.useState<{ success: boolean; message: string } | null>(null);
@@ -179,8 +181,8 @@ export default function FacturaDetallePage() {
     }
   };
 
-  const handleAnular = async () => {
-    if (!dte || !confirm('¿Estás seguro de que deseas anular este documento?')) return;
+  const handleAnular = async (motivo: string) => {
+    if (!dte) return;
 
     setAnulando(true);
     const token = localStorage.getItem('token');
@@ -192,7 +194,7 @@ export default function FacturaDetallePage() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ motivo: 'Anulacion solicitada por usuario' }),
+        body: JSON.stringify({ motivo }),
       });
 
       if (!res.ok) {
@@ -200,10 +202,10 @@ export default function FacturaDetallePage() {
         throw new Error(errorData.message || 'Error al anular');
       }
 
-      alert('Documento anulado correctamente');
+      setShowAnularDialog(false);
       router.push('/facturas');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al anular el documento');
+      throw err;
     } finally {
       setAnulando(false);
     }
@@ -336,13 +338,9 @@ export default function FacturaDetallePage() {
             )}
             {t('sendEmail')}
           </Button>
-          {dte.estado === 'PROCESADO' && (
-            <Button variant="destructive" onClick={handleAnular} disabled={anulando}>
-              {anulando ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Ban className="mr-2 h-4 w-4" />
-              )}
+          {(dte.estado === 'PROCESADO' || dte.estado === 'PENDIENTE' || dte.estado === 'FIRMADO') && (
+            <Button variant="destructive" onClick={() => setShowAnularDialog(true)} disabled={anulando}>
+              <Ban className="mr-2 h-4 w-4" />
               {t('void')}
             </Button>
           )}
@@ -567,6 +565,15 @@ export default function FacturaDetallePage() {
           )}
         </div>
       </div>
+
+      <AnularDteDialog
+        open={showAnularDialog}
+        onClose={() => setShowAnularDialog(false)}
+        onConfirm={handleAnular}
+        dteNumeroControl={dte?.numeroControl || ''}
+        dteEstado={dte?.estado || ''}
+        isLoading={anulando}
+      />
     </div>
   );
 }

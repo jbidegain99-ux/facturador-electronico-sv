@@ -40,6 +40,11 @@ export function createMockDte(overrides?: Partial<DTE>): DTE {
     totalIva: new Prisma.Decimal('13.00'),
     totalPagar: new Prisma.Decimal('113.00'),
     intentosEnvio: 0,
+    motivoAnulacion: null,
+    fechaAnulacion: null,
+    selloAnulacion: null,
+    sucursalId: null,
+    puntoVentaId: null,
     createdAt: new Date('2025-01-15T10:00:00Z'),
     ...overrides,
   };

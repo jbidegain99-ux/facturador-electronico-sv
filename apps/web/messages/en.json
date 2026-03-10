@@ -165,6 +165,7 @@
     "catalog": "Catalog",
     "support": "Support",
     "webhooks": "Webhooks",
+    "branches": "Branches",
     "settings": "Settings",
     "byRepubicode": "by Republicode"
   },

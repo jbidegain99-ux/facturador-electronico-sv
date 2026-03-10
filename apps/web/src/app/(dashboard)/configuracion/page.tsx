@@ -630,6 +630,37 @@ export default function ConfiguracionPage() {
           </CardContent>
         </Card>
 
+        {/* Sucursales Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Sucursales y Puntos de Venta
+            </CardTitle>
+            <CardDescription>
+              Administra las sucursales y puntos de venta de tu empresa
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/configuracion/sucursales">
+              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <Building2 className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Gestionar Sucursales</p>
+                    <p className="text-sm text-muted-foreground">
+                      Crea y administra sucursales, puntos de venta y codigos de establecimiento
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
+
         {/* Demo Mode Card */}
         <Card className={`lg:col-span-2 ${demoMode ? 'border-yellow-500/50' : ''}`}>
           <CardHeader>

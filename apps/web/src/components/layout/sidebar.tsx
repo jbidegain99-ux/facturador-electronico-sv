@@ -18,13 +18,14 @@ import {
   ClipboardList,
   BookOpen,
   Webhook,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { useTranslations } from 'next-intl';
 
-type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'accounting' | 'catalog' | 'webhooks' | 'support' | 'settings';
+type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'accounting' | 'catalog' | 'webhooks' | 'branches' | 'support' | 'settings';
 
 const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; proBadge: boolean; iconColor: string }[] = [
   { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, proBadge: false, iconColor: 'text-purple-600' },
@@ -36,6 +37,7 @@ const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; pro
   { key: 'accounting', href: '/contabilidad', icon: BookOpen, proBadge: true, iconColor: 'text-emerald-500' },
   { key: 'catalog', href: '/catalogo', icon: Package, proBadge: false, iconColor: 'text-amber-500' },
   { key: 'webhooks', href: '/webhooks', icon: Webhook, proBadge: true, iconColor: 'text-indigo-500' },
+  { key: 'branches', href: '/configuracion/sucursales', icon: Building2, proBadge: false, iconColor: 'text-rose-500' },
   { key: 'support', href: '/soporte', icon: HelpCircle, proBadge: false, iconColor: 'text-pink-500' },
   { key: 'settings', href: '/configuracion', icon: Settings, proBadge: false, iconColor: 'text-gray-500' },
 ];

@@ -48,11 +48,26 @@ const CONDICIONES_PAGO = [
 ];
 
 // ── Types ──────────────────────────────────────────────────────────
+interface SucursalOption {
+  id: string;
+  nombre: string;
+  codEstableMH: string;
+  puntosVenta?: PuntoVentaOption[];
+}
+
+interface PuntoVentaOption {
+  id: string;
+  nombre: string;
+  codPuntoVentaMH: string;
+}
+
 interface FacturaFormState {
   tipoDte: '01' | '03';
   cliente: Cliente | null;
   items: ItemFactura[];
   condicionPago: string;
+  sucursalId: string;
+  puntoVentaId: string;
 }
 
 /** Tracks which invoice items came from the catalog for usage tracking */
@@ -66,6 +81,8 @@ const initialState: FacturaFormState = {
   cliente: null,
   items: [],
   condicionPago: '01',
+  sucursalId: '',
+  puntoVentaId: '',
 };
 
 // ── Helper: track catalog usage after successful emission ──────────
@@ -111,6 +128,10 @@ export default function NuevaFacturaPage() {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [catalogRefs, setCatalogRefs] = React.useState<CatalogItemRef[]>([]);
 
+  // ── Sucursales state ───────────────────────────────────────────────
+  const [sucursales, setSucursales] = React.useState<SucursalOption[]>([]);
+  const [puntosVenta, setPuntosVenta] = React.useState<PuntoVentaOption[]>([]);
+
   // ── UI state ─────────────────────────────────────────────────────
   const [isEmitting, setIsEmitting] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
@@ -123,7 +144,56 @@ export default function NuevaFacturaPage() {
   const [hasDraft, setHasDraft] = React.useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = React.useState(false);
 
-  const { tipoDte, cliente, items, condicionPago } = formState;
+  const { tipoDte, cliente, items, condicionPago, sucursalId, puntoVentaId } = formState;
+
+  // ── Load sucursales on mount ───────────────────────────────────────
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sucursales`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        const list = Array.isArray(data) ? data : [];
+        setSucursales(list);
+        // Auto-select the principal sucursal if only one
+        if (list.length === 1) {
+          setFormState(prev => ({ ...prev, sucursalId: list[0].id }));
+        } else {
+          const principal = list.find((s: SucursalOption & { esPrincipal?: boolean }) => s.esPrincipal);
+          if (principal) {
+            setFormState(prev => ({ ...prev, sucursalId: principal.id }));
+          }
+        }
+      })
+      .catch(() => { /* non-critical */ });
+  }, []);
+
+  // ── Load puntos de venta when sucursal changes ─────────────────────
+  React.useEffect(() => {
+    if (!sucursalId) {
+      setPuntosVenta([]);
+      return;
+    }
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sucursales/${sucursalId}/puntos-venta`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        const list = Array.isArray(data) ? data : [];
+        setPuntosVenta(list);
+        // Auto-select if only one PV
+        if (list.length === 1) {
+          setFormState(prev => ({ ...prev, puntoVentaId: list[0].id }));
+        } else if (list.length > 0 && !list.some((pv: PuntoVentaOption) => pv.id === puntoVentaId)) {
+          setFormState(prev => ({ ...prev, puntoVentaId: '' }));
+        }
+      })
+      .catch(() => { /* non-critical */ });
+  }, [sucursalId]);
 
   // ── Computed totals ──────────────────────────────────────────────
   const subtotalGravado = items.reduce((sum, i) => sum + i.subtotal, 0);
@@ -229,12 +299,13 @@ export default function NuevaFacturaPage() {
       id: `item-${Date.now()}-${index}`,
     }));
 
-    setFormState({
+    setFormState(prev => ({
+      ...prev,
       tipoDte: usedTemplate.tipoDte,
       cliente: usedTemplate.cliente as Cliente | null,
       items: newItems,
       condicionPago: usedTemplate.condicionPago,
-    });
+    }));
 
     toastRef.current.success(t('templateApplied', { name: template.name }));
   };
@@ -343,12 +414,13 @@ export default function NuevaFacturaPage() {
             })
           );
 
-          setFormState({
+          setFormState(prev => ({
+            ...prev,
             tipoDte: dte.tipoDte as '01' | '03',
             cliente: null,
             items: duplicatedItems,
             condicionPago: '01',
-          });
+          }));
           toastRef.current.success(t('duplicateMsg'));
         } catch {
           toastRef.current.error(t('loadDuplicateError'));
@@ -410,6 +482,8 @@ export default function NuevaFacturaPage() {
       // Build DTE data — IDENTICAL structure to original
       const dteData = {
         tipoDte,
+        sucursalId: sucursalId || undefined,
+        puntoVentaId: puntoVentaId || undefined,
         data: {
           identificacion: {
             version: tipoDte === '01' ? 1 : 3,
@@ -549,7 +623,7 @@ export default function NuevaFacturaPage() {
 
   // ── Post-success handlers ────────────────────────────────────────
   const handleNewInvoice = () => {
-    setFormState(initialState);
+    setFormState(prev => ({ ...initialState, sucursalId: prev.sucursalId, puntoVentaId: prev.puntoVentaId }));
     setCatalogRefs([]);
     setShowSuccess(false);
     setSuccessData(null);
@@ -715,6 +789,59 @@ export default function NuevaFacturaPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Sucursal / Punto de Venta selectors */}
+          {sucursales.length > 0 && (
+            <>
+              <div className="hidden sm:block h-8 w-px bg-border" />
+
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                  Sucursal
+                </label>
+                <Select
+                  value={sucursalId}
+                  onValueChange={(v) => {
+                    setFormState(prev => ({ ...prev, sucursalId: v, puntoVentaId: '' }));
+                  }}
+                >
+                  <SelectTrigger className="w-[180px] input-rc">
+                    <SelectValue placeholder="Seleccionar..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sucursales.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.nombre} ({s.codEstableMH})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {puntosVenta.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Punto de Venta
+                  </label>
+                  <Select
+                    value={puntoVentaId}
+                    onValueChange={(v) => updateForm('puntoVentaId', v)}
+                  >
+                    <SelectTrigger className="w-[180px] input-rc">
+                      <SelectValue placeholder="Seleccionar..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {puntosVenta.map((pv) => (
+                        <SelectItem key={pv.id} value={pv.id}>
+                          {pv.nombre} ({pv.codPuntoVentaMH})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 

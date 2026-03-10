@@ -6,9 +6,12 @@ import {
   HttpException,
   HttpStatus,
   UseInterceptors,
+  UseGuards,
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { SuperAdminGuard } from '../super-admin/guards/super-admin.guard';
 import { SignerService } from './signer.service';
 
 export class SignTestDto {
@@ -23,7 +26,10 @@ export class LoadCertificateDto {
   password: string;
 }
 
+@ApiTags('signer')
 @Controller('signer')
+@ApiBearerAuth()
+@UseGuards(SuperAdminGuard)
 export class SignerController {
   constructor(private readonly signerService: SignerService) {}
 

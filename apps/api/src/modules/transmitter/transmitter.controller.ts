@@ -7,9 +7,13 @@ import {
   HttpException,
   HttpStatus,
   Query,
+  ForbiddenException,
+  Logger,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TransmitterService, DTERecord } from './transmitter.service';
 import { DteBuilderService } from '../dte/services/dte-builder.service';
+import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { DTE, TipoDte, Ambiente } from '@facturador/shared';
 import { MHEnvironment } from '@facturador/mh-client';
 
@@ -24,7 +28,6 @@ export class CreateAndTransmitDto {
   nit: string;
   password: string;
   env?: MHEnvironment;
-  tenantId: string;
   tipoDte: TipoDte;
   ambiente?: Ambiente;
   emisor: Record<string, unknown>;
@@ -55,23 +58,47 @@ export class ConsultarDto {
   env?: MHEnvironment;
 }
 
+@ApiTags('transmitter')
 @Controller('transmitter')
+@ApiBearerAuth()
 export class TransmitterController {
+  private readonly logger = new Logger(TransmitterController.name);
+
   constructor(
     private readonly transmitterService: TransmitterService,
     private readonly dteBuilder: DteBuilderService,
   ) {}
 
-  @Post('send/:dteId')
-  async sendDTE(
-    @Param('dteId') dteId: string,
-    @Body() dto: TransmitDto
-  ) {
+  /**
+   * Validates that the DTE record belongs to the authenticated user's tenant.
+   * Returns the record if valid, throws if not found or unauthorized.
+   */
+  private getDTEForTenant(dteId: string, user: CurrentUserData): DTERecord {
+    if (!user.tenantId) {
+      throw new ForbiddenException('Usuario no tiene tenant asignado');
+    }
+
     const record = this.transmitterService.getDTE(dteId);
 
     if (!record) {
       throw new HttpException(`DTE not found: ${dteId}`, HttpStatus.NOT_FOUND);
     }
+
+    if (record.tenantId !== user.tenantId) {
+      // Return 404 instead of 403 to prevent tenant enumeration
+      throw new HttpException(`DTE not found: ${dteId}`, HttpStatus.NOT_FOUND);
+    }
+
+    return record;
+  }
+
+  @Post('send/:dteId')
+  async sendDTE(
+    @Param('dteId') dteId: string,
+    @Body() dto: TransmitDto,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    const record = this.getDTEForTenant(dteId, user);
 
     try {
       if (dto.async) {
@@ -109,7 +136,14 @@ export class TransmitterController {
   }
 
   @Post('create-and-send')
-  async createAndSend(@Body() dto: CreateAndTransmitDto) {
+  async createAndSend(
+    @Body() dto: CreateAndTransmitDto,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    if (!user.tenantId) {
+      throw new ForbiddenException('Usuario no tiene tenant asignado');
+    }
+
     try {
       // 1. Build the DTE
       let dte: DTE;
@@ -134,11 +168,11 @@ export class TransmitterController {
         throw new Error(`DTE type ${dto.tipoDte} not implemented yet`);
       }
 
-      // 2. Create DTE record
+      // 2. Create DTE record — use tenantId from JWT, not from request body
       const dteId = crypto.randomUUID();
       const record: DTERecord = {
         id: dteId,
-        tenantId: dto.tenantId,
+        tenantId: user.tenantId,
         codigoGeneracion: dte.identificacion.codigoGeneracion,
         numeroControl: dte.identificacion.numeroControl,
         tipoDte: dto.tipoDte,
@@ -178,12 +212,21 @@ export class TransmitterController {
   @Get('status/:codigoGeneracion')
   async getStatus(
     @Param('codigoGeneracion') codigoGeneracion: string,
-    @Query() query: ConsultarDto
+    @Query() query: ConsultarDto,
+    @CurrentUser() user: CurrentUserData,
   ) {
-    // First check local record
+    if (!user.tenantId) {
+      throw new ForbiddenException('Usuario no tiene tenant asignado');
+    }
+
+    // First check local record (with tenant validation)
     const record = this.transmitterService.getDTEByCodigoGeneracion(codigoGeneracion);
 
     if (record) {
+      if (record.tenantId !== user.tenantId) {
+        throw new HttpException(`DTE not found: ${codigoGeneracion}`, HttpStatus.NOT_FOUND);
+      }
+
       return {
         source: 'local',
         dteId: record.id,
@@ -228,16 +271,14 @@ export class TransmitterController {
   }
 
   @Get('dte/:dteId')
-  getDTE(@Param('dteId') dteId: string) {
-    const record = this.transmitterService.getDTE(dteId);
-
-    if (!record) {
-      throw new HttpException(`DTE not found: ${dteId}`, HttpStatus.NOT_FOUND);
-    }
+  getDTE(
+    @Param('dteId') dteId: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    const record = this.getDTEForTenant(dteId, user);
 
     return {
       id: record.id,
-      tenantId: record.tenantId,
       codigoGeneracion: record.codigoGeneracion,
       numeroControl: record.numeroControl,
       tipoDte: record.tipoDte,
@@ -253,37 +294,30 @@ export class TransmitterController {
   }
 
   @Get('dte/:dteId/json')
-  getDTEJson(@Param('dteId') dteId: string) {
-    const record = this.transmitterService.getDTE(dteId);
-
-    if (!record) {
-      throw new HttpException(`DTE not found: ${dteId}`, HttpStatus.NOT_FOUND);
-    }
-
+  getDTEJson(
+    @Param('dteId') dteId: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    const record = this.getDTEForTenant(dteId, user);
     return record.jsonDte;
   }
 
   @Get('dte/:dteId/logs')
-  getDTELogs(@Param('dteId') dteId: string) {
-    const record = this.transmitterService.getDTE(dteId);
-
-    if (!record) {
-      throw new HttpException(`DTE not found: ${dteId}`, HttpStatus.NOT_FOUND);
-    }
-
+  getDTELogs(
+    @Param('dteId') dteId: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    this.getDTEForTenant(dteId, user);
     return this.transmitterService.getLogs(dteId);
   }
 
   @Post('anular/:dteId')
   async anularDTE(
     @Param('dteId') dteId: string,
-    @Body() dto: AnularDto
+    @Body() dto: AnularDto,
+    @CurrentUser() user: CurrentUserData,
   ) {
-    const record = this.transmitterService.getDTE(dteId);
-
-    if (!record) {
-      throw new HttpException(`DTE not found: ${dteId}`, HttpStatus.NOT_FOUND);
-    }
+    this.getDTEForTenant(dteId, user);
 
     try {
       const result = await this.transmitterService.anular(

@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Body, UseGuards, Request, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -28,6 +29,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @Throttle({ short: { limit: 5, ttl: 1000 }, medium: { limit: 10, ttl: 60000 }, long: { limit: 50, ttl: 3600000 } })
   @ApiOperation({ summary: 'Iniciar sesion' })
   @ApiResponse({ status: 200, description: 'Login exitoso' })
   @ApiResponse({ status: 401, description: 'Credenciales invalidas' })
@@ -39,6 +41,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @Throttle({ short: { limit: 3, ttl: 1000 }, medium: { limit: 5, ttl: 60000 }, long: { limit: 20, ttl: 3600000 } })
   @ApiOperation({ summary: 'Registrar nueva empresa y usuario administrador' })
   @ApiResponse({ status: 201, description: 'Empresa registrada exitosamente' })
   @ApiResponse({ status: 409, description: 'NIT o correo ya existe' })
@@ -76,6 +79,7 @@ export class AuthController {
 
   @Public()
   @Post('forgot-password')
+  @Throttle({ short: { limit: 2, ttl: 1000 }, medium: { limit: 3, ttl: 60000 }, long: { limit: 10, ttl: 3600000 } })
   @ApiOperation({ summary: 'Solicitar restablecimiento de contraseña' })
   @ApiResponse({ status: 200, description: 'Solicitud procesada' })
   async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: ExpressRequest) {

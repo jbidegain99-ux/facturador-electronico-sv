@@ -135,6 +135,7 @@ model Cliente {
 
   @@unique([tenantId, numDocumento])
   @@index([tenantId])
+  @@index([tenantId, createdAt])
 }
 
 model DTE {
@@ -163,6 +164,9 @@ model DTE {
   @@index([tenantId])
   @@index([estado])
   @@index([createdAt])
+  @@index([tenantId, estado, createdAt])
+  @@index([tenantId, clienteId])
+  @@index([clienteId])
 }
 
 model DTELog {

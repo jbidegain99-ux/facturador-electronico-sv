@@ -34,6 +34,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
+    // Verify token's tenantId matches user's current tenantId in DB.
+    // Prevents stale tokens from accessing wrong tenant after reassignment.
+    if (payload.tenantId && payload.tenantId !== user.tenantId) {
+      throw new UnauthorizedException('Token tenant mismatch — please login again');
+    }
+
     return {
       id: user.id,
       email: user.email,

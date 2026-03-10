@@ -172,7 +172,7 @@ describe('PlanFeaturesService', () => {
       expect(result).toContain('webhooks');
       expect(result).toContain('api_full');
       expect(result).toContain('phone_support');
-      expect(result).toHaveLength(10); // all 10 features enabled
+      expect(result).toHaveLength(11); // all 11 features enabled
     });
 
     it('should return STARTER features (5 enabled)', async () => {
@@ -200,7 +200,7 @@ describe('PlanFeaturesService', () => {
       expect(result).toContain('webhooks');
       expect(result).toContain('advanced_reports');
       expect(result).not.toContain('phone_support');
-      expect(result).toHaveLength(9);
+      expect(result).toHaveLength(10);
     });
   });
 

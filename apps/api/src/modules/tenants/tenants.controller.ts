@@ -19,9 +19,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiConsumes } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantsService } from './tenants.service';
+import { BlobStorageService } from './blob-storage.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { RequireFeature } from '../plans/decorators/require-feature.decorator';
+import { PlanFeatureGuard } from '../plans/guards/plan-feature.guard';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -33,6 +36,7 @@ export class TenantsController {
 
   constructor(
     private tenantsService: TenantsService,
+    private blobStorageService: BlobStorageService,
     private prisma: PrismaService,
   ) {}
 
@@ -384,5 +388,112 @@ export class TenantsController {
       message: 'Modo demo desactivado. Debes completar el onboarding para usar el sistema real.',
       demoMode: false,
     };
+  }
+
+  // ==================== LOGO ENDPOINTS ====================
+
+  @Post('me/logo')
+  @UseGuards(AuthGuard('jwt'), PlanFeatureGuard)
+  @ApiBearerAuth()
+  @RequireFeature('logo_branding')
+  @UseInterceptors(FileInterceptor('logo'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Subir logo del tenant (requiere plan Professional+)' })
+  @ApiResponse({ status: 200, description: 'Logo subido exitosamente' })
+  @ApiResponse({ status: 400, description: 'Archivo invalido' })
+  @ApiResponse({ status: 403, description: 'Feature no disponible en tu plan' })
+  async uploadLogo(
+    @CurrentUser() user: CurrentUserData,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!user.tenantId) {
+      throw new ForbiddenException('Usuario no tiene tenant asignado');
+    }
+
+    if (!file) {
+      throw new BadRequestException('Archivo de logo requerido');
+    }
+
+    if (!this.blobStorageService.isConfigured()) {
+      throw new BadRequestException('Almacenamiento de logos no configurado. Contacte soporte.');
+    }
+
+    // Validate file type
+    const allowedMimes = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
+    if (!allowedMimes.includes(file.mimetype)) {
+      throw new BadRequestException('El archivo debe ser PNG, JPG, WebP o SVG');
+    }
+
+    // Max 2MB
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+      throw new BadRequestException('El archivo no debe exceder 2MB');
+    }
+
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: user.tenantId },
+    });
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant no encontrado');
+    }
+
+    // Delete old logo if exists
+    if (tenant.logoUrl) {
+      await this.blobStorageService.deleteLogo(tenant.logoUrl);
+    }
+
+    // Upload new logo
+    const { url } = await this.blobStorageService.uploadLogo(
+      user.tenantId,
+      file.buffer,
+      file.mimetype,
+    );
+
+    // Update tenant
+    await this.prisma.tenant.update({
+      where: { id: user.tenantId },
+      data: { logoUrl: url },
+    });
+
+    this.logger.log(`Logo uploaded for tenant ${user.tenantId}`);
+
+    return {
+      success: true,
+      message: 'Logo subido exitosamente',
+      logoUrl: url,
+    };
+  }
+
+  @Delete('me/logo')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Eliminar logo del tenant' })
+  @ApiResponse({ status: 200, description: 'Logo eliminado' })
+  async deleteLogo(@CurrentUser() user: CurrentUserData) {
+    if (!user.tenantId) {
+      throw new ForbiddenException('Usuario no tiene tenant asignado');
+    }
+
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: user.tenantId },
+    });
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant no encontrado');
+    }
+
+    if (tenant.logoUrl) {
+      await this.blobStorageService.deleteLogo(tenant.logoUrl);
+    }
+
+    await this.prisma.tenant.update({
+      where: { id: user.tenantId },
+      data: { logoUrl: null },
+    });
+
+    this.logger.log(`Logo deleted for tenant ${user.tenantId}`);
+
+    return { success: true, message: 'Logo eliminado' };
   }
 }

@@ -1,7 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { TDocumentDefinitions, Content, StyleDictionary } from 'pdfmake/interfaces';
+import * as QRCode from 'qrcode';
 
-interface DteData {
+interface Identificacion {
+  ambiente?: string;
+  fecEmi?: string;
+  codigoGeneracion?: string;
+}
+
+export interface DteData {
   id: string;
   codigoGeneracion: string;
   numeroControl: string;
@@ -18,6 +25,7 @@ interface DteData {
     direccion?: string;
     telefono: string;
     correo: string;
+    logoUrl?: string | null;
   };
 }
 
@@ -106,10 +114,51 @@ export class PdfService {
     return false;
   }
 
+  /**
+   * Fetch a remote image and return as base64 data URL for pdfmake.
+   */
+  private async fetchImageAsDataUrl(url: string): Promise<string | null> {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+
+      const contentType = response.headers.get('content-type') || 'image/png';
+      const buffer = Buffer.from(await response.arrayBuffer());
+      return `data:${contentType};base64,${buffer.toString('base64')}`;
+    } catch (error) {
+      this.logger.warn(`Failed to fetch logo from ${url}: ${error}`);
+      return null;
+    }
+  }
+
+  /**
+   * Generate QR code as base64 data URL for the Hacienda consultation URL.
+   */
+  private async generateQrDataUrl(dte: DteData): Promise<string | null> {
+    try {
+      const identificacion = (dte.data as { identificacion?: Identificacion })?.identificacion;
+      const ambiente = identificacion?.ambiente || '00';
+      const fecEmi = identificacion?.fecEmi || dte.createdAt.toISOString().split('T')[0];
+
+      const url = `https://admin.factura.gob.sv/consultaPublica?ambiente=${ambiente}&codGen=${dte.codigoGeneracion}&fechaEmi=${fecEmi}`;
+
+      const dataUrl = await QRCode.toDataURL(url, {
+        width: 150,
+        margin: 1,
+        errorCorrectionLevel: 'M',
+      });
+      return dataUrl;
+    } catch (error) {
+      this.logger.error(`Error generating QR code: ${error}`);
+      return null;
+    }
+  }
+
   async generateInvoicePdf(dte: DteData): Promise<Buffer> {
     this.logger.log(`Generating PDF for DTE ${dte.codigoGeneracion}`);
 
     const data = dte.data as {
+      identificacion?: Identificacion;
       receptor?: Receptor;
       cuerpoDocumento?: CuerpoDocumento[];
       resumen?: Resumen;
@@ -119,6 +168,12 @@ export class PdfService {
     const items = data?.cuerpoDocumento || [];
     const resumen = data?.resumen || {};
     const isDemoMode = this.isDemoMode(dte);
+
+    // Generate QR code and fetch logo in parallel
+    const [qrDataUrl, logoDataUrl] = await Promise.all([
+      this.generateQrDataUrl(dte),
+      dte.tenant?.logoUrl ? this.fetchImageAsDataUrl(dte.tenant.logoUrl) : Promise.resolve(null),
+    ]);
 
     const styles: StyleDictionary = {
       header: {
@@ -184,12 +239,15 @@ export class PdfService {
         bold: true,
       } as Content] : []),
 
-      // Header
+      // Header with optional logo
       {
         columns: [
           {
             width: '*',
             stack: [
+              ...(logoDataUrl ? [
+                { image: logoDataUrl, width: 120, height: 50, margin: [0, 0, 0, 5] as [number, number, number, number] },
+              ] as Content[] : []),
               { text: dte.tenant?.nombre || 'Empresa', style: 'header' },
               { text: `NIT: ${dte.tenant?.nit || 'N/A'}`, style: 'small' },
               { text: `NRC: ${dte.tenant?.nrc || 'N/A'}`, style: 'small' },
@@ -302,6 +360,22 @@ export class PdfService {
           { text: `Sello de Recepcion: ${dte.selloRecibido}`, style: 'small' },
           { text: `Fecha Procesamiento: ${dte.fhProcesamiento ? this.formatDate(dte.fhProcesamiento) : 'N/A'}`, style: 'small' },
           ...(isDemoMode ? [{ text: 'Este documento fue generado en MODO DEMO y no tiene validez fiscal.', color: '#dc2626', fontSize: 9, margin: [0, 5, 0, 0] as [number, number, number, number] }] : []),
+        ],
+      } : null,
+
+      // QR Code for Hacienda verification
+      qrDataUrl ? {
+        margin: [0, 20, 0, 0] as [number, number, number, number],
+        columns: [
+          { width: '*', text: '' },
+          {
+            width: 'auto',
+            stack: [
+              { image: qrDataUrl, width: 120, height: 120, alignment: 'center' as const },
+              { text: 'Consulta publica - Ministerio de Hacienda', style: 'small', alignment: 'center' as const, margin: [0, 4, 0, 0] as [number, number, number, number] },
+            ],
+          },
+          { width: '*', text: '' },
         ],
       } : null,
     ].filter(Boolean) as Content[];

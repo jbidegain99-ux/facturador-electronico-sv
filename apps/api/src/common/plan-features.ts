@@ -22,7 +22,8 @@ export type FeatureCode =
   | 'api_full'
   | 'advanced_reports'
   | 'ticket_support'
-  | 'phone_support';
+  | 'phone_support'
+  | 'logo_branding';
 
 export const ALL_FEATURE_CODES: FeatureCode[] = [
   'invoicing',
@@ -35,6 +36,7 @@ export const ALL_FEATURE_CODES: FeatureCode[] = [
   'advanced_reports',
   'ticket_support',
   'phone_support',
+  'logo_branding',
 ];
 
 /** Legacy PlanFeatures interface used by services that still read the old shape */
@@ -85,6 +87,7 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
       advanced_reports: false,
       ticket_support: true,
       phone_support: false,
+      logo_branding: false,
     },
   },
   [PlanCode.PROFESSIONAL]: {
@@ -104,6 +107,7 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
       advanced_reports: true,
       ticket_support: true,
       phone_support: false,
+      logo_branding: true,
     },
   },
   [PlanCode.ENTERPRISE]: {
@@ -123,6 +127,7 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
       advanced_reports: true,
       ticket_support: true,
       phone_support: true,
+      logo_branding: true,
     },
   },
 };

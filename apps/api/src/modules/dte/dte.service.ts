@@ -463,7 +463,7 @@ export class DteService {
    */
   private async sendDteEmail(
     dte: { id: string; tenantId: string; tipoDte: string; codigoGeneracion: string; numeroControl: string; totalPagar: number | { toNumber(): number }; jsonOriginal: string; selloRecepcion?: string | null; estado: string; createdAt: Date },
-    tenant?: { id?: string; nombre: string; nit: string; nrc: string; direccion?: string | null; telefono: string; correo: string } | null,
+    tenant?: { id?: string; nombre: string; nit: string; nrc: string; direccion?: string | null; telefono: string; correo: string; logoUrl?: string | null } | null,
   ): Promise<void> {
     // Parse receptor email from jsonOriginal
     let parsedData: Record<string, unknown>;
@@ -498,6 +498,7 @@ export class DteService {
         direccion: tenant.direccion ?? undefined,
         telefono: tenant.telefono,
         correo: tenant.correo,
+        logoUrl: tenant.logoUrl ?? undefined,
       } : undefined,
     });
 
@@ -683,6 +684,7 @@ export class DteService {
         direccion: dte.tenant.direccion ?? undefined,
         telefono: dte.tenant.telefono,
         correo: dte.tenant.correo,
+        logoUrl: dte.tenant.logoUrl ?? undefined,
       } : undefined,
     });
 

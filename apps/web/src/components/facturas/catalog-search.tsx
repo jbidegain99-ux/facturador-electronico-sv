@@ -15,6 +15,8 @@ interface CatalogItem {
   basePrice: number;
   tipoItem: number;
   uniMedida: number;
+  tributo?: string;
+  taxRate?: number;
   isFavorite: boolean;
   usageCount: number;
 }

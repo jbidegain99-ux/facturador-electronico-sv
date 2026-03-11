@@ -342,8 +342,10 @@ export default function NuevaFacturaPage() {
     const cantidad = 1;
     const precioUnitario = Number(catalogItem.basePrice);
     const subtotal = cantidad * precioUnitario;
-    const esGravado = catalogItem.tipoItem !== 2;
-    const iva = esGravado ? subtotal * 0.13 : 0;
+    // Use catalog item's tributo to determine if gravado (20=IVA, 10=Exento, 30=NoSujeto)
+    const esGravado = !catalogItem.tributo || catalogItem.tributo === '20';
+    const taxRate = catalogItem.taxRate ?? 13;
+    const iva = esGravado ? subtotal * (taxRate / 100) : 0;
     const itemId = `item-${Date.now()}`;
 
     const newItem: ItemFactura = {
@@ -521,17 +523,17 @@ export default function NuevaFacturaPage() {
             precioUni: item.precioUnitario,
             montoDescu: item.descuento,
             ventaNoSuj: 0,
-            ventaExenta: 0,
-            ventaGravada: item.subtotal,
-            tributos: null,
+            ventaExenta: item.esExento ? item.subtotal : 0,
+            ventaGravada: item.esGravado ? item.subtotal : 0,
+            tributos: item.esGravado ? ['20'] : null,
             psv: 0,
             noGravado: 0,
             ivaItem: item.iva,
           })),
           resumen: {
             totalNoSuj: 0,
-            totalExenta: 0,
-            totalGravada: getSubtotal(),
+            totalExenta: items.filter(i => i.esExento).reduce((sum, i) => sum + i.subtotal, 0),
+            totalGravada: items.filter(i => i.esGravado).reduce((sum, i) => sum + i.subtotal, 0),
             subTotalVentas: getSubtotal(),
             descuNoSuj: 0,
             descuExenta: 0,

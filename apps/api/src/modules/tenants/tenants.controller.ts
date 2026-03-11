@@ -147,6 +147,11 @@ export class TenantsController {
         _count: {
           select: { dtes: true },
         },
+        haciendaConfig: {
+          include: {
+            environmentConfigs: true,
+          },
+        },
       },
     });
 
@@ -156,10 +161,23 @@ export class TenantsController {
 
     const isDemoMode = tenant.plan === 'DEMO' || tenant.certificatePath === 'DEMO_MODE';
 
+    // Check modern HaciendaEnvironmentConfig system (used by QuickSetup)
+    const envConfigs = tenant.haciendaConfig?.environmentConfigs ?? [];
+    const hasModernCertificate = envConfigs.some(
+      (cfg) => cfg.isConfigured && cfg.certificateP12 !== null,
+    );
+    const hasModernConnection = envConfigs.some(
+      (cfg) => cfg.isValidated && cfg.currentTokenEncrypted !== null,
+    );
+
+    // Support both legacy (certificatePath) and modern (HaciendaEnvironmentConfig) systems
+    const hasCertificate = !!tenant.certificatePath || hasModernCertificate;
+    const hasTestedConnection = !!tenant.mhToken || hasModernConnection;
+
     return {
       hasCompanyData: true, // Always true after registration
-      hasCertificate: !!tenant.certificatePath,
-      hasTestedConnection: !!tenant.mhToken,
+      hasCertificate,
+      hasTestedConnection,
       hasFirstInvoice: tenant._count.dtes > 0,
       demoMode: isDemoMode,
       plan: tenant.plan,

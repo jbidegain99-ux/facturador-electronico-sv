@@ -29,6 +29,8 @@ export class QuickSetupDto {
   })
   @IsString()
   @IsNotEmpty({ message: 'El usuario de API es requerido' })
+  @MinLength(10, { message: 'El usuario debe tener al menos 10 caracteres' })
+  @MaxLength(30, { message: 'El usuario no puede exceder 30 caracteres' })
   apiUser: string;
 
   @ApiProperty({
@@ -72,6 +74,8 @@ export class ValidateConnectionDto {
   })
   @IsString()
   @IsNotEmpty({ message: 'El usuario de API es requerido' })
+  @MinLength(10, { message: 'El usuario debe tener al menos 10 caracteres' })
+  @MaxLength(30, { message: 'El usuario no puede exceder 30 caracteres' })
   apiUser: string;
 
   @ApiProperty({

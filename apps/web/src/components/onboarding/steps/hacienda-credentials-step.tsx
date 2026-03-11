@@ -59,6 +59,8 @@ export function HaciendaCredentialsStep({
       newErrors.haciendaUser = 'El usuario es requerido';
     } else if (formData.haciendaUser.length < 14) {
       newErrors.haciendaUser = 'El usuario debe tener al menos 14 caracteres';
+    } else if (formData.haciendaUser.length > 30) {
+      newErrors.haciendaUser = 'El usuario no puede exceder 30 caracteres';
     }
 
     if (!formData.haciendaPassword) {
@@ -145,16 +147,25 @@ export function HaciendaCredentialsStep({
               <Input
                 id="haciendaUser"
                 placeholder="00000000000000"
+                maxLength={30}
                 value={formData.haciendaUser}
-                onChange={(e) => handleChange('haciendaUser', e.target.value)}
+                onChange={(e) => {
+                  const valor = e.target.value.replace(/[^0-9]/g, '');
+                  handleChange('haciendaUser', valor);
+                }}
                 className={errors.haciendaUser ? 'border-red-500' : ''}
               />
               {errors.haciendaUser && (
                 <p className="text-sm text-red-500">{errors.haciendaUser}</p>
               )}
-              <p className="text-xs text-muted-foreground">
-                Generalmente es su NIT sin guiones (14 dígitos)
-              </p>
+              <div className="flex justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Generalmente es su NIT sin guiones (14 dígitos)
+                </p>
+                <span className="text-xs text-muted-foreground">
+                  {formData.haciendaUser.length}/30
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2">

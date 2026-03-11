@@ -50,16 +50,16 @@ const planNames: Record<string, string> = {
 };
 
 const featureLabels: Record<string, { label: string; icon: typeof FileText }> = {
-  invoicing: { label: 'Facturacion electronica', icon: FileText },
-  accounting: { label: 'Modulo contable', icon: BarChart3 },
-  catalog: { label: 'Catalogo de productos', icon: Package },
+  invoicing: { label: 'Facturación electrónica', icon: FileText },
+  accounting: { label: 'Módulo contable', icon: BarChart3 },
+  catalog: { label: 'Catálogo de productos', icon: Package },
   recurring_invoices: { label: 'Facturas recurrentes', icon: Clock },
   quotes_b2b: { label: 'Cotizaciones B2B', icon: FileText },
   webhooks: { label: 'Webhooks', icon: Shield },
   api_full: { label: 'API completa', icon: Shield },
   advanced_reports: { label: 'Reportes avanzados', icon: BarChart3 },
   ticket_support: { label: 'Soporte por tickets', icon: Mail },
-  phone_support: { label: 'Soporte telefonico', icon: Phone },
+  phone_support: { label: 'Soporte telefónico', icon: Phone },
 };
 
 const allFeatures: FeatureCode[] = [

@@ -296,6 +296,8 @@ export function CompanyInfoStep({
 
     if (!formData.razonSocial) {
       newErrors.razonSocial = 'La razón social es requerida';
+    } else if (formData.razonSocial.length > 250) {
+      newErrors.razonSocial = 'La razón social no puede exceder 250 caracteres';
     }
 
     if (!formData.actividadEconomica) {
@@ -387,13 +389,19 @@ export function CompanyInfoStep({
               <Input
                 id="razonSocial"
                 placeholder="Mi Empresa S.A. de C.V."
+                maxLength={250}
                 value={formData.razonSocial}
                 onChange={(e) => handleChange('razonSocial', e.target.value)}
                 className={errors.razonSocial ? 'border-red-500' : ''}
               />
-              {errors.razonSocial && (
-                <p className="text-sm text-red-500">{errors.razonSocial}</p>
-              )}
+              <div className="flex justify-between">
+                {errors.razonSocial ? (
+                  <p className="text-sm text-red-500">{errors.razonSocial}</p>
+                ) : <span />}
+                <span className="text-xs text-muted-foreground">
+                  {formData.razonSocial.length}/250
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -401,9 +409,13 @@ export function CompanyInfoStep({
               <Input
                 id="nombreComercial"
                 placeholder="Nombre comercial (opcional)"
+                maxLength={250}
                 value={formData.nombreComercial}
                 onChange={(e) => handleChange('nombreComercial', e.target.value)}
               />
+              <span className="text-xs text-muted-foreground">
+                {(formData.nombreComercial || '').length}/250
+              </span>
             </div>
 
             <div className="space-y-2">

@@ -26,9 +26,9 @@ interface HelpRequestModalProps {
 }
 
 const ticketTypes = [
-  { value: 'EMAIL_CONFIG', label: 'Configuracion de Email', description: 'Ayuda con la configuracion del servicio de correo' },
-  { value: 'TECHNICAL', label: 'Problema Tecnico', description: 'Errores, fallas o comportamiento inesperado' },
-  { value: 'BILLING', label: 'Facturacion', description: 'Preguntas sobre planes, pagos o limites' },
+  { value: 'EMAIL_CONFIG', label: 'Configuración de Email', description: 'Ayuda con la configuración del servicio de correo' },
+  { value: 'TECHNICAL', label: 'Problema Técnico', description: 'Errores, fallas o comportamiento inesperado' },
+  { value: 'BILLING', label: 'Facturación', description: 'Preguntas sobre planes, pagos o límites' },
   { value: 'GENERAL', label: 'Consulta General', description: 'Otras preguntas o solicitudes' },
   { value: 'ONBOARDING', label: 'Onboarding', description: 'Ayuda con el proceso de registro en Hacienda' },
 ];

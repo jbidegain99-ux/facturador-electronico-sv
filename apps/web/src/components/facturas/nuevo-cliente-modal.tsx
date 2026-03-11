@@ -410,7 +410,7 @@ export function NuevoClienteModal({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [requiereDeducciones, setRequiereDeducciones] = React.useState(false);
 
-  // Determinar si es Consumidor Final (tipo 01) o Credito Fiscal (tipo 03)
+  // Determinar si es Consumidor Final (tipo 01) o Crédito Fiscal (tipo 03)
   const esConsumidorFinal = tipoDte === '01';
   const esCreditoFiscal = tipoDte === '03';
 
@@ -501,9 +501,9 @@ export function NuevoClienteModal({
         newErrors.nombre = 'Nombre debe tener al menos 3 caracteres';
       }
 
-      // NRC SOLO requerido para Credito Fiscal (CCF)
+      // NRC SOLO requerido para Crédito Fiscal (CCF)
       if (esCreditoFiscal && !formData.nrc.trim()) {
-        newErrors.nrc = 'NRC requerido para Credito Fiscal';
+        newErrors.nrc = 'NRC requerido para Crédito Fiscal';
       }
 
       // Validar email si se proporciona
@@ -543,7 +543,7 @@ export function NuevoClienteModal({
           tipoDocumento: formData.tipoDocumento,
           numDocumento: numDocFinal,
           nombre: nombreFinal,
-          // NRC solo para Credito Fiscal
+          // NRC solo para Crédito Fiscal
           nrc: esCreditoFiscal ? formData.nrc.trim() : undefined,
           telefono: formData.telefono.trim() || undefined,
           correo: formData.correo.trim() || undefined,
@@ -606,7 +606,7 @@ export function NuevoClienteModal({
               <DialogDescription>
                 {esConsumidorFinal
                   ? 'Cliente para Factura de Consumidor Final'
-                  : 'Cliente para Credito Fiscal (CCF)'}
+                  : 'Cliente para Crédito Fiscal (CCF)'}
               </DialogDescription>
             </div>
           </div>
@@ -713,7 +713,7 @@ export function NuevoClienteModal({
             {errors.nombre && <p className="text-xs text-destructive">{errors.nombre}</p>}
           </div>
 
-          {/* NRC - SOLO para Credito Fiscal */}
+          {/* NRC - SOLO para Crédito Fiscal */}
           {esCreditoFiscal && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

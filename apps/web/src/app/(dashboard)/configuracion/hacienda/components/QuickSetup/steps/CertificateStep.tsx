@@ -135,7 +135,7 @@ export function CertificateStep({
     }
 
     if (requiresPassword && !password) {
-      setError('Debes ingresar la contrasena del certificado');
+      setError('Debes ingresar la contraseña del certificado');
       return;
     }
 
@@ -235,7 +235,7 @@ export function CertificateStep({
           <ShieldCheck className="h-4 w-4 text-green-500" />
           <AlertDescription>
             <strong className="text-green-400">Certificado XML del MH detectado</strong>
-            {' '}&mdash; no requiere contrasena.
+            {' '}&mdash; no requiere contraseña.
             {detection.preview && (
               <span className="block text-sm text-muted-foreground mt-1">
                 NIT: {detection.preview.nit || 'N/A'}
@@ -243,7 +243,7 @@ export function CertificateStep({
                 {detection.preview.organizationName}
                 {detection.preview.validTo && (
                   <>
-                    {' | Valido hasta: '}
+                    {' | Válido hasta: '}
                     {new Date(detection.preview.validTo).toLocaleDateString()}
                   </>
                 )}
@@ -258,14 +258,14 @@ export function CertificateStep({
         <Card variant="glass">
           <CardContent className="p-6">
             <div className="space-y-2">
-              <Label htmlFor="certificatePassword">Contrasena del Certificado</Label>
+              <Label htmlFor="certificatePassword">Contraseña del Certificado</Label>
               <div className="relative">
                 <Input
                   id="certificatePassword"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Ingresa la contrasena de tu certificado"
+                  placeholder="Ingresa la contraseña de tu certificado"
                   className="pr-10"
                 />
                 <button
@@ -277,7 +277,7 @@ export function CertificateStep({
                 </button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Esta es la contrasena que usaste al descargar el certificado desde el portal de Hacienda
+                Esta es la contraseña que usaste al descargar el certificado desde el portal de Hacienda
               </p>
             </div>
           </CardContent>
@@ -297,7 +297,7 @@ export function CertificateStep({
         <FileKey2 className="h-4 w-4" />
         <AlertDescription>
           <strong>Importante:</strong> Tu certificado sera almacenado de forma segura y encriptada.
-          La contrasena nunca se guarda en texto plano.
+          La contraseña nunca se guarda en texto plano.
         </AlertDescription>
       </Alert>
 

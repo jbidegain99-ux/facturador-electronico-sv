@@ -1,9 +1,10 @@
-import { IsString, IsEmail, IsOptional, IsObject } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsObject, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateTenantDto {
   @ApiProperty({ example: 'Mi Empresa S.A. de C.V.' })
   @IsString()
+  @MaxLength(250, { message: 'El nombre no puede exceder 250 caracteres' })
   nombre: string;
 
   @ApiProperty({ example: '06141234567890' })
@@ -43,5 +44,6 @@ export class CreateTenantDto {
   @ApiProperty({ example: 'Mi Tienda', required: false })
   @IsOptional()
   @IsString()
+  @MaxLength(250, { message: 'El nombre comercial no puede exceder 250 caracteres' })
   nombreComercial?: string;
 }

@@ -34,9 +34,9 @@ export function formatDateTime(date: string | Date): string {
 export function getTipoDteName(tipo: string): string {
   const tipos: Record<string, string> = {
     '01': 'Factura',
-    '03': 'Credito Fiscal',
-    '05': 'Nota de Credito',
-    '06': 'Nota de Debito',
+    '03': 'Crédito Fiscal',
+    '05': 'Nota de Crédito',
+    '06': 'Nota de Débito',
   };
   return tipos[tipo] || tipo;
 }

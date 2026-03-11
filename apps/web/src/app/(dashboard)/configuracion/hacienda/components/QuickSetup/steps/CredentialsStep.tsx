@@ -42,12 +42,12 @@ export function CredentialsStep({
     }
 
     if (!apiPassword) {
-      setError('La contrasena de API es requerida');
+      setError('La contraseña de API es requerida');
       return;
     }
 
     if (apiPassword.length < 8) {
-      setError('La contrasena debe tener al menos 8 caracteres');
+      setError('La contraseña debe tener al menos 8 caracteres');
       return;
     }
 
@@ -71,7 +71,7 @@ export function CredentialsStep({
       const result = await res.json();
 
       if (!result.success) {
-        setError(result.error || 'Credenciales invalidas');
+        setError(result.error || 'Credenciales inválidas');
         setValidating(false);
         return;
       }
@@ -97,7 +97,7 @@ export function CredentialsStep({
         <p className="text-muted-foreground">
           Ingresa las credenciales de API para el ambiente de{' '}
           <span className={environment === 'TEST' ? 'text-amber-400' : 'text-emerald-400'}>
-            {environment === 'TEST' ? 'Pruebas' : 'Produccion'}
+            {environment === 'TEST' ? 'Pruebas' : 'Producción'}
           </span>
         </p>
       </div>
@@ -118,24 +118,33 @@ export function CredentialsStep({
               id="apiUser"
               type="text"
               value={apiUser}
-              onChange={(e) => setApiUser(e.target.value)}
+              maxLength={30}
+              onChange={(e) => {
+                const valor = e.target.value.replace(/[^0-9]/g, '');
+                setApiUser(valor);
+              }}
               placeholder="06141234567890"
             />
-            <p className="text-xs text-muted-foreground">
-              Generalmente es tu NIT sin guiones (14 digitos)
-            </p>
+            <div className="flex justify-between">
+              <p className="text-xs text-muted-foreground">
+                Generalmente es tu NIT sin guiones (14 dígitos)
+              </p>
+              <span className="text-xs text-muted-foreground">
+                {apiUser.length}/30
+              </span>
+            </div>
           </div>
 
           {/* API Password */}
           <div className="space-y-2">
-            <Label htmlFor="apiPassword">Contrasena de API</Label>
+            <Label htmlFor="apiPassword">Contraseña de API</Label>
             <div className="relative">
               <Input
                 id="apiPassword"
                 type={showPassword ? 'text' : 'password'}
                 value={apiPassword}
                 onChange={(e) => setApiPassword(e.target.value)}
-                placeholder="Tu contrasena de API"
+                placeholder="Tu contraseña de API"
                 className="pr-10"
               />
               <button
@@ -147,7 +156,7 @@ export function CredentialsStep({
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Esta contrasena se genera en el portal de Hacienda (minimo 8 caracteres)
+              Esta contraseña se genera en el portal de Hacienda (minimo 8 caracteres)
             </p>
           </div>
         </CardContent>
@@ -194,14 +203,14 @@ export function CredentialsStep({
         <Shield className="h-4 w-4" />
         <AlertDescription>
           <strong>Seguridad:</strong> Tus credenciales se almacenan de forma encriptada (AES-256).
-          Nunca compartimos tu informacion con terceros.
+          Nunca compartimos tu información con terceros.
         </AlertDescription>
       </Alert>
 
       {/* Actions */}
       <div className="flex justify-between pt-4">
         <Button type="button" variant="ghost" onClick={onBack} disabled={validating}>
-          Atras
+          Atrás
         </Button>
         <Button
           type="submit"

@@ -55,7 +55,7 @@ export function HaciendaConfigBanner({
         >
           <AlertTriangle className="h-4 w-4 flex-shrink-0" />
           <span className="text-sm">
-            Configura Hacienda para emitir facturas electronicas
+            Configura Hacienda para emitir facturas electrónicas
           </span>
           <Button
             variant="ghost"
@@ -92,10 +92,10 @@ export function HaciendaConfigBanner({
             </div>
             <div className="flex-1">
               <h4 className="font-medium text-foreground">
-                Configuracion de Hacienda pendiente
+                Configuración de Hacienda pendiente
               </h4>
               <p className="text-sm text-muted-foreground mt-1">
-                Necesitas configurar tu conexion con el Ministerio de Hacienda para poder emitir facturas electronicas.
+                Necesitas configurar tu conexión con el Ministerio de Hacienda para poder emitir facturas electrónicas.
               </p>
               <div className="flex gap-2 mt-3">
                 <Button size="sm" onClick={handleExistingCredentials}>
@@ -137,13 +137,13 @@ export function HaciendaConfigBanner({
 
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  Configuracion Pendiente
+                  Configuración Pendiente
                   <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">
                     Requerido
                   </span>
                 </h3>
                 <p className="text-muted-foreground mt-1 max-w-2xl">
-                  Para emitir facturas electronicas, necesitas configurar tu conexion con el Ministerio de Hacienda de El Salvador.
+                  Para emitir facturas electrónicas, necesitas configurar tu conexión con el Ministerio de Hacienda de El Salvador.
                 </p>
 
                 <div className="flex flex-wrap gap-3 mt-4">
@@ -185,6 +185,7 @@ export function HaciendaConfigBanner({
 }
 
 // Hook to check if Hacienda is configured
+// Refetches on every mount and when the page becomes visible again
 export function useHaciendaStatus() {
   const [status, setStatus] = React.useState<{
     isConfigured: boolean;
@@ -196,39 +197,56 @@ export function useHaciendaStatus() {
     demoMode: false,
   });
 
-  React.useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setStatus({ isConfigured: false, isLoading: false, demoMode: false });
-          return;
-        }
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setStatus({
-            isConfigured: data.hasCertificate === true,
-            isLoading: false,
-            demoMode: data.demoMode === true,
-          });
-        } else {
-          setStatus({ isConfigured: false, isLoading: false, demoMode: false });
-        }
-      } catch {
+  const checkStatus = React.useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
         setStatus({ isConfigured: false, isLoading: false, demoMode: false });
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store',
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setStatus({
+          isConfigured: data.hasCertificate === true,
+          isLoading: false,
+          demoMode: data.demoMode === true,
+        });
+      } else {
+        setStatus({ isConfigured: false, isLoading: false, demoMode: false });
+      }
+    } catch {
+      setStatus({ isConfigured: false, isLoading: false, demoMode: false });
+    }
+  }, []);
+
+  // Fetch on every mount (forces fresh data on navigation)
+  React.useEffect(() => {
+    setStatus(prev => ({ ...prev, isLoading: true }));
+    checkStatus();
+  }, [checkStatus]);
+
+  // Refetch when tab becomes visible (handles alt-tab scenarios)
+  React.useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkStatus();
       }
     };
 
-    checkStatus();
-  }, []);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [checkStatus]);
 
   return status;
 }

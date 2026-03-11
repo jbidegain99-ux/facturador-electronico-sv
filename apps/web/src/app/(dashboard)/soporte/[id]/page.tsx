@@ -59,9 +59,9 @@ interface TicketDetail {
 }
 
 const typeLabels: Record<string, string> = {
-  EMAIL_CONFIG: 'Configuracion de Email',
-  TECHNICAL: 'Problema Tecnico',
-  BILLING: 'Facturacion',
+  EMAIL_CONFIG: 'Configuración de Email',
+  TECHNICAL: 'Problema Técnico',
+  BILLING: 'Facturación',
   GENERAL: 'General',
   ONBOARDING: 'Onboarding',
 };

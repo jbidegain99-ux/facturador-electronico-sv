@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, IsObject, ValidateNested } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsObject, ValidateNested, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -20,6 +20,7 @@ export class UpdateTenantDto {
   @ApiProperty({ example: 'Mi Empresa S.A. de C.V.', required: false })
   @IsOptional()
   @IsString()
+  @MaxLength(250, { message: 'El nombre no puede exceder 250 caracteres' })
   nombre?: string;
 
   @ApiProperty({ example: '1234567', required: false })
@@ -52,5 +53,6 @@ export class UpdateTenantDto {
   @ApiProperty({ example: 'Mi Tienda', required: false })
   @IsOptional()
   @IsString()
+  @MaxLength(250, { message: 'El nombre comercial no puede exceder 250 caracteres' })
   nombreComercial?: string;
 }

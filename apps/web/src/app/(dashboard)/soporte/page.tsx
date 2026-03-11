@@ -63,8 +63,8 @@ interface TicketsResponse {
 
 const typeLabels: Record<string, string> = {
   EMAIL_CONFIG: 'Config. Email',
-  TECHNICAL: 'Tecnico',
-  BILLING: 'Facturacion',
+  TECHNICAL: 'Técnico',
+  BILLING: 'Facturación',
   GENERAL: 'General',
   ONBOARDING: 'Onboarding',
 };

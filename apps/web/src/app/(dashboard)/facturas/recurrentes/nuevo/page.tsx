@@ -264,7 +264,7 @@ export default function NuevoRecurrentePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="01">01 - Factura</SelectItem>
-                    <SelectItem value="03">03 - Credito Fiscal</SelectItem>
+                    <SelectItem value="03">03 - Crédito Fiscal</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -487,7 +487,7 @@ export default function NuevaFacturaPage() {
         data: {
           identificacion: {
             version: tipoDte === '01' ? 1 : 3,
-            ambiente: '00',
+            ambiente: '00', // Backend overrides with tenant's actual HaciendaConfig
             tipoDte,
             numeroControl: null,
             codigoGeneracion: null,

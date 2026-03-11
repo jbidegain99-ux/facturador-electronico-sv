@@ -153,7 +153,7 @@ model DTE {
   cliente          Cliente?  @relation(fields: [clienteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tipoDte          String
   codigoGeneracion String    @unique
-  numeroControl    String    @unique
+  numeroControl    String
   jsonOriginal     String    @db.NVarChar(Max)
   jsonFirmado      String?   @db.NVarChar(Max)
   estado           String    @default("PENDIENTE")
@@ -180,6 +180,7 @@ model DTE {
   createdAt        DateTime  @default(now())
   logs             DTELog[]
 
+  @@unique([tenantId, numeroControl])
   @@index([tenantId])
   @@index([estado])
   @@index([createdAt])

@@ -94,6 +94,9 @@ export class DteService {
     const correlativo = await this.getNextCorrelativo(tenantId, tipoDte);
     const numeroControl = await this.generateNumeroControl(tenantId, tipoDte, correlativo);
 
+    // Resolve ambiente from tenant's HaciendaConfig (PRODUCTION → '01', TEST → '00')
+    const ambiente = await this.resolveAmbiente(tenantId);
+
     const identificacionData = (data.identificacion as Record<string, unknown>) || {};
     const jsonOriginal = {
       ...data,
@@ -101,6 +104,7 @@ export class DteService {
         ...identificacionData,
         codigoGeneracion,
         numeroControl,
+        ambiente,
       },
     };
 
@@ -231,6 +235,11 @@ export class DteService {
       return dte;
     } catch (error) {
       this.logger.error(`Failed to create DTE: ${error instanceof Error ? error.message : error}`);
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new BadRequestException(
+          `Número de control duplicado (${numeroControl}). Intente de nuevo.`,
+        );
+      }
       throw error;
     }
   }
@@ -360,7 +369,8 @@ export class DteService {
 
     try {
       // Get auth token
-      const env = (process.env.MH_API_ENV as 'test' | 'prod') || 'test';
+      const tenantAmbiente = await this.resolveAmbiente(dte.tenantId);
+      const env: 'test' | 'prod' = tenantAmbiente === '01' ? 'prod' : 'test';
       const tokenInfo = await this.mhAuthService.getToken(nit, password, env);
 
       // Parse jsonOriginal from string
@@ -814,6 +824,24 @@ export class DteService {
     }, dteId);
 
     return updated;
+  }
+
+  /**
+   * Resolve the MH ambiente code from the tenant's HaciendaConfig.
+   * PRODUCTION → '01', TEST/default → '00'
+   */
+  private async resolveAmbiente(tenantId: string): Promise<'00' | '01'> {
+    try {
+      const haciendaConfig = await this.prisma.haciendaConfig.findUnique({
+        where: { tenantId },
+      });
+      if (haciendaConfig?.activeEnvironment === 'PRODUCTION') {
+        return '01';
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to resolve ambiente for tenant ${tenantId}: ${err instanceof Error ? err.message : err}`);
+    }
+    return '00';
   }
 
   private async getNextCorrelativo(tenantId: string, tipoDte: string): Promise<number> {

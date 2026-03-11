@@ -135,7 +135,7 @@ export class DteBuilderService {
 
   buildFactura(input: BuildFacturaInput): FacturaElectronica {
     const tipoDte: TipoDte = '01';
-    const ambiente = input.ambiente || '00';
+    const ambiente = input.ambiente ?? '00';
     const codigoGeneracion = this.generateCodigoGeneracion();
     const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
 
@@ -244,7 +244,7 @@ export class DteBuilderService {
 
   buildCCF(input: BuildCCFInput): ComprobanteCreditoFiscal {
     const tipoDte: TipoDte = '03';
-    const ambiente = input.ambiente || '00';
+    const ambiente = input.ambiente ?? '00';
     const codigoGeneracion = this.generateCodigoGeneracion();
     const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
 

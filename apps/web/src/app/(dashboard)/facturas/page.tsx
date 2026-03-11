@@ -278,7 +278,12 @@ export default function FacturasPage() {
             {t('subtitle')}
           </p>
         </div>
-        {canCreateInvoice ? (
+        {isLoadingHacienda ? (
+          <Button disabled>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('newInvoice')}
+          </Button>
+        ) : canCreateInvoice ? (
           <Link href="/facturas/nueva">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -328,9 +333,9 @@ export default function FacturasPage() {
               <SelectContent>
                 <SelectItem value="all">{t('allTypes')}</SelectItem>
                 <SelectItem value="01">{t('invoice')}</SelectItem>
-                <SelectItem value="03">Credito Fiscal</SelectItem>
-                <SelectItem value="05">Nota de Credito</SelectItem>
-                <SelectItem value="06">Nota de Debito</SelectItem>
+                <SelectItem value="03">Crédito Fiscal</SelectItem>
+                <SelectItem value="05">Nota de Crédito</SelectItem>
+                <SelectItem value="06">Nota de Débito</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>

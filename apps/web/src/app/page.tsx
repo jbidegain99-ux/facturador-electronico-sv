@@ -1,9 +1,14 @@
+'use client';
+
+import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FileText, Shield, Zap, Building2, CheckCircle, ArrowRight } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { ContactSalesDialog } from '@/components/contact-sales-dialog';
 
 export default function Home() {
+  const [contactOpen, setContactOpen] = React.useState(false);
   return (
     <div className="min-h-screen">
       {/* Navigation */}
@@ -17,7 +22,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="btn-secondary text-sm px-4 py-2">
-              Iniciar Sesion
+              Iniciar Sesión
             </Link>
             <ThemeToggle />
             <Link href="/register" className="btn-primary text-sm px-4 py-2">
@@ -40,14 +45,14 @@ export default function Home() {
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="text-foreground">Facturacion Electronica</span>
+            <span className="text-foreground">Facturación Electrónica</span>
             <br />
             <span className="gradient-text">para El Salvador</span>
           </h1>
 
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            Sistema completo de facturacion electronica DTE.
-            Emite facturas, creditos fiscales, notas de credito y mas.
+            Sistema completo de facturación electrónica DTE.
+            Emite facturas, créditos fiscales, notas de crédito y más.
             Todo en cumplimiento con la normativa del MH.
           </p>
 
@@ -99,8 +104,8 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Todos los DTEs</h3>
               <p className="text-muted-foreground">
-                Facturas, Creditos Fiscales, Notas de Credito, Notas de Debito,
-                Comprobantes de Retencion y mas.
+                Facturas, Créditos Fiscales, Notas de Crédito, Notas de Débito,
+                Comprobantes de Retención y más.
               </p>
             </div>
 
@@ -111,7 +116,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Firma Digital</h3>
               <p className="text-muted-foreground">
-                Firma automatica de documentos con tu certificado digital.
+                Firma automática de documentos con tu certificado digital.
                 Seguridad y autenticidad garantizada.
               </p>
             </div>
@@ -121,10 +126,10 @@ export default function Home() {
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-6">
                 <Zap className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Transmision al MH</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Transmisión al MH</h3>
               <p className="text-muted-foreground">
-                Envio automatico al Ministerio de Hacienda.
-                Recibe el sello de recepcion en segundos.
+                Envío automático al Ministerio de Hacienda.
+                Recibe el sello de recepción en segundos.
               </p>
             </div>
 
@@ -135,7 +140,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Multi-Empresa</h3>
               <p className="text-muted-foreground">
-                Gestiona multiples empresas desde una sola cuenta.
+                Gestiona múltiples empresas desde una sola cuenta.
                 Ideal para contadores y despachos.
               </p>
             </div>
@@ -145,7 +150,7 @@ export default function Home() {
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mb-6">
                 <CheckCircle className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Validacion en Tiempo Real</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Validación en Tiempo Real</h3>
               <p className="text-muted-foreground">
                 Valida tus documentos antes de enviarlos.
                 Evita rechazos y errores costosos.
@@ -159,9 +164,9 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Reportes y Estadisticas</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Reportes y Estadísticas</h3>
               <p className="text-muted-foreground">
-                Dashboard con metricas en tiempo real.
+                Dashboard con métricas en tiempo real.
                 Exporta reportes para tu contabilidad.
               </p>
             </div>
@@ -177,7 +182,7 @@ export default function Home() {
               Planes para cada necesidad
             </h2>
             <p className="text-muted-foreground text-lg">
-              Comienza gratis y escala segun tu negocio crece
+              Comienza gratis y escala según tu negocio crece
             </p>
           </div>
 
@@ -260,9 +265,12 @@ export default function Home() {
                   Multi-empresa
                 </li>
               </ul>
-              <Link href="/register" className="btn-secondary w-full text-center block">
+              <button
+                onClick={() => setContactOpen(true)}
+                className="btn-secondary w-full text-center block"
+              >
                 Contactar Ventas
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -276,8 +284,8 @@ export default function Home() {
               Comienza a facturar hoy
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
-              Registrate gratis y emite tu primera factura electronica en minutos.
-              Sin tarjeta de credito requerida.
+              Regístrate gratis y emite tu primera factura electrónica en minutos.
+              Sin tarjeta de crédito requerida.
             </p>
             <Link href="/register" className="btn-primary text-lg px-8 py-4 inline-flex items-center gap-2">
               Crear Cuenta Gratis
@@ -298,9 +306,9 @@ export default function Home() {
               <span className="font-semibold text-foreground">Facturador SV</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link href="#" className="hover:text-foreground transition-colors">Terminos</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">Privacidad</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">Soporte</Link>
+              <Link href="/terminos" className="hover:text-foreground transition-colors">Términos</Link>
+              <Link href="/privacidad" className="hover:text-foreground transition-colors">Privacidad</Link>
+              <Link href="mailto:soporte@facturosv.com" className="hover:text-foreground transition-colors">Soporte</Link>
             </div>
             <div className="text-sm text-muted-foreground">
               Powered by <span className="gradient-text font-semibold">Republicode</span>
@@ -308,6 +316,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      <ContactSalesDialog open={contactOpen} onOpenChange={setContactOpen} />
     </div>
   );
 }

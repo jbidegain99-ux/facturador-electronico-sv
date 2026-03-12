@@ -78,6 +78,9 @@ export interface MockPrismaClient {
   planSupportConfig: {
     findUnique: jest.Mock;
   };
+  haciendaConfig: {
+    findUnique: jest.Mock;
+  };
   $transaction: jest.Mock;
   $connect: jest.Mock;
   $disconnect: jest.Mock;
@@ -160,6 +163,9 @@ export function createMockPrismaService(): MockPrismaClient {
       findMany: jest.fn().mockResolvedValue([]),
     },
     planSupportConfig: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
+    haciendaConfig: {
       findUnique: jest.fn().mockResolvedValue(null),
     },
     $transaction: jest.fn(),

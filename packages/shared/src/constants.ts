@@ -3,6 +3,8 @@ export const TIPO_DTE = {
   CCF: '03',
   NOTA_CREDITO: '05',
   NOTA_DEBITO: '06',
+  COMPROBANTE_RETENCION: '07',
+  SUJETO_EXCLUIDO: '14',
 } as const;
 
 export const AMBIENTE = {

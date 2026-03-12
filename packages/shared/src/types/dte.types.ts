@@ -323,8 +323,92 @@ export interface NotaDebito {
   apendice: Apendice[] | null;
 }
 
+// Receptor para Comprobante de Retención (07) - same as CCF
+export type ReceptorRetencion = ReceptorCCF;
+
+// Item del Cuerpo Documento para Comprobante de Retención (07)
+export interface CuerpoDocumentoRetencion {
+  numItem: number;
+  tipoDte: string; // tipo del DTE original retenido
+  tipoDoc: number; // 1=Fisico, 2=Electronico
+  numDocumento: string;
+  fechaEmision: string;
+  montoSujetoGrav: number;
+  codigoRetencionMH: string; // Código retención MH (22=ISR, C4=IVA, etc.)
+  ivaRetenido: number;
+  descripcion: string;
+}
+
+// Resumen para Comprobante de Retención (07)
+export interface ResumenRetencion {
+  totalSujetoRetencion: number;
+  totalIVAretenido: number;
+  totalIVAretenidoLetras: string;
+}
+
+// DTE Comprobante de Retención (07)
+export interface ComprobanteRetencion {
+  identificacion: Identificacion;
+  emisor: Omit<Emisor, 'codEstableMH' | 'codEstable' | 'codPuntoVentaMH' | 'codPuntoVenta'>;
+  receptor: ReceptorRetencion;
+  cuerpoDocumento: CuerpoDocumentoRetencion[];
+  resumen: ResumenRetencion;
+  extension: Omit<Extension, 'placaVehiculo'> | null;
+  apendice: Apendice[] | null;
+}
+
+// Receptor para Factura de Sujeto Excluido (14) - persona natural sin NIT
+export interface ReceptorSujetoExcluido {
+  tipoDocumento: '36' | '13' | '02' | '03' | '37' | null;
+  numDocumento: string | null;
+  nombre: string;
+  codActividad: string | null;
+  descActividad: string | null;
+  direccion: Direccion;
+  telefono: string | null;
+  correo: string;
+}
+
+// Item del Cuerpo Documento para Sujeto Excluido (14) - sin IVA
+export interface CuerpoDocumentoSujetoExcluido {
+  numItem: number;
+  tipoItem: TipoItem;
+  cantidad: number;
+  codigo: string | null;
+  uniMedida: number;
+  descripcion: string;
+  precioUni: number;
+  montoDescu: number;
+  compra: number; // monto total de compra (sin IVA)
+}
+
+// Resumen para Sujeto Excluido (14)
+export interface ResumenSujetoExcluido {
+  totalCompra: number;
+  descu: number;
+  totalDescu: number;
+  subTotal: number;
+  ivaRete1: number;
+  reteRenta: number;
+  totalPagar: number;
+  totalLetras: string;
+  condicionOperacion: CondicionOperacion;
+  pagos: Pago[] | null;
+  observaciones: string | null;
+}
+
+// DTE Factura de Sujeto Excluido (14)
+export interface FacturaSujetoExcluido {
+  identificacion: Identificacion;
+  emisor: Emisor;
+  sujetoExcluido: ReceptorSujetoExcluido;
+  cuerpoDocumento: CuerpoDocumentoSujetoExcluido[];
+  resumen: ResumenSujetoExcluido;
+  apendice: Apendice[] | null;
+}
+
 // Union type para cualquier DTE
-export type DTE = FacturaElectronica | ComprobanteCreditoFiscal | NotaCredito | NotaDebito;
+export type DTE = FacturaElectronica | ComprobanteCreditoFiscal | NotaCredito | NotaDebito | ComprobanteRetencion | FacturaSujetoExcluido;
 
 // Versiones por tipo de DTE
 export const DTE_VERSIONS: Record<TipoDte, number> = {

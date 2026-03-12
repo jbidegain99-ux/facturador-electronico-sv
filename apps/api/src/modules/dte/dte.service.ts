@@ -27,6 +27,51 @@ import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client
 import { DTE_VERSIONS, TipoDte } from '@facturador/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { Prisma } from '@prisma/client';
+import { HaciendaAuthService } from '../hacienda/services/hacienda-auth.service';
+import { CertificateService } from '../hacienda/services/certificate.service';
+import { EncryptionService } from '../email-config/services/encryption.service';
+
+/** Convert a number to its Spanish text representation for totalLetras */
+function numberToWords(num: number): string {
+  const units = ['', 'UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
+  const teens = ['DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISEIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
+  const tens = ['', '', 'VEINTE', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
+  const hundreds = ['', 'CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS', 'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS', 'NOVECIENTOS'];
+  const intPart = Math.floor(num);
+  const decPart = Math.round((num - intPart) * 100);
+  const convertGroup = (n: number): string => {
+    if (n === 0) return '';
+    if (n < 10) return units[n];
+    if (n < 20) return teens[n - 10];
+    if (n < 100) {
+      const ten = Math.floor(n / 10);
+      const unit = n % 10;
+      if (n === 20) return 'VEINTE';
+      if (n < 30) return 'VEINTI' + units[unit];
+      return tens[ten] + (unit ? ' Y ' + units[unit] : '');
+    }
+    if (n === 100) return 'CIEN';
+    const hundred = Math.floor(n / 100);
+    const rest = n % 100;
+    return hundreds[hundred] + (rest ? ' ' + convertGroup(rest) : '');
+  };
+  const convertThousands = (n: number): string => {
+    if (n >= 1000) {
+      const thousands = Math.floor(n / 1000);
+      const rest = n % 1000;
+      return (thousands === 1 ? 'MIL' : convertGroup(thousands) + ' MIL') + (rest ? ' ' + convertGroup(rest) : '');
+    }
+    return convertGroup(n);
+  };
+  let result = '';
+  if (intPart === 0) result = 'CERO';
+  else if (intPart >= 1000000) {
+    const millions = Math.floor(intPart / 1000000);
+    const rest = intPart % 1000000;
+    result = (millions === 1 ? 'UN MILLON' : convertGroup(millions) + ' MILLONES') + (rest ? ' ' + convertThousands(rest) : '');
+  } else result = convertThousands(intPart);
+  return `${result} ${decPart.toString().padStart(2, '0')}/100 USD`;
+}
 
 // Enum values as strings for SQL Server compatibility
 const DTEStatus = {
@@ -37,6 +82,24 @@ const DTEStatus = {
   RECHAZADO: 'RECHAZADO',
   ANULADO: 'ANULADO',
 } as const;
+
+/** Common activity codes from MH catalog (CAT-019) */
+const ACTIVIDAD_ECONOMICA_MAP: Record<string, string> = {
+  '62010': 'Actividades de programación informática',
+  '62020': 'Actividades de consultoría informática y gestión de instalaciones informáticas',
+  '62090': 'Otras actividades de tecnología de la información y servicios informáticos',
+  '46510': 'Venta al por mayor de computadoras, equipo periférico y programas informáticos',
+  '47410': 'Venta al por menor de computadoras, equipo periférico, programas informáticos y equipo de telecomunicaciones en comercios especializados',
+  '63110': 'Procesamiento de datos, hospedaje y actividades conexas',
+  '70210': 'Actividades de consultoría de gestión',
+  '73110': 'Publicidad',
+  '69200': 'Actividades de contabilidad, teneduría de libros y auditoría; consultoría fiscal',
+  '56101': 'Actividades de restaurantes y de servicio móvil de comidas',
+  '47190': 'Otras actividades de venta al por menor en comercios no especializados',
+  '41001': 'Construcción de edificios residenciales',
+  '41002': 'Construcción de edificios no residenciales',
+  '49110': 'Transporte interurbano de pasajeros por ferrocarril',
+};
 
 @Injectable()
 export class DteService {
@@ -51,6 +114,9 @@ export class DteService {
     @Optional() @Inject(forwardRef(() => WebhooksService)) private webhooksService: WebhooksService | null,
     @Optional() @Inject(forwardRef(() => AccountingAutomationService)) private accountingAutomation: AccountingAutomationService | null,
     @Optional() private sucursalesService: SucursalesService | null,
+    private haciendaAuthService: HaciendaAuthService,
+    private certificateService: CertificateService,
+    private encryptionService: EncryptionService,
   ) {}
 
   /**
@@ -98,25 +164,51 @@ export class DteService {
     const ambiente = await this.resolveAmbiente(tenantId);
 
     const identificacionData = (data.identificacion as Record<string, unknown>) || {};
+
+    // Normalize the DTE JSON to comply with Hacienda schema for the specific tipoDte
+    const normalizedData = await this.normalizeJsonForHacienda(tenantId, tipoDte, data);
+
     const jsonOriginal = {
-      ...data,
+      ...normalizedData,
       identificacion: {
-        ...identificacionData,
+        ...((normalizedData.identificacion as Record<string, unknown>) || identificacionData),
         codigoGeneracion,
         numeroControl,
         ambiente,
       },
     };
 
-    // Extract totals from resumen
-    const resumen = data.resumen as Record<string, unknown> | undefined;
-    const totalGravada = Number(resumen?.totalGravada) || 0;
-    const totalIva = Number(resumen?.totalIva) || 0;
-    const totalPagar = Number(resumen?.totalPagar) || 0;
+    // Extract totals from resumen (structure varies by DTE type)
+    const resumen = normalizedData.resumen as Record<string, unknown> | undefined;
+    let totalGravada: number;
+    let totalIva: number;
+    let totalPagar: number;
+
+    if (tipoDte === '07') {
+      // Comprobante de Retención: uses totalSujetoRetencion/totalIVAretenido
+      totalGravada = Number(resumen?.totalSujetoRetencion) || 0;
+      totalIva = Number(resumen?.totalIVAretenido) || 0;
+      totalPagar = totalIva; // Retention amount is what's "paid"
+    } else if (tipoDte === '14') {
+      // Sujeto Excluido: no IVA, uses totalCompra
+      totalGravada = Number(resumen?.totalCompra) || 0;
+      totalIva = 0;
+      totalPagar = Number(resumen?.totalPagar) || totalGravada;
+    } else {
+      totalGravada = Number(resumen?.totalGravada) || 0;
+      // For CCF (03), NC (05), ND (06): IVA is in tributos array, not in totalIva field
+      const tributos = resumen?.tributos as Array<Record<string, unknown>> | null | undefined;
+      const tributosIva = tributos?.[0]?.valor ? Number(tributos[0].valor) : 0;
+      totalIva = Number(resumen?.totalIva) || tributosIva || 0;
+      totalPagar = Number(resumen?.totalPagar) || 0;
+    }
 
     // Try to find or create client based on receptor data
+    // Type 14 uses sujetoExcluido, type 07 uses receptor
     let clienteId: string | undefined;
-    const receptor = data.receptor as Record<string, unknown> | undefined;
+    const receptor = (tipoDte === '14'
+      ? data.sujetoExcluido as Record<string, unknown> | undefined
+      : data.receptor as Record<string, unknown> | undefined);
     if (receptor?.nombre) {
       const receptorNombre = receptor.nombre as string;
       const receptorNumDoc = (receptor.numDocumento as string) || '';
@@ -232,6 +324,11 @@ export class DteService {
       // Trigger accounting entry on creation (fire-and-forget)
       this.triggerAccountingEntry(dte.id, tenantId, 'ON_CREATED');
 
+      // Auto sign and transmit to Hacienda (fire-and-forget)
+      this.autoSignAndTransmit(dte.id, tenantId).catch(err =>
+        this.logger.error(`Auto sign+transmit failed for DTE ${dte.id}: ${err instanceof Error ? err.message : err}`),
+      );
+
       return dte;
     } catch (error) {
       this.logger.error(`Failed to create DTE: ${error instanceof Error ? error.message : error}`);
@@ -241,6 +338,165 @@ export class DteService {
         );
       }
       throw error;
+    }
+  }
+
+  /**
+   * Automatically sign and transmit a DTE after creation.
+   * Loads the tenant's certificate from HaciendaEnvironmentConfig and signs per-tenant.
+   */
+  private async autoSignAndTransmit(dteId: string, tenantId: string): Promise<void> {
+    this.logger.log(`[AUTO] Starting auto sign+transmit for DTE ${dteId}`);
+
+    // Load DTE with tenant info
+    const dte = await this.prisma.dTE.findFirst({
+      where: { id: dteId, tenantId },
+      include: { tenant: true },
+    });
+
+    if (!dte) {
+      throw new Error(`DTE ${dteId} not found for tenant ${tenantId}`);
+    }
+
+    // Parse jsonOriginal
+    let jsonOriginalParsed: Record<string, unknown>;
+    try {
+      jsonOriginalParsed = typeof dte.jsonOriginal === 'string'
+        ? JSON.parse(dte.jsonOriginal)
+        : dte.jsonOriginal;
+    } catch {
+      throw new Error(`Failed to parse jsonOriginal for DTE ${dteId}`);
+    }
+
+    // Resolve ambiente
+    const tenantAmbiente = await this.resolveAmbiente(tenantId);
+    const haciendaEnv: 'TEST' | 'PRODUCTION' = tenantAmbiente === '01' ? 'PRODUCTION' : 'TEST';
+    const mhEnv: 'test' | 'prod' = tenantAmbiente === '01' ? 'prod' : 'test';
+
+    // Demo mode: simulate signing + transmission
+    if (this.isDemoMode(dte.tenant)) {
+      this.logger.log(`[AUTO][DEMO] Simulating sign+transmit for DTE ${dteId}`);
+      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+      const payload = Buffer.from(JSON.stringify(jsonOriginalParsed)).toString('base64url');
+      const signature = Buffer.from(`DEMO_SIGNATURE_${Date.now()}`).toString('base64url');
+      const jsonFirmado = `${header}.${payload}.${signature}`;
+      const demoResponse = this.generateDemoResponse(dte.codigoGeneracion);
+
+      await this.prisma.dTE.update({
+        where: { id: dteId },
+        data: {
+          jsonFirmado,
+          estado: DTEStatus.PROCESADO,
+          selloRecepcion: demoResponse.selloRecibido,
+          fechaRecepcion: new Date(demoResponse.fhProcesamiento),
+          descripcionMh: demoResponse.observaciones?.join(', '),
+          intentosEnvio: { increment: 1 },
+        },
+      });
+
+      await this.logDteAction(dteId, 'AUTO_SIGN_TRANSMIT_DEMO', { demoMode: true });
+      this.sendDteEmail(dte, dte.tenant).catch(err =>
+        this.logger.error(`Failed to send DTE email for ${dteId}: ${err instanceof Error ? err.message : err}`),
+      );
+      this.triggerWebhook(tenantId, 'dte.approved', {
+        dteId: dte.id, codigoGeneracion: dte.codigoGeneracion,
+        selloRecibido: demoResponse.selloRecibido, estado: 'PROCESADO', demoMode: true,
+      }, dte.id);
+      this.triggerAccountingEntry(dte.id, tenantId, 'ON_APPROVED');
+      return;
+    }
+
+    // Step 1: Load tenant's certificate from HaciendaEnvironmentConfig
+    const envConfig = await this.prisma.haciendaEnvironmentConfig.findFirst({
+      where: {
+        haciendaConfig: { tenantId },
+        environment: haciendaEnv,
+      },
+    });
+
+    if (!envConfig?.certificateP12) {
+      throw new Error(`No certificate found for tenant ${tenantId} in environment ${haciendaEnv}`);
+    }
+
+    const certPassword = envConfig.certificatePasswordEnc
+      ? this.encryptionService.decrypt(envConfig.certificatePasswordEnc)
+      : undefined;
+
+    // Step 2: Sign the DTE using tenant's certificate
+    const certBuffer = Buffer.from(envConfig.certificateP12);
+    const jsonFirmado = await this.certificateService.signPayload(certBuffer, certPassword, jsonOriginalParsed);
+
+    await this.prisma.dTE.update({
+      where: { id: dteId },
+      data: { jsonFirmado, estado: DTEStatus.FIRMADO },
+    });
+    await this.logDteAction(dteId, 'SIGNED', { auto: true });
+    this.logger.log(`[AUTO] DTE ${dteId} signed successfully`);
+    this.triggerWebhook(tenantId, 'dte.signed', {
+      dteId: dte.id, codigoGeneracion: dte.codigoGeneracion, estado: 'FIRMADO',
+    }, dte.id);
+
+    // Step 3: Get auth token and transmit
+    const tokenInfo = await this.haciendaAuthService.getTokenForTenant(tenantId, haciendaEnv);
+
+    const identificacion = jsonOriginalParsed?.identificacion as Record<string, unknown> | undefined;
+    const ambiente = ((identificacion?.ambiente as string) || '00') as '00' | '01';
+
+    const request: SendDTERequest = {
+      ambiente,
+      idEnvio: Date.now(),
+      version: DTE_VERSIONS[dte.tipoDte as TipoDte],
+      tipoDte: dte.tipoDte as TipoDte,
+      documento: jsonFirmado,
+      codigoGeneracion: dte.codigoGeneracion,
+    };
+
+    try {
+      const response = await sendDTE(tokenInfo.token, request, { env: mhEnv });
+
+      await this.prisma.dTE.update({
+        where: { id: dteId },
+        data: {
+          estado: DTEStatus.PROCESADO,
+          selloRecepcion: response.selloRecibido || undefined,
+          fechaRecepcion: response.fhProcesamiento ? new Date(response.fhProcesamiento) : null,
+          descripcionMh: response.observaciones?.join(', '),
+          intentosEnvio: { increment: 1 },
+        },
+      });
+
+      await this.logDteAction(dteId, 'TRANSMITTED', { response, auto: true });
+      this.logger.log(`[AUTO] DTE ${dteId} transmitted successfully. Sello: ${response.selloRecibido}`);
+
+      this.sendDteEmail(dte, dte.tenant).catch(err =>
+        this.logger.error(`Failed to send DTE email for ${dteId}: ${err instanceof Error ? err.message : err}`),
+      );
+      this.triggerWebhook(tenantId, 'dte.approved', {
+        dteId: dte.id, codigoGeneracion: dte.codigoGeneracion,
+        selloRecibido: response.selloRecibido, estado: 'PROCESADO',
+        fechaAprobacion: response.fhProcesamiento,
+      }, dte.id);
+      this.triggerAccountingEntry(dte.id, tenantId, 'ON_APPROVED');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      const observaciones = error instanceof MHReceptionError ? error.observaciones : undefined;
+
+      await this.prisma.dTE.update({
+        where: { id: dteId },
+        data: {
+          estado: DTEStatus.RECHAZADO,
+          descripcionMh: observaciones?.join(', ') || errorMessage,
+          intentosEnvio: { increment: 1 },
+        },
+      });
+
+      await this.logDteAction(dteId, 'TRANSMISSION_ERROR', { error: errorMessage, observaciones, auto: true });
+      this.logger.error(`[AUTO] DTE ${dteId} transmission failed: ${errorMessage}`);
+
+      this.triggerWebhook(tenantId, 'dte.rejected', {
+        dteId: dte.id, codigoGeneracion: dte.codigoGeneracion,
+        estado: 'RECHAZADO', error: errorMessage, observaciones,
+      }, dte.id);
     }
   }
 
@@ -830,6 +1086,416 @@ export class DteService {
    * Resolve the MH ambiente code from the tenant's HaciendaConfig.
    * PRODUCTION → '01', TEST/default → '00'
    */
+  /**
+   * Normalize DTE JSON to comply with Hacienda's schema for the specific tipoDte.
+   * Adds emisor from tenant data, fixes receptor format, and adjusts fields for CCF (03).
+   */
+  private async normalizeJsonForHacienda(
+    tenantId: string,
+    tipoDte: string,
+    data: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    // Load tenant with sucursal info
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      include: {
+        sucursales: {
+          where: { activa: true },
+          orderBy: { esPrincipal: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    if (!tenant) {
+      throw new BadRequestException('Tenant no encontrado');
+    }
+
+    const sucursal = tenant.sucursales[0];
+    const identificacion = (data.identificacion as Record<string, unknown>) || {};
+    const receptor = (data.receptor as Record<string, unknown>) || {};
+    const cuerpoDocumento = (data.cuerpoDocumento as Array<Record<string, unknown>>) || [];
+    const resumen = (data.resumen as Record<string, unknown>) || {};
+
+    // Build emisor from tenant data (required for tipo 03, good practice for all)
+    let direccionEmisor: Record<string, unknown>;
+    try {
+      direccionEmisor = typeof tenant.direccion === 'string' ? JSON.parse(tenant.direccion) : tenant.direccion as Record<string, unknown>;
+    } catch {
+      direccionEmisor = { departamento: '06', municipio: '14', complemento: tenant.direccion || '' };
+    }
+    // If direccion is a flat string instead of an object, wrap it
+    if (typeof direccionEmisor === 'string' || !direccionEmisor?.departamento) {
+      direccionEmisor = { departamento: '06', municipio: '14', complemento: String(direccionEmisor || tenant.direccion || '') };
+    }
+
+    const emisor = {
+      nit: tenant.nit.replace(/-/g, ''),
+      nrc: tenant.nrc.replace(/-/g, ''),
+      nombre: tenant.nombre,
+      codActividad: tenant.actividadEcon || '62010',
+      descActividad: ACTIVIDAD_ECONOMICA_MAP[tenant.actividadEcon] || ((data.emisor as Record<string, unknown>)?.descActividad as string) || 'Servicios',
+      nombreComercial: tenant.nombreComercial || null,
+      tipoEstablecimiento: sucursal?.tipoEstablecimiento || '01',
+      direccion: direccionEmisor,
+      telefono: tenant.telefono || '00000000',
+      correo: tenant.correo,
+      codEstableMH: sucursal?.codEstableMH || null,
+      codEstable: sucursal?.codEstable || null,
+      codPuntoVentaMH: null,
+      codPuntoVenta: null,
+    };
+
+    if (tipoDte === '05' || tipoDte === '06') {
+      // === Nota de Crédito (05) / Nota de Débito (06) normalization ===
+      // Similar to CCF: uses ReceptorCCF format, requires documentoRelacionado, no ivaItem in items
+      const normalizedIdentificacion = {
+        ...identificacion,
+        motivoContin: identificacion.motivoContin ?? null,
+      };
+
+      // Receptor same format as CCF (NIT-based)
+      let receptorDireccion = receptor.direccion;
+      if (typeof receptorDireccion === 'string') {
+        try {
+          receptorDireccion = JSON.parse(receptorDireccion);
+        } catch {
+          receptorDireccion = { departamento: '06', municipio: '14', complemento: receptorDireccion };
+        }
+      }
+      if (!receptorDireccion || typeof receptorDireccion !== 'object' || !(receptorDireccion as Record<string, unknown>).departamento) {
+        receptorDireccion = { departamento: '06', municipio: '14', complemento: String(receptorDireccion || '') };
+      }
+
+      const receptorNit = ((receptor.nit as string) || (receptor.numDocumento as string) || '').replace(/-/g, '');
+      const normalizedReceptor = {
+        nit: receptorNit,
+        nrc: ((receptor.nrc as string) || '').replace(/-/g, ''),
+        nombre: (receptor.nombre as string) || '',
+        codActividad: (receptor.codActividad as string) || '62010',
+        descActividad: (receptor.descActividad as string) || 'Servicios',
+        nombreComercial: (receptor.nombreComercial as string) || null,
+        direccion: receptorDireccion,
+        telefono: (receptor.telefono as string) || null,
+        correo: (receptor.correo as string) || '',
+      };
+
+      // NC/ND items: no ivaItem field, requires numeroDocumento per item
+      const normalizedCuerpo = cuerpoDocumento.map(item => {
+        const { ivaItem: _ivaItem, ...rest } = item;
+        return {
+          ...rest,
+          numeroDocumento: item.numeroDocumento ?? '',
+          codTributo: item.codTributo ?? null,
+        };
+      });
+
+      // Resumen: same as CCF format (tributos array, no totalIva)
+      const totalGravada = Number(resumen.totalGravada) || 0;
+      const IVA_RATE = 0.13;
+      const ivaAmount = Math.round(totalGravada * IVA_RATE * 100) / 100;
+
+      const tributos = totalGravada > 0 ? [{
+        codigo: '20',
+        descripcion: 'Impuesto al Valor Agregado 13%',
+        valor: ivaAmount,
+      }] : null;
+
+      const montoTotalOperacion = Math.round((totalGravada + (Number(resumen.totalExenta) || 0) + (Number(resumen.totalNoSuj) || 0) + ivaAmount) * 100) / 100;
+
+      const { totalIva: _totalIva, ...resumenRest } = resumen;
+      const normalizedResumen: Record<string, unknown> = {
+        ...resumenRest,
+        tributos,
+        subTotal: Number(resumen.subTotal) || Number(resumen.subTotalVentas) || 0,
+        ivaPerci1: 0,
+        ivaRete1: 0,
+        reteRenta: Number(resumen.reteRenta) || 0,
+        montoTotalOperacion,
+        totalPagar: montoTotalOperacion,
+        totalLetras: (resumen.totalLetras as string) || numberToWords(montoTotalOperacion),
+        condicionOperacion: Number(resumen.condicionOperacion) || 1,
+      };
+
+      // Nota de Débito has numPagoElectronico
+      if (tipoDte === '06') {
+        normalizedResumen.numPagoElectronico = resumen.numPagoElectronico ?? null;
+      }
+
+      // NC/ND emisor omits establishment codes
+      const { codEstableMH: _codEstMH, codEstable: _codEst, codPuntoVentaMH: _codPvMH, codPuntoVenta: _codPv, ...emisorSinEstablecimiento } = emisor;
+
+      return {
+        identificacion: normalizedIdentificacion,
+        documentoRelacionado: (data.documentoRelacionado as unknown) ?? (data.documentosRelacionados as unknown) ?? [],
+        emisor: emisorSinEstablecimiento,
+        receptor: normalizedReceptor,
+        ventaTercero: (data.ventaTercero as unknown) ?? null,
+        cuerpoDocumento: normalizedCuerpo,
+        resumen: normalizedResumen,
+        extension: (data.extension as unknown) ?? null,
+        apendice: (data.apendice as unknown) ?? null,
+      };
+    }
+
+    if (tipoDte === '07') {
+      // === Comprobante de Retención (07) normalization ===
+      const normalizedIdentificacion = {
+        ...identificacion,
+        motivoContin: identificacion.motivoContin ?? null,
+      };
+
+      // Receptor same as CCF
+      let receptorDireccion = receptor.direccion;
+      if (typeof receptorDireccion === 'string') {
+        try {
+          receptorDireccion = JSON.parse(receptorDireccion);
+        } catch {
+          receptorDireccion = { departamento: '06', municipio: '14', complemento: receptorDireccion };
+        }
+      }
+      if (!receptorDireccion || typeof receptorDireccion !== 'object' || !(receptorDireccion as Record<string, unknown>).departamento) {
+        receptorDireccion = { departamento: '06', municipio: '14', complemento: String(receptorDireccion || '') };
+      }
+
+      const receptorNit = ((receptor.nit as string) || (receptor.numDocumento as string) || '').replace(/-/g, '');
+      const normalizedReceptor = {
+        nit: receptorNit,
+        nrc: ((receptor.nrc as string) || '').replace(/-/g, ''),
+        nombre: (receptor.nombre as string) || '',
+        codActividad: (receptor.codActividad as string) || '62010',
+        descActividad: (receptor.descActividad as string) || 'Servicios',
+        nombreComercial: (receptor.nombreComercial as string) || null,
+        direccion: receptorDireccion,
+        telefono: (receptor.telefono as string) || null,
+        correo: (receptor.correo as string) || '',
+      };
+
+      // Retention items have a different structure
+      const normalizedCuerpo = cuerpoDocumento.map((item, index) => ({
+        numItem: (item.numItem as number) || index + 1,
+        tipoDte: (item.tipoDte as string) || '03',
+        tipoDoc: (item.tipoDoc as number) || 2,
+        numDocumento: (item.numDocumento as string) || (item.numeroDocumento as string) || '',
+        fechaEmision: (item.fechaEmision as string) || '',
+        montoSujetoGrav: Number(item.montoSujetoGrav) || 0,
+        codigoRetencionMH: (item.codigoRetencionMH as string) || 'C4',
+        ivaRetenido: Number(item.ivaRetenido) || 0,
+        descripcion: (item.descripcion as string) || '',
+      }));
+
+      const totalSujetoRetencion = Math.round(normalizedCuerpo.reduce((sum, item) => sum + item.montoSujetoGrav, 0) * 100) / 100;
+      const totalIVAretenido = Math.round(normalizedCuerpo.reduce((sum, item) => sum + item.ivaRetenido, 0) * 100) / 100;
+
+      const { codEstableMH: _codEstMH, codEstable: _codEst, codPuntoVentaMH: _codPvMH, codPuntoVenta: _codPv, ...emisorSinEstablecimiento } = emisor;
+
+      return {
+        identificacion: normalizedIdentificacion,
+        emisor: emisorSinEstablecimiento,
+        receptor: normalizedReceptor,
+        cuerpoDocumento: normalizedCuerpo,
+        resumen: {
+          totalSujetoRetencion,
+          totalIVAretenido,
+          totalIVAretenidoLetras: (resumen.totalIVAretenidoLetras as string) || numberToWords(totalIVAretenido),
+        },
+        extension: (data.extension as unknown) ?? null,
+        apendice: (data.apendice as unknown) ?? null,
+      };
+    }
+
+    if (tipoDte === '14') {
+      // === Factura de Sujeto Excluido (14) normalization ===
+      // No IVA, uses sujetoExcluido instead of receptor
+      const normalizedIdentificacion = {
+        ...identificacion,
+        motivoContin: identificacion.motivoContin ?? null,
+      };
+
+      const sujetoExcluido = (data.sujetoExcluido as Record<string, unknown>) || receptor;
+
+      let seDireccion = sujetoExcluido.direccion;
+      if (typeof seDireccion === 'string') {
+        try {
+          seDireccion = JSON.parse(seDireccion);
+        } catch {
+          seDireccion = { departamento: '06', municipio: '14', complemento: seDireccion };
+        }
+      }
+      if (!seDireccion || typeof seDireccion !== 'object' || !(seDireccion as Record<string, unknown>).departamento) {
+        seDireccion = { departamento: '06', municipio: '14', complemento: String(seDireccion || '') };
+      }
+
+      const normalizedSujetoExcluido = {
+        tipoDocumento: (sujetoExcluido.tipoDocumento as string) || '13',
+        numDocumento: (sujetoExcluido.numDocumento as string) || null,
+        nombre: (sujetoExcluido.nombre as string) || '',
+        codActividad: (sujetoExcluido.codActividad as string) || null,
+        descActividad: (sujetoExcluido.descActividad as string) || null,
+        direccion: seDireccion,
+        telefono: (sujetoExcluido.telefono as string) || null,
+        correo: (sujetoExcluido.correo as string) || '',
+      };
+
+      // Items: no IVA, uses compra field
+      const normalizedCuerpo = cuerpoDocumento.map((item, index) => ({
+        numItem: (item.numItem as number) || index + 1,
+        tipoItem: (item.tipoItem as number) || 1,
+        cantidad: Number(item.cantidad) || 1,
+        codigo: (item.codigo as string) || null,
+        uniMedida: (item.uniMedida as number) || 59,
+        descripcion: (item.descripcion as string) || '',
+        precioUni: Number(item.precioUnitario ?? item.precioUni) || 0,
+        montoDescu: Number(item.montoDescu) || 0,
+        compra: Math.round((Number(item.cantidad) || 1) * Number(item.precioUnitario ?? item.precioUni ?? 0) * 100) / 100,
+      }));
+
+      const totalCompra = Math.round(normalizedCuerpo.reduce((sum, item) => sum + item.compra, 0) * 100) / 100;
+
+      const condicionOperacion = Number(resumen.condicionOperacion) || 1;
+      const pagos = condicionOperacion !== 2 ? [{
+        codigo: '01',
+        montoPago: totalCompra,
+        referencia: null,
+        plazo: null,
+        periodo: null,
+      }] : null;
+
+      return {
+        identificacion: normalizedIdentificacion,
+        emisor,
+        sujetoExcluido: normalizedSujetoExcluido,
+        cuerpoDocumento: normalizedCuerpo,
+        resumen: {
+          totalCompra,
+          descu: 0,
+          totalDescu: 0,
+          subTotal: totalCompra,
+          ivaRete1: 0,
+          reteRenta: Number(resumen.reteRenta) || 0,
+          totalPagar: totalCompra,
+          totalLetras: (resumen.totalLetras as string) || numberToWords(totalCompra),
+          condicionOperacion,
+          pagos,
+          observaciones: (resumen.observaciones as string) || null,
+        },
+        apendice: (data.apendice as unknown) ?? null,
+      };
+    }
+
+    if (tipoDte === '03') {
+      // === CCF (Crédito Fiscal) normalization ===
+
+      // Fix identificacion: add motivoContin if missing
+      const normalizedIdentificacion = {
+        ...identificacion,
+        motivoContin: identificacion.motivoContin ?? null,
+      };
+
+      // Fix receptor: CCF uses nit instead of numDocumento, requires nombreComercial
+
+      // Ensure direccion is an object {departamento, municipio, complemento}
+      let receptorDireccion = receptor.direccion;
+      if (typeof receptorDireccion === 'string') {
+        try {
+          receptorDireccion = JSON.parse(receptorDireccion);
+        } catch {
+          receptorDireccion = { departamento: '06', municipio: '14', complemento: receptorDireccion };
+        }
+      }
+      if (!receptorDireccion || typeof receptorDireccion !== 'object' || !(receptorDireccion as Record<string, unknown>).departamento) {
+        receptorDireccion = { departamento: '06', municipio: '14', complemento: String(receptorDireccion || '') };
+      }
+
+      const receptorNit = ((receptor.nit as string) || (receptor.numDocumento as string) || '').replace(/-/g, '');
+      const normalizedReceptor = {
+        nit: receptorNit,
+        nrc: ((receptor.nrc as string) || '').replace(/-/g, ''),
+        nombre: (receptor.nombre as string) || '',
+        codActividad: (receptor.codActividad as string) || '62010',
+        descActividad: (receptor.descActividad as string) || 'Servicios',
+        nombreComercial: (receptor.nombreComercial as string) || null,
+        direccion: receptorDireccion,
+        telefono: (receptor.telefono as string) || null,
+        correo: (receptor.correo as string) || '',
+      };
+
+      // Fix cuerpoDocumento: remove ivaItem, add numeroDocumento and codTributo
+      const normalizedCuerpo = cuerpoDocumento.map(item => {
+        const { ivaItem: _ivaItem, ...rest } = item;
+        return {
+          ...rest,
+          numeroDocumento: item.numeroDocumento ?? null,
+          codTributo: item.codTributo ?? null,
+        };
+      });
+
+      // Fix resumen: replace totalIva with ivaPerci1/ivaRete1
+      const totalGravada = Number(resumen.totalGravada) || 0;
+      const IVA_RATE = 0.13;
+      const ivaAmount = Math.round(totalGravada * IVA_RATE * 100) / 100;
+
+      const tributos = totalGravada > 0 ? [{
+        codigo: '20',
+        descripcion: 'Impuesto al Valor Agregado 13%',
+        valor: ivaAmount,
+      }] : null;
+
+      const montoTotalOperacion = Math.round((totalGravada + (Number(resumen.totalExenta) || 0) + (Number(resumen.totalNoSuj) || 0) + ivaAmount) * 100) / 100;
+
+      const { totalIva: _totalIva, ...resumenRest } = resumen;
+      const normalizedResumen = {
+        ...resumenRest,
+        tributos,
+        subTotal: Number(resumen.subTotal) || Number(resumen.subTotalVentas) || 0,
+        ivaPerci1: 0,
+        ivaRete1: 0,
+        reteRenta: Number(resumen.reteRenta) || 0,
+        montoTotalOperacion,
+        totalPagar: montoTotalOperacion,
+        totalLetras: (resumen.totalLetras as string) || numberToWords(montoTotalOperacion),
+        saldoFavor: Number(resumen.saldoFavor) || 0,
+        condicionOperacion: Number(resumen.condicionOperacion) || 1,
+        pagos: resumen.pagos ?? (Number(resumen.condicionOperacion) !== 2 ? [{
+          codigo: '01',
+          montoPago: montoTotalOperacion,
+          referencia: null,
+          plazo: null,
+          periodo: null,
+        }] : null),
+        numPagoElectronico: resumen.numPagoElectronico ?? null,
+      };
+
+      return {
+        identificacion: normalizedIdentificacion,
+        documentoRelacionado: (data.documentoRelacionado as unknown) ?? null,
+        emisor,
+        receptor: normalizedReceptor,
+        otrosDocumentos: (data.otrosDocumentos as unknown) ?? null,
+        ventaTercero: (data.ventaTercero as unknown) ?? null,
+        cuerpoDocumento: normalizedCuerpo,
+        resumen: normalizedResumen,
+        extension: (data.extension as unknown) ?? null,
+        apendice: (data.apendice as unknown) ?? null,
+      };
+    }
+
+    // === Factura (01) - just add emisor and null fields if missing ===
+    return {
+      ...data,
+      identificacion: {
+        ...identificacion,
+        motivoContin: identificacion.motivoContin ?? null,
+      },
+      emisor: data.emisor || emisor,
+      documentoRelacionado: data.documentoRelacionado ?? null,
+      otrosDocumentos: data.otrosDocumentos ?? null,
+      ventaTercero: data.ventaTercero ?? null,
+      extension: data.extension ?? null,
+      apendice: data.apendice ?? null,
+    };
+  }
+
   private async resolveAmbiente(tenantId: string): Promise<'00' | '01'> {
     try {
       const haciendaConfig = await this.prisma.haciendaConfig.findUnique({

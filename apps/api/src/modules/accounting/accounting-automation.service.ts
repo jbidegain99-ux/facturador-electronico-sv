@@ -130,7 +130,10 @@ export class AccountingAutomationService {
       '03': 'Crédito Fiscal',
       '05': 'Nota de Crédito',
       '06': 'Nota de Débito',
+      '04': 'Nota de Remisión',
       '07': 'Retención',
+      '09': 'Liquidación',
+      '11': 'Exportación',
       '14': 'Sujeto Excluido',
     };
     const dteLabel = tipoDteNames[dte.tipoDte] || `DTE ${dte.tipoDte}`;
@@ -204,8 +207,14 @@ export class AccountingAutomationService {
         return 'NOTA_CREDITO';
       case '06':
         return 'NOTA_DEBITO';
+      case '04':
+        return 'NOTA_REMISION';
       case '07':
         return 'RETENCION';
+      case '09':
+        return 'LIQUIDACION';
+      case '11':
+        return 'EXPORTACION';
       case '14':
         return 'SUJETO_EXCLUIDO';
       default:
@@ -246,7 +255,10 @@ export class AccountingAutomationService {
       '03': 'CCF',
       '05': 'NC',
       '06': 'ND',
+      '04': 'NR',
       '07': 'RET',
+      '09': 'DCL',
+      '11': 'FEX',
       '14': 'FSE',
     };
     const prefix = tipoDteNames[tipoDte] || 'DTE';
@@ -300,7 +312,10 @@ export class AccountingAutomationService {
       '03': 'CCF',
       '05': 'NC',
       '06': 'ND',
+      '04': 'NR',
       '07': 'RET',
+      '09': 'DCL',
+      '11': 'FEX',
       '14': 'FSE',
     };
     const prefix = tipoDteNames[tipoDte] || 'DTE';

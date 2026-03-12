@@ -108,6 +108,50 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
     },
   },
   {
+    operation: 'NOTA_REMISION',
+    description: 'Nota de Remisión (traslado de bienes)',
+    debitCode: '110301',
+    creditCode: '4101',
+    mappingConfig: {
+      debe: [
+        { cuenta: '110301', monto: 'total', descripcion: 'Clientes Locales' },
+      ],
+      haber: [
+        { cuenta: '4101', monto: 'subtotal', descripcion: 'Ventas' },
+        { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal' },
+      ],
+    },
+  },
+  {
+    operation: 'LIQUIDACION',
+    description: 'Documento Contable de Liquidación',
+    debitCode: '110101',
+    creditCode: '4101',
+    mappingConfig: {
+      debe: [
+        { cuenta: '110101', monto: 'total', descripcion: 'Caja General' },
+      ],
+      haber: [
+        { cuenta: '4101', monto: 'subtotal', descripcion: 'Ventas' },
+        { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal' },
+      ],
+    },
+  },
+  {
+    operation: 'EXPORTACION',
+    description: 'Factura de Exportación',
+    debitCode: '110302',
+    creditCode: '4102',
+    mappingConfig: {
+      debe: [
+        { cuenta: '110302', monto: 'total', descripcion: 'Clientes Exterior' },
+      ],
+      haber: [
+        { cuenta: '4102', monto: 'total', descripcion: 'Ventas Exportación' },
+      ],
+    },
+  },
+  {
     operation: 'SUJETO_EXCLUIDO',
     description: 'Factura Sujeto Excluido',
     debitCode: '110101',

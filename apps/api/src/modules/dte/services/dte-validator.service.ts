@@ -368,6 +368,215 @@ const SujetoExcluidoSchema = z.object({
   apendice: z.array(ApendiceSchema).min(1).max(10).nullable(),
 });
 
+// === Tipo 04: Nota de Remisión ===
+
+const ReceptorNotaRemisionSchema = z.object({
+  tipoDocumento: z.enum(['36', '13', '02', '03', '37']),
+  numDocumento: z.string().min(3).max(20),
+  nrc: z.string().regex(/^[0-9]{1,8}$/).nullable(),
+  nombre: z.string().min(1).max(250),
+  codActividad: z.string().regex(/^[0-9]{2,6}$/).nullable(),
+  descActividad: z.string().min(1).max(150).nullable(),
+  nombreComercial: z.string().min(1).max(150).nullable(),
+  direccion: DireccionSchema,
+  telefono: z.string().min(8).max(30).nullable(),
+  correo: z.string().email().max(100),
+  bienTitulo: z.string().max(2),
+});
+
+const ResumenNotaRemisionSchema = z.object({
+  totalNoSuj: z.number().min(0).lt(100000000000),
+  totalExenta: z.number().min(0).lt(100000000000),
+  totalGravada: z.number().min(0).lt(100000000000),
+  subTotalVentas: z.number().min(0).lt(100000000000),
+  descuNoSuj: z.number().min(0).lt(100000000000),
+  descuExenta: z.number().min(0).lt(100000000000),
+  descuGravada: z.number().min(0).lt(100000000000),
+  porcentajeDescuento: z.number().min(0).max(100).nullable(),
+  totalDescu: z.number().min(0).lt(100000000000),
+  tributos: z.array(TributoResumenSchema).nullable(),
+  subTotal: z.number().min(0).lt(100000000000),
+  montoTotalOperacion: z.number().min(0).lt(100000000000),
+  totalLetras: z.string().max(200),
+});
+
+const NotaRemisionSchema = z.object({
+  identificacion: IdentificacionBaseSchema.extend({
+    version: z.literal(3),
+    tipoDte: z.literal('04'),
+    numeroControl: z.string().regex(/^DTE-04-[A-Z0-9]{8}-[0-9]{15}$/),
+  }),
+  documentoRelacionado: z.array(DocumentoRelacionadoSchema).min(1).max(50).nullable(),
+  emisor: EmisorSchema,
+  receptor: ReceptorNotaRemisionSchema,
+  ventaTercero: VentaTerceroSchema,
+  cuerpoDocumento: z.array(CuerpoDocumentoNotaCreditoSchema).min(1).max(2000),
+  resumen: ResumenNotaRemisionSchema,
+  extension: ExtensionSchema,
+  apendice: z.array(ApendiceSchema).min(1).max(10).nullable(),
+});
+
+// === Tipo 09: Documento Contable de Liquidación ===
+
+const EmisorLiquidacionSchema = z.object({
+  nit: z.string().regex(/^([0-9]{14}|[0-9]{9})$/),
+  nrc: z.string().regex(/^[0-9]{1,8}$/),
+  nombre: z.string().min(3).max(200),
+  codActividad: z.string().regex(/^[0-9]{2,6}$/),
+  descActividad: z.string().min(5).max(150),
+  nombreComercial: z.string().min(5).max(150).nullable(),
+  tipoEstablecimiento: z.enum(['01', '02', '04', '07', '20']),
+  direccion: DireccionSchema,
+  telefono: z.string().min(8).max(8),
+  correo: z.string().email().max(100),
+  codigoMH: z.string().length(4).nullable(),
+  codigo: z.string().length(4).nullable(),
+  puntoVentaMH: z.string().length(4).nullable(),
+  puntoVentaContri: z.string().min(1).max(15).nullable(),
+});
+
+const ReceptorLiquidacionSchema = z.object({
+  nit: z.string().regex(/^([0-9]{14}|[0-9]{9})$/),
+  nrc: z.string().regex(/^[0-9]{1,8}$/),
+  nombre: z.string().min(1).max(250),
+  codActividad: z.string().regex(/^[0-9]{2,6}$/),
+  descActividad: z.string().min(5).max(150),
+  nombreComercial: z.string().min(5).max(150).nullable(),
+  tipoEstablecimiento: z.enum(['01', '02', '04', '07', '20']),
+  direccion: DireccionSchema,
+  telefono: z.string().min(8).max(8).nullable(),
+  correo: z.string().email().max(100),
+  codigoMH: z.string().length(4).nullable(),
+  puntoVentaMH: z.string().length(4).nullable(),
+});
+
+const CuerpoDocumentoLiquidacionSchema = z.object({
+  periodoLiquidacionFechaInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  periodoLiquidacionFechaFin: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  codLiquidacion: z.string().min(1).max(30).nullable(),
+  cantidadDoc: z.number().positive().nullable(),
+  valorOperaciones: z.number().positive().lt(100000000000),
+  montoSinPercepcion: z.number().min(0).lt(100000000000),
+  descripSinPercepcion: z.string().min(1).max(100).nullable(),
+  subTotal: z.number().positive().lt(100000000000),
+  iva: z.number().positive().lt(100000000000),
+  montoSujetoPercepcion: z.number().positive().lt(100000000000),
+  ivaPercibido: z.number().positive().lt(100000000000),
+  comision: z.number().min(0).lt(100000000000),
+  porcentComision: z.string().min(1).max(100).nullable(),
+  ivaComision: z.number().min(0).lt(100000000000),
+  liquidoApagar: z.number().positive().lt(100000000000),
+  totalLetras: z.string().min(8).max(200),
+  observaciones: z.string().max(200).nullable(),
+});
+
+const ExtensionLiquidacionSchema = z.object({
+  nombEntrega: z.string().min(5).max(100),
+  docuEntrega: z.string().min(5).max(25),
+  codEmpleado: z.string().min(1).max(15).nullable(),
+});
+
+const IdentificacionDCLSchema = z.object({
+  version: z.literal(1),
+  ambiente: z.enum(['00', '01']),
+  tipoDte: z.literal('09'),
+  numeroControl: z.string().regex(/^DTE-09-[A-Z0-9]{8}-[0-9]{15}$/).length(31),
+  codigoGeneracion: z.string().length(36).regex(/^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}$/),
+  tipoModelo: z.literal(1),
+  tipoOperacion: z.literal(1),
+  fecEmi: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  horEmi: z.string().regex(/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/),
+  tipoMoneda: z.literal('USD'),
+});
+
+const DocumentoContableLiquidacionSchema = z.object({
+  identificacion: IdentificacionDCLSchema,
+  emisor: EmisorLiquidacionSchema,
+  receptor: ReceptorLiquidacionSchema,
+  cuerpoDocumento: CuerpoDocumentoLiquidacionSchema,
+  extension: ExtensionLiquidacionSchema,
+  apendice: z.array(ApendiceSchema).min(1).max(10).nullable(),
+});
+
+// === Tipo 11: Factura de Exportación ===
+
+const EmisorExportacionSchema = EmisorSchema.extend({
+  tipoItemExpor: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  recintoFiscal: z.string().length(2).nullable(),
+  regimen: z.string().nullable(),
+});
+
+const ReceptorExportacionSchema = z.object({
+  nombre: z.string().min(1).max(250),
+  tipoDocumento: z.enum(['36', '13', '02', '03', '37']),
+  numDocumento: z.string().min(3).max(20),
+  nombreComercial: z.string().min(1).max(150).nullable(),
+  codPais: z.string().length(4),
+  nombrePais: z.string().min(3).max(50),
+  complemento: z.string().min(5).max(300),
+  tipoPersona: z.union([z.literal(1), z.literal(2)]),
+  descActividad: z.string().min(5).max(150),
+  telefono: z.string().min(8).max(50).nullable(),
+  correo: z.string().email().max(100).nullable(),
+}).nullable();
+
+const OtroDocumentoExportacionSchema = z.object({
+  codDocAsociado: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  descDocumento: z.string().max(100).nullable(),
+  detalleDocumento: z.string().max(300).nullable(),
+  placaTrans: z.string().min(5).max(70).nullable(),
+  modoTransp: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7), z.null()]),
+  numConductor: z.string().min(5).max(100).nullable(),
+  nombreConductor: z.string().min(5).max(200).nullable(),
+});
+
+const CuerpoDocumentoExportacionSchema = z.object({
+  numItem: z.number().int().min(1).max(2000),
+  cantidad: z.number().positive().lt(100000000000),
+  codigo: z.string().min(1).max(200).nullable(),
+  uniMedida: z.number().int().min(1).max(99),
+  descripcion: z.string().max(1000),
+  precioUni: z.number().lt(100000000000),
+  montoDescu: z.number().min(0).lt(100000000000),
+  ventaGravada: z.number().min(0).lt(100000000000),
+  tributos: z.array(z.string().length(2)).nullable(),
+  noGravado: z.number().lt(100000000000).gt(-100000000000),
+});
+
+const ResumenExportacionSchema = z.object({
+  totalGravada: z.number().min(0).lt(100000000000),
+  descuento: z.number().min(0).lt(100000000000),
+  porcentajeDescuento: z.number().min(0).max(100),
+  totalDescu: z.number().min(0).lt(100000000000),
+  seguro: z.number().min(0).lt(100000000000).nullable(),
+  flete: z.number().min(0).lt(100000000000).nullable(),
+  montoTotalOperacion: z.number().positive().lt(100000000000),
+  totalNoGravado: z.number().lt(100000000000).gt(-100000000000),
+  totalPagar: z.number().min(0).lt(100000000000),
+  totalLetras: z.string().max(200),
+  condicionOperacion: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  pagos: z.array(PagoSchema).nullable(),
+  codIncoterms: z.string().nullable(),
+  descIncoterms: z.string().min(3).max(150).nullable(),
+  numPagoElectronico: z.string().max(100).nullable(),
+  observaciones: z.string().max(500).nullable(),
+});
+
+const FacturaExportacionSchema = z.object({
+  identificacion: IdentificacionBaseSchema.extend({
+    version: z.literal(1),
+    tipoDte: z.literal('11'),
+    numeroControl: z.string().regex(/^DTE-11-[A-Z0-9]{8}-[0-9]{15}$/),
+  }),
+  emisor: EmisorExportacionSchema,
+  receptor: ReceptorExportacionSchema,
+  otrosDocumentos: z.array(OtroDocumentoExportacionSchema).nullable(),
+  ventaTercero: VentaTerceroSchema,
+  cuerpoDocumento: z.array(CuerpoDocumentoExportacionSchema).min(1).max(2000),
+  resumen: ResumenExportacionSchema,
+  apendice: z.array(ApendiceSchema).min(1).max(10).nullable(),
+});
+
 export interface ValidationResult {
   valid: boolean;
   errors: Array<{
@@ -381,9 +590,12 @@ export class DteValidatorService {
   private schemas: Record<string, z.ZodSchema> = {
     '01': FacturaSchema,
     '03': CCFSchema,
+    '04': NotaRemisionSchema,
     '05': NotaCreditoSchema,
     '06': NotaDebitoSchema,
     '07': ComprobanteRetencionSchema,
+    '09': DocumentoContableLiquidacionSchema,
+    '11': FacturaExportacionSchema,
     '14': SujetoExcluidoSchema,
   };
 

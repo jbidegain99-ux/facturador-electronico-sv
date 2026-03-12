@@ -9,23 +9,37 @@ import {
   ReceptorFactura,
   ReceptorCCF,
   ReceptorSujetoExcluido,
+  ReceptorNotaRemision,
+  ReceptorLiquidacion,
+  ReceptorExportacion,
+  EmisorExportacion,
+  EmisorLiquidacion,
   DocumentoRelacionado,
   CuerpoDocumentoFactura,
   CuerpoDocumentoCCF,
   CuerpoDocumentoNotaCredito,
   CuerpoDocumentoRetencion,
   CuerpoDocumentoSujetoExcluido,
+  CuerpoDocumentoLiquidacion,
+  CuerpoDocumentoExportacion,
   ResumenFactura,
   ResumenCCF,
   ResumenNotaCredito,
   ResumenRetencion,
   ResumenSujetoExcluido,
+  ResumenNotaRemision,
+  ResumenExportacion,
+  ExtensionLiquidacion,
   FacturaElectronica,
   ComprobanteCreditoFiscal,
   NotaCredito,
   NotaDebito,
   ComprobanteRetencion,
   FacturaSujetoExcluido,
+  NotaRemision,
+  DocumentoContableLiquidacion,
+  FacturaExportacion,
+  OtroDocumentoExportacion,
   DTE_VERSIONS,
   Pago,
   TributoResumen,
@@ -745,4 +759,305 @@ export class DteBuilderService {
       apendice: null,
     };
   }
+
+  // === Tipo 04: Nota de Remisión ===
+
+  buildNotaRemision(input: BuildNotaRemisionInput): NotaRemision {
+    const tipoDte: TipoDte = '04';
+    const ambiente = input.ambiente ?? '00';
+    const codigoGeneracion = this.generateCodigoGeneracion();
+    const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
+
+    const identificacion: Identificacion = {
+      version: DTE_VERSIONS[tipoDte],
+      ambiente,
+      tipoDte,
+      numeroControl,
+      codigoGeneracion,
+      tipoModelo: 1,
+      tipoOperacion: 1,
+      tipoContingencia: null,
+      motivoContin: null,
+      fecEmi: this.getCurrentDate(),
+      horEmi: this.getCurrentTime(),
+      tipoMoneda: 'USD',
+    };
+
+    const cuerpoDocumento: CuerpoDocumentoNotaCredito[] = input.items.map((item, index) => {
+      const subtotal = item.cantidad * item.precioUnitario;
+      const esGravado = item.esGravado !== false && !item.esExento;
+      const ventaGravada = esGravado ? this.roundTo2Decimals(subtotal) : 0;
+      const ventaExenta = item.esExento ? this.roundTo2Decimals(subtotal) : 0;
+
+      return {
+        numItem: index + 1,
+        tipoItem: 1 as const,
+        numeroDocumento: item.numeroDocumento || '',
+        cantidad: item.cantidad,
+        codigo: item.codigo || null,
+        codTributo: null,
+        uniMedida: 59,
+        descripcion: item.descripcion,
+        precioUni: item.precioUnitario,
+        montoDescu: 0,
+        ventaNoSuj: 0,
+        ventaExenta,
+        ventaGravada,
+        tributos: esGravado ? ['20'] : null,
+      };
+    });
+
+    const totalGravada = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaGravada, 0));
+    const totalExenta = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaExenta, 0));
+    const totalNoSuj = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaNoSuj, 0));
+    const subTotalVentas = this.roundTo2Decimals(totalGravada + totalExenta + totalNoSuj);
+
+    const tributos: TributoResumen[] | null = totalGravada > 0 ? [{
+      codigo: '20',
+      descripcion: 'Impuesto al Valor Agregado 13%',
+      valor: this.roundTo2Decimals(totalGravada * this.IVA_RATE),
+    }] : null;
+
+    const ivaTotal = tributos ? tributos[0].valor : 0;
+    const montoTotalOperacion = this.roundTo2Decimals(subTotalVentas + ivaTotal);
+
+    const resumen: ResumenNotaRemision = {
+      totalNoSuj,
+      totalExenta,
+      totalGravada,
+      subTotalVentas,
+      descuNoSuj: 0,
+      descuExenta: 0,
+      descuGravada: 0,
+      porcentajeDescuento: null,
+      totalDescu: 0,
+      tributos,
+      subTotal: subTotalVentas,
+      montoTotalOperacion,
+      totalLetras: this.numberToWords(montoTotalOperacion),
+    };
+
+    return {
+      identificacion,
+      documentoRelacionado: input.documentoRelacionado || null,
+      emisor: input.emisor,
+      receptor: input.receptor,
+      ventaTercero: null,
+      cuerpoDocumento,
+      resumen,
+      extension: null,
+      apendice: null,
+    };
+  }
+
+  // === Tipo 09: Documento Contable de Liquidación ===
+
+  buildDocumentoLiquidacion(input: BuildDocumentoLiquidacionInput): DocumentoContableLiquidacion {
+    const tipoDte: TipoDte = '09';
+    const ambiente = input.ambiente ?? '00';
+    const codigoGeneracion = this.generateCodigoGeneracion();
+    const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
+
+    const identificacion = {
+      version: DTE_VERSIONS[tipoDte],
+      ambiente,
+      tipoDte,
+      numeroControl,
+      codigoGeneracion,
+      tipoModelo: 1 as const,
+      tipoOperacion: 1 as const,
+      fecEmi: this.getCurrentDate(),
+      horEmi: this.getCurrentTime(),
+      tipoMoneda: 'USD' as const,
+    };
+
+    const IVA_RATE_DCL = 0.13;
+    const iva = this.roundTo2Decimals(input.valorOperaciones * IVA_RATE_DCL);
+    const subTotal = this.roundTo2Decimals(input.valorOperaciones + iva);
+    const PERCEPCION_RATE = 0.02;
+    const montoSujetoPercepcion = this.roundTo2Decimals(input.valorOperaciones);
+    const ivaPercibido = this.roundTo2Decimals(montoSujetoPercepcion * PERCEPCION_RATE);
+    const comision = this.roundTo2Decimals(input.comision || 0);
+    const ivaComision = this.roundTo2Decimals(comision * IVA_RATE_DCL);
+    const liquidoApagar = this.roundTo2Decimals(subTotal - ivaPercibido - comision - ivaComision);
+
+    const cuerpoDocumento: CuerpoDocumentoLiquidacion = {
+      periodoLiquidacionFechaInicio: input.periodoInicio,
+      periodoLiquidacionFechaFin: input.periodoFin,
+      codLiquidacion: input.codLiquidacion || null,
+      cantidadDoc: input.cantidadDoc || null,
+      valorOperaciones: input.valorOperaciones,
+      montoSinPercepcion: input.montoSinPercepcion || 0,
+      descripSinPercepcion: input.descripSinPercepcion || null,
+      subTotal,
+      iva,
+      montoSujetoPercepcion,
+      ivaPercibido,
+      comision,
+      porcentComision: input.porcentComision || null,
+      ivaComision,
+      liquidoApagar,
+      totalLetras: this.numberToWords(liquidoApagar),
+      observaciones: input.observaciones || null,
+    };
+
+    return {
+      identificacion,
+      emisor: input.emisor,
+      receptor: input.receptor,
+      cuerpoDocumento,
+      extension: input.extension,
+      apendice: null,
+    };
+  }
+
+  // === Tipo 11: Factura de Exportación ===
+
+  buildFacturaExportacion(input: BuildFacturaExportacionInput): FacturaExportacion {
+    const tipoDte: TipoDte = '11';
+    const ambiente = input.ambiente ?? '00';
+    const codigoGeneracion = this.generateCodigoGeneracion();
+    const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
+
+    const identificacion: Identificacion = {
+      version: DTE_VERSIONS[tipoDte],
+      ambiente,
+      tipoDte,
+      numeroControl,
+      codigoGeneracion,
+      tipoModelo: 1,
+      tipoOperacion: 1,
+      tipoContingencia: null,
+      motivoContin: null,
+      fecEmi: this.getCurrentDate(),
+      horEmi: this.getCurrentTime(),
+      tipoMoneda: 'USD',
+    };
+
+    // Export items: 0% IVA, uses noGravado for non-taxable charges
+    const cuerpoDocumento: CuerpoDocumentoExportacion[] = input.items.map((item, index) => {
+      const subtotal = this.roundTo2Decimals(item.cantidad * item.precioUnitario);
+      return {
+        numItem: index + 1,
+        cantidad: item.cantidad,
+        codigo: item.codigo || null,
+        uniMedida: item.uniMedida || 59,
+        descripcion: item.descripcion,
+        precioUni: item.precioUnitario,
+        montoDescu: item.descuento || 0,
+        ventaGravada: subtotal - (item.descuento || 0),
+        tributos: item.tributos || null,
+        noGravado: item.noGravado || 0,
+      };
+    });
+
+    const totalGravada = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaGravada, 0));
+    const totalNoGravado = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.noGravado, 0));
+    const totalDescu = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.montoDescu, 0));
+    const montoTotalOperacion = this.roundTo2Decimals(totalGravada + totalNoGravado + (input.flete || 0) + (input.seguro || 0));
+    const totalPagar = montoTotalOperacion;
+
+    const condicionOperacion = input.condicionOperacion || 1;
+    const pagos: Pago[] | null = condicionOperacion !== 2 ? [{
+      codigo: '01',
+      montoPago: totalPagar,
+      referencia: null,
+      plazo: null,
+      periodo: null,
+    }] : null;
+
+    const resumen: ResumenExportacion = {
+      totalGravada,
+      descuento: totalDescu,
+      porcentajeDescuento: totalGravada > 0 ? this.roundTo2Decimals((totalDescu / (totalGravada + totalDescu)) * 100) : 0,
+      totalDescu,
+      seguro: input.seguro || null,
+      flete: input.flete || null,
+      montoTotalOperacion,
+      totalNoGravado,
+      totalPagar,
+      totalLetras: this.numberToWords(totalPagar),
+      condicionOperacion,
+      pagos,
+      codIncoterms: input.codIncoterms || null,
+      descIncoterms: input.descIncoterms || null,
+      numPagoElectronico: null,
+      observaciones: input.observaciones || null,
+    };
+
+    return {
+      identificacion,
+      emisor: input.emisor,
+      receptor: input.receptor || null,
+      otrosDocumentos: input.otrosDocumentos || null,
+      ventaTercero: null,
+      cuerpoDocumento,
+      resumen,
+      apendice: null,
+    };
+  }
+}
+
+// === Input interfaces for new builders ===
+
+export interface BuildNotaRemisionInput {
+  emisor: Emisor;
+  receptor: ReceptorNotaRemision;
+  documentoRelacionado?: DocumentoRelacionado[];
+  items: Array<{
+    descripcion: string;
+    cantidad: number;
+    precioUnitario: number;
+    esGravado?: boolean;
+    esExento?: boolean;
+    codigo?: string;
+    numeroDocumento?: string;
+  }>;
+  codEstablecimiento: string;
+  correlativo: number;
+  ambiente?: Ambiente;
+}
+
+export interface BuildDocumentoLiquidacionInput {
+  emisor: EmisorLiquidacion;
+  receptor: ReceptorLiquidacion;
+  periodoInicio: string;
+  periodoFin: string;
+  valorOperaciones: number;
+  comision?: number;
+  porcentComision?: string;
+  montoSinPercepcion?: number;
+  descripSinPercepcion?: string;
+  codLiquidacion?: string;
+  cantidadDoc?: number;
+  observaciones?: string;
+  extension: ExtensionLiquidacion;
+  codEstablecimiento: string;
+  correlativo: number;
+  ambiente?: Ambiente;
+}
+
+export interface BuildFacturaExportacionInput {
+  emisor: EmisorExportacion;
+  receptor?: ReceptorExportacion;
+  items: Array<{
+    descripcion: string;
+    cantidad: number;
+    precioUnitario: number;
+    codigo?: string;
+    uniMedida?: number;
+    descuento?: number;
+    tributos?: string[];
+    noGravado?: number;
+  }>;
+  otrosDocumentos?: OtroDocumentoExportacion[];
+  codEstablecimiento: string;
+  correlativo: number;
+  ambiente?: Ambiente;
+  condicionOperacion?: CondicionOperacion;
+  flete?: number;
+  seguro?: number;
+  codIncoterms?: string;
+  descIncoterms?: string;
+  observaciones?: string;
 }

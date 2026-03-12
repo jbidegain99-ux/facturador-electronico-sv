@@ -1,7 +1,7 @@
 // Tipos DTE basados en JSON Schemas oficiales del MH El Salvador
 
 // Tipos de DTE
-export type TipoDte = '01' | '03' | '05' | '06' | '07' | '14';
+export type TipoDte = '01' | '03' | '04' | '05' | '06' | '07' | '09' | '11' | '14';
 export type Ambiente = '00' | '01'; // 00=Pruebas, 01=Produccion
 export type TipoModelo = 1 | 2; // 1=Normal, 2=Contingencia
 export type TipoOperacion = 1 | 2; // 1=Normal, 2=Contingencia
@@ -407,15 +407,220 @@ export interface FacturaSujetoExcluido {
   apendice: Apendice[] | null;
 }
 
+// === Tipo 04: Nota de Remisión ===
+
+// Receptor para Nota de Remisión (04) - includes bienTitulo
+export interface ReceptorNotaRemision {
+  tipoDocumento: '36' | '13' | '02' | '03' | '37';
+  numDocumento: string;
+  nrc: string | null;
+  nombre: string;
+  codActividad: string | null;
+  descActividad: string | null;
+  nombreComercial: string | null;
+  direccion: Direccion;
+  telefono: string | null;
+  correo: string;
+  bienTitulo: string; // 2-char code for type of goods being transferred
+}
+
+// Resumen para Nota de Remisión (04) - similar to CCF but no pagos
+export interface ResumenNotaRemision {
+  totalNoSuj: number;
+  totalExenta: number;
+  totalGravada: number;
+  subTotalVentas: number;
+  descuNoSuj: number;
+  descuExenta: number;
+  descuGravada: number;
+  porcentajeDescuento: number | null;
+  totalDescu: number;
+  tributos: TributoResumen[] | null;
+  subTotal: number;
+  montoTotalOperacion: number;
+  totalLetras: string;
+}
+
+// DTE Nota de Remisión (04)
+export interface NotaRemision {
+  identificacion: Identificacion;
+  documentoRelacionado: DocumentoRelacionado[] | null;
+  emisor: Emisor;
+  receptor: ReceptorNotaRemision;
+  ventaTercero: VentaTercero | null;
+  cuerpoDocumento: CuerpoDocumentoNotaCredito[]; // same item structure as NC
+  resumen: ResumenNotaRemision;
+  extension: Extension | null;
+  apendice: Apendice[] | null;
+}
+
+// === Tipo 09: Documento Contable de Liquidación ===
+
+// Receptor for DCL (09) - includes establishment fields
+export interface ReceptorLiquidacion {
+  nit: string;
+  nrc: string;
+  nombre: string;
+  codActividad: string;
+  descActividad: string;
+  nombreComercial: string | null;
+  tipoEstablecimiento: '01' | '02' | '04' | '07' | '20';
+  direccion: Direccion;
+  telefono: string | null;
+  correo: string;
+  codigoMH: string | null;
+  puntoVentaMH: string | null;
+}
+
+// Cuerpo Documento for DCL (09) - single object, not array
+export interface CuerpoDocumentoLiquidacion {
+  periodoLiquidacionFechaInicio: string; // YYYY-MM-DD
+  periodoLiquidacionFechaFin: string; // YYYY-MM-DD
+  codLiquidacion: string | null;
+  cantidadDoc: number | null;
+  valorOperaciones: number;
+  montoSinPercepcion: number;
+  descripSinPercepcion: string | null;
+  subTotal: number;
+  iva: number;
+  montoSujetoPercepcion: number;
+  ivaPercibido: number;
+  comision: number;
+  porcentComision: string | null;
+  ivaComision: number;
+  liquidoApagar: number;
+  totalLetras: string;
+  observaciones: string | null;
+}
+
+// Extension for DCL (09) - required, different from general Extension
+export interface ExtensionLiquidacion {
+  nombEntrega: string;
+  docuEntrega: string;
+  codEmpleado: string | null;
+}
+
+// Emisor for DCL (09) - includes MH establishment codes
+export interface EmisorLiquidacion {
+  nit: string;
+  nrc: string;
+  nombre: string;
+  codActividad: string;
+  descActividad: string;
+  nombreComercial: string | null;
+  tipoEstablecimiento: '01' | '02' | '04' | '07' | '20';
+  direccion: Direccion;
+  telefono: string;
+  correo: string;
+  codigoMH: string | null;
+  codigo: string | null;
+  puntoVentaMH: string | null;
+  puntoVentaContri: string | null;
+}
+
+// DTE Documento Contable de Liquidación (09)
+export interface DocumentoContableLiquidacion {
+  identificacion: Omit<Identificacion, 'tipoContingencia' | 'motivoContin'>;
+  emisor: EmisorLiquidacion;
+  receptor: ReceptorLiquidacion;
+  cuerpoDocumento: CuerpoDocumentoLiquidacion; // single object, not array
+  extension: ExtensionLiquidacion;
+  apendice: Apendice[] | null;
+}
+
+// === Tipo 11: Factura de Exportación ===
+
+// Emisor for FEX (11) - includes export-specific fields
+export interface EmisorExportacion extends Emisor {
+  tipoItemExpor: 1 | 2 | 3; // 1=Bienes, 2=Servicios, 3=Ambos
+  recintoFiscal: string | null; // required if tipoItemExpor != 2
+  regimen: string | null; // export regime, required if tipoItemExpor != 2
+}
+
+// Receptor for FEX (11) - international buyer
+export interface ReceptorExportacion {
+  nombre: string;
+  tipoDocumento: '36' | '13' | '02' | '03' | '37';
+  numDocumento: string;
+  nombreComercial: string | null;
+  codPais: string; // 4-digit country code
+  nombrePais: string;
+  complemento: string; // international address
+  tipoPersona: 1 | 2; // 1=Jurídica, 2=Natural
+  descActividad: string;
+  telefono: string | null;
+  correo: string | null;
+}
+
+// Otros Documentos for FEX (11) - transport/logistics
+export interface OtroDocumentoExportacion {
+  codDocAsociado: 1 | 2 | 3 | 4;
+  descDocumento: string | null;
+  detalleDocumento: string | null;
+  placaTrans: string | null;
+  modoTransp: 1 | 2 | 3 | 4 | 5 | 6 | 7 | null;
+  numConductor: string | null;
+  nombreConductor: string | null;
+}
+
+// Item del Cuerpo Documento for FEX (11)
+export interface CuerpoDocumentoExportacion {
+  numItem: number;
+  cantidad: number;
+  codigo: string | null;
+  uniMedida: number;
+  descripcion: string;
+  precioUni: number;
+  montoDescu: number;
+  ventaGravada: number;
+  tributos: string[] | null; // e.g., ["C3"]
+  noGravado: number;
+}
+
+// Resumen for FEX (11) - includes Incoterms, flete, seguro
+export interface ResumenExportacion {
+  totalGravada: number;
+  descuento: number;
+  porcentajeDescuento: number;
+  totalDescu: number;
+  seguro: number | null;
+  flete: number | null;
+  montoTotalOperacion: number;
+  totalNoGravado: number;
+  totalPagar: number;
+  totalLetras: string;
+  condicionOperacion: CondicionOperacion;
+  pagos: Pago[] | null;
+  codIncoterms: string | null;
+  descIncoterms: string | null;
+  numPagoElectronico: string | null;
+  observaciones: string | null;
+}
+
+// DTE Factura de Exportación (11)
+export interface FacturaExportacion {
+  identificacion: Identificacion;
+  emisor: EmisorExportacion;
+  receptor: ReceptorExportacion | null;
+  otrosDocumentos: OtroDocumentoExportacion[] | null;
+  ventaTercero: VentaTercero | null;
+  cuerpoDocumento: CuerpoDocumentoExportacion[];
+  resumen: ResumenExportacion;
+  apendice: Apendice[] | null;
+}
+
 // Union type para cualquier DTE
-export type DTE = FacturaElectronica | ComprobanteCreditoFiscal | NotaCredito | NotaDebito | ComprobanteRetencion | FacturaSujetoExcluido;
+export type DTE = FacturaElectronica | ComprobanteCreditoFiscal | NotaCredito | NotaDebito | ComprobanteRetencion | FacturaSujetoExcluido | NotaRemision | DocumentoContableLiquidacion | FacturaExportacion;
 
 // Versiones por tipo de DTE
 export const DTE_VERSIONS: Record<TipoDte, number> = {
   '01': 1, // Factura
   '03': 3, // CCF
+  '04': 3, // Nota de Remisión
   '05': 3, // Nota Credito
   '06': 3, // Nota Debito
   '07': 3, // Comprobante Retencion
+  '09': 1, // Documento Contable Liquidación
+  '11': 1, // Factura de Exportación
   '14': 1, // Factura Sujeto Excluido
 };

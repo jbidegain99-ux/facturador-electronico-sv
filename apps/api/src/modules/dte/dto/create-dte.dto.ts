@@ -159,4 +159,85 @@ export class CreateSujetoExcluidoDto {
   condicionOperacion?: CondicionOperacion;
 }
 
-export type CreateDteDto = CreateFacturaDto | CreateCCFDto | CreateNotaCreditoDto | CreateNotaDebitoDto | CreateComprobanteRetencionDto | CreateSujetoExcluidoDto;
+export class ReceptorNotaRemisionDto {
+  nit: string;
+  nrc: string;
+  nombre: string;
+  codActividad: string;
+  descActividad: string;
+  nombreComercial?: string;
+  direccion: DireccionDto;
+  telefono?: string;
+  correo: string;
+  bienTitulo: string;
+}
+
+export class CreateNotaRemisionDto {
+  tipoDte: '04' = '04';
+  ambiente?: Ambiente;
+  emisor: EmisorDto;
+  receptor: ReceptorNotaRemisionDto;
+  documentosRelacionados: DocumentoRelacionadoDto[];
+  items: ItemDto[];
+  codEstablecimiento: string;
+  correlativo: number;
+  condicionOperacion?: CondicionOperacion;
+}
+
+export class LiquidacionItemDto {
+  periodoLiquidacionFechaInicio: string;
+  periodoLiquidacionFechaFin: string;
+  codLiquidacion: number;
+  cantidadDoc: number;
+  valorOperaciones: number;
+  montoSinPercepcion: number;
+  descripcion: string;
+}
+
+export class ExtensionLiquidacionDto {
+  nombEntrega: string;
+  docuEntrega: string;
+  codEmpleado?: string;
+}
+
+export class CreateDocumentoLiquidacionDto {
+  tipoDte: '09' = '09';
+  ambiente?: Ambiente;
+  emisor: EmisorDto;
+  receptor: ReceptorCCFDto;
+  items: LiquidacionItemDto[];
+  extension: ExtensionLiquidacionDto;
+  codEstablecimiento: string;
+  correlativo: number;
+}
+
+export class ReceptorExportacionDto {
+  tipoDocumento?: string;
+  numDocumento?: string;
+  nombre?: string;
+  codPais: string;
+  nombrePais: string;
+  complemento: string;
+  tipoPersona?: 1 | 2;
+  descActividad?: string;
+  telefono?: string;
+  correo?: string;
+}
+
+export class CreateFacturaExportacionDto {
+  tipoDte: '11' = '11';
+  ambiente?: Ambiente;
+  emisor: EmisorDto;
+  receptor?: ReceptorExportacionDto;
+  items: ItemDto[];
+  codEstablecimiento: string;
+  correlativo: number;
+  condicionOperacion?: CondicionOperacion;
+  codIncoterms?: string;
+  descIncoterms?: string;
+  flete?: number;
+  seguro?: number;
+  observaciones?: string;
+}
+
+export type CreateDteDto = CreateFacturaDto | CreateCCFDto | CreateNotaCreditoDto | CreateNotaDebitoDto | CreateComprobanteRetencionDto | CreateSujetoExcluidoDto | CreateNotaRemisionDto | CreateDocumentoLiquidacionDto | CreateFacturaExportacionDto;

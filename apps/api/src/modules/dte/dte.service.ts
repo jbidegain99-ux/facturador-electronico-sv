@@ -189,6 +189,16 @@ export class DteService {
       totalGravada = Number(resumen?.totalSujetoRetencion) || 0;
       totalIva = Number(resumen?.totalIVAretenido) || 0;
       totalPagar = totalIva; // Retention amount is what's "paid"
+    } else if (tipoDte === '09') {
+      // Documento Contable de Liquidación: uses liquidoApagar as totalPagar
+      totalGravada = Number(resumen?.totalGravada) || 0;
+      totalIva = Number(resumen?.totalIva) || 0;
+      totalPagar = Number(resumen?.liquidoApagar) || Number(resumen?.totalPagar) || 0;
+    } else if (tipoDte === '11') {
+      // Factura de Exportación: 0% IVA
+      totalGravada = Number(resumen?.totalGravada) || 0;
+      totalIva = 0;
+      totalPagar = Number(resumen?.totalPagar) || Number(resumen?.montoTotalOperacion) || 0;
     } else if (tipoDte === '14') {
       // Sujeto Excluido: no IVA, uses totalCompra
       totalGravada = Number(resumen?.totalCompra) || 0;
@@ -1379,6 +1389,289 @@ export class DteService {
           pagos,
           observaciones: (resumen.observaciones as string) || null,
         },
+        apendice: (data.apendice as unknown) ?? null,
+      };
+    }
+
+    if (tipoDte === '04') {
+      // === Nota de Remisión (04) normalization ===
+      // Similar structure to NC/ND: documentoRelacionado, receptor with bienTitulo, tributos
+      const normalizedIdentificacion = {
+        ...identificacion,
+        motivoContin: identificacion.motivoContin ?? null,
+      };
+
+      let receptorDireccion = receptor.direccion;
+      if (typeof receptorDireccion === 'string') {
+        try {
+          receptorDireccion = JSON.parse(receptorDireccion);
+        } catch {
+          receptorDireccion = { departamento: '06', municipio: '14', complemento: receptorDireccion };
+        }
+      }
+      if (!receptorDireccion || typeof receptorDireccion !== 'object' || !(receptorDireccion as Record<string, unknown>).departamento) {
+        receptorDireccion = { departamento: '06', municipio: '14', complemento: String(receptorDireccion || '') };
+      }
+
+      const receptorNit = ((receptor.nit as string) || (receptor.numDocumento as string) || '').replace(/-/g, '');
+      const normalizedReceptor = {
+        nit: receptorNit,
+        nrc: ((receptor.nrc as string) || '').replace(/-/g, ''),
+        nombre: (receptor.nombre as string) || '',
+        codActividad: (receptor.codActividad as string) || '62010',
+        descActividad: (receptor.descActividad as string) || 'Servicios',
+        nombreComercial: (receptor.nombreComercial as string) || null,
+        direccion: receptorDireccion,
+        telefono: (receptor.telefono as string) || null,
+        correo: (receptor.correo as string) || '',
+        bienTitulo: (receptor.bienTitulo as string) || '01',
+      };
+
+      // NR items: same as NC/ND items (no ivaItem, has numeroDocumento)
+      const normalizedCuerpo = cuerpoDocumento.map(item => {
+        const { ivaItem: _ivaItem, ...rest } = item;
+        return {
+          ...rest,
+          numeroDocumento: item.numeroDocumento ?? '',
+          codTributo: item.codTributo ?? null,
+        };
+      });
+
+      // Resumen with tributos (same as CCF/NC/ND)
+      const totalGravada = Number(resumen.totalGravada) || 0;
+      const IVA_RATE = 0.13;
+      const ivaAmount = Math.round(totalGravada * IVA_RATE * 100) / 100;
+
+      const tributos = totalGravada > 0 ? [{
+        codigo: '20',
+        descripcion: 'Impuesto al Valor Agregado 13%',
+        valor: ivaAmount,
+      }] : null;
+
+      const montoTotalOperacion = Math.round((totalGravada + (Number(resumen.totalExenta) || 0) + (Number(resumen.totalNoSuj) || 0) + ivaAmount) * 100) / 100;
+
+      const { totalIva: _totalIva04, ...resumenRest04 } = resumen;
+      const normalizedResumen04: Record<string, unknown> = {
+        ...resumenRest04,
+        tributos,
+        subTotal: Number(resumen.subTotal) || Number(resumen.subTotalVentas) || 0,
+        ivaPerci1: 0,
+        ivaRete1: 0,
+        reteRenta: Number(resumen.reteRenta) || 0,
+        montoTotalOperacion,
+        totalPagar: montoTotalOperacion,
+        totalLetras: (resumen.totalLetras as string) || numberToWords(montoTotalOperacion),
+        condicionOperacion: Number(resumen.condicionOperacion) || 1,
+      };
+
+      return {
+        identificacion: normalizedIdentificacion,
+        documentoRelacionado: (data.documentoRelacionado as unknown) ?? (data.documentosRelacionados as unknown) ?? [],
+        emisor,
+        receptor: normalizedReceptor,
+        ventaTercero: (data.ventaTercero as unknown) ?? null,
+        cuerpoDocumento: normalizedCuerpo,
+        resumen: normalizedResumen04,
+        extension: (data.extension as unknown) ?? null,
+        apendice: (data.apendice as unknown) ?? null,
+      };
+    }
+
+    if (tipoDte === '09') {
+      // === Documento Contable de Liquidación (09) normalization ===
+      // Unique: cuerpoDocumento is a single object (NOT array), tipoModelo/tipoOperacion are const=1
+      // No tipoContingencia/motivoContin in identificacion
+      const { tipoContingencia: _tc, motivoContin: _mc, ...identRest09 } = identificacion;
+      const normalizedIdentificacion = {
+        ...identRest09,
+        tipoModelo: 1,
+        tipoOperacion: 1,
+      };
+
+      // Receptor same format as CCF
+      let receptorDireccion = receptor.direccion;
+      if (typeof receptorDireccion === 'string') {
+        try {
+          receptorDireccion = JSON.parse(receptorDireccion);
+        } catch {
+          receptorDireccion = { departamento: '06', municipio: '14', complemento: receptorDireccion };
+        }
+      }
+      if (!receptorDireccion || typeof receptorDireccion !== 'object' || !(receptorDireccion as Record<string, unknown>).departamento) {
+        receptorDireccion = { departamento: '06', municipio: '14', complemento: String(receptorDireccion || '') };
+      }
+
+      const receptorNit = ((receptor.nit as string) || (receptor.numDocumento as string) || '').replace(/-/g, '');
+      const normalizedReceptor = {
+        tipoDocumento: (receptor.tipoDocumento as string) || '36',
+        numDocumento: receptorNit,
+        nrc: ((receptor.nrc as string) || '').replace(/-/g, ''),
+        nombre: (receptor.nombre as string) || '',
+        codActividad: (receptor.codActividad as string) || '62010',
+        descActividad: (receptor.descActividad as string) || 'Servicios',
+        nombreComercial: (receptor.nombreComercial as string) || null,
+        direccion: receptorDireccion,
+        telefono: (receptor.telefono as string) || null,
+        correo: (receptor.correo as string) || '',
+      };
+
+      // DCL emisor needs codigoMH, codigo, puntoVentaMH, puntoVentaContri
+      const emisorDCL = {
+        ...emisor,
+        codigoMH: emisor.codEstableMH,
+        codigo: emisor.codEstable,
+        puntoVentaMH: emisor.codPuntoVentaMH,
+        puntoVentaContri: emisor.codPuntoVenta,
+      };
+
+      // cuerpoDocumento is a single object for DCL
+      const cuerpoItem = cuerpoDocumento[0] || (data.cuerpoDocumento as Record<string, unknown>) || {};
+      const valorOperaciones = Number(cuerpoItem.valorOperaciones) || 0;
+      const IVA_RATE = 0.13;
+      const PERCEPCION_RATE = 0.02;
+      const montoSinPercepcion = Number(cuerpoItem.montoSinPercepcion) || 0;
+      const montoSujetoPercepcion = valorOperaciones - montoSinPercepcion;
+      const ivaPercibido = Math.round(montoSujetoPercepcion * PERCEPCION_RATE * 100) / 100;
+      const subTotal = Math.round(valorOperaciones * (1 + IVA_RATE) * 100) / 100;
+      const comision = Number(cuerpoItem.comision) || 0;
+      const ivaComision = Math.round(comision * IVA_RATE * 100) / 100;
+      const liquidoApagar = Math.round((subTotal - ivaPercibido - comision - ivaComision) * 100) / 100;
+
+      const normalizedCuerpo = {
+        numItem: 1,
+        tipoDte: (cuerpoItem.tipoDte as string) || '03',
+        tipoGeneracion: (cuerpoItem.tipoGeneracion as number) || 1,
+        numeroDocumento: (cuerpoItem.numeroDocumento as string) || null,
+        periodoLiquidacionFechaInicio: (cuerpoItem.periodoLiquidacionFechaInicio as string) || '',
+        periodoLiquidacionFechaFin: (cuerpoItem.periodoLiquidacionFechaFin as string) || '',
+        codLiquidacion: (cuerpoItem.codLiquidacion as number) || 1,
+        cantidadDoc: (cuerpoItem.cantidadDoc as number) || 1,
+        valorOperaciones,
+        montoSinPercepcion,
+        descripcion: (cuerpoItem.descripcion as string) || '',
+      };
+
+      const normalizedResumen09 = {
+        totalNoGravado: 0,
+        totalGravada: valorOperaciones,
+        totalIva: Math.round(valorOperaciones * IVA_RATE * 100) / 100,
+        subTotal,
+        montoSujetoPercepcion,
+        ivaPercibido,
+        comision,
+        porcentComision: Number(cuerpoItem.porcentComision) || 0,
+        ivaComision,
+        liquidoApagar,
+        totalLetras: (resumen.totalLetras as string) || numberToWords(liquidoApagar),
+        observaciones: (resumen.observaciones as string) || null,
+      };
+
+      // Extension is required for DCL
+      const extensionData = (data.extension as Record<string, unknown>) || {};
+      const normalizedExtension = {
+        nombEntrega: (extensionData.nombEntrega as string) || '',
+        docuEntrega: (extensionData.docuEntrega as string) || '',
+        nombRecibe: (extensionData.nombRecibe as string) || '',
+        docuRecibe: (extensionData.docuRecibe as string) || '',
+        observaciones: (extensionData.observaciones as string) || null,
+      };
+
+      return {
+        identificacion: normalizedIdentificacion,
+        emisor: emisorDCL,
+        receptor: normalizedReceptor,
+        cuerpoDocumento: normalizedCuerpo,
+        resumen: normalizedResumen09,
+        extension: normalizedExtension,
+        apendice: (data.apendice as unknown) ?? null,
+      };
+    }
+
+    if (tipoDte === '11') {
+      // === Factura de Exportación (11) normalization ===
+      // 0% IVA, international receptor with codPais/nombrePais, Incoterms
+      const normalizedIdentificacion = {
+        ...identificacion,
+        motivoContin: identificacion.motivoContin ?? null,
+      };
+
+      // Emisor with export-specific fields
+      const emisorData = (data.emisor as Record<string, unknown>) || {};
+      const emisorExport = {
+        ...emisor,
+        tipoItemExpor: (emisorData.tipoItemExpor as number) || 1,
+        recintoFiscal: (emisorData.recintoFiscal as string) || null,
+        regimen: (emisorData.regimen as string) || null,
+      };
+
+      // Receptor: international format
+      const normalizedReceptor = receptor.nombre ? {
+        tipoDocumento: (receptor.tipoDocumento as string) || null,
+        numDocumento: (receptor.numDocumento as string) || null,
+        nombre: (receptor.nombre as string) || '',
+        codPais: (receptor.codPais as string) || '9303',
+        nombrePais: (receptor.nombrePais as string) || '',
+        complemento: (receptor.complemento as string) || '',
+        tipoPersona: (receptor.tipoPersona as number) || null,
+        descActividad: (receptor.descActividad as string) || null,
+        telefono: (receptor.telefono as string) || null,
+        correo: (receptor.correo as string) || null,
+      } : null;
+
+      // Items: export items have ventaGravada and noGravado, no ivaItem/tipoItem
+      const normalizedCuerpo = cuerpoDocumento.map((item, index) => ({
+        numItem: (item.numItem as number) || index + 1,
+        cantidad: Number(item.cantidad) || 1,
+        codigo: (item.codigo as string) || null,
+        uniMedida: (item.uniMedida as number) || 59,
+        descripcion: (item.descripcion as string) || '',
+        precioUni: Number(item.precioUnitario ?? item.precioUni) || 0,
+        montoDescu: Number(item.montoDescu) || 0,
+        ventaGravada: Math.round((Number(item.cantidad) || 1) * Number(item.precioUnitario ?? item.precioUni ?? 0) * 100) / 100,
+        tributos: null,
+        noGravado: Number(item.noGravado) || 0,
+      }));
+
+      const totalGravada = Math.round(normalizedCuerpo.reduce((sum, item) => sum + item.ventaGravada, 0) * 100) / 100;
+      const totalNoGravado = Math.round(normalizedCuerpo.reduce((sum, item) => sum + item.noGravado, 0) * 100) / 100;
+      const flete = Number(resumen.flete ?? data.flete) || 0;
+      const seguro = Number(resumen.seguro ?? data.seguro) || 0;
+      const montoTotalOperacion = Math.round((totalGravada + totalNoGravado) * 100) / 100;
+      const totalPagar = montoTotalOperacion;
+
+      const normalizedResumen11 = {
+        totalGravada,
+        totalNoGravado,
+        descuento: Number(resumen.descuento) || 0,
+        porcentajeDescuento: Number(resumen.porcentajeDescuento) || 0,
+        totalDescu: Number(resumen.totalDescu) || 0,
+        montoTotalOperacion,
+        totalPagar,
+        totalLetras: (resumen.totalLetras as string) || numberToWords(totalPagar),
+        condicionOperacion: Number(resumen.condicionOperacion) || 1,
+        pagos: resumen.pagos ?? [{
+          codigo: '01',
+          montoPago: totalPagar,
+          referencia: null,
+          plazo: null,
+          periodo: null,
+        }],
+        codIncoterms: (resumen.codIncoterms as string) || (data.codIncoterms as string) || null,
+        descIncoterms: (resumen.descIncoterms as string) || (data.descIncoterms as string) || null,
+        flete,
+        seguro,
+        observaciones: (resumen.observaciones as string) || (data.observaciones as string) || null,
+        numPagoElectronico: (resumen.numPagoElectronico as string) || null,
+      };
+
+      return {
+        identificacion: normalizedIdentificacion,
+        emisor: emisorExport,
+        receptor: normalizedReceptor,
+        otrosDocumentos: (data.otrosDocumentos as unknown) ?? null,
+        cuerpoDocumento: normalizedCuerpo,
+        resumen: normalizedResumen11,
+        extension: (data.extension as unknown) ?? null,
         apendice: (data.apendice as unknown) ?? null,
       };
     }

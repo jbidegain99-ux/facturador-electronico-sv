@@ -35,8 +35,13 @@ export function getTipoDteName(tipo: string): string {
   const tipos: Record<string, string> = {
     '01': 'Factura',
     '03': 'Crédito Fiscal',
+    '04': 'Nota de Remisión',
     '05': 'Nota de Crédito',
     '06': 'Nota de Débito',
+    '07': 'Comprobante de Retención',
+    '09': 'Liquidación',
+    '11': 'Factura de Exportación',
+    '14': 'Sujeto Excluido',
   };
   return tipos[tipo] || tipo;
 }

@@ -207,7 +207,7 @@ export function PlantillasPanel({
 interface GuardarPlantillaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  tipoDte: '01' | '03';
+  tipoDte: string;
   items: Array<{
     codigo?: string;
     descripcion: string;

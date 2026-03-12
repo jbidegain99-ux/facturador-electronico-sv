@@ -70,7 +70,7 @@ export const useAppStore = create<AppState>()(
 // Factura Wizard Store
 interface FacturaWizardState {
   step: number;
-  tipoDte: '01' | '03';
+  tipoDte: string;
   receptor: {
     tipoDocumento: string;
     numDocumento: string;
@@ -89,7 +89,7 @@ interface FacturaWizardState {
   setStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;
-  setTipoDte: (tipo: '01' | '03') => void;
+  setTipoDte: (tipo: string) => void;
   setReceptor: (receptor: FacturaWizardState['receptor']) => void;
   addItem: (item: ItemFactura) => void;
   updateItem: (id: string, item: Partial<ItemFactura>) => void;

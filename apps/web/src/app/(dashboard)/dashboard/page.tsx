@@ -494,7 +494,7 @@ export default function DashboardPage() {
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{inv.clientName}</p>
                           <p className="text-xs text-muted-foreground">
-                            {getTipoDteName(inv.tipoDte as '01' | '03')} — {formatDate(inv.date)}
+                            {getTipoDteName(inv.tipoDte)} — {formatDate(inv.date)}
                           </p>
                         </div>
                       </div>

@@ -31,7 +31,7 @@ interface NuevoClienteModalProps {
   open: boolean;
   onClose: () => void;
   onCreated: (cliente: Cliente) => void;
-  tipoDte?: '01' | '03';
+  tipoDte?: string;
   subtotal?: number; // Subtotal de la factura para validar umbral de $25,000
 }
 

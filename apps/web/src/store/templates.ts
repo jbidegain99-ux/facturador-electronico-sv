@@ -9,7 +9,7 @@ export interface InvoiceTemplate {
   id: string;
   name: string;
   description?: string;
-  tipoDte: '01' | '03';
+  tipoDte: string;
   cliente?: Partial<Cliente>;
   items: Omit<ItemFactura, 'id'>[];
   condicionPago: string;

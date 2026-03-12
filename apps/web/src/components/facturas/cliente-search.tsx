@@ -22,7 +22,7 @@ interface ClienteSearchProps {
   onChange: (cliente: Cliente | null) => void;
   onCreateNew: () => void;
   disabled?: boolean;
-  tipoDte?: '01' | '03';
+  tipoDte?: string;
 }
 
 const RECENT_CLIENTS_PREFIX = 'factura-recent-clients';

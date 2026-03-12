@@ -265,6 +265,13 @@ export default function NuevoRecurrentePage() {
                   <SelectContent>
                     <SelectItem value="01">01 - Factura</SelectItem>
                     <SelectItem value="03">03 - Crédito Fiscal</SelectItem>
+                    <SelectItem value="04">04 - Nota de Remisión</SelectItem>
+                    <SelectItem value="05">05 - Nota de Crédito</SelectItem>
+                    <SelectItem value="06">06 - Nota de Débito</SelectItem>
+                    <SelectItem value="07">07 - Comp. Retención</SelectItem>
+                    <SelectItem value="09">09 - Liquidación</SelectItem>
+                    <SelectItem value="11">11 - Exportación</SelectItem>
+                    <SelectItem value="14">14 - Sujeto Excluido</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -286,7 +293,7 @@ export default function NuevoRecurrentePage() {
                 value={cliente}
                 onChange={setCliente}
                 onCreateNew={() => router.push('/clientes')}
-                tipoDte={tipoDte as '01' | '03'}
+                tipoDte={tipoDte}
               />
             </div>
           </CardContent>

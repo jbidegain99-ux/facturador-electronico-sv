@@ -334,8 +334,13 @@ export default function FacturasPage() {
                 <SelectItem value="all">{t('allTypes')}</SelectItem>
                 <SelectItem value="01">{t('invoice')}</SelectItem>
                 <SelectItem value="03">Crédito Fiscal</SelectItem>
+                <SelectItem value="04">Nota de Remisión</SelectItem>
                 <SelectItem value="05">Nota de Crédito</SelectItem>
                 <SelectItem value="06">Nota de Débito</SelectItem>
+                <SelectItem value="07">Comp. Retención</SelectItem>
+                <SelectItem value="09">Liquidación</SelectItem>
+                <SelectItem value="11">Exportación</SelectItem>
+                <SelectItem value="14">Sujeto Excluido</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>

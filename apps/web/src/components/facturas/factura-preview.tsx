@@ -39,7 +39,7 @@ interface FacturaPreviewProps {
   onClose: () => void;
   onEmit: () => void;
   data: {
-    tipoDte: '01' | '03';
+    tipoDte: string;
     cliente: Cliente | null;
     items: ItemFactura[];
     condicionPago: string;

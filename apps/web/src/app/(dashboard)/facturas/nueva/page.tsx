@@ -61,8 +61,29 @@ interface PuntoVentaOption {
   codPuntoVentaMH: string;
 }
 
+type CreatableTipoDte = '01' | '03' | '04' | '05' | '06' | '07' | '09' | '11' | '14';
+
+const DTE_TYPE_OPTIONS: { value: CreatableTipoDte; label: string; group: string }[] = [
+  { value: '01', label: 'Factura', group: 'Facturación' },
+  { value: '03', label: 'Crédito Fiscal (CCF)', group: 'Facturación' },
+  { value: '11', label: 'Factura de Exportación', group: 'Facturación' },
+  { value: '14', label: 'Sujeto Excluido', group: 'Facturación' },
+  { value: '04', label: 'Nota de Remisión', group: 'Notas' },
+  { value: '05', label: 'Nota de Crédito', group: 'Notas' },
+  { value: '06', label: 'Nota de Débito', group: 'Notas' },
+  { value: '07', label: 'Comprobante de Retención', group: 'Retención' },
+  { value: '09', label: 'Documento de Liquidación', group: 'Liquidación' },
+];
+
+/** Types that require a receptor with NRC (NIT-based) */
+const REQUIRES_NRC: CreatableTipoDte[] = ['03', '04', '05', '06', '07'];
+/** Types that require documentoRelacionado */
+const REQUIRES_DOC_RELACIONADO: CreatableTipoDte[] = ['04', '05', '06'];
+/** Types that use the standard items + IVA flow */
+const STANDARD_ITEMS_TYPES: CreatableTipoDte[] = ['01', '03', '04', '05', '06', '11', '14'];
+
 interface FacturaFormState {
-  tipoDte: '01' | '03';
+  tipoDte: CreatableTipoDte;
   cliente: Cliente | null;
   items: ItemFactura[];
   condicionPago: string;
@@ -301,7 +322,7 @@ export default function NuevaFacturaPage() {
 
     setFormState(prev => ({
       ...prev,
-      tipoDte: usedTemplate.tipoDte,
+      tipoDte: (usedTemplate.tipoDte || '01') as CreatableTipoDte,
       cliente: usedTemplate.cliente as Cliente | null,
       items: newItems,
       condicionPago: usedTemplate.condicionPago,
@@ -418,7 +439,7 @@ export default function NuevaFacturaPage() {
 
           setFormState(prev => ({
             ...prev,
-            tipoDte: dte.tipoDte as '01' | '03',
+            tipoDte: dte.tipoDte as CreatableTipoDte,
             cliente: null,
             items: duplicatedItems,
             condicionPago: '01',
@@ -437,7 +458,7 @@ export default function NuevaFacturaPage() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (tipoDte === '03') {
+    if (REQUIRES_NRC.includes(tipoDte)) {
       if (!cliente) {
         newErrors.cliente = t('selectClientCcf');
       } else if (!cliente.nrc) {
@@ -460,7 +481,7 @@ export default function NuevaFacturaPage() {
 
   const canEmit = () => {
     if (items.length === 0) return false;
-    if (tipoDte === '03' && (!cliente || !cliente.nrc)) return false;
+    if (REQUIRES_NRC.includes(tipoDte) && (!cliente || !cliente.nrc)) return false;
     return true;
   };
 
@@ -488,7 +509,7 @@ export default function NuevaFacturaPage() {
         puntoVentaId: puntoVentaId || undefined,
         data: {
           identificacion: {
-            version: tipoDte === '01' ? 1 : 3,
+            version: { '01': 1, '03': 3, '04': 3, '05': 3, '06': 3, '07': 3, '09': 1, '11': 1, '14': 1 }[tipoDte] || 1,
             ambiente: '00', // Backend overrides with tenant's actual HaciendaConfig
             tipoDte,
             numeroControl: null,
@@ -741,30 +762,21 @@ export default function NuevaFacturaPage() {
             <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
               {t('typeLabel')}
             </label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => updateForm('tipoDte', '01')}
-                className={cn(
-                  'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                  tipoDte === '01'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-                )}
-              >
-                {t('invoiceType')}
-              </button>
-              <button
-                onClick={() => updateForm('tipoDte', '03')}
-                className={cn(
-                  'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                  tipoDte === '03'
-                    ? 'bg-secondary text-secondary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-                )}
-              >
-                {t('ccfType')}
-              </button>
-            </div>
+            <Select
+              value={tipoDte}
+              onValueChange={(v) => updateForm('tipoDte', v as CreatableTipoDte)}
+            >
+              <SelectTrigger className="w-[260px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DTE_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.value} - {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Divider */}
@@ -893,7 +905,7 @@ export default function NuevaFacturaPage() {
               <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                 {t('clientSection')}
               </h2>
-              {tipoDte === '03' && !cliente && (
+              {REQUIRES_NRC.includes(tipoDte) && !cliente && (
                 <span className="text-xs text-destructive">
                   * {t('requiredForCcf')}
                 </span>

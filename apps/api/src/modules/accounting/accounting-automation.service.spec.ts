@@ -306,6 +306,66 @@ describe('AccountingAutomationService', () => {
         }),
       );
     });
+
+    it('should determine NOTA_DEBITO for tipoDte=06', async () => {
+      const ndDte = { ...mockDte, tipoDte: '06' };
+
+      prisma.tenant.findUnique.mockResolvedValue({
+        autoJournalEnabled: true,
+        autoJournalTrigger: 'ON_APPROVED',
+      });
+      prisma.dTE.findFirst.mockResolvedValue(ndDte);
+      prisma.journalEntry.findFirst.mockResolvedValue(null);
+      prisma.accountMappingRule.findFirst.mockResolvedValue(null);
+
+      await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
+
+      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ operation: 'NOTA_DEBITO' }),
+        }),
+      );
+    });
+
+    it('should determine RETENCION for tipoDte=07', async () => {
+      const retDte = { ...mockDte, tipoDte: '07' };
+
+      prisma.tenant.findUnique.mockResolvedValue({
+        autoJournalEnabled: true,
+        autoJournalTrigger: 'ON_APPROVED',
+      });
+      prisma.dTE.findFirst.mockResolvedValue(retDte);
+      prisma.journalEntry.findFirst.mockResolvedValue(null);
+      prisma.accountMappingRule.findFirst.mockResolvedValue(null);
+
+      await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
+
+      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ operation: 'RETENCION' }),
+        }),
+      );
+    });
+
+    it('should determine SUJETO_EXCLUIDO for tipoDte=14', async () => {
+      const fseDte = { ...mockDte, tipoDte: '14' };
+
+      prisma.tenant.findUnique.mockResolvedValue({
+        autoJournalEnabled: true,
+        autoJournalTrigger: 'ON_APPROVED',
+      });
+      prisma.dTE.findFirst.mockResolvedValue(fseDte);
+      prisma.journalEntry.findFirst.mockResolvedValue(null);
+      prisma.accountMappingRule.findFirst.mockResolvedValue(null);
+
+      await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
+
+      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ operation: 'SUJETO_EXCLUIDO' }),
+        }),
+      );
+    });
   });
 
   describe('reverseFromDTE', () => {

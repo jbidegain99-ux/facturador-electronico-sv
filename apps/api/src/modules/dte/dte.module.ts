@@ -11,9 +11,10 @@ import { EmailConfigModule } from '../email-config/email-config.module';
 import { WebhooksModule } from '../webhooks/webhooks.module';
 import { AccountingModule } from '../accounting/accounting.module';
 import { SucursalesModule } from '../sucursales/sucursales.module';
+import { HaciendaModule } from '../hacienda/hacienda.module';
 
 @Module({
-  imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, forwardRef(() => WebhooksModule), forwardRef(() => AccountingModule), SucursalesModule],
+  imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, forwardRef(() => WebhooksModule), forwardRef(() => AccountingModule), SucursalesModule, HaciendaModule],
   controllers: [DteController],
   providers: [DteBuilderService, DteValidatorService, DteService, PdfService],
   exports: [DteBuilderService, DteValidatorService, DteService, PdfService],

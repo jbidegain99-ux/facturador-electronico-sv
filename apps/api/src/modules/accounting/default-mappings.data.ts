@@ -94,6 +94,20 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
     },
   },
   {
+    operation: 'RETENCION',
+    description: 'Comprobante de Retención',
+    debitCode: '210201',
+    creditCode: '110101',
+    mappingConfig: {
+      debe: [
+        { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal (retenido)' },
+      ],
+      haber: [
+        { cuenta: '110101', monto: 'iva', descripcion: 'Caja General (retención IVA)' },
+      ],
+    },
+  },
+  {
     operation: 'SUJETO_EXCLUIDO',
     description: 'Factura Sujeto Excluido',
     debitCode: '110101',

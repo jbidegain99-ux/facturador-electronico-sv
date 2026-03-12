@@ -3,16 +3,29 @@ import { randomUUID } from 'crypto';
 import {
   TipoDte,
   Ambiente,
+  CondicionOperacion,
   Identificacion,
   Emisor,
   ReceptorFactura,
   ReceptorCCF,
+  ReceptorSujetoExcluido,
+  DocumentoRelacionado,
   CuerpoDocumentoFactura,
   CuerpoDocumentoCCF,
+  CuerpoDocumentoNotaCredito,
+  CuerpoDocumentoRetencion,
+  CuerpoDocumentoSujetoExcluido,
   ResumenFactura,
   ResumenCCF,
+  ResumenNotaCredito,
+  ResumenRetencion,
+  ResumenSujetoExcluido,
   FacturaElectronica,
   ComprobanteCreditoFiscal,
+  NotaCredito,
+  NotaDebito,
+  ComprobanteRetencion,
+  FacturaSujetoExcluido,
   DTE_VERSIONS,
   Pago,
   TributoResumen,
@@ -50,6 +63,77 @@ export interface BuildCCFInput {
   correlativo: number;
   ambiente?: Ambiente;
   condicionOperacion?: 1 | 2 | 3;
+}
+
+export interface BuildNotaCreditoInput {
+  emisor: Omit<Emisor, 'codEstableMH' | 'codEstable' | 'codPuntoVentaMH' | 'codPuntoVenta'>;
+  receptor: ReceptorCCF;
+  documentoRelacionado: DocumentoRelacionado[];
+  items: Array<{
+    descripcion: string;
+    cantidad: number;
+    precioUnitario: number;
+    esGravado?: boolean;
+    esExento?: boolean;
+    codigo?: string;
+    numeroDocumento: string;
+  }>;
+  codEstablecimiento: string;
+  correlativo: number;
+  ambiente?: Ambiente;
+  condicionOperacion?: CondicionOperacion;
+}
+
+export interface BuildNotaDebitoInput {
+  emisor: Omit<Emisor, 'codEstableMH' | 'codEstable' | 'codPuntoVentaMH' | 'codPuntoVenta'>;
+  receptor: ReceptorCCF;
+  documentoRelacionado: DocumentoRelacionado[];
+  items: Array<{
+    descripcion: string;
+    cantidad: number;
+    precioUnitario: number;
+    esGravado?: boolean;
+    esExento?: boolean;
+    codigo?: string;
+    numeroDocumento: string;
+  }>;
+  codEstablecimiento: string;
+  correlativo: number;
+  ambiente?: Ambiente;
+  condicionOperacion?: CondicionOperacion;
+}
+
+export interface BuildComprobanteRetencionInput {
+  emisor: Omit<Emisor, 'codEstableMH' | 'codEstable' | 'codPuntoVentaMH' | 'codPuntoVenta'>;
+  receptor: ReceptorCCF;
+  items: Array<{
+    tipoDte: string;
+    tipoDoc: 1 | 2;
+    numDocumento: string;
+    fechaEmision: string;
+    montoSujetoGrav: number;
+    codigoRetencionMH: string;
+    ivaRetenido: number;
+    descripcion: string;
+  }>;
+  codEstablecimiento: string;
+  correlativo: number;
+  ambiente?: Ambiente;
+}
+
+export interface BuildSujetoExcluidoInput {
+  emisor: Emisor;
+  sujetoExcluido: ReceptorSujetoExcluido;
+  items: Array<{
+    descripcion: string;
+    cantidad: number;
+    precioUnitario: number;
+    codigo?: string;
+  }>;
+  codEstablecimiento: string;
+  correlativo: number;
+  ambiente?: Ambiente;
+  condicionOperacion?: CondicionOperacion;
 }
 
 @Injectable()
@@ -346,6 +430,318 @@ export class DteBuilderService {
       cuerpoDocumento,
       resumen,
       extension: null,
+      apendice: null,
+    };
+  }
+
+  buildNotaCredito(input: BuildNotaCreditoInput): NotaCredito {
+    const tipoDte: TipoDte = '05';
+    const ambiente = input.ambiente ?? '00';
+    const codigoGeneracion = this.generateCodigoGeneracion();
+    const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
+
+    const identificacion: Identificacion = {
+      version: DTE_VERSIONS[tipoDte],
+      ambiente,
+      tipoDte,
+      numeroControl,
+      codigoGeneracion,
+      tipoModelo: 1,
+      tipoOperacion: 1,
+      tipoContingencia: null,
+      motivoContin: null,
+      fecEmi: this.getCurrentDate(),
+      horEmi: this.getCurrentTime(),
+      tipoMoneda: 'USD',
+    };
+
+    const cuerpoDocumento: CuerpoDocumentoNotaCredito[] = input.items.map((item, index) => {
+      const subtotal = item.cantidad * item.precioUnitario;
+      const esGravado = item.esGravado !== false && !item.esExento;
+      const ventaGravada = esGravado ? this.roundTo2Decimals(subtotal) : 0;
+      const ventaExenta = item.esExento ? this.roundTo2Decimals(subtotal) : 0;
+
+      return {
+        numItem: index + 1,
+        tipoItem: 1 as const,
+        numeroDocumento: item.numeroDocumento,
+        cantidad: item.cantidad,
+        codigo: item.codigo || null,
+        codTributo: null,
+        uniMedida: 59,
+        descripcion: item.descripcion,
+        precioUni: item.precioUnitario,
+        montoDescu: 0,
+        ventaNoSuj: 0,
+        ventaExenta,
+        ventaGravada,
+        tributos: esGravado ? ['20'] : null,
+      };
+    });
+
+    const totalGravada = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaGravada, 0));
+    const totalExenta = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaExenta, 0));
+    const totalNoSuj = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaNoSuj, 0));
+    const subTotalVentas = this.roundTo2Decimals(totalGravada + totalExenta + totalNoSuj);
+
+    const tributos: TributoResumen[] | null = totalGravada > 0 ? [{
+      codigo: '20',
+      descripcion: 'Impuesto al Valor Agregado 13%',
+      valor: this.roundTo2Decimals(totalGravada * this.IVA_RATE),
+    }] : null;
+
+    const ivaTotal = tributos ? tributos[0].valor : 0;
+    const montoTotalOperacion = this.roundTo2Decimals(subTotalVentas + ivaTotal);
+
+    const resumen: ResumenNotaCredito = {
+      totalNoSuj,
+      totalExenta,
+      totalGravada,
+      subTotalVentas,
+      descuNoSuj: 0,
+      descuExenta: 0,
+      descuGravada: 0,
+      totalDescu: 0,
+      tributos,
+      subTotal: subTotalVentas,
+      ivaPerci1: 0,
+      ivaRete1: 0,
+      reteRenta: 0,
+      montoTotalOperacion,
+      totalLetras: this.numberToWords(montoTotalOperacion),
+      condicionOperacion: input.condicionOperacion || 1,
+    };
+
+    return {
+      identificacion,
+      documentoRelacionado: input.documentoRelacionado,
+      emisor: input.emisor,
+      receptor: input.receptor,
+      ventaTercero: null,
+      cuerpoDocumento,
+      resumen,
+      extension: null,
+      apendice: null,
+    };
+  }
+
+  buildNotaDebito(input: BuildNotaDebitoInput): NotaDebito {
+    const tipoDte: TipoDte = '06';
+    const ambiente = input.ambiente ?? '00';
+    const codigoGeneracion = this.generateCodigoGeneracion();
+    const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
+
+    const identificacion: Identificacion = {
+      version: DTE_VERSIONS[tipoDte],
+      ambiente,
+      tipoDte,
+      numeroControl,
+      codigoGeneracion,
+      tipoModelo: 1,
+      tipoOperacion: 1,
+      tipoContingencia: null,
+      motivoContin: null,
+      fecEmi: this.getCurrentDate(),
+      horEmi: this.getCurrentTime(),
+      tipoMoneda: 'USD',
+    };
+
+    const cuerpoDocumento: CuerpoDocumentoNotaCredito[] = input.items.map((item, index) => {
+      const subtotal = item.cantidad * item.precioUnitario;
+      const esGravado = item.esGravado !== false && !item.esExento;
+      const ventaGravada = esGravado ? this.roundTo2Decimals(subtotal) : 0;
+      const ventaExenta = item.esExento ? this.roundTo2Decimals(subtotal) : 0;
+
+      return {
+        numItem: index + 1,
+        tipoItem: 1 as const,
+        numeroDocumento: item.numeroDocumento,
+        cantidad: item.cantidad,
+        codigo: item.codigo || null,
+        codTributo: null,
+        uniMedida: 59,
+        descripcion: item.descripcion,
+        precioUni: item.precioUnitario,
+        montoDescu: 0,
+        ventaNoSuj: 0,
+        ventaExenta,
+        ventaGravada,
+        tributos: esGravado ? ['20'] : null,
+      };
+    });
+
+    const totalGravada = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaGravada, 0));
+    const totalExenta = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaExenta, 0));
+    const totalNoSuj = this.roundTo2Decimals(cuerpoDocumento.reduce((sum, item) => sum + item.ventaNoSuj, 0));
+    const subTotalVentas = this.roundTo2Decimals(totalGravada + totalExenta + totalNoSuj);
+
+    const tributos: TributoResumen[] | null = totalGravada > 0 ? [{
+      codigo: '20',
+      descripcion: 'Impuesto al Valor Agregado 13%',
+      valor: this.roundTo2Decimals(totalGravada * this.IVA_RATE),
+    }] : null;
+
+    const ivaTotal = tributos ? tributos[0].valor : 0;
+    const montoTotalOperacion = this.roundTo2Decimals(subTotalVentas + ivaTotal);
+
+    const resumen: ResumenNotaCredito & { numPagoElectronico: string | null } = {
+      totalNoSuj,
+      totalExenta,
+      totalGravada,
+      subTotalVentas,
+      descuNoSuj: 0,
+      descuExenta: 0,
+      descuGravada: 0,
+      totalDescu: 0,
+      tributos,
+      subTotal: subTotalVentas,
+      ivaPerci1: 0,
+      ivaRete1: 0,
+      reteRenta: 0,
+      montoTotalOperacion,
+      totalLetras: this.numberToWords(montoTotalOperacion),
+      condicionOperacion: input.condicionOperacion || 1,
+      numPagoElectronico: null,
+    };
+
+    return {
+      identificacion,
+      documentoRelacionado: input.documentoRelacionado,
+      emisor: input.emisor,
+      receptor: input.receptor,
+      ventaTercero: null,
+      cuerpoDocumento,
+      resumen,
+      extension: null,
+      apendice: null,
+    };
+  }
+
+  buildComprobanteRetencion(input: BuildComprobanteRetencionInput): ComprobanteRetencion {
+    const tipoDte: TipoDte = '07';
+    const ambiente = input.ambiente ?? '00';
+    const codigoGeneracion = this.generateCodigoGeneracion();
+    const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
+
+    const identificacion: Identificacion = {
+      version: DTE_VERSIONS[tipoDte],
+      ambiente,
+      tipoDte,
+      numeroControl,
+      codigoGeneracion,
+      tipoModelo: 1,
+      tipoOperacion: 1,
+      tipoContingencia: null,
+      motivoContin: null,
+      fecEmi: this.getCurrentDate(),
+      horEmi: this.getCurrentTime(),
+      tipoMoneda: 'USD',
+    };
+
+    const cuerpoDocumento: CuerpoDocumentoRetencion[] = input.items.map((item, index) => ({
+      numItem: index + 1,
+      tipoDte: item.tipoDte,
+      tipoDoc: item.tipoDoc,
+      numDocumento: item.numDocumento,
+      fechaEmision: item.fechaEmision,
+      montoSujetoGrav: this.roundTo2Decimals(item.montoSujetoGrav),
+      codigoRetencionMH: item.codigoRetencionMH,
+      ivaRetenido: this.roundTo2Decimals(item.ivaRetenido),
+      descripcion: item.descripcion,
+    }));
+
+    const totalSujetoRetencion = this.roundTo2Decimals(
+      cuerpoDocumento.reduce((sum, item) => sum + item.montoSujetoGrav, 0),
+    );
+    const totalIVAretenido = this.roundTo2Decimals(
+      cuerpoDocumento.reduce((sum, item) => sum + item.ivaRetenido, 0),
+    );
+
+    const resumen: ResumenRetencion = {
+      totalSujetoRetencion,
+      totalIVAretenido,
+      totalIVAretenidoLetras: this.numberToWords(totalIVAretenido),
+    };
+
+    return {
+      identificacion,
+      emisor: input.emisor,
+      receptor: input.receptor,
+      cuerpoDocumento,
+      resumen,
+      extension: null,
+      apendice: null,
+    };
+  }
+
+  buildSujetoExcluido(input: BuildSujetoExcluidoInput): FacturaSujetoExcluido {
+    const tipoDte: TipoDte = '14';
+    const ambiente = input.ambiente ?? '00';
+    const codigoGeneracion = this.generateCodigoGeneracion();
+    const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
+
+    const identificacion: Identificacion = {
+      version: DTE_VERSIONS[tipoDte],
+      ambiente,
+      tipoDte,
+      numeroControl,
+      codigoGeneracion,
+      tipoModelo: 1,
+      tipoOperacion: 1,
+      tipoContingencia: null,
+      motivoContin: null,
+      fecEmi: this.getCurrentDate(),
+      horEmi: this.getCurrentTime(),
+      tipoMoneda: 'USD',
+    };
+
+    const cuerpoDocumento: CuerpoDocumentoSujetoExcluido[] = input.items.map((item, index) => {
+      const compra = this.roundTo2Decimals(item.cantidad * item.precioUnitario);
+      return {
+        numItem: index + 1,
+        tipoItem: 1 as const,
+        cantidad: item.cantidad,
+        codigo: item.codigo || null,
+        uniMedida: 59,
+        descripcion: item.descripcion,
+        precioUni: item.precioUnitario,
+        montoDescu: 0,
+        compra,
+      };
+    });
+
+    const totalCompra = this.roundTo2Decimals(
+      cuerpoDocumento.reduce((sum, item) => sum + item.compra, 0),
+    );
+
+    const pagos: Pago[] | null = input.condicionOperacion !== 2 ? [{
+      codigo: '01',
+      montoPago: totalCompra,
+      referencia: null,
+      plazo: null,
+      periodo: null,
+    }] : null;
+
+    const resumen: ResumenSujetoExcluido = {
+      totalCompra,
+      descu: 0,
+      totalDescu: 0,
+      subTotal: totalCompra,
+      ivaRete1: 0,
+      reteRenta: 0,
+      totalPagar: totalCompra,
+      totalLetras: this.numberToWords(totalCompra),
+      condicionOperacion: input.condicionOperacion || 1,
+      pagos,
+      observaciones: null,
+    };
+
+    return {
+      identificacion,
+      emisor: input.emisor,
+      sujetoExcluido: input.sujetoExcluido,
+      cuerpoDocumento,
+      resumen,
       apendice: null,
     };
   }

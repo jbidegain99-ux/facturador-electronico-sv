@@ -109,4 +109,54 @@ export class CreateNotaDebitoDto {
   condicionOperacion?: CondicionOperacion;
 }
 
-export type CreateDteDto = CreateFacturaDto | CreateCCFDto | CreateNotaCreditoDto | CreateNotaDebitoDto;
+export class RetencionItemDto {
+  tipoDte: string;
+  tipoDoc: 1 | 2;
+  numDocumento: string;
+  fechaEmision: string;
+  montoSujetoGrav: number;
+  codigoRetencionMH: string;
+  ivaRetenido: number;
+  descripcion: string;
+}
+
+export class CreateComprobanteRetencionDto {
+  tipoDte: '07' = '07';
+  ambiente?: Ambiente;
+  emisor: Omit<EmisorDto, 'codEstableMH' | 'codEstable' | 'codPuntoVentaMH' | 'codPuntoVenta'>;
+  receptor: ReceptorCCFDto;
+  items: RetencionItemDto[];
+  codEstablecimiento: string;
+  correlativo: number;
+}
+
+export class SujetoExcluidoItemDto {
+  descripcion: string;
+  cantidad: number;
+  precioUnitario: number;
+  codigo?: string;
+}
+
+export class ReceptorSujetoExcluidoDto {
+  tipoDocumento?: '36' | '13' | '02' | '03' | '37';
+  numDocumento?: string;
+  nombre: string;
+  codActividad?: string;
+  descActividad?: string;
+  direccion: DireccionDto;
+  telefono?: string;
+  correo: string;
+}
+
+export class CreateSujetoExcluidoDto {
+  tipoDte: '14' = '14';
+  ambiente?: Ambiente;
+  emisor: EmisorDto;
+  sujetoExcluido: ReceptorSujetoExcluidoDto;
+  items: SujetoExcluidoItemDto[];
+  codEstablecimiento: string;
+  correlativo: number;
+  condicionOperacion?: CondicionOperacion;
+}
+
+export type CreateDteDto = CreateFacturaDto | CreateCCFDto | CreateNotaCreditoDto | CreateNotaDebitoDto | CreateComprobanteRetencionDto | CreateSujetoExcluidoDto;

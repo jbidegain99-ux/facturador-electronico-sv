@@ -577,6 +577,38 @@ const FacturaExportacionSchema = z.object({
   apendice: z.array(ApendiceSchema).min(1).max(10).nullable(),
 });
 
+// === Tipo 34: Comprobante de Retención Simplificado (CRS) ===
+
+const RetencionCRSItemSchema = z.object({
+  numItem: z.number().int().min(1).max(500),
+  tipoImpuesto: z.enum(['ISR', 'IVA', 'ISSS', 'AFP', 'OTRO']),
+  descripcion: z.string().max(1000),
+  tasa: z.number().min(0).lte(1),
+  montoSujetoRetencion: z.number().min(0).lt(100000000000),
+  montoRetencion: z.number().min(0).lt(100000000000),
+});
+
+const ResumenCRSSchema = z.object({
+  totalSujetoRetencion: z.number().min(0).lt(100000000000),
+  totalRetenido: z.number().min(0).lt(100000000000),
+  totalRetenidoLetras: z.string().max(200),
+});
+
+const CRSSchema = z.object({
+  identificacion: IdentificacionBaseSchema.extend({
+    version: z.literal(1),
+    tipoDte: z.literal('34'),
+    numeroControl: z.string().regex(/^DTE-34-[A-Z0-9]{8}-[0-9]{15}$/),
+  }),
+  emisor: EmisorSinEstablecimientoSchema,
+  receptor: ReceptorCCFSchema,
+  documentoRelacionado: z.array(DocumentoRelacionadoSchema).nullable(),
+  cuerpoDocumento: z.array(RetencionCRSItemSchema).min(1).max(500),
+  resumen: ResumenCRSSchema,
+  extension: ExtensionSinPlacaSchema,
+  apendice: z.array(ApendiceSchema).min(1).max(10).nullable(),
+});
+
 export interface ValidationResult {
   valid: boolean;
   errors: Array<{
@@ -597,6 +629,7 @@ export class DteValidatorService {
     '09': DocumentoContableLiquidacionSchema,
     '11': FacturaExportacionSchema,
     '14': SujetoExcluidoSchema,
+    '34': CRSSchema,
   };
 
   validate(dte: DTE): ValidationResult {

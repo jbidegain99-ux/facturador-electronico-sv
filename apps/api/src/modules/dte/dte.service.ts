@@ -189,6 +189,11 @@ export class DteService {
       totalGravada = Number(resumen?.totalSujetoRetencion) || 0;
       totalIva = Number(resumen?.totalIVAretenido) || 0;
       totalPagar = totalIva; // Retention amount is what's "paid"
+    } else if (tipoDte === '34') {
+      // CRS: uses totalSujetoRetencion/totalRetenido
+      totalGravada = Number(resumen?.totalSujetoRetencion) || 0;
+      totalIva = 0;
+      totalPagar = Number(resumen?.totalRetenido) || 0;
     } else if (tipoDte === '09') {
       // Documento Contable de Liquidación: uses liquidoApagar as totalPagar
       totalGravada = Number(resumen?.totalGravada) || 0;
@@ -1308,6 +1313,72 @@ export class DteService {
           totalSujetoRetencion,
           totalIVAretenido,
           totalIVAretenidoLetras: (resumen.totalIVAretenidoLetras as string) || numberToWords(totalIVAretenido),
+        },
+        extension: (data.extension as unknown) ?? null,
+        apendice: (data.apendice as unknown) ?? null,
+      };
+    }
+
+    if (tipoDte === '34') {
+      // === Comprobante de Retención Simplificado (34) normalization ===
+      // Multiple retenciones with tipoImpuesto/tasa/monto structure
+      const normalizedIdentificacion = {
+        ...identificacion,
+        motivoContin: identificacion.motivoContin ?? null,
+      };
+
+      // Receptor same as CCF (NIT-based)
+      let receptorDireccion = receptor.direccion;
+      if (typeof receptorDireccion === 'string') {
+        try {
+          receptorDireccion = JSON.parse(receptorDireccion);
+        } catch {
+          receptorDireccion = { departamento: '06', municipio: '14', complemento: receptorDireccion };
+        }
+      }
+      if (!receptorDireccion || typeof receptorDireccion !== 'object' || !(receptorDireccion as Record<string, unknown>).departamento) {
+        receptorDireccion = { departamento: '06', municipio: '14', complemento: String(receptorDireccion || '') };
+      }
+
+      const receptorNit = ((receptor.nit as string) || (receptor.numDocumento as string) || '').replace(/-/g, '');
+      const normalizedReceptor = {
+        nit: receptorNit,
+        nrc: ((receptor.nrc as string) || '').replace(/-/g, ''),
+        nombre: (receptor.nombre as string) || '',
+        codActividad: (receptor.codActividad as string) || '62010',
+        descActividad: (receptor.descActividad as string) || 'Servicios',
+        nombreComercial: (receptor.nombreComercial as string) || null,
+        direccion: receptorDireccion,
+        telefono: (receptor.telefono as string) || null,
+        correo: (receptor.correo as string) || '',
+      };
+
+      // Retenciones: from cuerpoDocumento or data.retenciones
+      const retenciones = (data.retenciones as Array<Record<string, unknown>>) || cuerpoDocumento;
+      const normalizedCuerpo = retenciones.map((item, index) => ({
+        numItem: (item.numItem as number) || index + 1,
+        tipoImpuesto: (item.tipoImpuesto as string) || (item.tipo_impuesto as string) || 'ISR',
+        descripcion: (item.descripcion as string) || '',
+        tasa: Number(item.tasa) || 0,
+        montoSujetoRetencion: Math.round((Number(item.montoSujetoRetencion ?? item.monto_sujeto_retencion) || 0) * 100) / 100,
+        montoRetencion: Math.round((Number(item.montoRetencion ?? item.monto_retencion) || 0) * 100) / 100,
+      }));
+
+      const totalSujetoRetencion = Math.round(normalizedCuerpo.reduce((sum, item) => sum + item.montoSujetoRetencion, 0) * 100) / 100;
+      const totalRetenido = Math.round(normalizedCuerpo.reduce((sum, item) => sum + item.montoRetencion, 0) * 100) / 100;
+
+      const { codEstableMH: _codEstMH34, codEstable: _codEst34, codPuntoVentaMH: _codPvMH34, codPuntoVenta: _codPv34, ...emisorSinEstablecimiento34 } = emisor;
+
+      return {
+        identificacion: normalizedIdentificacion,
+        emisor: emisorSinEstablecimiento34,
+        receptor: normalizedReceptor,
+        documentoRelacionado: (data.documentoRelacionado as unknown) ?? null,
+        cuerpoDocumento: normalizedCuerpo,
+        resumen: {
+          totalSujetoRetencion,
+          totalRetenido,
+          totalRetenidoLetras: (resumen.totalRetenidoLetras as string) || numberToWords(totalRetenido),
         },
         extension: (data.extension as unknown) ?? null,
         apendice: (data.apendice as unknown) ?? null,

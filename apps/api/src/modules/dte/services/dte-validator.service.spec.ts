@@ -48,8 +48,8 @@ describe('DteValidatorService', () => {
   });
 
   describe('schemas available', () => {
-    it('should have schemas for all 6 DTE types', () => {
-      const types = ['01', '03', '05', '06', '07', '14'];
+    it('should have schemas for all 10 DTE types', () => {
+      const types = ['01', '03', '04', '05', '06', '07', '09', '11', '14', '34'];
       for (const tipo of types) {
         // Build a minimal DTE and check schema doesn't return "not implemented"
         const result = validator.validate({
@@ -172,12 +172,112 @@ describe('DteValidatorService', () => {
     });
   });
 
+  describe('validate Comprobante de Retención CRS (34)', () => {
+    it('should validate a well-formed CRS built by the builder', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      const crs = builder.buildCRS({
+        emisor: emisorCRS,
+        receptor: mockReceptorCCF,
+        retenciones: [
+          { tipoImpuesto: 'ISR', descripcion: 'ISR 10%', tasa: 0.10, montoSujetoRetencion: 1000, montoRetencion: 100 },
+          { tipoImpuesto: 'IVA', descripcion: 'IVA 1%', tasa: 0.01, montoSujetoRetencion: 1000, montoRetencion: 10 },
+        ],
+        montoTotalRetencion: 110,
+        codEstablecimiento: '0001',
+        correlativo: 1,
+      });
+
+      const result = validator.validate(crs as never);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('should reject CRS with empty retenciones', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      const crs = builder.buildCRS({
+        emisor: emisorCRS,
+        receptor: mockReceptorCCF,
+        retenciones: [
+          { tipoImpuesto: 'ISR', descripcion: 'ISR', tasa: 0.10, montoSujetoRetencion: 100, montoRetencion: 10 },
+        ],
+        montoTotalRetencion: 10,
+        codEstablecimiento: '0001',
+        correlativo: 1,
+      });
+
+      // Remove all items
+      (crs as unknown as Record<string, unknown>).cuerpoDocumento = [];
+
+      const result = validator.validate(crs as never);
+      expect(result.valid).toBe(false);
+    });
+
+    it('should reject CRS with invalid tipoImpuesto', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      const crs = builder.buildCRS({
+        emisor: emisorCRS,
+        receptor: mockReceptorCCF,
+        retenciones: [
+          { tipoImpuesto: 'ISR', descripcion: 'ISR', tasa: 0.10, montoSujetoRetencion: 100, montoRetencion: 10 },
+        ],
+        montoTotalRetencion: 10,
+        codEstablecimiento: '0001',
+        correlativo: 1,
+      });
+
+      // Set invalid tipoImpuesto
+      (crs.cuerpoDocumento[0] as unknown as Record<string, unknown>).tipoImpuesto = 'INVALID';
+
+      const result = validator.validate(crs as never);
+      expect(result.valid).toBe(false);
+    });
+
+    it('should reject CRS with tasa > 1', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      const crs = builder.buildCRS({
+        emisor: emisorCRS,
+        receptor: mockReceptorCCF,
+        retenciones: [
+          { tipoImpuesto: 'ISR', descripcion: 'ISR', tasa: 0.10, montoSujetoRetencion: 100, montoRetencion: 10 },
+        ],
+        montoTotalRetencion: 10,
+        codEstablecimiento: '0001',
+        correlativo: 1,
+      });
+
+      // Set tasa > 1
+      (crs.cuerpoDocumento[0] as unknown as Record<string, unknown>).tasa = 1.5;
+
+      const result = validator.validate(crs as never);
+      expect(result.valid).toBe(false);
+    });
+
+    it('should validate CRS with documentoRelacionado', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      const crs = builder.buildCRS({
+        emisor: emisorCRS,
+        receptor: mockReceptorCCF,
+        documentoRelacionado: mockDocRelacionado,
+        retenciones: [
+          { tipoImpuesto: 'ISR', descripcion: 'ISR 10%', tasa: 0.10, montoSujetoRetencion: 1000, montoRetencion: 100 },
+        ],
+        montoTotalRetencion: 100,
+        codEstablecimiento: '0001',
+        correlativo: 1,
+      });
+
+      const result = validator.validate(crs as never);
+      expect(result.valid).toBe(true);
+    });
+  });
+
   describe('validateNumeroControl', () => {
     it('should validate numero control for all new DTE types', () => {
       expect(validator.validateNumeroControl('DTE-05-00000001-000000000000001', '05')).toBe(true);
       expect(validator.validateNumeroControl('DTE-06-00000001-000000000000001', '06')).toBe(true);
       expect(validator.validateNumeroControl('DTE-07-00000001-000000000000001', '07')).toBe(true);
       expect(validator.validateNumeroControl('DTE-14-00000001-000000000000001', '14')).toBe(true);
+      expect(validator.validateNumeroControl('DTE-34-00000001-000000000000001', '34')).toBe(true);
     });
 
     it('should reject mismatched tipo in numero control', () => {

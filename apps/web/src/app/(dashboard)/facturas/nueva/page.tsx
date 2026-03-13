@@ -61,7 +61,7 @@ interface PuntoVentaOption {
   codPuntoVentaMH: string;
 }
 
-type CreatableTipoDte = '01' | '03' | '04' | '05' | '06' | '07' | '09' | '11' | '14';
+type CreatableTipoDte = '01' | '03' | '04' | '05' | '06' | '07' | '09' | '11' | '14' | '34';
 
 const DTE_TYPE_OPTIONS: { value: CreatableTipoDte; label: string; group: string }[] = [
   { value: '01', label: 'Factura', group: 'Facturación' },
@@ -72,6 +72,7 @@ const DTE_TYPE_OPTIONS: { value: CreatableTipoDte; label: string; group: string 
   { value: '05', label: 'Nota de Crédito', group: 'Notas' },
   { value: '06', label: 'Nota de Débito', group: 'Notas' },
   { value: '07', label: 'Comprobante de Retención', group: 'Retención' },
+  { value: '34', label: 'Retención CRS', group: 'Retención' },
   { value: '09', label: 'Documento de Liquidación', group: 'Liquidación' },
 ];
 
@@ -509,7 +510,7 @@ export default function NuevaFacturaPage() {
         puntoVentaId: puntoVentaId || undefined,
         data: {
           identificacion: {
-            version: { '01': 1, '03': 3, '04': 3, '05': 3, '06': 3, '07': 3, '09': 1, '11': 1, '14': 1 }[tipoDte] || 1,
+            version: { '01': 1, '03': 3, '04': 3, '05': 3, '06': 3, '07': 3, '09': 1, '11': 1, '14': 1, '34': 1 }[tipoDte] || 1,
             ambiente: '00', // Backend overrides with tenant's actual HaciendaConfig
             tipoDte,
             numeroControl: null,

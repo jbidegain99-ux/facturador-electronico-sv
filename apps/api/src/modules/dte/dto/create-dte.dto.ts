@@ -240,4 +240,24 @@ export class CreateFacturaExportacionDto {
   observaciones?: string;
 }
 
-export type CreateDteDto = CreateFacturaDto | CreateCCFDto | CreateNotaCreditoDto | CreateNotaDebitoDto | CreateComprobanteRetencionDto | CreateSujetoExcluidoDto | CreateNotaRemisionDto | CreateDocumentoLiquidacionDto | CreateFacturaExportacionDto;
+export class RetencionCRSItemDto {
+  tipoImpuesto: 'ISR' | 'IVA' | 'ISSS' | 'AFP' | 'OTRO';
+  descripcion: string;
+  tasa: number;
+  montoSujetoRetencion: number;
+  montoRetencion: number;
+}
+
+export class CreateCRSDto {
+  tipoDte: '34' = '34';
+  ambiente?: Ambiente;
+  emisor: Omit<EmisorDto, 'codEstableMH' | 'codEstable' | 'codPuntoVentaMH' | 'codPuntoVenta'>;
+  receptor: ReceptorCCFDto;
+  documentoRelacionado?: string;
+  retenciones: RetencionCRSItemDto[];
+  montoTotalRetencion: number;
+  codEstablecimiento: string;
+  correlativo: number;
+}
+
+export type CreateDteDto = CreateFacturaDto | CreateCCFDto | CreateNotaCreditoDto | CreateNotaDebitoDto | CreateComprobanteRetencionDto | CreateSujetoExcluidoDto | CreateNotaRemisionDto | CreateDocumentoLiquidacionDto | CreateFacturaExportacionDto | CreateCRSDto;

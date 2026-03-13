@@ -276,12 +276,110 @@ describe('DteBuilderService', () => {
     });
   });
 
+  describe('buildCRS (34)', () => {
+    it('should build a valid CRS with multiple retenciones', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      const result = service.buildCRS({
+        emisor: emisorCRS,
+        receptor: mockReceptorCCF,
+        retenciones: [
+          { tipoImpuesto: 'ISR', descripcion: 'ISR 10%', tasa: 0.10, montoSujetoRetencion: 1000, montoRetencion: 100 },
+          { tipoImpuesto: 'IVA', descripcion: 'IVA 1%', tasa: 0.01, montoSujetoRetencion: 1000, montoRetencion: 10 },
+        ],
+        montoTotalRetencion: 110,
+        codEstablecimiento: '0001',
+        correlativo: 1,
+      });
+
+      expect(result.identificacion.tipoDte).toBe('34');
+      expect(result.identificacion.version).toBe(1);
+      expect(result.cuerpoDocumento).toHaveLength(2);
+      expect(result.resumen.totalRetenido).toBe(110);
+      expect(result.resumen.totalSujetoRetencion).toBe(2000);
+      expect(result.resumen.totalRetenidoLetras).toContain('USD');
+    });
+
+    it('should calculate single retencion correctly', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      const result = service.buildCRS({
+        emisor: emisorCRS,
+        receptor: mockReceptorCCF,
+        retenciones: [
+          { tipoImpuesto: 'ISR', descripcion: 'ISR 1%', tasa: 0.01, montoSujetoRetencion: 5000, montoRetencion: 50 },
+        ],
+        montoTotalRetencion: 50,
+        codEstablecimiento: '0001',
+        correlativo: 1,
+      });
+
+      expect(result.cuerpoDocumento[0].montoRetencion).toBe(50);
+      expect(result.cuerpoDocumento[0].tipoImpuesto).toBe('ISR');
+      expect(result.resumen.totalRetenido).toBe(50);
+    });
+
+    it('should throw when total does not match sum of retenciones', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      expect(() => {
+        service.buildCRS({
+          emisor: emisorCRS,
+          receptor: mockReceptorCCF,
+          retenciones: [
+            { tipoImpuesto: 'ISR', descripcion: 'ISR 10%', tasa: 0.10, montoSujetoRetencion: 1000, montoRetencion: 100 },
+          ],
+          montoTotalRetencion: 999, // Does not match
+          codEstablecimiento: '0001',
+          correlativo: 1,
+        });
+      }).toThrow('Monto total retención');
+    });
+
+    it('should support all tipoImpuesto values', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      const result = service.buildCRS({
+        emisor: emisorCRS,
+        receptor: mockReceptorCCF,
+        retenciones: [
+          { tipoImpuesto: 'ISR', descripcion: 'ISR', tasa: 0.10, montoSujetoRetencion: 100, montoRetencion: 10 },
+          { tipoImpuesto: 'IVA', descripcion: 'IVA', tasa: 0.01, montoSujetoRetencion: 100, montoRetencion: 1 },
+          { tipoImpuesto: 'ISSS', descripcion: 'ISSS', tasa: 0.03, montoSujetoRetencion: 100, montoRetencion: 3 },
+          { tipoImpuesto: 'AFP', descripcion: 'AFP', tasa: 0.07, montoSujetoRetencion: 100, montoRetencion: 7 },
+          { tipoImpuesto: 'OTRO', descripcion: 'Otro', tasa: 0.05, montoSujetoRetencion: 100, montoRetencion: 5 },
+        ],
+        montoTotalRetencion: 26,
+        codEstablecimiento: '0001',
+        correlativo: 1,
+      });
+
+      expect(result.cuerpoDocumento).toHaveLength(5);
+      expect(result.resumen.totalRetenido).toBe(26);
+    });
+
+    it('should include documentoRelacionado when provided', () => {
+      const { codEstableMH: _, codEstable: __, codPuntoVentaMH: ___, codPuntoVenta: ____, ...emisorCRS } = mockEmisor;
+      const result = service.buildCRS({
+        emisor: emisorCRS,
+        receptor: mockReceptorCCF,
+        documentoRelacionado: mockDocRelacionado,
+        retenciones: [
+          { tipoImpuesto: 'ISR', descripcion: 'ISR 10%', tasa: 0.10, montoSujetoRetencion: 1000, montoRetencion: 100 },
+        ],
+        montoTotalRetencion: 100,
+        codEstablecimiento: '0001',
+        correlativo: 1,
+      });
+
+      expect(result.documentoRelacionado).toHaveLength(1);
+      expect(result.documentoRelacionado![0].numeroDocumento).toBe('DTE-03-00000001-000000000000001');
+    });
+  });
+
   describe('generateNumeroControl', () => {
     it('should generate correct format for each DTE type', () => {
       expect(service.generateNumeroControl('05', '0001', 1)).toMatch(/^DTE-05-00000001-000000000000001$/);
       expect(service.generateNumeroControl('06', '0001', 1)).toMatch(/^DTE-06-00000001-000000000000001$/);
       expect(service.generateNumeroControl('07', '0001', 1)).toMatch(/^DTE-07-00000001-000000000000001$/);
       expect(service.generateNumeroControl('14', '0001', 1)).toMatch(/^DTE-14-00000001-000000000000001$/);
+      expect(service.generateNumeroControl('34', '0001', 1)).toMatch(/^DTE-34-00000001-000000000000001$/);
     });
   });
 });

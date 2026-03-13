@@ -43,6 +43,10 @@ import {
   DTE_VERSIONS,
   Pago,
   TributoResumen,
+  TipoImpuestoRetencion,
+  RetencionItem,
+  ResumenCRS,
+  ComprobanteCRS,
 } from '@facturador/shared';
 
 export interface BuildFacturaInput {
@@ -911,6 +915,70 @@ export class DteBuilderService {
     };
   }
 
+  // === Tipo 34: Comprobante de Retención Simplificado (CRS) ===
+
+  buildCRS(input: BuildCRSInput): ComprobanteCRS {
+    const tipoDte: TipoDte = '34';
+    const ambiente = input.ambiente ?? '00';
+    const codigoGeneracion = this.generateCodigoGeneracion();
+    const numeroControl = this.generateNumeroControl(tipoDte, input.codEstablecimiento, input.correlativo);
+
+    const identificacion: Identificacion = {
+      version: DTE_VERSIONS[tipoDte],
+      ambiente,
+      tipoDte,
+      numeroControl,
+      codigoGeneracion,
+      tipoModelo: 1,
+      tipoOperacion: 1,
+      tipoContingencia: null,
+      motivoContin: null,
+      fecEmi: this.getCurrentDate(),
+      horEmi: this.getCurrentTime(),
+      tipoMoneda: 'USD',
+    };
+
+    const cuerpoDocumento: RetencionItem[] = input.retenciones.map((ret, index) => ({
+      numItem: index + 1,
+      tipoImpuesto: ret.tipoImpuesto,
+      descripcion: ret.descripcion,
+      tasa: ret.tasa,
+      montoSujetoRetencion: this.roundTo2Decimals(ret.montoSujetoRetencion),
+      montoRetencion: this.roundTo2Decimals(ret.montoRetencion),
+    }));
+
+    const totalSujetoRetencion = this.roundTo2Decimals(
+      cuerpoDocumento.reduce((sum, item) => sum + item.montoSujetoRetencion, 0),
+    );
+    const totalRetenido = this.roundTo2Decimals(
+      cuerpoDocumento.reduce((sum, item) => sum + item.montoRetencion, 0),
+    );
+
+    // Validate total matches sum of retenciones
+    if (Math.abs(totalRetenido - input.montoTotalRetencion) > 0.01) {
+      throw new Error(
+        `Monto total retención (${input.montoTotalRetencion}) no coincide con suma de retenciones (${totalRetenido})`,
+      );
+    }
+
+    const resumen: ResumenCRS = {
+      totalSujetoRetencion,
+      totalRetenido,
+      totalRetenidoLetras: this.numberToWords(totalRetenido),
+    };
+
+    return {
+      identificacion,
+      emisor: input.emisor,
+      receptor: input.receptor,
+      documentoRelacionado: input.documentoRelacionado || null,
+      cuerpoDocumento,
+      resumen,
+      extension: null,
+      apendice: null,
+    };
+  }
+
   // === Tipo 11: Factura de Exportación ===
 
   buildFacturaExportacion(input: BuildFacturaExportacionInput): FacturaExportacion {
@@ -1060,4 +1128,21 @@ export interface BuildFacturaExportacionInput {
   codIncoterms?: string;
   descIncoterms?: string;
   observaciones?: string;
+}
+
+export interface BuildCRSInput {
+  emisor: Omit<Emisor, 'codEstableMH' | 'codEstable' | 'codPuntoVentaMH' | 'codPuntoVenta'>;
+  receptor: ReceptorCCF;
+  documentoRelacionado?: DocumentoRelacionado[];
+  retenciones: Array<{
+    tipoImpuesto: TipoImpuestoRetencion;
+    descripcion: string;
+    tasa: number;
+    montoSujetoRetencion: number;
+    montoRetencion: number;
+  }>;
+  montoTotalRetencion: number;
+  codEstablecimiento: string;
+  correlativo: number;
+  ambiente?: Ambiente;
 }

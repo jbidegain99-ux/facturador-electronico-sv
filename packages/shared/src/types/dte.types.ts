@@ -1,7 +1,7 @@
 // Tipos DTE basados en JSON Schemas oficiales del MH El Salvador
 
 // Tipos de DTE
-export type TipoDte = '01' | '03' | '04' | '05' | '06' | '07' | '09' | '11' | '14';
+export type TipoDte = '01' | '03' | '04' | '05' | '06' | '07' | '09' | '11' | '14' | '34';
 export type Ambiente = '00' | '01'; // 00=Pruebas, 01=Produccion
 export type TipoModelo = 1 | 2; // 1=Normal, 2=Contingencia
 export type TipoOperacion = 1 | 2; // 1=Normal, 2=Contingencia
@@ -609,8 +609,42 @@ export interface FacturaExportacion {
   apendice: Apendice[] | null;
 }
 
+// === Tipo 34: Comprobante de Retención Simplificado (CRS) ===
+
+// Tipo de impuesto para retenciones CRS
+export type TipoImpuestoRetencion = 'ISR' | 'IVA' | 'ISSS' | 'AFP' | 'OTRO';
+
+// Item de retención individual para CRS (34)
+export interface RetencionItem {
+  numItem: number;
+  tipoImpuesto: TipoImpuestoRetencion;
+  descripcion: string;
+  tasa: number; // 0-1 (e.g., 0.10 = 10%)
+  montoSujetoRetencion: number;
+  montoRetencion: number;
+}
+
+// Resumen para CRS (34)
+export interface ResumenCRS {
+  totalSujetoRetencion: number;
+  totalRetenido: number;
+  totalRetenidoLetras: string;
+}
+
+// DTE Comprobante de Retención Simplificado (34)
+export interface ComprobanteCRS {
+  identificacion: Identificacion;
+  emisor: Omit<Emisor, 'codEstableMH' | 'codEstable' | 'codPuntoVentaMH' | 'codPuntoVenta'>;
+  receptor: ReceptorCCF;
+  documentoRelacionado: DocumentoRelacionado[] | null;
+  cuerpoDocumento: RetencionItem[];
+  resumen: ResumenCRS;
+  extension: Omit<Extension, 'placaVehiculo'> | null;
+  apendice: Apendice[] | null;
+}
+
 // Union type para cualquier DTE
-export type DTE = FacturaElectronica | ComprobanteCreditoFiscal | NotaCredito | NotaDebito | ComprobanteRetencion | FacturaSujetoExcluido | NotaRemision | DocumentoContableLiquidacion | FacturaExportacion;
+export type DTE = FacturaElectronica | ComprobanteCreditoFiscal | NotaCredito | NotaDebito | ComprobanteRetencion | FacturaSujetoExcluido | NotaRemision | DocumentoContableLiquidacion | FacturaExportacion | ComprobanteCRS;
 
 // Versiones por tipo de DTE
 export const DTE_VERSIONS: Record<TipoDte, number> = {
@@ -623,4 +657,5 @@ export const DTE_VERSIONS: Record<TipoDte, number> = {
   '09': 1, // Documento Contable Liquidación
   '11': 1, // Factura de Exportación
   '14': 1, // Factura Sujeto Excluido
+  '34': 1, // Comprobante de Retención Simplificado (CRS)
 };

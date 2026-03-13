@@ -135,6 +135,7 @@ export class AccountingAutomationService {
       '09': 'Liquidación',
       '11': 'Exportación',
       '14': 'Sujeto Excluido',
+      '34': 'Retención CRS',
     };
     const dteLabel = tipoDteNames[dte.tipoDte] || `DTE ${dte.tipoDte}`;
     const description = `${dteLabel} ${dte.numeroControl} - Auto`;
@@ -217,6 +218,8 @@ export class AccountingAutomationService {
         return 'EXPORTACION';
       case '14':
         return 'SUJETO_EXCLUIDO';
+      case '34':
+        return 'RETENCION_CRS';
       default:
         return null;
     }
@@ -260,6 +263,7 @@ export class AccountingAutomationService {
       '09': 'DCL',
       '11': 'FEX',
       '14': 'FSE',
+      '34': 'CRS',
     };
     const prefix = tipoDteNames[tipoDte] || 'DTE';
 
@@ -317,6 +321,7 @@ export class AccountingAutomationService {
       '09': 'DCL',
       '11': 'FEX',
       '14': 'FSE',
+      '34': 'CRS',
     };
     const prefix = tipoDteNames[tipoDte] || 'DTE';
     const amount = Math.round(totalPagar * 100) / 100;

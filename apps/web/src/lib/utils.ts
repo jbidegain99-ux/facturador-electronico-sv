@@ -42,6 +42,7 @@ export function getTipoDteName(tipo: string): string {
     '09': 'Liquidación',
     '11': 'Factura de Exportación',
     '14': 'Sujeto Excluido',
+    '34': 'Comprobante de Retención (CRS)',
   };
   return tipos[tipo] || tipo;
 }

@@ -181,6 +181,7 @@ export interface CompanyInfoForm {
 export interface HaciendaCredentialsForm {
   haciendaUser: string;
   haciendaPassword: string;
+  skipUpdate?: boolean;
 }
 
 export interface CertificateForm {
@@ -195,6 +196,7 @@ export interface CertificateForm {
 export interface ApiCredentialsForm {
   apiPassword: string;
   environmentUrl?: string;
+  skipUpdate?: boolean;
 }
 
 // Step metadata for UI

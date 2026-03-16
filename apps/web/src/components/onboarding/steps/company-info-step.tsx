@@ -270,7 +270,7 @@ export function CompanyInfoStep({
         telefonoHacienda: data.telefonoHacienda || '',
       });
     }
-  }, [data?.nit, data?.nrc, data?.razonSocial, data?.actividadEconomica, data?.emailHacienda]);
+  }, [data]);
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 

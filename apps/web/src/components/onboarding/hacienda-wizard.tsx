@@ -131,9 +131,14 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
   const handleHaciendaCredentials = async (formData: HaciendaCredentialsForm) => {
     setLoading(true);
     try {
-      const result = await apiCall('/hacienda-credentials', 'POST', formData);
-      setData(result);
-      await handleCompleteStep('HACIENDA_CREDENTIALS');
+      // If user chose to continue without changes (credentials already exist)
+      if (formData.skipUpdate) {
+        await handleCompleteStep('HACIENDA_CREDENTIALS');
+      } else {
+        const result = await apiCall('/hacienda-credentials', 'POST', formData);
+        setData(result);
+        await handleCompleteStep('HACIENDA_CREDENTIALS');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al guardar');
     } finally {
@@ -195,9 +200,13 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
   const handleTestApiCredentials = async (formData: ApiCredentialsForm) => {
     setLoading(true);
     try {
-      const result = await apiCall('/test-api-credentials', 'POST', formData);
-      setData(result);
-      await handleCompleteStep('API_CREDENTIALS_TEST');
+      if (formData.skipUpdate) {
+        await handleCompleteStep('API_CREDENTIALS_TEST');
+      } else {
+        const result = await apiCall('/test-api-credentials', 'POST', formData);
+        setData(result);
+        await handleCompleteStep('API_CREDENTIALS_TEST');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al guardar');
     } finally {
@@ -208,9 +217,13 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
   const handleProdApiCredentials = async (formData: ApiCredentialsForm) => {
     setLoading(true);
     try {
-      const result = await apiCall('/prod-api-credentials', 'POST', formData);
-      setData(result);
-      await handleCompleteStep('API_CREDENTIALS_PROD');
+      if (formData.skipUpdate) {
+        await handleCompleteStep('API_CREDENTIALS_PROD');
+      } else {
+        const result = await apiCall('/prod-api-credentials', 'POST', formData);
+        setData(result);
+        await handleCompleteStep('API_CREDENTIALS_PROD');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al guardar');
     } finally {

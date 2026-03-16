@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { TDocumentDefinitions, Content, StyleDictionary } from 'pdfmake/interfaces';
 import * as QRCode from 'qrcode';
+import { DEPARTAMENTOS } from '@facturador/shared';
 
 interface Identificacion {
   ambiente?: string;
@@ -104,6 +105,80 @@ export class PdfService {
 
   private formatCurrency(amount: number): string {
     return `$${amount.toFixed(2)}`;
+  }
+
+  /**
+   * Format a structured address (departamento code, municipio code, complemento)
+   * into a human-readable string.
+   */
+  private formatDireccion(direccion?: { departamento?: string; municipio?: string; complemento?: string }): string {
+    if (!direccion) return 'N/A';
+
+    const parts: string[] = [];
+
+    if (direccion.complemento) {
+      parts.push(direccion.complemento);
+    }
+
+    const deptoName = direccion.departamento ? (DEPARTAMENTOS[direccion.departamento] || direccion.departamento) : '';
+    if (deptoName) {
+      parts.push(deptoName);
+    }
+
+    if (parts.length === 0) return 'N/A';
+    return parts.join(', ');
+  }
+
+  /**
+   * Parse tenant.direccion which may be a JSON string or structured object.
+   */
+  private parseTenantDireccion(direccion?: string): string {
+    if (!direccion) return '';
+    try {
+      const parsed = JSON.parse(direccion);
+      if (typeof parsed === 'object' && parsed !== null) {
+        return this.formatDireccion(parsed as { departamento?: string; municipio?: string; complemento?: string });
+      }
+      return direccion;
+    } catch {
+      return direccion;
+    }
+  }
+
+  /**
+   * Extract IVA amount from resumen, checking totalIva, tributos array, and ivaRete1.
+   */
+  private getIvaAmount(resumen: Resumen, data: Record<string, unknown>): number {
+    // First check if totalIva is available (Factura type 01)
+    const totalIva = (resumen as Record<string, unknown>).totalIva;
+    if (typeof totalIva === 'number' && totalIva > 0) return totalIva;
+
+    // Check tributos array for IVA code '20'
+    const tributos = (resumen as Record<string, unknown>).tributos;
+    if (Array.isArray(tributos)) {
+      const ivaTributo = tributos.find((t: Record<string, unknown>) => t.codigo === '20');
+      if (ivaTributo && typeof ivaTributo.valor === 'number') return ivaTributo.valor;
+    }
+
+    // Check data-level tributos
+    const dataTributos = (data as Record<string, unknown>).tributos;
+    if (Array.isArray(dataTributos)) {
+      const ivaTributo = dataTributos.find((t: Record<string, unknown>) => t.codigo === '20');
+      if (ivaTributo && typeof ivaTributo.valor === 'number') return ivaTributo.valor;
+    }
+
+    // Fallback to ivaRete1
+    if (typeof resumen.ivaRete1 === 'number' && resumen.ivaRete1 > 0) return resumen.ivaRete1;
+
+    // Calculate from totalGravada if all else fails
+    if (typeof resumen.totalGravada === 'number' && resumen.totalGravada > 0 && typeof resumen.montoTotalOperacion === 'number') {
+      const subTotal = (resumen.totalGravada || 0) + (resumen.totalExenta || 0) + (resumen.totalNoSuj || 0);
+      if (resumen.montoTotalOperacion > subTotal) {
+        return Math.round((resumen.montoTotalOperacion - subTotal) * 100) / 100;
+      }
+    }
+
+    return 0;
   }
 
   private isDemoMode(dte: DteData): boolean {
@@ -251,7 +326,7 @@ export class PdfService {
               { text: dte.tenant?.nombre || 'Empresa', style: 'header' },
               { text: `NIT: ${dte.tenant?.nit || 'N/A'}`, style: 'small' },
               { text: `NRC: ${dte.tenant?.nrc || 'N/A'}`, style: 'small' },
-              { text: dte.tenant?.direccion || '', style: 'small' },
+              { text: this.parseTenantDireccion(dte.tenant?.direccion), style: 'small' },
               { text: `Tel: ${dte.tenant?.telefono || 'N/A'}`, style: 'small' },
               { text: dte.tenant?.correo || '', style: 'small' },
             ],
@@ -295,7 +370,7 @@ export class PdfService {
           {
             width: '*',
             stack: [
-              { text: `Direccion: ${receptor.direccion?.complemento || 'N/A'}`, style: 'small' },
+              { text: `Direccion: ${this.formatDireccion(receptor.direccion)}`, style: 'small' },
               { text: `Telefono: ${receptor.telefono || 'N/A'}`, style: 'small' },
               { text: `Correo: ${receptor.correo || 'N/A'}`, style: 'small' },
             ],
@@ -335,7 +410,7 @@ export class PdfService {
               body: [
                 [{ text: 'Subtotal Gravado:', alignment: 'right' as const }, { text: this.formatCurrency(resumen.totalGravada || 0), alignment: 'right' as const }],
                 [{ text: 'Subtotal Exento:', alignment: 'right' as const }, { text: this.formatCurrency(resumen.totalExenta || 0), alignment: 'right' as const }],
-                [{ text: 'IVA (13%):', alignment: 'right' as const }, { text: this.formatCurrency(resumen.ivaRete1 || 0), alignment: 'right' as const }],
+                [{ text: 'IVA (13%):', alignment: 'right' as const }, { text: this.formatCurrency(this.getIvaAmount(resumen, dte.data)), alignment: 'right' as const }],
                 [{ text: 'TOTAL:', alignment: 'right' as const, bold: true, fontSize: 12 }, { text: this.formatCurrency(resumen.totalPagar || resumen.montoTotalOperacion || 0), alignment: 'right' as const, bold: true, fontSize: 12 }],
               ],
             },

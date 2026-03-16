@@ -166,7 +166,16 @@ export class DteService {
     const identificacionData = (data.identificacion as Record<string, unknown>) || {};
 
     // Normalize the DTE JSON to comply with Hacienda schema for the specific tipoDte
-    const normalizedData = await this.normalizeJsonForHacienda(tenantId, tipoDte, data);
+    let normalizedData: Record<string, unknown>;
+    try {
+      normalizedData = await this.normalizeJsonForHacienda(tenantId, tipoDte, data);
+    } catch (normalizeError) {
+      this.logger.error(`Failed to normalize DTE JSON for tenant ${tenantId}, type ${tipoDte}: ${normalizeError instanceof Error ? normalizeError.message : normalizeError}`);
+      if (normalizeError instanceof BadRequestException) throw normalizeError;
+      throw new BadRequestException(
+        `Error al preparar datos del DTE: ${normalizeError instanceof Error ? normalizeError.message : 'Error desconocido'}`,
+      );
+    }
 
     const jsonOriginal = {
       ...normalizedData,
@@ -1145,16 +1154,16 @@ export class DteService {
     }
 
     const emisor = {
-      nit: tenant.nit.replace(/-/g, ''),
-      nrc: tenant.nrc.replace(/-/g, ''),
-      nombre: tenant.nombre,
+      nit: (tenant.nit || '').replace(/-/g, ''),
+      nrc: (tenant.nrc || '').replace(/-/g, ''),
+      nombre: tenant.nombre || '',
       codActividad: tenant.actividadEcon || '62010',
       descActividad: ACTIVIDAD_ECONOMICA_MAP[tenant.actividadEcon] || ((data.emisor as Record<string, unknown>)?.descActividad as string) || 'Servicios',
       nombreComercial: tenant.nombreComercial || null,
       tipoEstablecimiento: sucursal?.tipoEstablecimiento || '01',
       direccion: direccionEmisor,
       telefono: tenant.telefono || '00000000',
-      correo: tenant.correo,
+      correo: tenant.correo || '',
       codEstableMH: sucursal?.codEstableMH || null,
       codEstable: sucursal?.codEstable || null,
       codPuntoVentaMH: null,

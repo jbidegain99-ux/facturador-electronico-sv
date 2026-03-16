@@ -65,6 +65,15 @@ export function CertificateStep({
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState<string>('');
 
+  // When navigating back, if certificate was already uploaded, show that state
+  React.useEffect(() => {
+    if (hasCertificate) {
+      // Certificate exists on server; user can continue without re-uploading
+      setFileName('');
+      setError('');
+    }
+  }, [hasCertificate]);
+
   const isTest = type === 'test';
   const title = isTest ? 'Certificado de Pruebas' : 'Certificado de Producción';
   const description = isTest
@@ -469,6 +478,13 @@ export function ApiCredentialsStep({
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState<string>('');
 
+  // When navigating back, if credentials already exist, clear error state
+  React.useEffect(() => {
+    if (hasCredentials) {
+      setError('');
+    }
+  }, [hasCredentials]);
+
   const isTest = type === 'test';
   const title = isTest
     ? 'Credenciales API de Pruebas'
@@ -479,6 +495,12 @@ export function ApiCredentialsStep({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // If credentials already exist and user didn't enter new ones, allow continuing
+    if (hasCredentials && !formData.apiPassword) {
+      onSubmit({ apiPassword: '', environmentUrl: '', skipUpdate: true } as ApiCredentialsForm);
+      return;
+    }
 
     if (!formData.apiPassword || formData.apiPassword.length < 8) {
       setError('La contraseña API debe tener al menos 8 caracteres');
@@ -606,7 +628,7 @@ export function ApiCredentialsStep({
               </>
             ) : (
               <>
-                Continuar
+                {hasCredentials && !formData.apiPassword ? 'Continuar sin cambios' : 'Continuar'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}

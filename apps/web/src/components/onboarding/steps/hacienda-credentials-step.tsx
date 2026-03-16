@@ -76,6 +76,11 @@ export function HaciendaCredentialsStep({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // If credentials already exist and user didn't enter new ones, allow continuing
+    if (data?.hasHaciendaCredentials && !formData.haciendaUser && !formData.haciendaPassword) {
+      onSubmit({ haciendaUser: '', haciendaPassword: '', skipUpdate: true } as HaciendaCredentialsForm);
+      return;
+    }
     if (validate()) {
       onSubmit(formData);
     }
@@ -240,7 +245,7 @@ export function HaciendaCredentialsStep({
               </>
             ) : (
               <>
-                Continuar
+                {data?.hasHaciendaCredentials && !formData.haciendaUser ? 'Continuar sin cambios' : 'Continuar'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}

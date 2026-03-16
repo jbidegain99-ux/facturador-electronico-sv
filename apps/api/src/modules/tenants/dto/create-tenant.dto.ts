@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, IsObject, MaxLength } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsObject, MaxLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateTenantDto {
@@ -7,16 +7,21 @@ export class CreateTenantDto {
   @MaxLength(250, { message: 'El nombre no puede exceder 250 caracteres' })
   nombre: string;
 
-  @ApiProperty({ example: '06141234567890' })
+  @ApiProperty({ example: '0614-123456-789-0' })
   @IsString()
+  @MaxLength(17, { message: 'El NIT no puede exceder 17 caracteres' })
+  @Matches(/^\d{4}-\d{6}-\d{3}-\d$/, { message: 'NIT debe tener formato 0000-000000-000-0' })
   nit: string;
 
-  @ApiProperty({ example: '1234567' })
+  @ApiProperty({ example: '123456-7' })
   @IsString()
+  @MaxLength(9, { message: 'El NRC no puede exceder 9 caracteres' })
+  @Matches(/^\d{1,7}-\d$/, { message: 'NRC debe tener formato 0000000-0' })
   nrc: string;
 
   @ApiProperty({ example: '46510' })
   @IsString()
+  @MaxLength(10, { message: 'La actividad económica no puede exceder 10 caracteres' })
   actividadEcon: string;
 
   @ApiProperty({
@@ -33,12 +38,15 @@ export class CreateTenantDto {
     complemento: string;
   };
 
-  @ApiProperty({ example: '22001234' })
+  @ApiProperty({ example: '2200-1234' })
   @IsString()
+  @MaxLength(9, { message: 'El teléfono no puede exceder 9 caracteres' })
+  @Matches(/^\d{4}-\d{4}$/, { message: 'Teléfono debe tener formato 0000-0000' })
   telefono: string;
 
   @ApiProperty({ example: 'empresa@ejemplo.com' })
   @IsEmail()
+  @MaxLength(100, { message: 'El correo no puede exceder 100 caracteres' })
   correo: string;
 
   @ApiProperty({ example: 'Mi Tienda', required: false })

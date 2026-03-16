@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, IsObject, ValidateNested, MaxLength, Matches } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsObject, ValidateNested, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -50,8 +50,7 @@ export class CreateClienteDto {
   @ApiProperty({ example: '2200-1234', required: false })
   @IsOptional()
   @IsString()
-  @MaxLength(9, { message: 'El teléfono no puede exceder 9 caracteres' })
-  @Matches(/^\d{4}-\d{4}$/, { message: 'Teléfono debe tener formato 0000-0000' })
+  @MaxLength(20, { message: 'El teléfono no puede exceder 20 caracteres' })
   telefono?: string;
 
   @ApiProperty({ required: true })

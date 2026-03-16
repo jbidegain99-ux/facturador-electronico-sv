@@ -307,6 +307,21 @@ export default function ClientesPage() {
 
   const openEditModal = (cliente: Cliente) => {
     setEditingCliente(cliente);
+
+    // direccion viene como JSON string de la BD - parsear a objeto
+    let parsedDireccion = { departamento: '06', municipio: '14', complemento: '' };
+    if (cliente.direccion) {
+      if (typeof cliente.direccion === 'string') {
+        try {
+          parsedDireccion = JSON.parse(cliente.direccion);
+        } catch {
+          parsedDireccion = { departamento: '06', municipio: '14', complemento: cliente.direccion };
+        }
+      } else {
+        parsedDireccion = cliente.direccion;
+      }
+    }
+
     setFormData({
       tipoDocumento: cliente.tipoDocumento,
       numDocumento: cliente.numDocumento,
@@ -314,8 +329,9 @@ export default function ClientesPage() {
       nrc: cliente.nrc || '',
       correo: cliente.correo || '',
       telefono: cliente.telefono || '',
-      direccion: cliente.direccion || { departamento: '06', municipio: '14', complemento: '' },
+      direccion: parsedDireccion,
     });
+    setFieldErrors({});
     setFormError(null);
     setIsModalOpen(true);
   };

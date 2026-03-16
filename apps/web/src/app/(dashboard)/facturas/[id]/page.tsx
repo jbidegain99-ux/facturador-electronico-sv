@@ -552,14 +552,28 @@ export default function FacturaDetallePage() {
             </CardContent>
           </Card>
 
-          {/* Descripcion MH */}
+          {/* Descripcion MH / Error */}
           {dte.descripcionMh && (
-            <Card>
+            <Card className={dte.estado === 'RECHAZADO' ? 'border-red-500/50' : ''}>
               <CardHeader>
-                <CardTitle className="text-base">{t('mhResponse')}</CardTitle>
+                <CardTitle className="text-base">
+                  {dte.estado === 'RECHAZADO' ? 'Error de Transmision' : t('mhResponse')}
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{dte.descripcionMh}</p>
+              <CardContent className="space-y-3">
+                {dte.descripcionMh.includes(' | Accion sugerida: ') ? (
+                  <>
+                    <p className="text-sm font-medium text-red-500 dark:text-red-400">
+                      {dte.descripcionMh.split(' | Accion sugerida: ')[0]}
+                    </p>
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      <span className="font-medium">Que hacer: </span>
+                      {dte.descripcionMh.split(' | Accion sugerida: ')[1]}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{dte.descripcionMh}</p>
+                )}
               </CardContent>
             </Card>
           )}

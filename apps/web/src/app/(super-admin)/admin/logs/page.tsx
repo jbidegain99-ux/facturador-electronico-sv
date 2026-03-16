@@ -95,11 +95,37 @@ const actionColors: Record<string, string> = {
   CONFIG_CHANGE: 'bg-amber-500/20 text-amber-400',
 };
 
+interface DteError {
+  id: string;
+  timestamp: string;
+  errorCode: string;
+  errorType: string;
+  field: string | null;
+  userFriendlyMessage: string | null;
+  suggestedAction: string | null;
+  resolvable: boolean;
+  dteId: string | null;
+  mhStatusCode: number | null;
+}
+
+interface DteErrorSummary {
+  total: number;
+  byType: Record<string, number>;
+  byCode: Record<string, number>;
+  resolvable: number;
+}
+
 export default function LogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // DTE Error logs
+  const [dteErrors, setDteErrors] = useState<DteError[]>([]);
+  const [dteErrorSummary, setDteErrorSummary] = useState<DteErrorSummary | null>(null);
+  const [dteErrorsTenantId, setDteErrorsTenantId] = useState('');
+  const [loadingDteErrors, setLoadingDteErrors] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -187,6 +213,28 @@ export default function LogsPage() {
     e.preventDefault();
     setPage(1);
     fetchLogs();
+  };
+
+  const fetchDteErrors = async (tenantId: string) => {
+    if (!tenantId) return;
+    try {
+      setLoadingDteErrors(true);
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const base = process.env.NEXT_PUBLIC_API_URL;
+
+      const [errorsRes, summaryRes] = await Promise.all([
+        fetch(`${base}/super-admin/logs/tenant-errors?tenantId=${tenantId}&limit=30`, { headers }),
+        fetch(`${base}/super-admin/logs/error-summary?tenantId=${tenantId}`, { headers }),
+      ]);
+
+      if (errorsRes.ok) setDteErrors(await errorsRes.json());
+      if (summaryRes.ok) setDteErrorSummary(await summaryRes.json());
+    } catch (err) {
+      console.error('Error fetching DTE errors:', err);
+    } finally {
+      setLoadingDteErrors(false);
+    }
   };
 
   const clearFilters = () => {
@@ -292,6 +340,89 @@ export default function LogsPage() {
           </div>
         </div>
       )}
+
+      {/* DTE Error Logs Section */}
+      <div className="glass-card p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-400" />
+            Errores DTE por Tenant
+          </h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Ingrese tenantId para buscar errores..."
+            value={dteErrorsTenantId}
+            onChange={(e) => setDteErrorsTenantId(e.target.value)}
+            className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm"
+          />
+          <Button onClick={() => fetchDteErrors(dteErrorsTenantId)} disabled={!dteErrorsTenantId || loadingDteErrors}>
+            {loadingDteErrors ? 'Buscando...' : 'Buscar'}
+          </Button>
+        </div>
+
+        {dteErrorSummary && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+              <div className="text-xl font-bold text-red-400">{dteErrorSummary.total}</div>
+              <div className="text-xs text-muted-foreground">Errores (7 dias)</div>
+            </div>
+            <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+              <div className="text-xl font-bold text-yellow-400">{dteErrorSummary.resolvable}</div>
+              <div className="text-xs text-muted-foreground">Resolubles</div>
+            </div>
+            {Object.entries(dteErrorSummary.byType).map(([type, count]) => (
+              <div key={type} className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="text-xl font-bold">{count}</div>
+                <div className="text-xs text-muted-foreground">{type}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {dteErrors.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left py-2 px-3">Fecha</th>
+                  <th className="text-left py-2 px-3">Codigo</th>
+                  <th className="text-left py-2 px-3">Mensaje</th>
+                  <th className="text-left py-2 px-3">Resoluble</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dteErrors.map((err) => (
+                  <tr key={err.id} className="border-b border-white/5 hover:bg-white/5">
+                    <td className="py-2 px-3 text-muted-foreground whitespace-nowrap">
+                      {formatDate(err.timestamp)}
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">
+                        {err.errorCode}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3">
+                      <div>{err.userFriendlyMessage || 'Sin mensaje'}</div>
+                      {err.suggestedAction && (
+                        <div className="text-xs text-muted-foreground mt-1">{err.suggestedAction}</div>
+                      )}
+                    </td>
+                    <td className="py-2 px-3">
+                      {err.resolvable ? (
+                        <span className="text-green-400 text-xs">Si</span>
+                      ) : (
+                        <span className="text-red-400 text-xs">No</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Filters */}
       {showFilters && (

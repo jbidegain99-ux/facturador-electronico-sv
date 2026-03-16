@@ -30,6 +30,8 @@ import { Prisma } from '@prisma/client';
 import { HaciendaAuthService } from '../hacienda/services/hacienda-auth.service';
 import { CertificateService } from '../hacienda/services/certificate.service';
 import { EncryptionService } from '../email-config/services/encryption.service';
+import { DteErrorMapperService } from './services/error-mapper.service';
+import { DteOperationLoggerService } from './services/dte-operation-logger.service';
 
 /** Convert a number to its Spanish text representation for totalLetras */
 function numberToWords(num: number): string {
@@ -117,6 +119,8 @@ export class DteService {
     private haciendaAuthService: HaciendaAuthService,
     private certificateService: CertificateService,
     private encryptionService: EncryptionService,
+    private errorMapper: DteErrorMapperService,
+    @Optional() private operationLogger: DteOperationLoggerService | null,
   ) {}
 
   /**
@@ -718,16 +722,51 @@ export class DteService {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       const observaciones = error instanceof MHReceptionError ? error.observaciones : undefined;
 
+      // Map to user-friendly message
+      const mapped = this.errorMapper.mapError({
+        rawError: error instanceof Error ? error : errorMessage,
+        mhResponse: error instanceof MHReceptionError
+          ? { status: error.statusCode, data: { observaciones: error.observaciones } }
+          : undefined,
+      });
+
+      // Store user-friendly message in descripcionMh
+      const userDescription = `${mapped.userMessage} | Accion sugerida: ${mapped.suggestedAction}`;
+
       await this.prisma.dTE.update({
         where: { id: dteId },
         data: {
           estado: DTEStatus.RECHAZADO,
-          descripcionMh: observaciones?.join(', ') || errorMessage,
+          descripcionMh: userDescription,
           intentosEnvio: { increment: 1 },
         },
       });
 
-      await this.logDteAction(dteId, 'TRANSMISSION_ERROR', { error: errorMessage, observaciones });
+      await this.logDteAction(dteId, 'TRANSMISSION_ERROR', {
+        error: errorMessage,
+        observaciones,
+        userMessage: mapped.userMessage,
+        suggestedAction: mapped.suggestedAction,
+        errorCode: mapped.errorCode,
+        resolvable: mapped.resolvable,
+      });
+
+      // Log to DteOperationLog/DteErrorLog if tables exist
+      if (this.operationLogger) {
+        try {
+          const opLogId = await this.operationLogger.logOperationStart(
+            dte.tenantId, dteId, 'TRANSMISSION',
+            { dteType: dte.tipoDte, dteNumber: dte.numeroControl, emitterNit: nit },
+          );
+          await this.operationLogger.logOperationError(opLogId, dte.tenantId, dteId, error instanceof Error ? error : errorMessage, {
+            mhResponse: error instanceof MHReceptionError
+              ? { status: error.statusCode, data: { observaciones: error.observaciones } }
+              : undefined,
+          });
+        } catch (logErr) {
+          this.logger.warn(`DteOperationLog write failed (tables may not exist yet): ${logErr instanceof Error ? logErr.message : logErr}`);
+        }
+      }
 
       // Trigger webhook for rejection (fire-and-forget)
       this.triggerWebhook(dte.tenantId, 'dte.rejected', {
@@ -735,17 +774,26 @@ export class DteService {
         codigoGeneracion: dte.codigoGeneracion,
         estado: 'RECHAZADO',
         error: errorMessage,
+        userMessage: mapped.userMessage,
         observaciones,
       }, dte.id);
 
-      // Wrap MH errors as BadRequestException with descriptive message
+      // Wrap errors with user-friendly message
       if (error instanceof MHReceptionError) {
         throw new BadRequestException({
-          message: 'DTE rechazado por Hacienda',
+          message: mapped.userMessage,
+          suggestedAction: mapped.suggestedAction,
+          resolvable: mapped.resolvable,
+          errorCode: mapped.errorCode,
           observaciones: error.observaciones,
         });
       }
-      throw new InternalServerErrorException(`Error al transmitir DTE: ${errorMessage}`);
+      throw new InternalServerErrorException({
+        message: mapped.userMessage,
+        suggestedAction: mapped.suggestedAction,
+        resolvable: mapped.resolvable,
+        errorCode: mapped.errorCode,
+      });
     }
   }
 

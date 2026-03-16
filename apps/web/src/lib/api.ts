@@ -111,3 +111,20 @@ export async function deleteCliente(id: string) {
     method: 'DELETE',
   });
 }
+
+// DTE Operation Logs (Super Admin)
+export async function getTenantErrors(tenantId: string, limit?: number) {
+  const params = new URLSearchParams({ tenantId });
+  if (limit) params.set('limit', String(limit));
+  return fetchAPI(`/super-admin/logs/tenant-errors?${params}`);
+}
+
+export async function getTenantErrorSummary(tenantId: string) {
+  return fetchAPI(`/super-admin/logs/error-summary?tenantId=${tenantId}`);
+}
+
+export async function getTenantOperationLogs(tenantId: string, limit?: number) {
+  const params = new URLSearchParams({ tenantId });
+  if (limit) params.set('limit', String(limit));
+  return fetchAPI(`/super-admin/logs/operations?${params}`);
+}

@@ -8,11 +8,13 @@ import {
   Param,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from './guards/super-admin.guard';
 import { SuperAdminService } from './super-admin.service';
+import { DteOperationLoggerService } from '../dte/services/dte-operation-logger.service';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 
 // Bootstrap controller - no authentication required
@@ -43,7 +45,10 @@ export class SuperAdminBootstrapController {
 @Controller('super-admin')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class SuperAdminController {
-  constructor(private readonly superAdminService: SuperAdminService) {}
+  constructor(
+    private readonly superAdminService: SuperAdminService,
+    private readonly operationLogger: DteOperationLoggerService,
+  ) {}
 
   // ============ DASHBOARD ============
   @Get('dashboard')
@@ -146,5 +151,44 @@ export class SuperAdminController {
     @CurrentUser() user: CurrentUserData,
   ) {
     return this.superAdminService.createSuperAdmin(data, user.id, user.email);
+  }
+
+  // ============ DTE OPERATION LOGS ============
+  @Get('logs/tenant-errors')
+  @ApiOperation({ summary: 'Obtener errores recientes de un tenant' })
+  @ApiQuery({ name: 'tenantId', required: true })
+  @ApiQuery({ name: 'limit', required: false })
+  getTenantErrors(
+    @Query('tenantId') tenantId: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (!tenantId) {
+      throw new BadRequestException('tenantId es requerido');
+    }
+    return this.operationLogger.getTenantErrors(tenantId, limit ? parseInt(limit) : 50);
+  }
+
+  @Get('logs/error-summary')
+  @ApiOperation({ summary: 'Obtener resumen de errores de un tenant (ultimos 7 dias)' })
+  @ApiQuery({ name: 'tenantId', required: true })
+  getErrorSummary(@Query('tenantId') tenantId: string) {
+    if (!tenantId) {
+      throw new BadRequestException('tenantId es requerido');
+    }
+    return this.operationLogger.getErrorSummary(tenantId);
+  }
+
+  @Get('logs/operations')
+  @ApiOperation({ summary: 'Obtener logs de operaciones de un tenant' })
+  @ApiQuery({ name: 'tenantId', required: true })
+  @ApiQuery({ name: 'limit', required: false })
+  getOperationLogs(
+    @Query('tenantId') tenantId: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (!tenantId) {
+      throw new BadRequestException('tenantId es requerido');
+    }
+    return this.operationLogger.getOperationLogs(tenantId, limit ? parseInt(limit) : 50);
   }
 }

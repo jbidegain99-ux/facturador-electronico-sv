@@ -13,6 +13,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TransmitterService, DTERecord } from './transmitter.service';
 import { DteBuilderService } from '../dte/services/dte-builder.service';
+import { DteOperationLoggerService } from '../dte/services/dte-operation-logger.service';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { DTE, TipoDte, Ambiente } from '@facturador/shared';
 import { MHEnvironment } from '@facturador/mh-client';
@@ -67,6 +68,7 @@ export class TransmitterController {
   constructor(
     private readonly transmitterService: TransmitterService,
     private readonly dteBuilder: DteBuilderService,
+    private readonly operationLogger: DteOperationLoggerService,
   ) {}
 
   /**
@@ -100,35 +102,68 @@ export class TransmitterController {
   ) {
     const record = this.getDTEForTenant(dteId, user);
 
+    // Log operation start
+    const opLogId = await this.operationLogger.logOperationStart(
+      record.tenantId,
+      dteId,
+      'TRANSMISSION',
+      {
+        dteType: record.tipoDte,
+        dteNumber: record.numeroControl,
+        emitterNit: dto.nit,
+      },
+    );
+
     try {
+      let result;
       if (dto.async) {
-        const result = await this.transmitterService.transmitAsync(
+        const asyncResult = await this.transmitterService.transmitAsync(
           dteId,
           record.tenantId,
           dto.nit,
           dto.password,
           dto.env || 'test'
         );
-        return {
+        result = {
           success: true,
-          message: result.message,
-          jobId: result.jobId,
+          message: asyncResult.message,
+          jobId: asyncResult.jobId,
           dteId,
         };
       } else {
-        const result = await this.transmitterService.transmitSync(
+        result = await this.transmitterService.transmitSync(
           dteId,
           dto.nit,
           dto.password,
           dto.env || 'test'
         );
-        return result;
       }
+
+      // Log success
+      await this.operationLogger.logOperationSuccess(opLogId);
+      return result;
     } catch (error) {
+      // Log error with mapping
+      const mappedError = await this.operationLogger.logOperationError(
+        opLogId,
+        record.tenantId,
+        dteId,
+        error instanceof Error ? error : String(error),
+        {
+          mhResponse: error instanceof Error && 'response' in error
+            ? (error as Error & { response: { data?: Record<string, unknown>; status?: number } }).response
+            : undefined,
+        },
+      );
+
       throw new HttpException(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Transmission failed',
+          userMessage: mappedError.userMessage,
+          suggestedAction: mappedError.suggestedAction,
+          resolvable: mappedError.resolvable,
+          errorCode: mappedError.errorCode,
         },
         HttpStatus.INTERNAL_SERVER_ERROR
       );
@@ -144,19 +179,19 @@ export class TransmitterController {
       throw new ForbiddenException('Usuario no tiene tenant asignado');
     }
 
-    try {
-      // 1. Build the DTE
-      let dte: DTE;
-      const buildInput = {
-        emisor: dto.emisor as never,
-        receptor: dto.receptor as never,
-        items: dto.items,
-        codEstablecimiento: dto.codEstablecimiento,
-        correlativo: dto.correlativo,
-        ambiente: dto.ambiente,
-        condicionOperacion: dto.condicionOperacion,
-      };
+    // Build the DTE first (before logging, since we need context)
+    let dte: DTE;
+    const buildInput = {
+      emisor: dto.emisor as never,
+      receptor: dto.receptor as never,
+      items: dto.items,
+      codEstablecimiento: dto.codEstablecimiento,
+      correlativo: dto.correlativo,
+      ambiente: dto.ambiente,
+      condicionOperacion: dto.condicionOperacion,
+    };
 
+    try {
       if (dto.tipoDte === '01') {
         dte = this.dteBuilder.buildFactura(buildInput);
       } else if (dto.tipoDte === '03') {
@@ -167,26 +202,49 @@ export class TransmitterController {
       } else {
         throw new Error(`DTE type ${dto.tipoDte} not implemented yet`);
       }
+    } catch (error) {
+      throw new HttpException(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to build DTE',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-      // 2. Create DTE record — use tenantId from JWT, not from request body
-      const dteId = crypto.randomUUID();
-      const record: DTERecord = {
-        id: dteId,
-        tenantId: user.tenantId,
-        codigoGeneracion: dte.identificacion.codigoGeneracion,
-        numeroControl: dte.identificacion.numeroControl,
-        tipoDte: dto.tipoDte,
-        ambiente: dto.ambiente || '00',
-        status: 'PENDIENTE',
-        jsonDte: dte,
-        intentos: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+    // Create DTE record — use tenantId from JWT, not from request body
+    const dteId = crypto.randomUUID();
+    const record: DTERecord = {
+      id: dteId,
+      tenantId: user.tenantId,
+      codigoGeneracion: dte.identificacion.codigoGeneracion,
+      numeroControl: dte.identificacion.numeroControl,
+      tipoDte: dto.tipoDte,
+      ambiente: dto.ambiente || '00',
+      status: 'PENDIENTE',
+      jsonDte: dte,
+      intentos: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-      this.transmitterService.saveDTE(record);
+    this.transmitterService.saveDTE(record);
 
-      // 3. Transmit
+    // Log operation start
+    const opLogId = await this.operationLogger.logOperationStart(
+      user.tenantId,
+      dteId,
+      'TRANSMISSION',
+      {
+        dteType: dto.tipoDte,
+        dteNumber: dte.identificacion.numeroControl,
+        emitterNit: dto.nit,
+        receiverNit: dto.receptor ? String((dto.receptor as Record<string, unknown>).nit || '') : undefined,
+        itemsCount: dto.items.length,
+      },
+    );
+
+    try {
       const result = await this.transmitterService.transmitSync(
         dteId,
         dto.nit,
@@ -194,15 +252,33 @@ export class TransmitterController {
         dto.env || 'test'
       );
 
+      await this.operationLogger.logOperationSuccess(opLogId);
+
       return {
         ...result,
         dte,
       };
     } catch (error) {
+      const mappedError = await this.operationLogger.logOperationError(
+        opLogId,
+        user.tenantId,
+        dteId,
+        error instanceof Error ? error : String(error),
+        {
+          mhResponse: error instanceof Error && 'response' in error
+            ? (error as Error & { response: { data?: Record<string, unknown>; status?: number } }).response
+            : undefined,
+        },
+      );
+
       throw new HttpException(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Failed to create and send DTE',
+          userMessage: mappedError.userMessage,
+          suggestedAction: mappedError.suggestedAction,
+          resolvable: mappedError.resolvable,
+          errorCode: mappedError.errorCode,
         },
         HttpStatus.INTERNAL_SERVER_ERROR
       );

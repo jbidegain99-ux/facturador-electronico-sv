@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto';
+import { NrcValidator } from '../../common/validators/nrc.validator';
 import { Cliente } from '@prisma/client';
 
 interface ClienteWhereInput {
@@ -27,6 +28,19 @@ export class ClientesService {
   async create(tenantId: string, createClienteDto: CreateClienteDto) {
     this.logger.log(`Creating cliente for tenant ${tenantId}`);
 
+    // Validate and normalize NRC if provided
+    let normalizedNrc: string | undefined;
+    if (createClienteDto.nrc) {
+      const nrcValidation = NrcValidator.validate(createClienteDto.nrc);
+      if (!nrcValidation.isValid) {
+        throw new BadRequestException({
+          field: 'nrc',
+          message: nrcValidation.error,
+        });
+      }
+      normalizedNrc = nrcValidation.formatted ?? undefined;
+    }
+
     // Check if client with same document already exists for this tenant
     const existingCliente = await this.prisma.cliente.findUnique({
       where: {
@@ -48,7 +62,7 @@ export class ClientesService {
         tipoDocumento: createClienteDto.tipoDocumento,
         numDocumento: createClienteDto.numDocumento,
         nombre: createClienteDto.nombre,
-        nrc: createClienteDto.nrc,
+        nrc: normalizedNrc,
         correo: createClienteDto.correo,
         telefono: createClienteDto.telefono,
         direccion: JSON.stringify(createClienteDto.direccion || {}),
@@ -139,6 +153,19 @@ export class ClientesService {
     }
 
     const updateData: Record<string, unknown> = { ...updateClienteDto };
+
+    // Normalize NRC if provided
+    if (updateClienteDto.nrc) {
+      const nrcValidation = NrcValidator.validate(updateClienteDto.nrc);
+      if (!nrcValidation.isValid) {
+        throw new BadRequestException({
+          field: 'nrc',
+          message: nrcValidation.error,
+        });
+      }
+      updateData.nrc = nrcValidation.formatted;
+    }
+
     if (updateClienteDto.direccion) {
       updateData.direccion = JSON.stringify(updateClienteDto.direccion);
     }

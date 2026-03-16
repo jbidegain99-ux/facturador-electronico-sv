@@ -4,6 +4,8 @@ import { DteBuilderService } from './services/dte-builder.service';
 import { DteValidatorService } from './services/dte-validator.service';
 import { DteService } from './dte.service';
 import { PdfService } from './pdf.service';
+import { DteErrorMapperService } from './services/error-mapper.service';
+import { DteOperationLoggerService } from './services/dte-operation-logger.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { SignerModule } from '../signer/signer.module';
 import { MhAuthModule } from '../mh-auth/mh-auth.module';
@@ -16,7 +18,7 @@ import { HaciendaModule } from '../hacienda/hacienda.module';
 @Module({
   imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, forwardRef(() => WebhooksModule), forwardRef(() => AccountingModule), SucursalesModule, HaciendaModule],
   controllers: [DteController],
-  providers: [DteBuilderService, DteValidatorService, DteService, PdfService],
-  exports: [DteBuilderService, DteValidatorService, DteService, PdfService],
+  providers: [DteBuilderService, DteValidatorService, DteService, PdfService, DteErrorMapperService, DteOperationLoggerService],
+  exports: [DteBuilderService, DteValidatorService, DteService, PdfService, DteErrorMapperService, DteOperationLoggerService],
 })
 export class DteModule {}

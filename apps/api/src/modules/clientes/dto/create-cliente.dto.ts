@@ -35,11 +35,10 @@ export class CreateClienteDto {
   @MaxLength(250, { message: 'El nombre no puede exceder 250 caracteres' })
   nombre: string;
 
-  @ApiProperty({ example: '123456-7', required: false })
+  @ApiProperty({ example: '1234567-8', required: false, description: 'NRC: 7 u 8 dígitos, con o sin guión. Se normaliza automáticamente.' })
   @IsOptional()
   @IsString()
-  @MaxLength(9, { message: 'El NRC no puede exceder 9 caracteres' })
-  @Matches(/^\d{1,7}-\d$/, { message: 'NRC debe tener formato 0000000-0' })
+  @MaxLength(10, { message: 'El NRC no puede exceder 10 caracteres' })
   nrc?: string;
 
   @ApiProperty({ example: 'cliente@ejemplo.com', required: false })

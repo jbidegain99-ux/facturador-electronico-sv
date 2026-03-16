@@ -26,6 +26,7 @@ import {
   AlertDescription,
 } from '@/components/ui/alert';
 import type { Cliente } from '@/types';
+import { NrcValidator } from '@/lib/validators/nrc.validator';
 
 interface NuevoClienteModalProps {
   open: boolean;
@@ -504,6 +505,11 @@ export function NuevoClienteModal({
       // NRC SOLO requerido para Crédito Fiscal (CCF)
       if (esCreditoFiscal && !formData.nrc.trim()) {
         newErrors.nrc = 'NRC requerido para Crédito Fiscal';
+      } else if (esCreditoFiscal && formData.nrc.trim()) {
+        const nrcResult = NrcValidator.validate(formData.nrc);
+        if (!nrcResult.isValid) {
+          newErrors.nrc = nrcResult.error || 'NRC no válido';
+        }
       }
 
       // Validar email si se proporciona
@@ -543,8 +549,10 @@ export function NuevoClienteModal({
           tipoDocumento: formData.tipoDocumento,
           numDocumento: numDocFinal,
           nombre: nombreFinal,
-          // NRC solo para Crédito Fiscal
-          nrc: esCreditoFiscal ? formData.nrc.trim() : undefined,
+          // NRC solo para Crédito Fiscal (normalizado)
+          nrc: esCreditoFiscal && formData.nrc.trim()
+            ? (NrcValidator.validate(formData.nrc).formatted || formData.nrc.trim())
+            : undefined,
           telefono: formData.telefono.trim() || undefined,
           correo: formData.correo.trim() || undefined,
           direccion: {
@@ -723,11 +731,25 @@ export function NuevoClienteModal({
                 <Input
                   value={formData.nrc}
                   onChange={(e) => handleChange('nrc', e.target.value)}
-                  placeholder="1234567"
+                  onBlur={() => {
+                    if (formData.nrc.trim()) {
+                      const result = NrcValidator.validate(formData.nrc);
+                      if (result.isValid && result.formatted) {
+                        setFormData((prev) => ({ ...prev, nrc: result.formatted! }));
+                        setErrors((prev) => ({ ...prev, nrc: undefined }));
+                      } else if (!result.isValid) {
+                        setErrors((prev) => ({ ...prev, nrc: result.error }));
+                      }
+                    }
+                  }}
+                  placeholder="1234567-8 o 234567-8"
                 />
                 {errors.nrc && <p className="text-xs text-destructive">{errors.nrc}</p>}
+                {formData.nrc.trim() && !errors.nrc && NrcValidator.validate(formData.nrc).isValid && (
+                  <p className="text-xs text-green-600">NRC valido</p>
+                )}
                 <p className="text-xs text-muted-foreground">
-                  Numero de Registro de Contribuyente
+                  7 u 8 digitos - se normaliza automaticamente
                 </p>
               </div>
 

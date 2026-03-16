@@ -52,6 +52,7 @@ export class CreateClienteDto {
   @IsOptional()
   @IsString()
   @MaxLength(9, { message: 'El teléfono no puede exceder 9 caracteres' })
+  @Matches(/^\d{4}-\d{4}$/, { message: 'Teléfono debe tener formato 0000-0000' })
   telefono?: string;
 
   @ApiProperty({ required: true })

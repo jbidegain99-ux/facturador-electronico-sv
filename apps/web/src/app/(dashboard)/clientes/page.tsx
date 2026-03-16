@@ -86,7 +86,7 @@ const initialFormState: ClienteForm = {
 // Validation patterns
 const NIT_PATTERN = /^\d{4}-\d{6}-\d{3}-\d{1}$/;
 const DUI_PATTERN = /^\d{8}-\d{1}$/;
-const NRC_PATTERN = /^\d{1,7}(-\d)?$/;
+const NRC_PATTERN = /^\d{1,8}(-\d)?$|^\d{7}-\d$/;
 const PHONE_PATTERN = /^\d{4}-\d{4}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -148,7 +148,12 @@ function validateField(field: string, value: string, formData: ClienteForm): str
       return '';
     case 'nrc':
       if (!value) return '';
-      if (!NRC_PATTERN.test(value)) return 'NRC invalido (maximo 7 digitos, formato: 000000-0)';
+      // Accept 7 or 8 raw digits, or formatted XXXXXXX-X
+      {
+        const nrcClean = value.replace(/[-\s]/g, '');
+        if (!/^\d+$/.test(nrcClean)) return 'NRC debe contener solo digitos';
+        if (nrcClean.length < 7 || nrcClean.length > 8) return 'NRC debe tener 7 u 8 digitos';
+      }
       return '';
     case 'telefono':
       if (!value) return '';
@@ -682,15 +687,16 @@ export default function ClientesPage() {
               <div className="space-y-1">
                 <label className="text-sm font-medium">NRC</label>
                 <Input
-                  placeholder="000000-0"
+                  placeholder="0000000-0"
                   value={formData.nrc}
                   onChange={(e) => handleFormChange('nrc', e.target.value)}
-                  maxLength={9}
+                  maxLength={10}
                   className={`font-mono ${fieldErrors.nrc ? 'border-red-500' : ''}`}
                 />
                 {fieldErrors.nrc && (
                   <p className="text-xs text-red-500">{fieldErrors.nrc}</p>
                 )}
+                <p className="text-xs text-muted-foreground">7 u 8 digitos, se normaliza automaticamente</p>
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">{t('phoneLabel')}</label>

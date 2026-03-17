@@ -543,6 +543,19 @@ export class DteService {
       throw new NotFoundException('DTE no encontrado');
     }
 
+    // Start operation log for SIGNING
+    let opLogId: string | undefined;
+    if (this.operationLogger) {
+      try {
+        opLogId = await this.operationLogger.logOperationStart(
+          dte.tenantId, dteId, 'SIGNING',
+          { dteType: dte.tipoDte, dteNumber: dte.numeroControl },
+        );
+      } catch (logErr) {
+        this.logger.warn(`DteOperationLog write failed: ${logErr instanceof Error ? logErr.message : logErr}`);
+      }
+    }
+
     // Parse jsonOriginal from string
     let jsonOriginalParsed: Record<string, unknown>;
     try {
@@ -551,24 +564,40 @@ export class DteService {
         : dte.jsonOriginal;
     } catch (parseError) {
       this.logger.error(`Failed to parse jsonOriginal for DTE ${dteId}: ${parseError instanceof Error ? parseError.message : parseError}`);
+      if (opLogId && this.operationLogger) {
+        await this.operationLogger.logOperationError(opLogId, dte.tenantId, dteId, parseError instanceof Error ? parseError : 'JSON parse error', {}, 'SIGNING').catch(() => {});
+      }
       throw new InternalServerErrorException('Error al procesar datos del DTE: JSON inválido');
     }
 
     let jsonFirmado: string;
 
-    // Demo mode: simulate signing without a real certificate
-    if (this.isDemoMode(dte.tenant)) {
-      this.logger.log(`[DEMO MODE] Simulating DTE signing for ${dteId}`);
-      // Create a mock JWS-like string for demo purposes
-      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
-      const payload = Buffer.from(JSON.stringify(jsonOriginalParsed)).toString('base64url');
-      const signature = Buffer.from(`DEMO_SIGNATURE_${Date.now()}`).toString('base64url');
-      jsonFirmado = `${header}.${payload}.${signature}`;
-    } else {
-      if (!this.signerService.isCertificateLoaded()) {
-        throw new BadRequestException('No hay certificado de firma cargado. Configure su certificado en la sección de ajustes.');
+    try {
+      // Demo mode: simulate signing without a real certificate
+      if (this.isDemoMode(dte.tenant)) {
+        this.logger.log(`[DEMO MODE] Simulating DTE signing for ${dteId}`);
+        // Create a mock JWS-like string for demo purposes
+        const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+        const payload = Buffer.from(JSON.stringify(jsonOriginalParsed)).toString('base64url');
+        const signature = Buffer.from(`DEMO_SIGNATURE_${Date.now()}`).toString('base64url');
+        jsonFirmado = `${header}.${payload}.${signature}`;
+      } else {
+        if (!this.signerService.isCertificateLoaded()) {
+          throw new BadRequestException('No hay certificado de firma cargado. Configure su certificado en la sección de ajustes.');
+        }
+        jsonFirmado = await this.signerService.signDTE(jsonOriginalParsed);
       }
-      jsonFirmado = await this.signerService.signDTE(jsonOriginalParsed);
+    } catch (signError) {
+      // Log signing error to operation logger
+      if (opLogId && this.operationLogger) {
+        await this.operationLogger.logOperationError(
+          opLogId, dte.tenantId, dteId,
+          signError instanceof Error ? signError : String(signError),
+          { field: 'certificate', expectedFormat: 'Valid PFX certificate' },
+          'SIGNING',
+        ).catch(() => {});
+      }
+      throw signError;
     }
 
     const updated = await this.prisma.dTE.update({
@@ -578,6 +607,11 @@ export class DteService {
         estado: DTEStatus.FIRMADO,
       },
     });
+
+    // Log signing success
+    if (opLogId && this.operationLogger) {
+      await this.operationLogger.logOperationSuccess(opLogId).catch(() => {});
+    }
 
     await this.logDteAction(dteId, 'SIGNED', {
       jsonFirmado: jsonFirmado.substring(0, 100) + '...',
@@ -612,6 +646,36 @@ export class DteService {
       throw new BadRequestException('El DTE no ha sido firmado. Firme el DTE antes de transmitir.');
     }
 
+    // Start operation log for TRANSMISSION
+    let opLogId: string | undefined;
+    if (this.operationLogger) {
+      try {
+        // Extract receiver info from jsonOriginal for context
+        let receiverName: string | undefined;
+        let receiverNit: string | undefined;
+        try {
+          const parsed = typeof dte.jsonOriginal === 'string' ? JSON.parse(dte.jsonOriginal) : dte.jsonOriginal;
+          const receptor = (parsed as Record<string, unknown>).receptor as Record<string, unknown> | undefined;
+          receiverName = receptor?.nombre as string | undefined;
+          receiverNit = receptor?.numDocumento as string | undefined;
+        } catch { /* ignore */ }
+
+        opLogId = await this.operationLogger.logOperationStart(
+          dte.tenantId, dteId, 'TRANSMISSION',
+          {
+            dteType: dte.tipoDte,
+            dteNumber: dte.numeroControl,
+            emitterNit: nit,
+            receiverNit,
+            receiverName,
+            total: Number(dte.totalPagar) || undefined,
+          },
+        );
+      } catch (logErr) {
+        this.logger.warn(`DteOperationLog write failed: ${logErr instanceof Error ? logErr.message : logErr}`);
+      }
+    }
+
     // Demo mode: simulate Hacienda response
     if (this.isDemoMode(dte.tenant)) {
       this.logger.log(`[DEMO MODE] Simulating DTE transmission for ${dteId}`);
@@ -625,8 +689,15 @@ export class DteService {
           fechaRecepcion: new Date(demoResponse.fhProcesamiento),
           descripcionMh: demoResponse.observaciones?.join(', '),
           intentosEnvio: { increment: 1 },
+          lastError: null,
+          lastErrorAt: null,
+          lastErrorOperationType: null,
         },
       });
+
+      if (opLogId && this.operationLogger) {
+        await this.operationLogger.logOperationSuccess(opLogId).catch(() => {});
+      }
 
       await this.logDteAction(dteId, 'TRANSMITTED_DEMO', { response: demoResponse, demoMode: true });
 
@@ -690,8 +761,17 @@ export class DteService {
           fechaRecepcion: response.fhProcesamiento ? new Date(response.fhProcesamiento) : null,
           descripcionMh: response.observaciones?.join(', '),
           intentosEnvio: { increment: 1 },
+          // Clear previous error on success
+          lastError: null,
+          lastErrorAt: null,
+          lastErrorOperationType: null,
         },
       });
+
+      // Log transmission success
+      if (opLogId && this.operationLogger) {
+        await this.operationLogger.logOperationSuccess(opLogId).catch(() => {});
+      }
 
       await this.logDteAction(dteId, 'TRANSMITTED', { response });
 
@@ -751,20 +831,21 @@ export class DteService {
         resolvable: mapped.resolvable,
       });
 
-      // Log to DteOperationLog/DteErrorLog if tables exist
-      if (this.operationLogger) {
+      // Log to DteOperationLog/DteErrorLog + persist error on DTE record
+      if (opLogId && this.operationLogger) {
         try {
-          const opLogId = await this.operationLogger.logOperationStart(
-            dte.tenantId, dteId, 'TRANSMISSION',
-            { dteType: dte.tipoDte, dteNumber: dte.numeroControl, emitterNit: nit },
+          await this.operationLogger.logOperationError(
+            opLogId, dte.tenantId, dteId,
+            error instanceof Error ? error : errorMessage,
+            {
+              mhResponse: error instanceof MHReceptionError
+                ? { status: error.statusCode, data: { observaciones: error.observaciones } }
+                : undefined,
+            },
+            'TRANSMISSION',
           );
-          await this.operationLogger.logOperationError(opLogId, dte.tenantId, dteId, error instanceof Error ? error : errorMessage, {
-            mhResponse: error instanceof MHReceptionError
-              ? { status: error.statusCode, data: { observaciones: error.observaciones } }
-              : undefined,
-          });
         } catch (logErr) {
-          this.logger.warn(`DteOperationLog write failed (tables may not exist yet): ${logErr instanceof Error ? logErr.message : logErr}`);
+          this.logger.warn(`DteOperationLog write failed: ${logErr instanceof Error ? logErr.message : logErr}`);
         }
       }
 

@@ -27,6 +27,17 @@ import {
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
+interface DteLastError {
+  errorCode: string;
+  errorType: string;
+  userMessage: string;
+  suggestedAction: string;
+  field?: string;
+  value?: string;
+  resolvable: boolean;
+  timestamp: string;
+}
+
 interface DTEDetail {
   id: string;
   numeroControl: string;
@@ -41,6 +52,9 @@ interface DTEDetail {
   totalPagar: string | number;
   jsonOriginal: string;
   jsonFirmado?: string;
+  lastError?: string;
+  lastErrorAt?: string;
+  lastErrorOperationType?: string;
   createdAt: string;
   updatedAt: string;
   cliente?: {
@@ -552,8 +566,56 @@ export default function FacturaDetallePage() {
             </CardContent>
           </Card>
 
-          {/* Descripcion MH / Error */}
-          {dte.descripcionMh && (
+          {/* Error Detail Card - shown when DTE has lastError */}
+          {dte.lastError && dte.lastErrorAt && (() => {
+            let errorDetail: DteLastError | null = null;
+            try { errorDetail = JSON.parse(dte.lastError) as DteLastError; } catch { /* ignore */ }
+            if (!errorDetail) return null;
+            return (
+              <Card className="border-red-500/50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                    <CardTitle className="text-base text-red-600 dark:text-red-400">
+                      Error de {dte.lastErrorOperationType === 'SIGNING' ? 'Firma' : dte.lastErrorOperationType === 'VALIDATION' ? 'Validacion' : 'Transmision'}
+                    </CardTitle>
+                  </div>
+                  <CardDescription className="text-xs">
+                    {formatDateTime(dte.lastErrorAt)}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                    {errorDetail.userMessage}
+                  </p>
+
+                  {errorDetail.field && (
+                    <p className="text-xs text-muted-foreground">
+                      Campo: <code className="bg-muted px-1 py-0.5 rounded text-red-600 dark:text-red-400">{errorDetail.field}</code>
+                      {errorDetail.value && <> = <code className="bg-muted px-1 py-0.5 rounded">{errorDetail.value}</code></>}
+                    </p>
+                  )}
+
+                  <div className="text-sm bg-muted/50 p-3 rounded-lg">
+                    <span className="font-medium">Que hacer: </span>
+                    {errorDetail.suggestedAction}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <Badge variant={errorDetail.resolvable ? 'default' : 'secondary'} className="text-xs">
+                      {errorDetail.resolvable ? 'Resoluble por usuario' : 'Requiere soporte'}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs font-mono">
+                      {errorDetail.errorCode}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          {/* Descripcion MH / Error (legacy) */}
+          {dte.descripcionMh && !dte.lastError && (
             <Card className={dte.estado === 'RECHAZADO' ? 'border-red-500/50' : ''}>
               <CardHeader>
                 <CardTitle className="text-base">

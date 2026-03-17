@@ -115,6 +115,22 @@ interface DteErrorSummary {
   resolvable: number;
 }
 
+interface DteOperation {
+  id: string;
+  dteId: string;
+  dteType: string | null;
+  dteNumber: string | null;
+  operationType: string;
+  status: string;
+  timestamp: string;
+  errors: Array<{
+    id: string;
+    errorCode: string;
+    userFriendlyMessage: string | null;
+    resolvable: boolean;
+  }>;
+}
+
 export default function LogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -126,6 +142,8 @@ export default function LogsPage() {
   const [dteErrorSummary, setDteErrorSummary] = useState<DteErrorSummary | null>(null);
   const [dteErrorsTenantId, setDteErrorsTenantId] = useState('');
   const [loadingDteErrors, setLoadingDteErrors] = useState(false);
+  const [dteActiveTab, setDteActiveTab] = useState<'errors' | 'operations' | 'summary'>('errors');
+  const [dteOperations, setDteOperations] = useState<DteOperation[]>([]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -223,13 +241,15 @@ export default function LogsPage() {
       const headers = { Authorization: `Bearer ${token}` };
       const base = process.env.NEXT_PUBLIC_API_URL;
 
-      const [errorsRes, summaryRes] = await Promise.all([
+      const [errorsRes, summaryRes, opsRes] = await Promise.all([
         fetch(`${base}/super-admin/logs/tenant-errors?tenantId=${tenantId}&limit=30`, { headers }),
         fetch(`${base}/super-admin/logs/error-summary?tenantId=${tenantId}`, { headers }),
+        fetch(`${base}/super-admin/logs/operations?tenantId=${tenantId}&limit=50`, { headers }),
       ]);
 
       if (errorsRes.ok) setDteErrors(await errorsRes.json());
       if (summaryRes.ok) setDteErrorSummary(await summaryRes.json());
+      if (opsRes.ok) setDteOperations(await opsRes.json());
     } catch (err) {
       console.error('Error fetching DTE errors:', err);
     } finally {
@@ -341,18 +361,18 @@ export default function LogsPage() {
         </div>
       )}
 
-      {/* DTE Error Logs Section */}
+      {/* DTE Logs Section */}
       <div className="glass-card p-4 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-red-400" />
-            Errores DTE por Tenant
+            Logs DTE por Tenant
           </h2>
         </div>
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="Ingrese tenantId para buscar errores..."
+            placeholder="Ingrese tenantId para buscar logs DTE..."
             value={dteErrorsTenantId}
             onChange={(e) => setDteErrorsTenantId(e.target.value)}
             className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm"
@@ -362,33 +382,38 @@ export default function LogsPage() {
           </Button>
         </div>
 
-        {dteErrorSummary && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-              <div className="text-xl font-bold text-red-400">{dteErrorSummary.total}</div>
-              <div className="text-xs text-muted-foreground">Errores (7 dias)</div>
-            </div>
-            <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-              <div className="text-xl font-bold text-yellow-400">{dteErrorSummary.resolvable}</div>
-              <div className="text-xs text-muted-foreground">Resolubles</div>
-            </div>
-            {Object.entries(dteErrorSummary.byType).map(([type, count]) => (
-              <div key={type} className="p-3 rounded-lg bg-white/5 border border-white/10">
-                <div className="text-xl font-bold">{count}</div>
-                <div className="text-xs text-muted-foreground">{type}</div>
-              </div>
+        {/* Tabs */}
+        {(dteErrors.length > 0 || dteOperations.length > 0 || dteErrorSummary) && (
+          <div className="flex gap-4 border-b border-white/10">
+            {(['errors', 'operations', 'summary'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setDteActiveTab(tab)}
+                className={`px-4 py-2 font-medium border-b-2 text-sm ${
+                  dteActiveTab === tab
+                    ? 'border-purple-500 text-purple-400'
+                    : 'border-transparent text-muted-foreground hover:text-white'
+                }`}
+              >
+                {tab === 'errors' && `Errores (${dteErrors.length})`}
+                {tab === 'operations' && `Operaciones (${dteOperations.length})`}
+                {tab === 'summary' && 'Resumen'}
+              </button>
             ))}
           </div>
         )}
 
-        {dteErrors.length > 0 && (
+        {/* TAB: ERRORS */}
+        {dteActiveTab === 'errors' && dteErrors.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="text-left py-2 px-3">Fecha</th>
                   <th className="text-left py-2 px-3">Codigo</th>
+                  <th className="text-left py-2 px-3">Tipo</th>
                   <th className="text-left py-2 px-3">Mensaje</th>
+                  <th className="text-left py-2 px-3">Campo</th>
                   <th className="text-left py-2 px-3">Resoluble</th>
                 </tr>
               </thead>
@@ -403,11 +428,17 @@ export default function LogsPage() {
                         {err.errorCode}
                       </span>
                     </td>
+                    <td className="py-2 px-3 text-xs text-muted-foreground">
+                      {err.errorType}
+                    </td>
                     <td className="py-2 px-3">
                       <div>{err.userFriendlyMessage || 'Sin mensaje'}</div>
                       {err.suggestedAction && (
                         <div className="text-xs text-muted-foreground mt-1">{err.suggestedAction}</div>
                       )}
+                    </td>
+                    <td className="py-2 px-3 text-xs font-mono">
+                      {err.field || '-'}
                     </td>
                     <td className="py-2 px-3">
                       {err.resolvable ? (
@@ -420,6 +451,106 @@ export default function LogsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* TAB: OPERATIONS */}
+        {dteActiveTab === 'operations' && dteOperations.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left py-2 px-3">DTE</th>
+                  <th className="text-left py-2 px-3">Operacion</th>
+                  <th className="text-left py-2 px-3">Estado</th>
+                  <th className="text-left py-2 px-3">Fecha</th>
+                  <th className="text-left py-2 px-3">Errores</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dteOperations.map((op) => (
+                  <tr key={op.id} className="border-b border-white/5 hover:bg-white/5">
+                    <td className="py-2 px-3 font-mono text-xs">
+                      {op.dteNumber || op.dteId.slice(0, 8)}
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">
+                        {op.operationType}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className={`px-2 py-0.5 rounded text-xs ${
+                        op.status === 'SUCCESS'
+                          ? 'bg-green-500/20 text-green-400'
+                          : op.status === 'FAILED'
+                            ? 'bg-red-500/20 text-red-400'
+                            : 'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {op.status}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-muted-foreground whitespace-nowrap text-xs">
+                      {formatDate(op.timestamp)}
+                    </td>
+                    <td className="py-2 px-3">
+                      {op.errors?.length > 0 ? (
+                        <div>
+                          <span className="text-red-400 font-semibold">{op.errors.length}</span>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {op.errors[0].userFriendlyMessage || op.errors[0].errorCode}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* TAB: SUMMARY */}
+        {dteActiveTab === 'summary' && dteErrorSummary && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                <div className="text-xl font-bold text-red-400">{dteErrorSummary.total}</div>
+                <div className="text-xs text-muted-foreground">Errores (7 dias)</div>
+              </div>
+              <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                <div className="text-xl font-bold text-yellow-400">{dteErrorSummary.resolvable}</div>
+                <div className="text-xs text-muted-foreground">Resolubles</div>
+              </div>
+              {Object.entries(dteErrorSummary.byType).map(([type, count]) => (
+                <div key={type} className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-xl font-bold">{count}</div>
+                  <div className="text-xs text-muted-foreground">{type}</div>
+                </div>
+              ))}
+            </div>
+            {Object.keys(dteErrorSummary.byCode).length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-3 text-sm">Errores mas comunes</h3>
+                <div className="space-y-2">
+                  {Object.entries(dteErrorSummary.byCode)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 5)
+                    .map(([code, count]) => (
+                      <div
+                        key={code}
+                        className="flex items-center justify-between p-2 bg-white/5 rounded"
+                      >
+                        <span className="font-mono text-sm">{code}</span>
+                        <span className="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">
+                          {count}x
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

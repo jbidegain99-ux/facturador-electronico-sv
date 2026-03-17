@@ -45,6 +45,9 @@ export function createMockDte(overrides?: Partial<DTE>): DTE {
     selloAnulacion: null,
     sucursalId: null,
     puntoVentaId: null,
+    lastError: null,
+    lastErrorAt: null,
+    lastErrorOperationType: null,
     createdAt: new Date('2025-01-15T10:00:00Z'),
     ...overrides,
   };

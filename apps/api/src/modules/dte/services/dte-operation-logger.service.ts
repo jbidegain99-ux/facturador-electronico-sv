@@ -71,6 +71,7 @@ export class DteOperationLoggerService {
     dteId: string,
     error: Error | string,
     context: ErrorLogContext,
+    operationType?: 'VALIDATION' | 'SIGNING' | 'TRANSMISSION',
   ): Promise<MappedError> {
     const mappedError = this.errorMapper.mapError({
       rawError: error,
@@ -80,6 +81,18 @@ export class DteOperationLoggerService {
       mhResponse: context.mhResponse,
     });
 
+    const errorDetailJson = JSON.stringify({
+      errorCode: mappedError.errorCode,
+      errorType: mappedError.errorType,
+      userMessage: mappedError.userMessage,
+      suggestedAction: mappedError.suggestedAction,
+      field: context.field || null,
+      value: context.value || null,
+      resolvable: mappedError.resolvable,
+      timestamp: new Date().toISOString(),
+    });
+
+    // 1. Save to DteErrorLog (full audit history)
     await this.prisma.dteErrorLog.create({
       data: {
         operationLogId,
@@ -100,6 +113,21 @@ export class DteOperationLoggerService {
       },
     });
 
+    // 2. Persist error on the DTE record itself (for tenant UI display)
+    try {
+      await this.prisma.dTE.update({
+        where: { id: dteId },
+        data: {
+          lastError: errorDetailJson,
+          lastErrorAt: new Date(),
+          lastErrorOperationType: operationType || 'TRANSMISSION',
+        },
+      });
+    } catch (updateErr) {
+      this.logger.warn(`Failed to update DTE ${dteId} with lastError: ${updateErr instanceof Error ? updateErr.message : updateErr}`);
+    }
+
+    // 3. Mark operation as FAILED
     await this.prisma.dteOperationLog.update({
       where: { id: operationLogId },
       data: { status: 'FAILED' },

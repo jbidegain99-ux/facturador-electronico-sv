@@ -184,10 +184,16 @@ model DTE {
   puntoVentaId String?
   puntoVenta   PuntoVenta? @relation(fields: [puntoVentaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  // Error tracking (last error persisted for UI display)
+  lastError              String?   @db.NVarChar(Max) // JSON: {errorCode, userMessage, suggestedAction, field, value}
+  lastErrorAt            DateTime? @db.DateTime2
+  lastErrorOperationType String?   @db.NVarChar(50)  // VALIDATION, SIGNING, TRANSMISSION
+
   createdAt     DateTime       @default(now())
   logs          DTELog[]
   paymentMethod PaymentMethod?
 
+  @@index([tenantId, lastErrorAt(sort: Desc)])
   @@unique([tenantId, numeroControl])
   @@index([tenantId])
   @@index([estado])

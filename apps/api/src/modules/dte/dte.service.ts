@@ -487,9 +487,12 @@ export class DteService {
         data: {
           estado: DTEStatus.PROCESADO,
           selloRecepcion: response.selloRecibido || undefined,
-          fechaRecepcion: response.fhProcesamiento ? new Date(response.fhProcesamiento) : null,
+          fechaRecepcion: this.parseMhDate(response.fhProcesamiento),
           descripcionMh: response.observaciones?.join(', '),
           intentosEnvio: { increment: 1 },
+          lastError: null,
+          lastErrorAt: null,
+          lastErrorOperationType: null,
         },
       });
 
@@ -758,7 +761,7 @@ export class DteService {
         data: {
           estado: DTEStatus.PROCESADO,
           selloRecepcion: response.selloRecibido || undefined,
-          fechaRecepcion: response.fhProcesamiento ? new Date(response.fhProcesamiento) : null,
+          fechaRecepcion: this.parseMhDate(response.fhProcesamiento),
           descripcionMh: response.observaciones?.join(', '),
           intentosEnvio: { increment: 1 },
           // Clear previous error on success
@@ -2069,6 +2072,25 @@ export class DteService {
       extension: data.extension ?? null,
       apendice: data.apendice ?? null,
     };
+  }
+
+  /**
+   * Parse MH date format "DD/MM/YYYY HH:mm:ss" to Date object.
+   * Falls back to current date if parsing fails.
+   */
+  private parseMhDate(fhProcesamiento: string | null | undefined): Date | null {
+    if (!fhProcesamiento) return null;
+    // Try ISO format first (already valid)
+    const isoDate = new Date(fhProcesamiento);
+    if (!isNaN(isoDate.getTime())) return isoDate;
+    // Try DD/MM/YYYY HH:mm:ss format from MH
+    const match = fhProcesamiento.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
+    if (match) {
+      const [, day, month, year, hours, minutes, seconds] = match;
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds));
+    }
+    this.logger.warn(`Could not parse MH date: ${fhProcesamiento}, using current time`);
+    return new Date();
   }
 
   private async resolveAmbiente(tenantId: string): Promise<'00' | '01'> {

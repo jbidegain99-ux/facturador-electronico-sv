@@ -1982,14 +1982,87 @@ export class DteService {
       };
     }
 
-    // === Factura (01) - just add emisor and null fields if missing ===
+    // === Factura (01) - normalize receptor, resumen, and null fields ===
+
+    // Parse receptor.direccion if it's a JSON string
+    let receptorDireccion01 = receptor.direccion;
+    if (typeof receptorDireccion01 === 'string') {
+      try {
+        receptorDireccion01 = JSON.parse(receptorDireccion01);
+      } catch {
+        receptorDireccion01 = { departamento: '06', municipio: '14', complemento: receptorDireccion01 };
+      }
+    }
+    if (!receptorDireccion01 || typeof receptorDireccion01 !== 'object' || !(receptorDireccion01 as Record<string, unknown>).departamento) {
+      receptorDireccion01 = { departamento: '06', municipio: '14', complemento: String(receptorDireccion01 || '') };
+    }
+
+    // Normalize receptor for Factura (01) - uses nullable fields
+    const receptorNit01 = ((receptor.nit as string) || (receptor.numDocumento as string) || '').replace(/-/g, '');
+    const normalizedReceptor01 = {
+      tipoDocumento: (receptor.tipoDocumento as string) || null,
+      numDocumento: receptorNit01 || null,
+      nrc: receptor.nrc ? ((receptor.nrc as string) || '').replace(/-/g, '') : null,
+      nombre: (receptor.nombre as string) || null,
+      codActividad: (receptor.codActividad as string) || null,
+      descActividad: (receptor.descActividad as string) || null,
+      direccion: receptorDireccion01,
+      telefono: (receptor.telefono as string) || null,
+      correo: (receptor.correo as string) || null,
+    };
+
+    // Normalize resumen: ensure totalLetras and pagos
+    const totalPagar01 = Number(resumen.totalPagar) || Number(resumen.montoTotalOperacion) || 0;
+    const totalPagarRounded = Math.round(totalPagar01 * 100) / 100;
+    const normalizedResumen01 = {
+      ...resumen,
+      totalGravada: Math.round((Number(resumen.totalGravada) || 0) * 100) / 100,
+      subTotalVentas: Math.round((Number(resumen.subTotalVentas) || Number(resumen.totalGravada) || 0) * 100) / 100,
+      subTotal: Math.round((Number(resumen.subTotal) || Number(resumen.totalGravada) || 0) * 100) / 100,
+      totalIva: Math.round((Number(resumen.totalIva) || 0) * 100) / 100,
+      montoTotalOperacion: totalPagarRounded,
+      totalPagar: totalPagarRounded,
+      totalLetras: (resumen.totalLetras as string) || numberToWords(totalPagarRounded),
+      condicionOperacion: Number(resumen.condicionOperacion) || 1,
+      pagos: resumen.pagos ?? [{ codigo: '01', montoPago: totalPagarRounded, referencia: null, plazo: null, periodo: null }],
+    };
+
+    // Normalize cuerpoDocumento items for tipo 01
+    const normalizedCuerpo01 = cuerpoDocumento.map((item, index) => {
+      const cantidad = Number(item.cantidad) || 1;
+      const precioUni = Number(item.precioUni) || 0;
+      const ventaGravada = Math.round((Number(item.ventaGravada) || cantidad * precioUni) * 100) / 100;
+      const ivaItem = Math.round((Number(item.ivaItem) || ventaGravada * 0.13) * 100) / 100;
+      return {
+        numItem: item.numItem || index + 1,
+        tipoItem: Number(item.tipoItem) || 1,
+        numero: item.numero ?? null,
+        cantidad,
+        codigo: item.codigo || null,
+        codTributo: item.codTributo ?? null,
+        uniMedida: Number(item.uniMedida) || 59,
+        descripcion: (item.descripcion as string) || 'Servicio',
+        precioUni: Math.round(precioUni * 100) / 100,
+        montoDescu: Math.round((Number(item.montoDescu) || 0) * 100) / 100,
+        ventaNoSuj: Math.round((Number(item.ventaNoSuj) || 0) * 100) / 100,
+        ventaExenta: Math.round((Number(item.ventaExenta) || 0) * 100) / 100,
+        ventaGravada,
+        tributos: item.tributos ?? null,
+        psv: item.psv ?? 0,
+        noGravado: item.noGravado ?? 0,
+        ivaItem,
+      };
+    });
+
     return {
-      ...data,
       identificacion: {
         ...identificacion,
         motivoContin: identificacion.motivoContin ?? null,
       },
-      emisor: data.emisor || emisor,
+      emisor,
+      receptor: normalizedReceptor01,
+      cuerpoDocumento: normalizedCuerpo01,
+      resumen: normalizedResumen01,
       documentoRelacionado: data.documentoRelacionado ?? null,
       otrosDocumentos: data.otrosDocumentos ?? null,
       ventaTercero: data.ventaTercero ?? null,

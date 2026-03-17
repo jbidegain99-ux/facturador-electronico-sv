@@ -34,6 +34,7 @@ interface Cliente {
   numDocumento: string;
   nombre: string;
   nrc?: string;
+  nrcDisplay?: string;
   correo?: string;
   telefono?: string;
   direccion: {
@@ -107,7 +108,10 @@ function formatDui(value: string): string {
 
 function formatNrc(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 8);
-  if (digits.length <= 7) return digits;
+  // Auto-format when user reaches 7 digits: XXXXXX-X
+  if (digits.length <= 6) return digits;
+  if (digits.length === 7) return `${digits.slice(0, 6)}-${digits.slice(6)}`;
+  // 8 digits: XXXXXXX-X (strip leading zero on submit, backend handles normalization)
   return `${digits.slice(0, 7)}-${digits.slice(7)}`;
 }
 
@@ -326,7 +330,7 @@ export default function ClientesPage() {
       tipoDocumento: cliente.tipoDocumento,
       numDocumento: cliente.numDocumento,
       nombre: cliente.nombre,
-      nrc: cliente.nrc || '',
+      nrc: cliente.nrcDisplay || cliente.nrc || '',
       correo: cliente.correo || '',
       telefono: cliente.telefono || '',
       direccion: parsedDireccion,
@@ -578,8 +582,8 @@ export default function ClientesPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {cliente.nrc ? (
-                            <span className="font-mono text-sm">{cliente.nrc}</span>
+                          {(cliente.nrcDisplay || cliente.nrc) ? (
+                            <span className="font-mono text-sm">{cliente.nrcDisplay || cliente.nrc}</span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
@@ -703,7 +707,7 @@ export default function ClientesPage() {
               <div className="space-y-1">
                 <label className="text-sm font-medium">NRC</label>
                 <Input
-                  placeholder="0000000-0"
+                  placeholder="367475-0"
                   value={formData.nrc}
                   onChange={(e) => handleFormChange('nrc', e.target.value)}
                   maxLength={10}
@@ -712,7 +716,7 @@ export default function ClientesPage() {
                 {fieldErrors.nrc && (
                   <p className="text-xs text-red-500">{fieldErrors.nrc}</p>
                 )}
-                <p className="text-xs text-muted-foreground">7 u 8 digitos, se normaliza automaticamente</p>
+                <p className="text-xs text-muted-foreground">7 digitos (ej: 367475-0). Se normaliza automaticamente</p>
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">{t('phoneLabel')}</label>

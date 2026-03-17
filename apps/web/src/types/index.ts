@@ -25,6 +25,7 @@ export interface Cliente {
   tipoDocumento: '36' | '13' | '02' | '03' | '37';
   numDocumento: string;
   nrc?: string;
+  nrcDisplay?: string;
   nombre: string;
   codActividad?: string;
   descActividad?: string;

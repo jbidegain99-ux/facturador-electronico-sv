@@ -549,9 +549,9 @@ export function NuevoClienteModal({
           tipoDocumento: formData.tipoDocumento,
           numDocumento: numDocFinal,
           nombre: nombreFinal,
-          // NRC solo para Crédito Fiscal (normalizado)
+          // NRC solo para Crédito Fiscal (send raw digits for backend to normalize)
           nrc: esCreditoFiscal && formData.nrc.trim()
-            ? (NrcValidator.validate(formData.nrc).formatted || formData.nrc.trim())
+            ? (NrcValidator.validate(formData.nrc).storage || formData.nrc.trim())
             : undefined,
           telefono: formData.telefono.trim() || undefined,
           correo: formData.correo.trim() || undefined,
@@ -734,22 +734,22 @@ export function NuevoClienteModal({
                   onBlur={() => {
                     if (formData.nrc.trim()) {
                       const result = NrcValidator.validate(formData.nrc);
-                      if (result.isValid && result.formatted) {
-                        setFormData((prev) => ({ ...prev, nrc: result.formatted! }));
+                      if (result.isValid && result.display) {
+                        setFormData((prev) => ({ ...prev, nrc: result.display! }));
                         setErrors((prev) => ({ ...prev, nrc: undefined }));
                       } else if (!result.isValid) {
                         setErrors((prev) => ({ ...prev, nrc: result.error }));
                       }
                     }
                   }}
-                  placeholder="1234567-8 o 234567-8"
+                  placeholder="367475-0"
                 />
                 {errors.nrc && <p className="text-xs text-destructive">{errors.nrc}</p>}
                 {formData.nrc.trim() && !errors.nrc && NrcValidator.validate(formData.nrc).isValid && (
-                  <p className="text-xs text-green-600">NRC valido</p>
+                  <p className="text-xs text-green-600">NRC valido: {NrcValidator.validate(formData.nrc).display}</p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  7 u 8 digitos - se normaliza automaticamente
+                  7 digitos (ej: 367475-0). Se normaliza automaticamente
                 </p>
               </div>
 

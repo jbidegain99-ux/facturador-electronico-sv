@@ -28,7 +28,7 @@ export class ClientesService {
   async create(tenantId: string, createClienteDto: CreateClienteDto) {
     this.logger.log(`Creating cliente for tenant ${tenantId}`);
 
-    // Validate and normalize NRC if provided
+    // Validate and normalize NRC if provided - store as raw digits (no hyphen)
     let normalizedNrc: string | undefined;
     if (createClienteDto.nrc) {
       const nrcValidation = NrcValidator.validate(createClienteDto.nrc);
@@ -38,7 +38,7 @@ export class ClientesService {
           message: nrcValidation.error,
         });
       }
-      normalizedNrc = nrcValidation.formatted ?? undefined;
+      normalizedNrc = nrcValidation.storage ?? undefined;
     }
 
     // Check if client with same document already exists for this tenant
@@ -70,7 +70,7 @@ export class ClientesService {
     });
 
     this.logger.log(`Cliente ${cliente.id} created successfully`);
-    return cliente;
+    return this.withNrcDisplay(cliente);
   }
 
   async findAll(tenantId: string, query?: PaginationQueryDto): Promise<PaginatedResponse<Cliente>> {
@@ -107,7 +107,7 @@ export class ClientesService {
     this.logger.log(`Found ${total} clientes, returning ${data.length} results (page ${page})`);
 
     return {
-      data,
+      data: data.map(c => this.withNrcDisplay(c)),
       total,
       page,
       limit,
@@ -127,7 +127,18 @@ export class ClientesService {
       throw new NotFoundException('Cliente no encontrado');
     }
 
-    return cliente;
+    return this.withNrcDisplay(cliente);
+  }
+
+  /**
+   * Adds nrcDisplay (formatted with hyphen) to a client record for UI display.
+   * Storage NRC is raw digits; display is XXXXXX-X.
+   */
+  private withNrcDisplay<T extends { nrc: string | null }>(cliente: T): T & { nrcDisplay: string | null } {
+    return {
+      ...cliente,
+      nrcDisplay: cliente.nrc ? NrcValidator.toDisplay(cliente.nrc) : null,
+    };
   }
 
   async update(tenantId: string, id: string, updateClienteDto: UpdateClienteDto) {
@@ -154,7 +165,7 @@ export class ClientesService {
 
     const updateData: Record<string, unknown> = { ...updateClienteDto };
 
-    // Normalize NRC if provided
+    // Normalize NRC if provided - store as raw digits (no hyphen)
     if (updateClienteDto.nrc) {
       const nrcValidation = NrcValidator.validate(updateClienteDto.nrc);
       if (!nrcValidation.isValid) {
@@ -163,7 +174,7 @@ export class ClientesService {
           message: nrcValidation.error,
         });
       }
-      updateData.nrc = nrcValidation.formatted;
+      updateData.nrc = nrcValidation.storage;
     }
 
     if (updateClienteDto.direccion) {
@@ -177,7 +188,7 @@ export class ClientesService {
     });
 
     this.logger.log(`Cliente ${id} updated successfully`);
-    return cliente;
+    return this.withNrcDisplay(cliente);
   }
 
   async remove(tenantId: string, id: string) {

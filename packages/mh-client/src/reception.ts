@@ -94,7 +94,7 @@ export async function sendDTE(
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': token,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
@@ -171,7 +171,7 @@ export async function consultarDTE(
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': token,
         'Content-Type': 'application/json',
       },
       signal: controller.signal,
@@ -225,7 +225,7 @@ export async function anularDTE(
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': token,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
@@ -291,7 +291,7 @@ export async function sendContingencia(
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': token,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

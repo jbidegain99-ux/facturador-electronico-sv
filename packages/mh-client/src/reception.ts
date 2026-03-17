@@ -103,7 +103,18 @@ export async function sendDTE(
 
     clearTimeout(timeoutId);
 
-    const data: MHRecepcionResponse = await response.json();
+    // Read raw text first to diagnose empty/non-JSON responses from MH
+    const rawText = await response.text();
+
+    let data: MHRecepcionResponse;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      throw new MHReceptionError(
+        `MH returned invalid JSON (HTTP ${response.status}): ${rawText.substring(0, 200)}`,
+        response.status,
+      );
+    }
 
     if (!response.ok) {
       throw new MHReceptionError(

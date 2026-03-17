@@ -902,7 +902,7 @@ export class DteService {
     const correoReceptor = receptor?.correo as string | undefined;
 
     if (!correoReceptor) {
-      this.logger.debug(`No receptor email for DTE ${dte.id}, skipping email`);
+      this.logger.warn(`No receptor email for DTE ${dte.id} (${dte.numeroControl}), skipping email`);
       return;
     }
 

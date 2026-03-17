@@ -107,15 +107,23 @@ export class QuoteEmailService {
       });
     }
 
-    // Notify tenant users
-    const tenantUsers = await this.prisma.user.findMany({
-      where: { tenantId: quote.tenantId },
-      select: { email: true },
-      take: 5,
-    });
+    // Notify quote creator (or first tenant user as fallback)
+    const creator = quote.createdBy
+      ? await this.prisma.user.findUnique({
+          where: { id: quote.createdBy },
+          select: { email: true },
+        })
+      : null;
 
-    const recipientEmail =
-      tenantUsers[0]?.email || quote.clienteEmail || '';
+    let recipientEmail = creator?.email || '';
+    if (!recipientEmail) {
+      const firstUser = await this.prisma.user.findFirst({
+        where: { tenantId: quote.tenantId },
+        select: { email: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      recipientEmail = firstUser?.email || quote.clienteEmail || '';
+    }
 
     const { html, text } = quoteApprovedTenantTemplate({
       quoteNumber: quote.quoteNumber,
@@ -137,15 +145,23 @@ export class QuoteEmailService {
   }
 
   async notifyQuoteRejection(quote: Quote): Promise<boolean> {
-    // Get tenant users to notify
-    const tenantUsers = await this.prisma.user.findMany({
-      where: { tenantId: quote.tenantId },
-      select: { email: true },
-      take: 5,
-    });
+    // Notify quote creator (or first tenant user as fallback)
+    const creator = quote.createdBy
+      ? await this.prisma.user.findUnique({
+          where: { id: quote.createdBy },
+          select: { email: true },
+        })
+      : null;
 
-    const recipientEmail =
-      tenantUsers[0]?.email || quote.clienteEmail || '';
+    let recipientEmail = creator?.email || '';
+    if (!recipientEmail) {
+      const firstUser = await this.prisma.user.findFirst({
+        where: { tenantId: quote.tenantId },
+        select: { email: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      recipientEmail = firstUser?.email || quote.clienteEmail || '';
+    }
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
 
     const { html, text } = quoteRejectedTemplate({
@@ -174,15 +190,23 @@ export class QuoteEmailService {
       .filter((li) => removedItemIds.includes(li.id))
       .map((li) => li.description);
 
-    // Get tenant users to notify
-    const tenantUsers = await this.prisma.user.findMany({
-      where: { tenantId: quote.tenantId },
-      select: { email: true },
-      take: 5,
-    });
+    // Notify quote creator (or first tenant user as fallback)
+    const creator = quote.createdBy
+      ? await this.prisma.user.findUnique({
+          where: { id: quote.createdBy },
+          select: { email: true },
+        })
+      : null;
 
-    const recipientEmail =
-      tenantUsers[0]?.email || quote.clienteEmail || '';
+    let recipientEmail = creator?.email || '';
+    if (!recipientEmail) {
+      const firstUser = await this.prisma.user.findFirst({
+        where: { tenantId: quote.tenantId },
+        select: { email: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      recipientEmail = firstUser?.email || quote.clienteEmail || '';
+    }
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
     const quoteLink = `${frontendUrl}/cotizaciones/${quote.id}`;

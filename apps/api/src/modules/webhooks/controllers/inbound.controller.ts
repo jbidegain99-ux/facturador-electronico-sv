@@ -145,10 +145,12 @@ export class InboundWebhooksController {
 
     try {
       // 6. Build the DTE data structure expected by DteService.createDte()
+      // Wellnest prices already include 13% IVA — must desglose, not add on top
       const discount = payload.discountApplied ?? 0;
-      const ventaGravada = payload.amount - discount;
+      const precioConIva = payload.amount - discount;
       const ivaRate = 0.13;
-      const totalIva = Math.round(ventaGravada * ivaRate * 100) / 100;
+      const ventaGravada = Math.round((precioConIva / (1 + ivaRate)) * 100) / 100;
+      const totalIva = Math.round((precioConIva - ventaGravada) * 100) / 100;
       const totalPagar = Math.round((ventaGravada + totalIva) * 100) / 100;
 
       const now = new Date(payload.purchaseDate || Date.now());
@@ -195,9 +197,10 @@ export class InboundWebhooksController {
             cantidad: 1,
             codigo: payload.packageId,
             descripcion: `Paquete de ${payload.creditsTotal} clases - Wellnest Studio`,
-            precioUni: payload.amount,
-            montoDescu: discount,
+            precioUni: Math.round((payload.amount / (1 + ivaRate)) * 100) / 100,
+            montoDescu: Math.round((discount / (1 + ivaRate)) * 100) / 100,
             ventaGravada,
+            ivaItem: totalIva,
             noGravado: 0,
           },
         ],

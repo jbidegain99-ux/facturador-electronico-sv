@@ -276,3 +276,80 @@ Time:     6.503s
 ## RECOMENDACIÓN
 
 All fixes verified through code review, TypeScript compilation, and 61 passing unit tests. **DOCUMENT READY FOR CLOSURE.** Recommend running E2E validation when Azure SQL firewall is updated to allow current IP.
+
+---
+
+## Wellnest IVA Desglose Fix (2026-03-19)
+
+### Problem
+
+Wellnest sends `amount` (package price) via webhook to Facturador. This price **already includes 13% IVA**, but the webhook handler was treating it as a net price and adding 13% IVA on top.
+
+| | Before (wrong) | After (correct) |
+|---|---|---|
+| Input amount | $15.00 (IVA included) | $15.00 (IVA included) |
+| precioUni | $15.00 | $13.27 |
+| ventaGravada | $15.00 | $13.27 |
+| ivaItem | $1.95 | $1.73 |
+| totalIva | $1.95 | $1.73 |
+| totalPagar | $16.95 | $15.00 |
+
+**Formula:** `neto = precio_con_iva / 1.13`, `iva = precio_con_iva - neto`, `total = neto + iva = precio_con_iva`
+
+### Changes
+
+#### Prospective Fix: `apps/api/src/modules/webhooks/controllers/inbound.controller.ts`
+
+**Before (lines 148-152):**
+```typescript
+const ventaGravada = payload.amount - discount;
+const totalIva = Math.round(ventaGravada * ivaRate * 100) / 100;
+const totalPagar = Math.round((ventaGravada + totalIva) * 100) / 100;
+// precioUni: payload.amount
+// montoDescu: discount
+```
+
+**After:**
+```typescript
+const precioConIva = payload.amount - discount;
+const ventaGravada = Math.round((precioConIva / (1 + ivaRate)) * 100) / 100;
+const totalIva = Math.round((precioConIva - ventaGravada) * 100) / 100;
+const totalPagar = Math.round((ventaGravada + totalIva) * 100) / 100;
+// precioUni: Math.round((payload.amount / (1 + ivaRate)) * 100) / 100
+// montoDescu: Math.round((discount / (1 + ivaRate)) * 100) / 100
+// ivaItem: totalIva  (NEW — explicit IVA desglosado)
+```
+
+#### Retroactive Script: `apps/api/scripts/fix-wellnest-iva-desglose.ts`
+
+```bash
+# Dry run first
+cd apps/api && DRY_RUN=true npx ts-node -r dotenv/config scripts/fix-wellnest-iva-desglose.ts
+
+# Live run
+npx ts-node -r dotenv/config scripts/fix-wellnest-iva-desglose.ts
+```
+
+### Verification Examples
+
+| Package Price | precioUni | ventaGravada | ivaItem | totalPagar | Valid? |
+|---|---|---|---|---|---|
+| $15.00 | 13.27 | 13.27 | 1.73 | 15.00 | ✅ 13.27+1.73=15.00 |
+| $25.00 | 22.12 | 22.12 | 2.88 | 25.00 | ✅ 22.12+2.88=25.00 |
+| $40.00 (-$4) | 35.40 | 31.86 | 4.14 | 36.00 | ✅ 31.86+4.14=36.00 |
+
+### Impact Assessment
+
+- **Other tenants:** NOT affected — fix scoped to Wellnest webhook only
+- **Other DTE types:** NOT affected — only tipo 01 Factura from webhook
+- **DTE transmission:** None sent to Hacienda (no credentials configured)
+- **Normalizer compatibility:** `normalizeJsonForHacienda()` uses provided `ivaItem` if present (line 2038), so explicit value prevents double calc
+
+### Execution Checklist
+
+- [ ] Run correction script DRY_RUN mode
+- [ ] Review output
+- [ ] Run correction script LIVE mode
+- [ ] Deploy updated webhook handler
+- [ ] Trigger test webhook to verify
+- [ ] Confirm totalPagar = original amount sent from Wellnest

@@ -106,7 +106,7 @@ export function TotalesCard({
 
       {/* Payment condition */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-muted-foreground">Condicion de pago:</label>
+        <label className="text-sm font-medium text-muted-foreground">Condición de pago:</label>
         <Select value={condicionPago} onValueChange={onCondicionPagoChange} disabled={disabled}>
           <SelectTrigger className="w-full input-rc">
             <SelectValue placeholder="Seleccionar condicion" />

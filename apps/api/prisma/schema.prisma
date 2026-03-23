@@ -16,7 +16,7 @@ model Tenant {
   actividadEcon   String
   direccion       String    @db.NVarChar(Max)
   telefono        String
-  correo          String
+  correo          String    @unique
   nombreComercial String?
   certificatePath String?
   mhToken         String?   @db.NVarChar(Max)

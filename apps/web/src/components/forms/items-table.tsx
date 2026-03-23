@@ -85,12 +85,12 @@ export function ItemsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-24">Codigo</TableHead>
-            <TableHead>Descripcion</TableHead>
+            <TableHead className="w-24">Código</TableHead>
+            <TableHead>Descripción</TableHead>
             <TableHead className="w-24 text-right">Cantidad</TableHead>
             <TableHead className="w-32 text-right">Precio Unit.</TableHead>
             <TableHead className="w-32 text-right">Subtotal</TableHead>
-            <TableHead className="w-28 text-right">IVA</TableHead>
+            <TableHead className="w-28 text-right">IVA (13%)</TableHead>
             <TableHead className="w-32 text-right">Total</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>

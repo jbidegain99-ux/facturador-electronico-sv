@@ -23,6 +23,8 @@ interface ClienteSearchProps {
   onCreateNew: () => void;
   disabled?: boolean;
   tipoDte?: string;
+  /** When true, hides Consumidor Final option (e.g. for quotes) */
+  hideConsumidorFinal?: boolean;
 }
 
 const RECENT_CLIENTS_PREFIX = 'factura-recent-clients';
@@ -79,6 +81,7 @@ export function ClienteSearch({
   onCreateNew,
   disabled = false,
   tipoDte = '01',
+  hideConsumidorFinal = false,
 }: ClienteSearchProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
@@ -159,13 +162,13 @@ export function ClienteSearch({
         results.forEach((cliente) => options.push({ type: 'cliente', data: cliente }));
       }
 
-      // Always show Consumidor Final if matches
-      if ('consumidor final'.includes(search.toLowerCase()) && tipoDte === '01') {
+      // Always show Consumidor Final if matches (not in quotes or when explicitly hidden)
+      if (!hideConsumidorFinal && 'consumidor final'.includes(search.toLowerCase()) && tipoDte === '01') {
         options.push({ type: 'cliente', data: CONSUMIDOR_FINAL });
       }
     } else {
-      // No search - show Consumidor Final for Factura (01)
-      if (tipoDte === '01') {
+      // No search - show Consumidor Final for Factura (01), unless hidden
+      if (!hideConsumidorFinal && tipoDte === '01') {
         options.push({ type: 'cliente', data: CONSUMIDOR_FINAL });
       }
 

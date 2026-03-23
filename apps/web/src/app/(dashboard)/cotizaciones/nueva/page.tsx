@@ -436,6 +436,7 @@ export default function NuevaCotizacionPage() {
               onChange={handleClienteChange}
               onCreateNew={() => setShowNuevoCliente(true)}
               tipoDte="01"
+              hideConsumidorFinal
             />
             {errors.cliente && (
               <p className="text-xs text-destructive">{errors.cliente}</p>

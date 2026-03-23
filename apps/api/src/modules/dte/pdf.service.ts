@@ -73,11 +73,11 @@ export class PdfService {
   private getTipoDteLabel(tipoDte: string): string {
     const tipos: Record<string, string> = {
       '01': 'Factura',
-      '03': 'Comprobante de Credito Fiscal',
-      '05': 'Nota de Credito',
-      '06': 'Nota de Debito',
-      '07': 'Comprobante de Retencion',
-      '11': 'Factura de Exportacion',
+      '03': 'Comprobante de Crédito Fiscal',
+      '05': 'Nota de Crédito',
+      '06': 'Nota de Débito',
+      '07': 'Comprobante de Retención',
+      '11': 'Factura de Exportación',
       '14': 'Factura de Sujeto Excluido',
     };
     return tipos[tipoDte] || `DTE ${tipoDte}`;
@@ -120,6 +120,10 @@ export class PdfService {
       parts.push(direccion.complemento);
     }
 
+    if (direccion.municipio) {
+      parts.push(direccion.municipio);
+    }
+
     const deptoName = direccion.departamento ? (DEPARTAMENTOS[direccion.departamento] || direccion.departamento) : '';
     if (deptoName) {
       parts.push(deptoName);
@@ -133,15 +137,18 @@ export class PdfService {
    * Parse tenant.direccion which may be a JSON string or structured object.
    */
   private parseTenantDireccion(direccion?: string): string {
-    if (!direccion) return '';
+    if (!direccion) return 'N/A';
     try {
       const parsed = JSON.parse(direccion);
       if (typeof parsed === 'object' && parsed !== null) {
-        return this.formatDireccion(parsed as { departamento?: string; municipio?: string; complemento?: string });
+        const dir = parsed as { departamento?: string; municipio?: string; complemento?: string };
+        const result = this.formatDireccion(dir);
+        return result || 'N/A';
       }
-      return direccion;
+      return direccion || 'N/A';
     } catch {
-      return direccion;
+      // If not JSON, return as plain string
+      return direccion || 'N/A';
     }
   }
 
@@ -170,12 +177,24 @@ export class PdfService {
     // Fallback to ivaRete1
     if (typeof resumen.ivaRete1 === 'number' && resumen.ivaRete1 > 0) return resumen.ivaRete1;
 
-    // Calculate from totalGravada if all else fails
-    if (typeof resumen.totalGravada === 'number' && resumen.totalGravada > 0 && typeof resumen.montoTotalOperacion === 'number') {
-      const subTotal = (resumen.totalGravada || 0) + (resumen.totalExenta || 0) + (resumen.totalNoSuj || 0);
-      if (resumen.montoTotalOperacion > subTotal) {
-        return Math.round((resumen.montoTotalOperacion - subTotal) * 100) / 100;
+    // Calculate IVA from individual items (sum of ivaItem)
+    const cuerpoDocumento = (data as { cuerpoDocumento?: CuerpoDocumento[] })?.cuerpoDocumento;
+    if (Array.isArray(cuerpoDocumento)) {
+      const totalIvaItems = cuerpoDocumento.reduce((sum, item) => sum + (item.ivaItem || 0), 0);
+      if (totalIvaItems > 0) return Math.round(totalIvaItems * 100) / 100;
+    }
+
+    // Calculate from totalGravada (13% standard IVA)
+    if (typeof resumen.totalGravada === 'number' && resumen.totalGravada > 0) {
+      // Try difference method first
+      if (typeof resumen.montoTotalOperacion === 'number') {
+        const subTotal = (resumen.totalGravada || 0) + (resumen.totalExenta || 0) + (resumen.totalNoSuj || 0);
+        if (resumen.montoTotalOperacion > subTotal) {
+          return Math.round((resumen.montoTotalOperacion - subTotal) * 100) / 100;
+        }
       }
+      // Fallback: calculate 13% of totalGravada
+      return Math.round(resumen.totalGravada * 0.13 * 100) / 100;
     }
 
     return 0;
@@ -286,10 +305,10 @@ export class PdfService {
       [
         { text: '#', style: 'tableHeader', alignment: 'center' },
         { text: 'Cant.', style: 'tableHeader', alignment: 'center' },
-        { text: 'Descripcion', style: 'tableHeader' },
+        { text: 'Descripción', style: 'tableHeader' },
         { text: 'Precio Unit.', style: 'tableHeader', alignment: 'right' },
         { text: 'Gravado', style: 'tableHeader', alignment: 'right' },
-        { text: 'IVA', style: 'tableHeader', alignment: 'right' },
+        { text: 'IVA (13%)', style: 'tableHeader', alignment: 'right' },
       ],
     ];
 
@@ -336,7 +355,7 @@ export class PdfService {
             stack: [
               { text: this.getTipoDteLabel(dte.tipoDte), style: 'header', alignment: 'right' },
               { text: `No. Control: ${dte.numeroControl}`, alignment: 'right', bold: true },
-              { text: `Codigo: ${dte.codigoGeneracion}`, alignment: 'right', style: 'small' },
+              { text: `Código: ${dte.codigoGeneracion}`, alignment: 'right', style: 'small' },
               { text: `Fecha: ${this.formatDate(dte.createdAt)}`, alignment: 'right' },
               {
                 text: `Estado: ${this.getEstadoLabel(dte.estado)}`,
@@ -370,8 +389,8 @@ export class PdfService {
           {
             width: '*',
             stack: [
-              { text: `Direccion: ${this.formatDireccion(receptor.direccion)}`, style: 'small' },
-              { text: `Telefono: ${receptor.telefono || 'N/A'}`, style: 'small' },
+              { text: `Dirección: ${this.formatDireccion(receptor.direccion)}`, style: 'small' },
+              { text: `Teléfono: ${receptor.telefono || 'N/A'}`, style: 'small' },
               { text: `Correo: ${receptor.correo || 'N/A'}`, style: 'small' },
             ],
           },
@@ -431,8 +450,8 @@ export class PdfService {
       dte.selloRecibido ? {
         margin: [0, 30, 0, 0],
         stack: [
-          { text: 'INFORMACION DE HACIENDA', style: 'subheader' },
-          { text: `Sello de Recepcion: ${dte.selloRecibido}`, style: 'small' },
+          { text: 'INFORMACIÓN DE HACIENDA', style: 'subheader' },
+          { text: `Sello de Recepción: ${dte.selloRecibido}`, style: 'small' },
           { text: `Fecha Procesamiento: ${dte.fhProcesamiento ? this.formatDate(dte.fhProcesamiento) : 'N/A'}`, style: 'small' },
           ...(isDemoMode ? [{ text: 'Este documento fue generado en MODO DEMO y no tiene validez fiscal.', color: '#dc2626', fontSize: 9, margin: [0, 5, 0, 0] as [number, number, number, number] }] : []),
         ],
@@ -447,7 +466,7 @@ export class PdfService {
             width: 'auto',
             stack: [
               { image: qrDataUrl, width: 120, height: 120, alignment: 'center' as const },
-              { text: 'Consulta publica - Ministerio de Hacienda', style: 'small', alignment: 'center' as const, margin: [0, 4, 0, 0] as [number, number, number, number] },
+              { text: 'Consulta pública - Ministerio de Hacienda', style: 'small', alignment: 'center' as const, margin: [0, 4, 0, 0] as [number, number, number, number] },
             ],
           },
           { width: '*', text: '' },
@@ -465,8 +484,8 @@ export class PdfService {
       pageMargins: [40, 40, 40, 60],
       footer: (currentPage: number, pageCount: number) => ({
         columns: [
-          { text: isDemoMode ? 'DOCUMENTO DE PRUEBA - SIN VALIDEZ FISCAL' : 'Documento Tributario Electronico', alignment: 'left', style: 'small', margin: [40, 0, 0, 0] },
-          { text: `Pagina ${currentPage} de ${pageCount}`, alignment: 'right', style: 'small', margin: [0, 0, 40, 0] },
+          { text: isDemoMode ? 'DOCUMENTO DE PRUEBA - SIN VALIDEZ FISCAL' : 'Documento Tributario Electrónico', alignment: 'left', style: 'small', margin: [40, 0, 0, 0] },
+          { text: `Página ${currentPage} de ${pageCount}`, alignment: 'right', style: 'small', margin: [0, 0, 40, 0] },
         ],
       }),
     };

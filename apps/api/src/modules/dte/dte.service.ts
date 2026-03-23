@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException, Optional, Inject, forwardRef, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException, BadGatewayException, Optional, Inject, forwardRef, ForbiddenException } from '@nestjs/common';
 declare global {
   interface String {
     hashCode(): number;
@@ -798,7 +798,7 @@ export class DteService {
       return updated;
     } catch (error) {
       // Re-throw NestJS HTTP exceptions as-is (e.g. InternalServerErrorException from JSON parse)
-      if (error instanceof InternalServerErrorException || error instanceof BadRequestException || error instanceof NotFoundException) {
+      if (error instanceof InternalServerErrorException || error instanceof BadRequestException || error instanceof NotFoundException || error instanceof BadGatewayException) {
         throw error;
       }
 
@@ -872,6 +872,26 @@ export class DteService {
           observaciones: error.observaciones,
         });
       }
+
+      // Classify network/timeout errors as 502 Bad Gateway instead of generic 500
+      const isNetworkError = errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('ETIMEDOUT') ||
+        errorMessage.includes('ENOTFOUND') ||
+        errorMessage.includes('fetch failed') ||
+        errorMessage.includes('network');
+      const isTimeoutError = errorMessage.includes('timeout') || errorMessage.includes('TIMEOUT');
+
+      if (isNetworkError || isTimeoutError) {
+        throw new BadGatewayException({
+          message: isTimeoutError
+            ? 'El Ministerio de Hacienda no respondió a tiempo. Intente nuevamente en unos minutos.'
+            : 'No se pudo conectar con el Ministerio de Hacienda. Verifique su conexión e intente nuevamente.',
+          suggestedAction: mapped.suggestedAction,
+          resolvable: true,
+          errorCode: isTimeoutError ? 'MH_TIMEOUT' : 'MH_UNREACHABLE',
+        });
+      }
+
       throw new InternalServerErrorException({
         message: mapped.userMessage,
         suggestedAction: mapped.suggestedAction,

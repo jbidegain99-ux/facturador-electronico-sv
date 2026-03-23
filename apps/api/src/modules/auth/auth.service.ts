@@ -197,6 +197,15 @@ export class AuthService {
       throw new ConflictException('Ya existe una empresa con este NIT');
     }
 
+    // Check if company email already exists in another tenant
+    const existingTenantByEmail = await this.prisma.tenant.findFirst({
+      where: { correo: tenant.correo.toLowerCase().trim() },
+    });
+
+    if (existingTenantByEmail) {
+      throw new ConflictException('Ya existe una empresa registrada con este correo electrónico');
+    }
+
     // Check if email already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email: user.email },

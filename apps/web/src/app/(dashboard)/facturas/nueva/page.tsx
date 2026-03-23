@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -28,6 +29,7 @@ import type { CatalogItem } from '@/components/facturas/catalog-search';
 import { ItemsTable } from '@/components/facturas/items-table';
 import { FacturaPreview } from '@/components/facturas/factura-preview';
 import { NuevoClienteModal } from '@/components/facturas/nuevo-cliente-modal';
+import { PaymentMethodModal } from '@/components/facturas/payment-method-modal';
 import { PlantillasPanel, GuardarPlantillaModal } from '@/components/facturas/plantillas-panel';
 import { FavoritosPanel } from '@/components/facturas/favoritos-panel';
 import { useTemplatesStore, InvoiceTemplate, FavoriteItem } from '@/store/templates';
@@ -165,6 +167,7 @@ export default function NuevaFacturaPage() {
   } | null>(null);
   const [hasDraft, setHasDraft] = React.useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = React.useState(false);
+  const [showPaymentModal, setShowPaymentModal] = React.useState(false);
 
   const { tipoDte, cliente, items, condicionPago, sucursalId, puntoVentaId } = formState;
 
@@ -610,9 +613,16 @@ export default function NuevaFacturaPage() {
         numeroControl:
           createdDte.numeroControl || createdDte.codigoGeneracion,
       });
-      setShowSuccess(true);
       setShowPreview(false);
       localStorage.removeItem(DRAFT_KEY);
+
+      // Show payment modal for contado invoices (01, 03, 11, 14)
+      const payableDteTypes = ['01', '03', '11', '14'];
+      if (payableDteTypes.includes(tipoDte) && condicionPago === '01') {
+        setShowPaymentModal(true);
+      } else {
+        setShowSuccess(true);
+      }
 
       // Confetti
       try {
@@ -659,6 +669,39 @@ export default function NuevaFacturaPage() {
       router.push(`/facturas/${successData.id}`);
     }
   };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    setShowSuccess(true);
+  };
+
+  const handlePaymentSkip = () => {
+    setShowPaymentModal(false);
+    setShowSuccess(true);
+  };
+
+  // ══════════════════════════════════════════════════════════════════
+  // RENDER: Payment modal (after DTE creation, before success)
+  // ══════════════════════════════════════════════════════════════════
+  if (showPaymentModal && successData) {
+    return (
+      <>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="text-center space-y-4 max-w-md mx-auto">
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-primary" />
+            <p className="text-muted-foreground">Registrando pago...</p>
+          </div>
+        </div>
+        <PaymentMethodModal
+          open={showPaymentModal}
+          onOpenChange={setShowPaymentModal}
+          dteId={successData.id}
+          onSuccess={handlePaymentSuccess}
+          onSkip={handlePaymentSkip}
+        />
+      </>
+    );
+  }
 
   // ══════════════════════════════════════════════════════════════════
   // RENDER: Success view
@@ -771,11 +814,23 @@ export default function NuevaFacturaPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {DTE_TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.value} - {opt.label}
-                  </SelectItem>
-                ))}
+                {(() => {
+                  const groups = DTE_TYPE_OPTIONS.reduce((acc, opt) => {
+                    if (!acc[opt.group]) acc[opt.group] = [];
+                    acc[opt.group].push(opt);
+                    return acc;
+                  }, {} as Record<string, typeof DTE_TYPE_OPTIONS>);
+                  return Object.entries(groups).map(([group, opts]) => (
+                    <SelectGroup key={group}>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{group}</div>
+                      {opts.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.value} - {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ));
+                })()}
               </SelectContent>
             </Select>
           </div>

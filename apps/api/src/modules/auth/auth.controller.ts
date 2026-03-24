@@ -41,7 +41,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @Throttle({ short: { limit: 3, ttl: 1000 }, medium: { limit: 5, ttl: 60000 }, long: { limit: 20, ttl: 3600000 } })
+  @Throttle({ short: { limit: 10, ttl: 1000 }, medium: { limit: 30, ttl: 60000 }, long: { limit: 100, ttl: 3600000 } })
   @ApiOperation({ summary: 'Registrar nueva empresa y usuario administrador' })
   @ApiResponse({ status: 201, description: 'Empresa registrada exitosamente' })
   @ApiResponse({ status: 409, description: 'NIT o correo ya existe' })

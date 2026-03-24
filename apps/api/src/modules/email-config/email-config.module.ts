@@ -9,10 +9,12 @@ import {
   DefaultEmailService,
 } from './services';
 import { EmailAdapterFactory } from './adapters';
+import { PlansModule } from '../plans/plans.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    PlansModule,
   ],
   controllers: [
     EmailConfigController,

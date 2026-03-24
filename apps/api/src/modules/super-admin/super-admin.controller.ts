@@ -16,10 +16,12 @@ import { SuperAdminGuard } from './guards/super-admin.guard';
 import { SuperAdminService } from './super-admin.service';
 import { DteOperationLoggerService } from '../dte/services/dte-operation-logger.service';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 // Bootstrap controller - no authentication required
 @ApiTags('super-admin')
 @Controller('super-admin')
+@Public()
 export class SuperAdminBootstrapController {
   constructor(private readonly superAdminService: SuperAdminService) {}
 

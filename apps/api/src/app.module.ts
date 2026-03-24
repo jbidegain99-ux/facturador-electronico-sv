@@ -29,6 +29,9 @@ import { QuotesModule } from './modules/quotes/quotes.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { SucursalesModule } from './modules/sucursales/sucursales.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { CashFlowModule } from './modules/cash-flow/cash-flow.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 
@@ -82,6 +85,9 @@ const imports = [
   AccountingModule,
   WebhooksModule,
   SucursalesModule,
+  PaymentsModule,
+  CashFlowModule,
+  ReportsModule,
 ];
 
 @Module({

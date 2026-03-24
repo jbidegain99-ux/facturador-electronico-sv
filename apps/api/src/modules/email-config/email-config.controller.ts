@@ -22,6 +22,8 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { SuperAdminGuard } from '../super-admin/guards/super-admin.guard';
+import { PlanFeatureGuard } from '../plans/guards/plan-feature.guard';
+import { RequireFeature } from '../plans/decorators/require-feature.decorator';
 import {
   EmailConfigService,
   EmailHealthService,
@@ -39,7 +41,8 @@ import { ConfiguredBy, MessageSender, RequestStatus } from './types/email.types'
 
 @ApiTags('email-config')
 @Controller('email-config')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), PlanFeatureGuard)
+@RequireFeature('external_email')
 @ApiBearerAuth()
 export class EmailConfigController {
   constructor(

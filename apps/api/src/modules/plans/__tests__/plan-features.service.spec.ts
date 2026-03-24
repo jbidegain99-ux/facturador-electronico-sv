@@ -7,6 +7,7 @@ interface MockPrisma {
   planFeature: { findUnique: jest.Mock; findMany: jest.Mock };
   dTE: { count: jest.Mock };
   cliente: { count: jest.Mock };
+  sucursal: { count: jest.Mock };
 }
 
 function createMockPrisma(): MockPrisma {
@@ -15,6 +16,7 @@ function createMockPrisma(): MockPrisma {
     planFeature: { findUnique: jest.fn(), findMany: jest.fn() },
     dTE: { count: jest.fn() },
     cliente: { count: jest.fn() },
+    sucursal: { count: jest.fn() },
   };
 }
 
@@ -127,12 +129,22 @@ describe('PlanFeaturesService', () => {
       expect(await service.checkFeatureAccess('ENTERPRISE', 'invoicing')).toBe(true);
     });
 
-    it('should grant accounting to all 3 plans', async () => {
+    it('should grant accounting to STARTER, PROFESSIONAL, ENTERPRISE but not FREE', async () => {
       prisma.planFeature.findUnique.mockResolvedValue(null);
 
+      expect(await service.checkFeatureAccess('FREE', 'accounting')).toBe(false);
       expect(await service.checkFeatureAccess('STARTER', 'accounting')).toBe(true);
       expect(await service.checkFeatureAccess('PROFESSIONAL', 'accounting')).toBe(true);
       expect(await service.checkFeatureAccess('ENTERPRISE', 'accounting')).toBe(true);
+    });
+
+    it('should grant webhooks only to ENTERPRISE', async () => {
+      prisma.planFeature.findUnique.mockResolvedValue(null);
+
+      expect(await service.checkFeatureAccess('FREE', 'webhooks')).toBe(false);
+      expect(await service.checkFeatureAccess('STARTER', 'webhooks')).toBe(false);
+      expect(await service.checkFeatureAccess('PROFESSIONAL', 'webhooks')).toBe(false);
+      expect(await service.checkFeatureAccess('ENTERPRISE', 'webhooks')).toBe(true);
     });
 
     it('should deny phone_support for non-ENTERPRISE plans', async () => {
@@ -172,10 +184,12 @@ describe('PlanFeaturesService', () => {
       expect(result).toContain('webhooks');
       expect(result).toContain('api_full');
       expect(result).toContain('phone_support');
-      expect(result).toHaveLength(11); // all 11 features enabled
+      expect(result).toContain('external_email');
+      expect(result).toContain('hacienda_setup_support');
+      expect(result).toHaveLength(13); // all 13 features enabled
     });
 
-    it('should return STARTER features (5 enabled)', async () => {
+    it('should return STARTER features (6 enabled)', async () => {
       prisma.planFeature.findMany.mockResolvedValue([]);
 
       const result = await service.getPlanFeatures('STARTER');
@@ -184,39 +198,69 @@ describe('PlanFeaturesService', () => {
       expect(result).toContain('catalog');
       expect(result).toContain('recurring_invoices');
       expect(result).toContain('ticket_support');
+      expect(result).toContain('logo_branding');
       expect(result).not.toContain('quotes_b2b');
       expect(result).not.toContain('webhooks');
       expect(result).not.toContain('phone_support');
-      expect(result).toHaveLength(5);
+      expect(result).not.toContain('external_email');
+      expect(result).toHaveLength(6);
     });
 
-    it('should return PROFESSIONAL features (9 enabled)', async () => {
+    it('should return PROFESSIONAL features (8 enabled, no webhooks/api)', async () => {
       prisma.planFeature.findMany.mockResolvedValue([]);
 
       const result = await service.getPlanFeatures('PROFESSIONAL');
       expect(result).toContain('invoicing');
       expect(result).toContain('accounting');
       expect(result).toContain('quotes_b2b');
-      expect(result).toContain('webhooks');
       expect(result).toContain('advanced_reports');
+      expect(result).toContain('external_email');
+      expect(result).toContain('hacienda_setup_support');
+      expect(result).not.toContain('webhooks');
+      expect(result).not.toContain('api_full');
       expect(result).not.toContain('phone_support');
       expect(result).toHaveLength(10);
+    });
+
+    it('should return FREE features (3 enabled)', async () => {
+      prisma.planFeature.findMany.mockResolvedValue([]);
+
+      const result = await service.getPlanFeatures('FREE');
+      expect(result).toContain('invoicing');
+      expect(result).toContain('catalog');
+      expect(result).toContain('ticket_support');
+      expect(result).not.toContain('accounting');
+      expect(result).not.toContain('recurring_invoices');
+      expect(result).toHaveLength(3);
     });
   });
 
   describe('getPlanLimits', () => {
-    it('should return limits for STARTER (300 DTEs, 100 clients)', async () => {
+    it('should return limits for FREE (10 DTEs, 10 clients, 1 branch)', async () => {
+      const limits = await service.getPlanLimits('FREE');
+      expect(limits.maxDtesPerMonth).toBe(10);
+      expect(limits.maxClients).toBe(10);
+      expect(limits.maxUsers).toBe(1);
+      expect(limits.maxBranches).toBe(1);
+      expect(limits.maxCatalogItems).toBe(50);
+    });
+
+    it('should return limits for STARTER (300 DTEs, 100 clients, 1 branch)', async () => {
       const limits = await service.getPlanLimits('STARTER');
       expect(limits.maxDtesPerMonth).toBe(300);
       expect(limits.maxClients).toBe(100);
       expect(limits.maxUsers).toBe(3);
+      expect(limits.maxBranches).toBe(1);
+      expect(limits.maxCatalogItems).toBe(300);
     });
 
-    it('should return limits for PROFESSIONAL (2000 DTEs, 500 clients)', async () => {
+    it('should return limits for PROFESSIONAL (2000 DTEs, 500 clients, 5 branches)', async () => {
       const limits = await service.getPlanLimits('PROFESSIONAL');
       expect(limits.maxDtesPerMonth).toBe(2000);
       expect(limits.maxClients).toBe(500);
       expect(limits.maxUsers).toBe(10);
+      expect(limits.maxBranches).toBe(5);
+      expect(limits.maxCatalogItems).toBe(1000);
     });
 
     it('should return unlimited for ENTERPRISE', async () => {
@@ -224,12 +268,14 @@ describe('PlanFeaturesService', () => {
       expect(limits.maxDtesPerMonth).toBe(-1);
       expect(limits.maxClients).toBe(-1);
       expect(limits.maxUsers).toBe(-1);
+      expect(limits.maxBranches).toBe(-1);
     });
 
     it('should normalize DEMO to STARTER limits', async () => {
       const limits = await service.getPlanLimits('DEMO');
       expect(limits.maxDtesPerMonth).toBe(300);
       expect(limits.maxClients).toBe(100);
+      expect(limits.maxBranches).toBe(1);
     });
   });
 
@@ -282,16 +328,20 @@ describe('PlanFeaturesService', () => {
       ]);
       prisma.dTE.count.mockResolvedValue(50);
       prisma.cliente.count.mockResolvedValue(30);
+      prisma.sucursal.count.mockResolvedValue(2);
 
       const result = await service.getTenantUsageInfo('tenant-1');
 
       expect(result.planCode).toBe('PROFESSIONAL');
       expect(result.enabledFeatures).toEqual(['invoicing', 'accounting', 'quotes_b2b']);
       expect(result.limits.maxDtesPerMonth).toBe(2000);
+      expect(result.limits.maxBranches).toBe(5);
       expect(result.usage.dtesThisMonth).toBe(50);
       expect(result.usage.clientCount).toBe(30);
+      expect(result.usage.branchCount).toBe(2);
       expect(result.canCreateDte).toBe(true);
       expect(result.canAddClient).toBe(true);
+      expect(result.canAddBranch).toBe(true);
     });
 
     it('should flag canCreateDte false when at limit', async () => {
@@ -299,10 +349,23 @@ describe('PlanFeaturesService', () => {
       prisma.planFeature.findMany.mockResolvedValue([]);
       prisma.dTE.count.mockResolvedValue(300);
       prisma.cliente.count.mockResolvedValue(5);
+      prisma.sucursal.count.mockResolvedValue(0);
 
       const result = await service.getTenantUsageInfo('tenant-1');
       expect(result.canCreateDte).toBe(false);
       expect(result.canAddClient).toBe(true);
+    });
+
+    it('should flag canAddBranch false when at limit for STARTER', async () => {
+      prisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER' });
+      prisma.planFeature.findMany.mockResolvedValue([]);
+      prisma.dTE.count.mockResolvedValue(0);
+      prisma.cliente.count.mockResolvedValue(0);
+      prisma.sucursal.count.mockResolvedValue(1);
+
+      const result = await service.getTenantUsageInfo('tenant-1');
+      expect(result.canAddBranch).toBe(false); // STARTER limit is 1
+      expect(result.limits.maxBranches).toBe(1);
     });
   });
 });

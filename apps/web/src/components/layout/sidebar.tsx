@@ -19,34 +19,64 @@ import {
   BookOpen,
   Webhook,
   Building2,
+  TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { useTranslations } from 'next-intl';
 
-type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'accounting' | 'catalog' | 'webhooks' | 'branches' | 'support' | 'settings';
+type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'cashFlow' | 'accounting' | 'catalog' | 'webhooks' | 'branches' | 'support' | 'settings';
 
-const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; proBadge: boolean; iconColor: string }[] = [
-  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, proBadge: false, iconColor: 'text-purple-600' },
-  { key: 'invoices', href: '/facturas', icon: FileText, proBadge: false, iconColor: 'text-blue-600' },
-  { key: 'quotes', href: '/cotizaciones', icon: ClipboardList, proBadge: false, iconColor: 'text-teal-500' },
-  { key: 'recurring', href: '/facturas/recurrentes', icon: Repeat, proBadge: true, iconColor: 'text-cyan-500' },
-  { key: 'reports', href: '/reportes', icon: BarChart3, proBadge: false, iconColor: 'text-orange-500' },
-  { key: 'clients', href: '/clientes', icon: Users, proBadge: false, iconColor: 'text-blue-500' },
-  { key: 'accounting', href: '/contabilidad', icon: BookOpen, proBadge: true, iconColor: 'text-emerald-500' },
-  { key: 'catalog', href: '/catalogo', icon: Package, proBadge: false, iconColor: 'text-amber-500' },
-  { key: 'webhooks', href: '/webhooks', icon: Webhook, proBadge: true, iconColor: 'text-indigo-500' },
-  { key: 'branches', href: '/configuracion/sucursales', icon: Building2, proBadge: false, iconColor: 'text-rose-500' },
-  { key: 'support', href: '/soporte', icon: HelpCircle, proBadge: false, iconColor: 'text-pink-500' },
-  { key: 'settings', href: '/configuracion', icon: Settings, proBadge: false, iconColor: 'text-gray-500' },
+type BadgeType = 'PRO' | 'ENT' | null;
+
+const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; badgeKey?: 'pro' | 'ent'; iconColor: string }[] = [
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, iconColor: 'text-purple-600' },
+  { key: 'invoices', href: '/facturas', icon: FileText, iconColor: 'text-blue-600' },
+  { key: 'quotes', href: '/cotizaciones', icon: ClipboardList, badgeKey: 'pro', iconColor: 'text-teal-500' },
+  { key: 'recurring', href: '/facturas/recurrentes', icon: Repeat, badgeKey: 'pro', iconColor: 'text-cyan-500' },
+  { key: 'reports', href: '/reportes', icon: BarChart3, iconColor: 'text-orange-500' },
+  { key: 'clients', href: '/clientes', icon: Users, iconColor: 'text-blue-500' },
+  { key: 'cashFlow', href: '/cash-flow', icon: TrendingUp, iconColor: 'text-green-500' },
+  { key: 'accounting', href: '/contabilidad', icon: BookOpen, badgeKey: 'pro', iconColor: 'text-emerald-500' },
+  { key: 'catalog', href: '/catalogo', icon: Package, iconColor: 'text-amber-500' },
+  { key: 'webhooks', href: '/webhooks', icon: Webhook, badgeKey: 'ent', iconColor: 'text-indigo-500' },
+  { key: 'branches', href: '/configuracion/sucursales', icon: Building2, iconColor: 'text-rose-500' },
+  { key: 'support', href: '/soporte', icon: HelpCircle, iconColor: 'text-pink-500' },
+  { key: 'settings', href: '/configuracion', icon: Settings, iconColor: 'text-gray-500' },
 ];
+
+/**
+ * Determine badge for a nav item based on plan features.
+ * PRO badge: feature available in STARTER+ (user needs to upgrade from FREE)
+ * ENT badge: feature available only in ENTERPRISE (user needs to upgrade from PRO)
+ */
+function getNavBadge(item: (typeof navigation)[number], planCode: string, features: ReturnType<typeof usePlanFeatures>['features']): BadgeType {
+  if (!item.badgeKey) return null;
+
+  if (item.badgeKey === 'ent') {
+    // Enterprise-only features (webhooks, api)
+    const isEnterprise = planCode === 'ENTERPRISE';
+    return isEnterprise ? null : 'ENT';
+  }
+
+  // PRO features — show badge if user is on FREE plan
+  if (item.key === 'recurring' && features.recurringInvoices) return null;
+  if (item.key === 'accounting' && features.accounting) return null;
+  if (item.key === 'quotes' && features.advancedQuotes) return null;
+
+  // If feature is missing, show PRO badge
+  if (item.key === 'recurring' && !features.recurringInvoices) return 'PRO';
+  if (item.key === 'accounting' && !features.accounting) return 'PRO';
+  if (item.key === 'quotes' && !features.advancedQuotes) return 'PRO';
+
+  return null;
+}
 
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useAppStore();
   const { features } = usePlanFeatures();
-  const showProBadge = !features.recurringInvoices;
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
 
@@ -101,6 +131,8 @@ export function Sidebar() {
             ? pathname === '/dashboard'
             : pathname === item.href || pathname.startsWith(item.href + '/');
 
+          const badge = getNavBadge(item, features.planCode, features);
+
           return (
             <Link
               key={item.key}
@@ -117,9 +149,14 @@ export function Sidebar() {
               {sidebarOpen && (
                 <span className="flex items-center gap-2">
                   {t(item.key)}
-                  {item.proBadge && showProBadge && (
+                  {badge === 'PRO' && (
                     <span className="text-[10px] font-bold bg-purple-600 text-white px-1.5 py-0.5 rounded-full leading-none">
                       {tCommon('pro')}
+                    </span>
+                  )}
+                  {badge === 'ENT' && (
+                    <span className="text-[10px] font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full leading-none">
+                      ENT
                     </span>
                   )}
                 </span>

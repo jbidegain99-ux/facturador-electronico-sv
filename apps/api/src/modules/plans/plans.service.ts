@@ -175,6 +175,7 @@ export class PlansService {
           select: {
             usuarios: true,
             clientes: true,
+            sucursales: true,
           },
         },
       },
@@ -213,11 +214,15 @@ export class PlansService {
         clientes: tenant._count.clientes,
         maxClientes: plan?.maxClientes ?? -1,
         clientesRemaining: plan?.maxClientes === -1 ? -1 : Math.max(0, (plan?.maxClientes ?? 0) - tenant._count.clientes),
+        branches: tenant._count.sucursales,
+        maxBranches: plan?.maxBranches ?? -1,
+        branchesRemaining: plan?.maxBranches === -1 ? -1 : Math.max(0, (plan?.maxBranches ?? -1) - tenant._count.sucursales),
       },
       limits: {
         canCreateDte: plan?.maxDtesPerMonth === -1 || dtesThisMonth < (plan?.maxDtesPerMonth ?? 0),
         canAddUser: plan?.maxUsers === -1 || tenant._count.usuarios < (plan?.maxUsers ?? 0),
         canAddCliente: plan?.maxClientes === -1 || tenant._count.clientes < (plan?.maxClientes ?? 0),
+        canAddBranch: plan?.maxBranches === -1 || tenant._count.sucursales < (plan?.maxBranches ?? 0),
       },
     };
   }
@@ -232,7 +237,7 @@ export class PlansService {
     return { ...getPlanFeatures(planCode), planCode };
   }
 
-  async checkLimit(tenantId: string, type: 'dte' | 'user' | 'cliente'): Promise<boolean> {
+  async checkLimit(tenantId: string, type: 'dte' | 'user' | 'cliente' | 'branch'): Promise<boolean> {
     const usage = await this.getTenantUsage(tenantId);
 
     switch (type) {
@@ -242,6 +247,8 @@ export class PlansService {
         return usage.limits.canAddUser;
       case 'cliente':
         return usage.limits.canAddCliente;
+      case 'branch':
+        return usage.limits.canAddBranch;
       default:
         return true;
     }
@@ -276,59 +283,35 @@ export class PlansService {
   }
 
   async seedDefaultPlans() {
+    const buildPlanData = (code: PlanCode, nombre: string, descripcion: string, orden: number, isDefault = false) => {
+      const config = PLAN_CONFIGS[code];
+      return {
+        codigo: code,
+        nombre,
+        descripcion,
+        maxDtesPerMonth: config.limits.dtes,
+        maxUsers: config.limits.users,
+        maxClientes: config.limits.customers,
+        maxStorageMb: config.limits.storage === -1 ? -1 : config.limits.storage * 1024,
+        maxBranches: config.limits.branches,
+        maxCatalogItems: config.limits.catalog,
+        features: JSON.stringify(
+          Object.entries(config.features)
+            .filter(([, v]) => v)
+            .map(([k]) => k),
+        ),
+        precioMensual: config.price.monthly,
+        precioAnual: config.price.yearly,
+        orden,
+        isDefault,
+      };
+    };
+
     const planDefinitions = [
-      {
-        codigo: PlanCode.STARTER,
-        nombre: 'Starter',
-        descripcion: 'Perfecto para pequenas empresas comenzando con facturacion electronica',
-        maxDtesPerMonth: PLAN_CONFIGS.STARTER.limits.dtes,
-        maxUsers: PLAN_CONFIGS.STARTER.limits.users,
-        maxClientes: PLAN_CONFIGS.STARTER.limits.customers,
-        maxStorageMb: PLAN_CONFIGS.STARTER.limits.storage * 1024,
-        features: JSON.stringify(
-          Object.entries(PLAN_CONFIGS.STARTER.features)
-            .filter(([, v]) => v)
-            .map(([k]) => k),
-        ),
-        precioMensual: PLAN_CONFIGS.STARTER.price.monthly,
-        precioAnual: PLAN_CONFIGS.STARTER.price.yearly,
-        orden: 1,
-        isDefault: true,
-      },
-      {
-        codigo: PlanCode.PROFESSIONAL,
-        nombre: 'Professional',
-        descripcion: 'Para empresas en crecimiento que necesitan herramientas avanzadas',
-        maxDtesPerMonth: PLAN_CONFIGS.PROFESSIONAL.limits.dtes,
-        maxUsers: PLAN_CONFIGS.PROFESSIONAL.limits.users,
-        maxClientes: PLAN_CONFIGS.PROFESSIONAL.limits.customers,
-        maxStorageMb: PLAN_CONFIGS.PROFESSIONAL.limits.storage * 1024,
-        features: JSON.stringify(
-          Object.entries(PLAN_CONFIGS.PROFESSIONAL.features)
-            .filter(([, v]) => v)
-            .map(([k]) => k),
-        ),
-        precioMensual: PLAN_CONFIGS.PROFESSIONAL.price.monthly,
-        precioAnual: PLAN_CONFIGS.PROFESSIONAL.price.yearly,
-        orden: 2,
-      },
-      {
-        codigo: PlanCode.ENTERPRISE,
-        nombre: 'Enterprise',
-        descripcion: 'Solucion completa sin limites para grandes organizaciones',
-        maxDtesPerMonth: PLAN_CONFIGS.ENTERPRISE.limits.dtes,
-        maxUsers: PLAN_CONFIGS.ENTERPRISE.limits.users,
-        maxClientes: PLAN_CONFIGS.ENTERPRISE.limits.customers,
-        maxStorageMb: PLAN_CONFIGS.ENTERPRISE.limits.storage,
-        features: JSON.stringify(
-          Object.entries(PLAN_CONFIGS.ENTERPRISE.features)
-            .filter(([, v]) => v)
-            .map(([k]) => k),
-        ),
-        precioMensual: PLAN_CONFIGS.ENTERPRISE.price.monthly,
-        precioAnual: PLAN_CONFIGS.ENTERPRISE.price.yearly,
-        orden: 3,
-      },
+      buildPlanData(PlanCode.FREE, 'Free', 'Plan gratuito para probar la plataforma', 0),
+      buildPlanData(PlanCode.STARTER, 'Starter', 'Perfecto para pequenas empresas comenzando con facturacion electronica', 1, true),
+      buildPlanData(PlanCode.PROFESSIONAL, 'Professional', 'Para empresas en crecimiento que necesitan herramientas avanzadas', 2),
+      buildPlanData(PlanCode.ENTERPRISE, 'Enterprise', 'Solucion completa sin limites para grandes organizaciones', 3),
     ];
 
     const results = [];
@@ -343,6 +326,8 @@ export class PlansService {
           maxUsers: planData.maxUsers,
           maxClientes: planData.maxClientes,
           maxStorageMb: planData.maxStorageMb,
+          maxBranches: planData.maxBranches,
+          maxCatalogItems: planData.maxCatalogItems,
           features: planData.features,
           precioMensual: planData.precioMensual,
           precioAnual: planData.precioAnual,
@@ -353,6 +338,32 @@ export class PlansService {
       results.push({ action: 'upserted', plan });
     }
 
-    return { message: '3 planes creados/actualizados exitosamente', plans: results };
+    // Seed PlanSupportConfig for all plans
+    const supportConfigs = [
+      { planCode: PlanCode.FREE, ticketSupportEnabled: true, ticketResponseHours: 0, resolutionSLAHours: 0, phoneSupportEnabled: false, accountManagerEnabled: false, hasLiveChat: false, priority: 'BAJA' },
+      { planCode: PlanCode.STARTER, ticketSupportEnabled: true, ticketResponseHours: 24, resolutionSLAHours: 48, phoneSupportEnabled: false, accountManagerEnabled: false, hasLiveChat: false, priority: 'NORMAL' },
+      { planCode: PlanCode.PROFESSIONAL, ticketSupportEnabled: true, ticketResponseHours: 12, resolutionSLAHours: 24, phoneSupportEnabled: false, accountManagerEnabled: false, hasLiveChat: false, priority: 'ALTA' },
+      { planCode: PlanCode.ENTERPRISE, ticketSupportEnabled: true, ticketResponseHours: 2, resolutionSLAHours: 8, phoneSupportEnabled: true, phoneSupportHours: 'Lun-Vie 8am-6pm CST', accountManagerEnabled: true, hasLiveChat: true, chatSchedule: 'Lun-Vie 8am-8pm CST, Sab 10am-2pm', priority: 'CRITICA' },
+    ];
+
+    for (const sc of supportConfigs) {
+      await this.prisma.planSupportConfig.upsert({
+        where: { planCode: sc.planCode },
+        create: sc,
+        update: sc,
+      });
+    }
+
+    // Seed PlanFeature rows for FREE plan
+    const freeFeatures = Object.entries(PLAN_CONFIGS.FREE.features);
+    for (const [featureCode, enabled] of freeFeatures) {
+      await this.prisma.planFeature.upsert({
+        where: { planCode_featureCode: { planCode: PlanCode.FREE, featureCode } },
+        create: { planCode: PlanCode.FREE, featureCode, enabled },
+        update: { enabled },
+      });
+    }
+
+    return { message: '4 planes creados/actualizados exitosamente', plans: results };
   }
 }

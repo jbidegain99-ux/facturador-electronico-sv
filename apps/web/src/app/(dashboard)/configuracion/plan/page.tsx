@@ -15,6 +15,8 @@ import {
   Shield,
   Clock,
   AlertCircle,
+  Building2,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,32 +36,39 @@ interface UsageData {
     maxDtesPerMonth: number;
     maxClients: number;
     maxCatalogItems: number;
+    maxBranches: number;
   };
   usage: {
     dtesThisMonth: number;
     clientCount: number;
+    branchCount: number;
   };
   canCreateDte: boolean;
   canAddClient: boolean;
+  canAddBranch: boolean;
 }
 
 const planNames: Record<string, string> = {
+  FREE: 'Free',
   STARTER: 'Starter',
   PROFESSIONAL: 'Professional',
   ENTERPRISE: 'Enterprise',
 };
 
 const featureLabels: Record<string, { label: string; icon: typeof FileText }> = {
-  invoicing: { label: 'Facturación electrónica', icon: FileText },
-  accounting: { label: 'Módulo contable', icon: BarChart3 },
-  catalog: { label: 'Catálogo de productos', icon: Package },
+  invoicing: { label: 'Facturacion electronica', icon: FileText },
+  accounting: { label: 'Modulo contable', icon: BarChart3 },
+  catalog: { label: 'Catalogo de productos', icon: Package },
   recurring_invoices: { label: 'Facturas recurrentes', icon: Clock },
   quotes_b2b: { label: 'Cotizaciones B2B', icon: FileText },
   webhooks: { label: 'Webhooks', icon: Shield },
   api_full: { label: 'API completa', icon: Shield },
   advanced_reports: { label: 'Reportes avanzados', icon: BarChart3 },
   ticket_support: { label: 'Soporte por tickets', icon: Mail },
-  phone_support: { label: 'Soporte telefónico', icon: Phone },
+  phone_support: { label: 'Soporte telefonico', icon: Phone },
+  logo_branding: { label: 'Logo y branding personalizado', icon: Package },
+  external_email: { label: 'Correos externos (Gmail, Office 365, SMTP)', icon: Mail },
+  hacienda_setup_support: { label: 'Soporte setup Hacienda', icon: Shield },
 };
 
 const allFeatures: FeatureCode[] = [
@@ -71,6 +80,9 @@ const allFeatures: FeatureCode[] = [
   'webhooks',
   'api_full',
   'advanced_reports',
+  'external_email',
+  'hacienda_setup_support',
+  'logo_branding',
   'ticket_support',
   'phone_support',
 ];
@@ -133,6 +145,7 @@ export default function PlanConfigPage() {
 
   const dtePercent = usage ? getUsagePercent(usage.usage.dtesThisMonth, usage.limits.maxDtesPerMonth) : 0;
   const clientPercent = usage ? getUsagePercent(usage.usage.clientCount, usage.limits.maxClients) : 0;
+  const branchPercent = usage ? getUsagePercent(usage.usage.branchCount, usage.limits.maxBranches) : 0;
 
   return (
     <div className="space-y-6">
@@ -163,7 +176,7 @@ export default function PlanConfigPage() {
       </Card>
 
       {/* Usage Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* DTEs this month */}
         <Card>
           <CardContent className="pt-6">
@@ -237,6 +250,34 @@ export default function PlanConfigPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Branches */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-rose-500" />
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Sucursales</div>
+                <div className="text-2xl font-bold">
+                  {usage?.usage.branchCount ?? 0}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {' '}/ {usage ? formatLimit(usage.limits.maxBranches) : '—'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {usage && usage.limits.maxBranches !== -1 && (
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all ${getBarColor(branchPercent)}`}
+                  style={{ width: `${branchPercent}%` }}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Features + SLA */}
@@ -294,9 +335,32 @@ export default function PlanConfigPage() {
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span>Tiempo de respuesta SLA</span>
+                    <span>SLA primera respuesta</span>
                   </div>
                   <span className="font-semibold">{supportConfig.ticketResponseHours}h</span>
+                </div>
+              )}
+              {supportConfig.resolutionSLAHours > 0 && (
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <span>SLA resolucion</span>
+                  </div>
+                  <span className="font-semibold">{supportConfig.resolutionSLAHours}h</span>
+                </div>
+              )}
+              {supportConfig.hasLiveChat && (
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                    <span>Chat en vivo</span>
+                  </div>
+                  <div className="text-right">
+                    <CheckCircle className="w-5 h-5 text-green-500 inline" />
+                    {supportConfig.chatSchedule && (
+                      <div className="text-xs text-muted-foreground mt-1">{supportConfig.chatSchedule}</div>
+                    )}
+                  </div>
                 </div>
               )}
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">

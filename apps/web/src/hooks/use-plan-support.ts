@@ -6,18 +6,26 @@ export interface PlanSupportConfig {
   planCode: string;
   ticketSupportEnabled: boolean;
   ticketResponseHours: number;
+  resolutionSLAHours: number;
   phoneSupportEnabled: boolean;
   phoneSupportHours: string | null;
   accountManagerEnabled: boolean;
+  hasLiveChat: boolean;
+  chatSchedule: string | null;
+  priority: string;
 }
 
 const DEFAULT_SUPPORT: PlanSupportConfig = {
-  planCode: 'STARTER',
+  planCode: 'FREE',
   ticketSupportEnabled: true,
-  ticketResponseHours: 72,
+  ticketResponseHours: 0,
+  resolutionSLAHours: 0,
   phoneSupportEnabled: false,
   phoneSupportHours: null,
   accountManagerEnabled: false,
+  hasLiveChat: false,
+  chatSchedule: null,
+  priority: 'BAJA',
 };
 
 let cachedSupport: PlanSupportConfig | null = null;

@@ -8,6 +8,7 @@ export interface PlanLimits {
   maxCatalogItems: number;
   maxUsers: number;
   maxStorageGb: number;
+  maxBranches: number;
 }
 
 export interface TenantUsageInfo {
@@ -17,9 +18,11 @@ export interface TenantUsageInfo {
   usage: {
     dtesThisMonth: number;
     clientCount: number;
+    branchCount: number;
   };
   canCreateDte: boolean;
   canAddClient: boolean;
+  canAddBranch: boolean;
 }
 
 @Injectable()
@@ -58,8 +61,8 @@ export class PlanFeaturesService {
       return config.features[featureCode as FeatureCode] ?? false;
     }
 
-    // Unknown plan code: use STARTER features as default
-    return PLAN_CONFIGS[PlanCode.STARTER].features[featureCode as FeatureCode] ?? false;
+    // Unknown plan code: use FREE features as default
+    return PLAN_CONFIGS[PlanCode.FREE].features[featureCode as FeatureCode] ?? false;
   }
 
   async getPlanFeatures(planCode: string): Promise<FeatureCode[]> {
@@ -75,7 +78,7 @@ export class PlanFeaturesService {
     }
 
     // Fallback: derive from hardcoded PLAN_CONFIGS
-    const config = PLAN_CONFIGS[normalized as PlanCode] ?? PLAN_CONFIGS[PlanCode.STARTER];
+    const config = PLAN_CONFIGS[normalized as PlanCode] ?? PLAN_CONFIGS[PlanCode.FREE];
     return (Object.entries(config.features) as [FeatureCode, boolean][])
       .filter(([, enabled]) => enabled)
       .map(([code]) => code);
@@ -83,13 +86,14 @@ export class PlanFeaturesService {
 
   async getPlanLimits(planCode: string): Promise<PlanLimits> {
     const normalized = normalizePlanCode(planCode);
-    const config = PLAN_CONFIGS[normalized as PlanCode] ?? PLAN_CONFIGS[PlanCode.STARTER];
+    const config = PLAN_CONFIGS[normalized as PlanCode] ?? PLAN_CONFIGS[PlanCode.FREE];
     return {
       maxDtesPerMonth: config.limits.dtes,
       maxClients: config.limits.customers,
-      maxCatalogItems: config.limits.dtes === -1 ? -1 : Math.min(config.limits.dtes, 1000),
+      maxCatalogItems: config.limits.catalog,
       maxUsers: config.limits.users,
       maxStorageGb: config.limits.storage,
+      maxBranches: config.limits.branches,
     };
   }
 
@@ -107,6 +111,13 @@ export class PlanFeaturesService {
     return currentCount >= limits.maxClients;
   }
 
+  async checkBranchLimitExceeded(tenantId: string, currentCount: number): Promise<boolean> {
+    const planCode = await this.getTenantPlanCode(tenantId);
+    const limits = await this.getPlanLimits(planCode);
+    if (limits.maxBranches === -1) return false;
+    return currentCount >= limits.maxBranches;
+  }
+
   async getTenantUsageInfo(tenantId: string): Promise<TenantUsageInfo> {
     const planCode = await this.getTenantPlanCode(tenantId);
     const [enabledFeatures, limits] = await Promise.all([
@@ -118,11 +129,14 @@ export class PlanFeaturesService {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const [dtesThisMonth, clientCount] = await Promise.all([
+    const [dtesThisMonth, clientCount, branchCount] = await Promise.all([
       this.prisma.dTE.count({
         where: { tenantId, createdAt: { gte: startOfMonth } },
       }),
       this.prisma.cliente.count({
+        where: { tenantId },
+      }),
+      this.prisma.sucursal.count({
         where: { tenantId },
       }),
     ]);
@@ -131,9 +145,10 @@ export class PlanFeaturesService {
       planCode,
       enabledFeatures,
       limits,
-      usage: { dtesThisMonth, clientCount },
+      usage: { dtesThisMonth, clientCount, branchCount },
       canCreateDte: limits.maxDtesPerMonth === -1 || dtesThisMonth < limits.maxDtesPerMonth,
       canAddClient: limits.maxClients === -1 || clientCount < limits.maxClients,
+      canAddBranch: limits.maxBranches === -1 || branchCount < limits.maxBranches,
     };
   }
 }

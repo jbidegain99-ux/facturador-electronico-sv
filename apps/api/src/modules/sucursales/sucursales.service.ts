@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PlanFeaturesService } from '../plans/services/plan-features.service';
 
 interface CreateSucursalDto {
   nombre: string;
@@ -43,7 +44,10 @@ interface UpdatePuntoVentaDto {
 
 @Injectable()
 export class SucursalesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private planFeaturesService: PlanFeaturesService,
+  ) {}
 
   // ===== SUCURSALES =====
 
@@ -65,6 +69,15 @@ export class SucursalesService {
   }
 
   async create(tenantId: string, dto: CreateSucursalDto) {
+    // Check branch limit before creating
+    const branchCount = await this.prisma.sucursal.count({ where: { tenantId } });
+    const limitExceeded = await this.planFeaturesService.checkBranchLimitExceeded(tenantId, branchCount);
+    if (limitExceeded) {
+      throw new ForbiddenException(
+        'Has alcanzado el limite de sucursales para tu plan. Actualiza tu plan para crear mas.',
+      );
+    }
+
     // If this is marked as principal, unset other principals
     if (dto.esPrincipal) {
       await this.prisma.sucursal.updateMany({

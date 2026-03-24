@@ -7,12 +7,15 @@ export interface PlanFeatures {
   maxDtesPerMonth: number;
   maxClients: number;
   maxCatalogItems: number;
+  maxBranches: number;
   recurringInvoices: boolean;
   templates: boolean;
   reports: boolean;
   apiAccess: boolean;
   accounting: boolean;
   advancedQuotes: boolean;
+  externalEmail: boolean;
+  haciendaSetup: boolean;
 }
 
 export type FeatureCode =
@@ -25,19 +28,25 @@ export type FeatureCode =
   | 'api_full'
   | 'advanced_reports'
   | 'ticket_support'
-  | 'phone_support';
+  | 'phone_support'
+  | 'logo_branding'
+  | 'external_email'
+  | 'hacienda_setup_support';
 
 const DEFAULT_FEATURES: PlanFeatures = {
-  planCode: 'STARTER',
-  maxDtesPerMonth: 300,
-  maxClients: 100,
-  maxCatalogItems: 300,
-  recurringInvoices: true,
-  templates: true,
+  planCode: 'FREE',
+  maxDtesPerMonth: 10,
+  maxClients: 10,
+  maxCatalogItems: 50,
+  maxBranches: 1,
+  recurringInvoices: false,
+  templates: false,
   reports: false,
   apiAccess: false,
-  accounting: true,
+  accounting: false,
   advancedQuotes: false,
+  externalEmail: false,
+  haciendaSetup: false,
 };
 
 // Module-level cache to avoid re-fetching across components
@@ -48,10 +57,12 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Normalize plan aliases to canonical codes.
+ * DEMO/TRIAL map to STARTER (not FREE) to preserve demo mode in dte.service.ts.
  */
 function normalizePlanCode(code: string): string {
   const upper = code.toUpperCase();
   const aliases: Record<string, string> = {
+    FREE: 'FREE',
     BASIC: 'STARTER',
     DEMO: 'STARTER',
     TRIAL: 'STARTER',

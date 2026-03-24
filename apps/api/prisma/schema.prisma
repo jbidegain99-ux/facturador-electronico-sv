@@ -187,14 +187,14 @@ model DTE {
   // Error tracking (last error persisted for UI display)
   lastError              String?   @db.NVarChar(Max) // JSON: {errorCode, userMessage, suggestedAction, field, value}
   lastErrorAt            DateTime? @db.DateTime2
-  lastErrorOperationType String?   @db.NVarChar(50)  // VALIDATION, SIGNING, TRANSMISSION
+  lastErrorOperationType String?   @db.NVarChar(50) // VALIDATION, SIGNING, TRANSMISSION
 
   createdAt     DateTime       @default(now())
   logs          DTELog[]
   paymentMethod PaymentMethod?
 
-  @@index([tenantId, lastErrorAt(sort: Desc)])
   @@unique([tenantId, numeroControl])
+  @@index([tenantId, lastErrorAt(sort: Desc)])
   @@index([tenantId])
   @@index([estado])
   @@index([createdAt])
@@ -660,9 +660,11 @@ model SupportTicket {
   resolvedAt DateTime?
 
   // SLA
-  slaResponseHours Int?
-  slaDeadline      DateTime?
-  respondedAt      DateTime?
+  slaResponseHours   Int?
+  slaDeadline        DateTime?
+  respondedAt        DateTime?
+  resolutionDeadline DateTime?
+  planAtCreation     String?   @db.NVarChar(50)
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -788,6 +790,8 @@ model Plan {
   maxUsers        Int @default(1) // -1 para ilimitado
   maxClientes     Int @default(100) // -1 para ilimitado
   maxStorageMb    Int @default(500) // -1 para ilimitado
+  maxBranches     Int @default(-1) // -1 para ilimitado
+  maxCatalogItems Int @default(100) // -1 para ilimitado
 
   // Features habilitados (JSON array)
   features String? @db.NVarChar(Max)
@@ -827,9 +831,13 @@ model PlanSupportConfig {
   planCode              String  @unique
   ticketSupportEnabled  Boolean @default(false)
   ticketResponseHours   Int     @default(72)
+  resolutionSLAHours    Int     @default(0)
   phoneSupportEnabled   Boolean @default(false)
   phoneSupportHours     String?
   accountManagerEnabled Boolean @default(false)
+  hasLiveChat           Boolean @default(false)
+  chatSchedule          String? @db.NVarChar(100)
+  priority              String  @default("BAJA") @db.NVarChar(20)
 
   plan Plan @relation(fields: [planCode], references: [codigo], onDelete: NoAction, onUpdate: NoAction)
 

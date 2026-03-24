@@ -5,17 +5,25 @@ import { PlanFeaturesService } from './plan-features.service';
 export interface SupportConfig {
   ticketSupportEnabled: boolean;
   ticketResponseHours: number;
+  resolutionSLAHours: number;
   phoneSupportEnabled: boolean;
   phoneSupportHours: string | null;
   accountManagerEnabled: boolean;
+  hasLiveChat: boolean;
+  chatSchedule: string | null;
+  priority: string;
 }
 
 const DEFAULT_SUPPORT: SupportConfig = {
   ticketSupportEnabled: false,
   ticketResponseHours: 0,
+  resolutionSLAHours: 0,
   phoneSupportEnabled: false,
   phoneSupportHours: null,
   accountManagerEnabled: false,
+  hasLiveChat: false,
+  chatSchedule: null,
+  priority: 'BAJA',
 };
 
 @Injectable()
@@ -37,9 +45,13 @@ export class PlanSupportService {
     return {
       ticketSupportEnabled: config.ticketSupportEnabled,
       ticketResponseHours: config.ticketResponseHours,
+      resolutionSLAHours: config.resolutionSLAHours,
       phoneSupportEnabled: config.phoneSupportEnabled,
       phoneSupportHours: config.phoneSupportHours,
       accountManagerEnabled: config.accountManagerEnabled,
+      hasLiveChat: config.hasLiveChat,
+      chatSchedule: config.chatSchedule,
+      priority: config.priority,
     };
   }
 
@@ -47,6 +59,18 @@ export class PlanSupportService {
     const planCode = await this.planFeaturesService.getTenantPlanCode(tenantId);
     const config = await this.getSupportConfig(planCode);
     return config.ticketResponseHours;
+  }
+
+  async getResolutionSLA(tenantId: string): Promise<number> {
+    const planCode = await this.planFeaturesService.getTenantPlanCode(tenantId);
+    const config = await this.getSupportConfig(planCode);
+    return config.resolutionSLAHours;
+  }
+
+  async getTicketPriority(tenantId: string): Promise<string> {
+    const planCode = await this.planFeaturesService.getTenantPlanCode(tenantId);
+    const config = await this.getSupportConfig(planCode);
+    return config.priority;
   }
 
   async hasPhoneSupport(tenantId: string): Promise<boolean> {

@@ -55,14 +55,30 @@ export class SupportService {
   ) {
     const ticketNumber = await this.generateTicketNumber();
 
-    // Calculate SLA deadline based on plan
+    // Calculate SLA deadlines based on plan
     let slaResponseHours: number | null = null;
     let slaDeadline: Date | null = null;
+    let resolutionDeadline: Date | null = null;
+    let planAtCreation: string | null = null;
     try {
       const responseHours = await this.planSupportService.getTicketResponseTime(tenantId);
+      const resolutionHours = await this.planSupportService.getResolutionSLA(tenantId);
+      const planPriority = await this.planSupportService.getTicketPriority(tenantId);
+      planAtCreation = planPriority; // Store plan priority as context
+
+      // Get actual plan code for planAtCreation
+      const tenant = await this.prisma.tenant.findUnique({
+        where: { id: tenantId },
+        select: { plan: true },
+      });
+      planAtCreation = tenant?.plan ?? null;
+
       if (responseHours > 0) {
         slaResponseHours = responseHours;
         slaDeadline = new Date(Date.now() + responseHours * 60 * 60 * 1000);
+      }
+      if (resolutionHours > 0) {
+        resolutionDeadline = new Date(Date.now() + resolutionHours * 60 * 60 * 1000);
       }
     } catch (err) {
       this.logger.warn(`Failed to calculate SLA for tenant ${tenantId}: ${(err as Error).message}`);
@@ -81,6 +97,8 @@ export class SupportService {
         status: TicketStatus.PENDING,
         slaResponseHours,
         slaDeadline,
+        resolutionDeadline,
+        planAtCreation,
       },
       include: {
         tenant: { select: { nombre: true } },

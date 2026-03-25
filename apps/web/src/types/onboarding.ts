@@ -87,12 +87,19 @@ export interface OnboardingState {
   actividadEconomica?: string;
   emailHacienda?: string;
   telefonoHacienda?: string;
-  // Credentials status (not actual values)
+  // Credentials status (not actual values - passwords are never sent)
+  haciendaUser?: string;
   hasHaciendaCredentials: boolean;
   hasTestCertificate: boolean;
   hasTestApiCredentials: boolean;
   hasProdCertificate: boolean;
   hasProdApiCredentials: boolean;
+  // Environment URLs (non-sensitive, returned by backend)
+  testEnvironmentUrl?: string;
+  prodEnvironmentUrl?: string;
+  // Certificate expiry dates
+  testCertExpiry?: string;
+  prodCertExpiry?: string;
   // DTE types
   dteTypes?: DteTypeSelection[];
   // Test progress

@@ -374,6 +374,7 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
           <CertificateStep
             type="test"
             hasCertificate={data?.hasTestCertificate}
+            savedCertExpiry={data?.testCertExpiry}
             onSubmit={handleTestCertificate}
             onBack={handleBack}
             loading={loading}
@@ -385,6 +386,7 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
           <ApiCredentialsStep
             type="test"
             hasCredentials={data?.hasTestApiCredentials}
+            savedEnvironmentUrl={data?.testEnvironmentUrl}
             onSubmit={handleTestApiCredentials}
             onBack={handleBack}
             loading={loading}
@@ -420,6 +422,7 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
           <CertificateStep
             type="prod"
             hasCertificate={data?.hasProdCertificate}
+            savedCertExpiry={data?.prodCertExpiry}
             onSubmit={handleProdCertificate}
             onBack={handleBack}
             loading={loading}
@@ -431,6 +434,7 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
           <ApiCredentialsStep
             type="prod"
             hasCredentials={data?.hasProdApiCredentials}
+            savedEnvironmentUrl={data?.prodEnvironmentUrl}
             onSubmit={handleProdApiCredentials}
             onBack={handleBack}
             loading={loading}

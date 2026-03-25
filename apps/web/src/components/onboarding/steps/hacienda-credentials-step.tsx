@@ -39,11 +39,18 @@ export function HaciendaCredentialsStep({
   loading,
 }: HaciendaCredentialsStepProps) {
   const [formData, setFormData] = React.useState<HaciendaCredentialsForm>({
-    haciendaUser: '',
+    haciendaUser: data?.haciendaUser || '',
     haciendaPassword: '',
   });
   const [showPassword, setShowPassword] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  // Sync haciendaUser when navigating back (data prop updates after mount)
+  React.useEffect(() => {
+    if (data?.haciendaUser) {
+      setFormData((prev) => ({ ...prev, haciendaUser: data.haciendaUser! }));
+    }
+  }, [data?.haciendaUser]);
 
   const handleChange = (field: keyof HaciendaCredentialsForm, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

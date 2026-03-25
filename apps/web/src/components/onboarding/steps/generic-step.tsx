@@ -39,6 +39,7 @@ type CertificateUploadMode = 'combined' | 'separate';
 interface CertificateStepProps {
   type: 'test' | 'prod';
   hasCertificate?: boolean;
+  savedCertExpiry?: string;
   onSubmit: (data: CertificateForm) => void;
   onBack: () => void;
   loading?: boolean;
@@ -47,6 +48,7 @@ interface CertificateStepProps {
 export function CertificateStep({
   type,
   hasCertificate,
+  savedCertExpiry,
   onSubmit,
   onBack,
   loading,
@@ -55,7 +57,7 @@ export function CertificateStep({
   const [formData, setFormData] = React.useState<CertificateForm>({
     certificate: '',
     password: '',
-    expiryDate: '',
+    expiryDate: savedCertExpiry ? new Date(savedCertExpiry).toISOString().split('T')[0] : '',
   });
   // For separate file upload
   const [privateKey, setPrivateKey] = React.useState<string>('');
@@ -72,7 +74,14 @@ export function CertificateStep({
       setFileName('');
       setError('');
     }
-  }, [hasCertificate]);
+    // Restore saved expiry date when navigating back
+    if (savedCertExpiry) {
+      setFormData((prev) => ({
+        ...prev,
+        expiryDate: new Date(savedCertExpiry).toISOString().split('T')[0],
+      }));
+    }
+  }, [hasCertificate, savedCertExpiry]);
 
   const isTest = type === 'test';
   const title = isTest ? 'Certificado de Pruebas' : 'Certificado de Producción';
@@ -459,6 +468,7 @@ export function CertificateStep({
 interface ApiCredentialsStepProps {
   type: 'test' | 'prod';
   hasCredentials?: boolean;
+  savedEnvironmentUrl?: string;
   onSubmit: (data: ApiCredentialsForm) => void;
   onBack: () => void;
   loading?: boolean;
@@ -467,16 +477,24 @@ interface ApiCredentialsStepProps {
 export function ApiCredentialsStep({
   type,
   hasCredentials,
+  savedEnvironmentUrl,
   onSubmit,
   onBack,
   loading,
 }: ApiCredentialsStepProps) {
   const [formData, setFormData] = React.useState<ApiCredentialsForm>({
     apiPassword: '',
-    environmentUrl: '',
+    environmentUrl: savedEnvironmentUrl || '',
   });
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState<string>('');
+
+  // Sync environment URL when navigating back (data prop updates after mount)
+  React.useEffect(() => {
+    if (savedEnvironmentUrl) {
+      setFormData((prev) => ({ ...prev, environmentUrl: savedEnvironmentUrl }));
+    }
+  }, [savedEnvironmentUrl]);
 
   // When navigating back, if credentials already exist, clear error state
   React.useEffect(() => {

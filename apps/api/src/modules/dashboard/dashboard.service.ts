@@ -75,12 +75,12 @@ export class DashboardService {
         },
       }),
 
-      // Revenue this month
+      // Revenue this month (include PENDIENTE — real sales not yet transmitted)
       this.prisma.dTE.aggregate({
         where: {
           tenantId,
           createdAt: { gte: startOfThisMonth },
-          estado: { in: ['PROCESADO', 'FIRMADO'] },
+          estado: { in: ['PROCESADO', 'FIRMADO', 'PENDIENTE'] },
         },
         _sum: { totalPagar: true },
       }),
@@ -90,7 +90,7 @@ export class DashboardService {
         where: {
           tenantId,
           createdAt: { gte: startOfLastMonth, lte: endOfLastMonth },
-          estado: { in: ['PROCESADO', 'FIRMADO'] },
+          estado: { in: ['PROCESADO', 'FIRMADO', 'PENDIENTE'] },
         },
         _sum: { totalPagar: true },
       }),
@@ -118,7 +118,7 @@ export class DashboardService {
         where: {
           tenantId,
           createdAt: { gte: startOfThisMonth },
-          estado: { in: ['PROCESADO', 'FIRMADO'] },
+          estado: { in: ['PROCESADO', 'FIRMADO', 'PENDIENTE'] },
         },
         select: { createdAt: true, totalPagar: true },
         orderBy: { createdAt: 'asc' },
@@ -130,7 +130,7 @@ export class DashboardService {
         where: {
           tenantId,
           createdAt: { gte: startOfThisMonth },
-          estado: { in: ['PROCESADO', 'FIRMADO'] },
+          estado: { in: ['PROCESADO', 'FIRMADO', 'PENDIENTE'] },
           clienteId: { not: null },
         },
         _sum: { totalPagar: true },

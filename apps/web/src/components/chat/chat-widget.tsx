@@ -1,125 +1,104 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useAppStore } from '@/store';
 
 const SCRIPT_URL =
   'https://ragsaas-api-dev.whitewater-60ca8851.eastus2.azurecontainerapps.io/widget/facturobot/script.js';
 
+/**
+ * The Agent Nimo script creates a button and iframe appended to document.body.
+ * It uses style.cssText so we match via cssText substring.
+ * We keep refs to avoid re-querying the DOM on every toggle.
+ */
+let nimoButton: HTMLElement | null = null;
+let nimoIframe: HTMLIFrameElement | null = null;
 let scriptLoaded = false;
-let scriptLoading = false;
+let iframeOpen = false;
 
-function loadScript(): Promise<void> {
-  if (scriptLoaded) return Promise.resolve();
-  if (scriptLoading) {
-    return new Promise((resolve) => {
-      const check = setInterval(() => {
-        if (scriptLoaded) {
-          clearInterval(check);
-          resolve();
-        }
-      }, 100);
-    });
+function findNimoElements() {
+  if (nimoButton && nimoIframe) return;
+
+  // The script appends button + iframe directly to body with background:#4F46E5
+  const children = Array.from(document.body.children);
+  for (const el of children) {
+    if (el.tagName === 'BUTTON' && (el as HTMLElement).style.cssText.includes('#4F46E5')) {
+      nimoButton = el as HTMLElement;
+    }
+    if (el.tagName === 'IFRAME') {
+      const iframe = el as HTMLIFrameElement;
+      if (iframe.src.includes('ragsaas') || iframe.src.includes('facturobot')) {
+        nimoIframe = iframe;
+      }
+    }
   }
-
-  scriptLoading = true;
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = SCRIPT_URL;
-    script.async = true;
-    script.onload = () => {
-      scriptLoaded = true;
-      scriptLoading = false;
-      resolve();
-    };
-    script.onerror = () => {
-      scriptLoading = false;
-      reject(new Error('Failed to load Agent Nimo script'));
-    };
-    document.body.appendChild(script);
-  });
 }
 
-/**
- * Find the widget's default trigger button injected by the Agent Nimo script.
- * The script creates a 56px round button fixed at bottom:20px right:20px.
- */
-function findWidgetButton(): HTMLElement | null {
-  const buttons = Array.from(document.querySelectorAll('button'));
-  return buttons.find((btn) => {
-    const s = btn.style;
-    return (
-      s.position === 'fixed' &&
-      s.bottom === '20px' &&
-      s.right === '20px' &&
-      s.borderRadius === '50%'
-    );
-  }) ?? null;
-}
-
-/**
- * Find the widget iframe injected by the Agent Nimo script.
- */
-function findWidgetIframe(): HTMLIFrameElement | null {
-  const iframes = Array.from(document.querySelectorAll('iframe'));
-  return iframes.find((iframe) => {
-    const s = iframe.style;
-    return (
-      s.position === 'fixed' &&
-      s.right === '20px' &&
-      s.bottom === '80px'
-    );
-  }) ?? null;
-}
-
-/** Toggle the Agent Nimo chat panel by clicking its hidden trigger button. */
+/** Toggle the Agent Nimo chat panel. */
 export function toggleChat() {
-  const btn = findWidgetButton();
-  if (btn) {
-    btn.click();
+  findNimoElements();
+
+  if (nimoIframe) {
+    iframeOpen = !iframeOpen;
+    nimoIframe.style.display = iframeOpen ? 'block' : 'none';
     return;
   }
-  console.warn('[ChatWidget] Agent Nimo button not found');
+
+  // Fallback: click the hidden button
+  if (nimoButton) {
+    nimoButton.click();
+    return;
+  }
+
+  console.warn('[ChatWidget] Agent Nimo elements not found');
 }
 
 export function ChatWidget() {
-  const { theme } = useAppStore();
   const observerRef = useRef<MutationObserver | null>(null);
 
-  // Load script and hide its default floating button
   useEffect(() => {
     let cancelled = false;
 
     const hideDefaultButton = () => {
-      const btn = findWidgetButton();
-      if (btn) {
-        btn.style.display = 'none';
+      findNimoElements();
+      if (nimoButton) {
+        nimoButton.style.display = 'none';
         return true;
       }
       return false;
     };
 
-    const init = async () => {
-      try {
-        await loadScript();
+    const init = () => {
+      // Don't load twice (the script itself guards with __ragsaasLoaded)
+      if (scriptLoaded) {
+        hideDefaultButton();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = SCRIPT_URL;
+      script.async = true;
+      script.onload = () => {
+        scriptLoaded = true;
         if (cancelled) return;
 
-        // The script may append the button asynchronously — watch for it
-        if (!hideDefaultButton()) {
-          observerRef.current = new MutationObserver(() => {
-            if (hideDefaultButton()) {
-              observerRef.current?.disconnect();
-              observerRef.current = null;
-            }
-          });
-          observerRef.current.observe(document.body, {
-            childList: true,
-            subtree: true,
-          });
-        }
-      } catch (err) {
-        console.warn('[ChatWidget] Failed to load Agent Nimo:', err);
-      }
+        // The script appends elements synchronously in its IIFE,
+        // but give a tick just in case
+        requestAnimationFrame(() => {
+          if (!hideDefaultButton()) {
+            observerRef.current = new MutationObserver(() => {
+              if (hideDefaultButton()) {
+                observerRef.current?.disconnect();
+                observerRef.current = null;
+              }
+            });
+            observerRef.current.observe(document.body, { childList: true });
+          }
+        });
+      };
+      script.onerror = () => {
+        console.warn('[ChatWidget] Failed to load Agent Nimo script');
+      };
+      document.body.appendChild(script);
     };
 
     init();
@@ -129,16 +108,6 @@ export function ChatWidget() {
       observerRef.current?.disconnect();
     };
   }, []);
-
-  // Sync theme with widget iframe
-  useEffect(() => {
-    if (!scriptLoaded) return;
-
-    const iframe = findWidgetIframe();
-    if (iframe?.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'THEME_CHANGE', theme }, '*');
-    }
-  }, [theme]);
 
   return null;
 }

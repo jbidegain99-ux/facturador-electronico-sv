@@ -180,7 +180,8 @@
     "theme": "Theme: {theme}",
     "user": "User",
     "settings": "Settings",
-    "language": "Language"
+    "language": "Language",
+    "chat": "FacturoBot Assistant"
   },
   "dashboard": {
     "title": "Dashboard",

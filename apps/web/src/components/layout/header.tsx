@@ -12,7 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bell, User, LogOut, Settings, Info, X, ExternalLink, Megaphone, Zap, Shield, AlertTriangle, AlertCircle, CheckCheck, Globe } from 'lucide-react';
+import { Bell, User, LogOut, Settings, Info, X, ExternalLink, Megaphone, Zap, Shield, AlertTriangle, AlertCircle, CheckCheck, Globe, MessageCircle } from 'lucide-react';
+import { toggleChat } from '@/components/chat/chat-widget';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTranslations } from 'next-intl';
 import { locales, localeNames, type Locale } from '@/i18n/config';
@@ -275,6 +276,16 @@ export function Header() {
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Chat Widget Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleChat}
+          title={t('chat')}
+        >
+          <MessageCircle className="h-5 w-5" />
+        </Button>
 
         {/* Theme Toggle */}
         <ThemeToggle />

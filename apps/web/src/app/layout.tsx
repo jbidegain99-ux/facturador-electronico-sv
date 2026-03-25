@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { ToastProvider } from '@/components/ui/toast';
 import { ThemeProvider } from '@/components/theme-provider';
 import { I18nProvider } from '@/components/i18n-provider';
+import { ChatWidget } from '@/components/chat/chat-widget';
 import './globals.css';
 import '@/styles/design-tokens.css';
 
@@ -59,7 +60,10 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ThemeProvider>
           <I18nProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              {children}
+              <ChatWidget />
+            </ToastProvider>
           </I18nProvider>
         </ThemeProvider>
       </body>

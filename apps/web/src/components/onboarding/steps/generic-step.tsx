@@ -213,20 +213,39 @@ export function CertificateStep({
       </div>
 
       {hasCertificate && (
-        <Alert className="border-green-500 bg-green-500/10">
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700 dark:text-green-400">
-            Ya tiene un certificado configurado. Puede continuar sin cambios o subir uno nuevo para actualizarlo.
-          </AlertDescription>
-        </Alert>
+        <Card className="border-green-500 bg-green-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium text-green-700 dark:text-green-400">
+                  Certificado configurado correctamente
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Su certificado digital ya está guardado en el sistema.
+                  {formData.expiryDate && (
+                    <> Expira: <strong>{formData.expiryDate}</strong>.</>
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Puede continuar al siguiente paso o subir un nuevo certificado para reemplazarlo.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Upload mode selector */}
       <Card>
         <CardHeader>
-          <CardTitle>Tipo de Certificado</CardTitle>
+          <CardTitle>
+            {hasCertificate ? 'Reemplazar Certificado (opcional)' : 'Tipo de Certificado'}
+          </CardTitle>
           <CardDescription>
-            Seleccione cómo desea cargar su certificado digital
+            {hasCertificate
+              ? 'Solo necesita subir un nuevo archivo si desea reemplazar el certificado actual'
+              : 'Seleccione cómo desea cargar su certificado digital'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -270,9 +289,11 @@ export function CertificateStep({
               {uploadMode === 'combined' ? 'Archivo del Certificado' : 'Archivos del Certificado'}
             </CardTitle>
             <CardDescription>
-              {uploadMode === 'combined'
-                ? 'Seleccione el archivo .p12 o .pfx de su certificado digital'
-                : 'Seleccione el certificado público y la llave privada'}
+              {hasCertificate
+                ? 'Seleccione un nuevo archivo solo si desea reemplazar el certificado actual'
+                : uploadMode === 'combined'
+                  ? 'Seleccione el archivo .p12 o .pfx de su certificado digital'
+                  : 'Seleccione el certificado público y la llave privada'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -280,7 +301,7 @@ export function CertificateStep({
               <>
                 <div className="space-y-2">
                   <Label htmlFor="certificate">
-                    Certificado (.p12 / .pfx) <span className="text-red-500">*</span>
+                    Certificado (.p12 / .pfx) {!hasCertificate && <span className="text-red-500">*</span>}
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -294,17 +315,31 @@ export function CertificateStep({
                       type="button"
                       variant="outline"
                       onClick={() => document.getElementById('certificate')?.click()}
-                      className="w-full justify-start"
+                      className={`w-full justify-start ${hasCertificate && !fileName ? 'border-dashed' : ''}`}
                     >
-                      <Upload className="mr-2 h-4 w-4" />
-                      {fileName || 'Seleccionar archivo...'}
+                      {fileName ? (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          {fileName}
+                        </>
+                      ) : hasCertificate ? (
+                        <>
+                          <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                          Certificado guardado — clic para reemplazar
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Seleccionar archivo...
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="certPassword">
-                    Contraseña del Certificado <span className="text-red-500">*</span>
+                    Contraseña del Certificado {!hasCertificate && <span className="text-red-500">*</span>}
                   </Label>
                   <div className="relative">
                     <Input
@@ -314,7 +349,7 @@ export function CertificateStep({
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, password: e.target.value }))
                       }
-                      placeholder="••••••••"
+                      placeholder={hasCertificate ? 'Contraseña guardada — dejar vacío para mantener' : '••••••••'}
                       className="pr-10"
                     />
                     <Button
@@ -337,7 +372,7 @@ export function CertificateStep({
               <>
                 <div className="space-y-2">
                   <Label htmlFor="publicCert">
-                    Certificado Público (.crt / .cer / .pem) <span className="text-red-500">*</span>
+                    Certificado Público (.crt / .cer / .pem) {!hasCertificate && <span className="text-red-500">*</span>}
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -351,17 +386,31 @@ export function CertificateStep({
                       type="button"
                       variant="outline"
                       onClick={() => document.getElementById('publicCert')?.click()}
-                      className="w-full justify-start"
+                      className={`w-full justify-start ${hasCertificate && !fileName ? 'border-dashed' : ''}`}
                     >
-                      <Upload className="mr-2 h-4 w-4" />
-                      {fileName || 'Seleccionar certificado...'}
+                      {fileName ? (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          {fileName}
+                        </>
+                      ) : hasCertificate ? (
+                        <>
+                          <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                          Certificado guardado — clic para reemplazar
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Seleccionar certificado...
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="privateKey">
-                    Llave Privada (.key / .pem) <span className="text-red-500">*</span>
+                    Llave Privada (.key / .pem) {!hasCertificate && <span className="text-red-500">*</span>}
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -375,10 +424,24 @@ export function CertificateStep({
                       type="button"
                       variant="outline"
                       onClick={() => document.getElementById('privateKey')?.click()}
-                      className="w-full justify-start"
+                      className={`w-full justify-start ${hasCertificate && !privateKeyFileName ? 'border-dashed' : ''}`}
                     >
-                      <KeyRound className="mr-2 h-4 w-4" />
-                      {privateKeyFileName || 'Seleccionar llave privada...'}
+                      {privateKeyFileName ? (
+                        <>
+                          <KeyRound className="mr-2 h-4 w-4" />
+                          {privateKeyFileName}
+                        </>
+                      ) : hasCertificate ? (
+                        <>
+                          <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                          Llave guardada — clic para reemplazar
+                        </>
+                      ) : (
+                        <>
+                          <KeyRound className="mr-2 h-4 w-4" />
+                          Seleccionar llave privada...
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -395,7 +458,7 @@ export function CertificateStep({
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, password: e.target.value }))
                       }
-                      placeholder="Dejar vacío si no tiene contraseña"
+                      placeholder={hasCertificate ? 'Dejar vacío para mantener la actual' : 'Dejar vacío si no tiene contraseña'}
                       className="pr-10"
                     />
                     <Button
@@ -546,12 +609,27 @@ export function ApiCredentialsStep({
       </div>
 
       {hasCredentials && (
-        <Alert className="border-green-500 bg-green-500/10">
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700 dark:text-green-400">
-            Ya tiene credenciales configuradas. Puede actualizarlas si lo desea.
-          </AlertDescription>
-        </Alert>
+        <Card className="border-green-500 bg-green-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium text-green-700 dark:text-green-400">
+                  Credenciales API configuradas correctamente
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Su contraseña API ya está guardada en el sistema.
+                  {formData.environmentUrl && (
+                    <> URL: <strong>{formData.environmentUrl}</strong>.</>
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Puede continuar al siguiente paso o actualizar las credenciales si lo desea.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <Alert>
@@ -565,15 +643,19 @@ export function ApiCredentialsStep({
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Credenciales de API</CardTitle>
+            <CardTitle>
+              {hasCredentials ? 'Actualizar Credenciales (opcional)' : 'Credenciales de API'}
+            </CardTitle>
             <CardDescription>
-              Ingrese la contraseña API proporcionada por Hacienda
+              {hasCredentials
+                ? 'Ingrese nuevos valores solo si desea actualizar las credenciales actuales'
+                : 'Ingrese la contraseña API proporcionada por Hacienda'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="apiPassword">
-                Contraseña API <span className="text-red-500">*</span>
+                Contraseña API {!hasCredentials && <span className="text-red-500">*</span>}
               </Label>
               <div className="relative">
                 <Input
@@ -586,7 +668,7 @@ export function ApiCredentialsStep({
                       apiPassword: e.target.value,
                     }))
                   }
-                  placeholder="••••••••••••"
+                  placeholder={hasCredentials ? 'Contraseña guardada — dejar vacío para mantener' : '••••••••••••'}
                   className="pr-10"
                 />
                 <Button

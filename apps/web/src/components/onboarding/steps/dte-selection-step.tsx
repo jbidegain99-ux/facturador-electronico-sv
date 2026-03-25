@@ -76,20 +76,26 @@ export function DteSelectionStep({
   onBack,
   loading,
 }: DteSelectionStepProps) {
+  // Derive a stable key from backend data to detect actual content changes
+  const savedTypesKey = React.useMemo(
+    () => selectedTypes.map((t) => t.dteType).sort().join(','),
+    [selectedTypes]
+  );
+
   const [selected, setSelected] = React.useState<Set<DteType>>(() => {
     if (selectedTypes.length > 0) {
       return new Set(selectedTypes.map((t) => t.dteType));
     }
-    // Pre-select common types
+    // Pre-select common types only on first visit (no saved data)
     return new Set(COMMON_TYPES);
   });
 
-  // Update selection when navigating back to this step with saved data
+  // Sync selection from backend when navigating back to this step
   React.useEffect(() => {
     if (selectedTypes.length > 0) {
       setSelected(new Set(selectedTypes.map((t) => t.dteType)));
     }
-  }, [selectedTypes]);
+  }, [savedTypesKey]);
 
   const toggleType = (type: DteType) => {
     setSelected((prev) => {

@@ -8,6 +8,8 @@ import { DefaultEmailService } from '../email-config/services/default-email.serv
 import { HaciendaAuthService } from '../hacienda/services/hacienda-auth.service';
 import { CertificateService } from '../hacienda/services/certificate.service';
 import { EncryptionService } from '../email-config/services/encryption.service';
+import { DteErrorMapperService } from './services/error-mapper.service';
+import { DteOperationLoggerService } from './services/dte-operation-logger.service';
 import { createMockPrismaService, MockPrismaClient } from '../../test/helpers/mock-prisma';
 import { createMockDte, createMockTenant } from '../../test/helpers/test-fixtures';
 
@@ -41,6 +43,8 @@ describe('DteService', () => {
         { provide: HaciendaAuthService, useValue: { getTokenForTenant: jest.fn().mockResolvedValue({ token: 'mock-token' }) } },
         { provide: CertificateService, useValue: { signPayload: jest.fn().mockResolvedValue('mock-jws-signature') } },
         { provide: EncryptionService, useValue: { decrypt: jest.fn().mockReturnValue('mock-password') } },
+        { provide: DteErrorMapperService, useValue: { mapError: jest.fn().mockReturnValue({ message: 'error', code: 'UNKNOWN' }) } },
+        { provide: DteOperationLoggerService, useValue: { logOperationStart: jest.fn(), logOperationSuccess: jest.fn(), logOperationError: jest.fn() } },
       ],
     }).compile();
 

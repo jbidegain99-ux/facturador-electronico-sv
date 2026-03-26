@@ -30,13 +30,14 @@ describe('ClientesService', () => {
 
       const result = await service.findAll('tenant-1');
 
-      expect(result).toEqual({
-        data: clientes,
-        total: 2,
-        page: 1,
-        limit: 20,
-        totalPages: 1,
-      });
+      expect(result.total).toBe(2);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(20);
+      expect(result.totalPages).toBe(1);
+      expect(result.data).toHaveLength(2);
+      // Service adds nrcDisplay to each client
+      expect(result.data[0]).toHaveProperty('nrcDisplay');
+      expect(result.data[0].id).toBe('cliente-1');
       expect(prisma.cliente.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { tenantId: 'tenant-1' },
@@ -144,7 +145,8 @@ describe('ClientesService', () => {
       };
 
       const result = await service.create('tenant-1', dto as Parameters<typeof service.create>[1]);
-      expect(result).toEqual(newCliente);
+      expect(result).toMatchObject({ id: newCliente.id, nombre: newCliente.nombre });
+      expect(result).toHaveProperty('nrcDisplay');
       expect(prisma.cliente.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -177,7 +179,8 @@ describe('ClientesService', () => {
       prisma.cliente.findFirst.mockResolvedValue(cliente);
 
       const result = await service.findOne('tenant-1', 'cliente-1');
-      expect(result).toEqual(cliente);
+      expect(result).toMatchObject({ id: cliente.id, nombre: cliente.nombre });
+      expect(result).toHaveProperty('nrcDisplay');
     });
 
     it('should throw NotFoundException when not found', async () => {

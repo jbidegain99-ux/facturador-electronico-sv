@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, IsObject, ValidateNested, MaxLength } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsObject, ValidateNested, MaxLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -38,6 +38,7 @@ export class CreateClienteDto {
   @ApiProperty({ example: '1234567-8', required: false, description: 'NRC: 7 u 8 dígitos, con o sin guión. Se normaliza automáticamente.' })
   @IsOptional()
   @IsString()
+  @Matches(/^[0-9]{1,8}(-[0-9])?$/, { message: 'El NRC debe tener formato numérico válido (ej: 1234567-8 o 12345678)' })
   @MaxLength(10, { message: 'El NRC no puede exceder 10 caracteres' })
   nrc?: string;
 
@@ -50,6 +51,7 @@ export class CreateClienteDto {
   @ApiProperty({ example: '2200-1234', required: false })
   @IsOptional()
   @IsString()
+  @Matches(/^[0-9]{4}-[0-9]{4}$/, { message: 'El teléfono debe tener formato XXXX-XXXX' })
   @MaxLength(20, { message: 'El teléfono no puede exceder 20 caracteres' })
   telefono?: string;
 

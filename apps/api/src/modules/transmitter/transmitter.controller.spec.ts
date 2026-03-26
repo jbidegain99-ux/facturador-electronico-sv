@@ -4,6 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { TransmitterController, TransmitDto, CreateAndTransmitDto, AnularDto, ConsultarDto } from './transmitter.controller';
 import { TransmitterService, DTERecord } from './transmitter.service';
 import { DteBuilderService } from '../dte/services/dte-builder.service';
+import { DteOperationLoggerService } from '../dte/services/dte-operation-logger.service';
 import { createMockUser, createMockUserWithoutTenant, createMockAuthGuard } from '../../test/helpers/mock-user';
 import { CurrentUserData } from '../../common/decorators/current-user.decorator';
 
@@ -52,6 +53,7 @@ describe('TransmitterController', () => {
       providers: [
         { provide: TransmitterService, useValue: mockTransmitterService },
         { provide: DteBuilderService, useValue: mockDteBuilder },
+        { provide: DteOperationLoggerService, useValue: { logOperationStart: jest.fn(), logOperationSuccess: jest.fn(), logOperationError: jest.fn(), getTenantErrors: jest.fn() } },
       ],
     })
       .overrideGuard(AuthGuard('jwt'))

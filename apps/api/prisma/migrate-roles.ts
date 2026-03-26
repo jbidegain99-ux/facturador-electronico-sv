@@ -139,13 +139,11 @@ async function main() {
           });
 
           if (existingPerms === 0) {
-            await prisma.rolePermission.createMany({
-              data: template.permissions.map((tp) => ({
-                roleId: role.id,
-                permissionId: tp.permissionId,
-              })),
-              skipDuplicates: true,
-            });
+            for (const tp of template.permissions) {
+              await prisma.rolePermission.create({
+                data: { roleId: role.id, permissionId: tp.permissionId },
+              }).catch(() => { /* ignore duplicate */ });
+            }
           }
 
           roleId = role.id;

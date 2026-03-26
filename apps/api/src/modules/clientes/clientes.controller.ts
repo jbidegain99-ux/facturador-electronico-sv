@@ -18,6 +18,7 @@ import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { PaginationQueryDto } from '../../common/dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 
 @ApiTags('clientes')
 @Controller('clientes')
@@ -34,6 +35,7 @@ export class ClientesController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @ApiResponse({ status: 403, description: 'Usuario no tiene tenant asignado' })
   @ApiResponse({ status: 409, description: 'Ya existe un cliente con este documento' })
+  @RequirePermission('client:create')
   async create(
     @CurrentUser() user: CurrentUserData,
     @Body() createClienteDto: CreateClienteDto,
@@ -56,6 +58,7 @@ export class ClientesController {
   @ApiQuery({ name: 'sortOrder', required: false, description: 'Orden: asc o desc (default: desc)' })
   @ApiResponse({ status: 200, description: 'Lista paginada de clientes' })
   @ApiResponse({ status: 401, description: 'No autenticado' })
+  @RequirePermission('client:read')
   async findAll(
     @CurrentUser() user: CurrentUserData,
     @Query() query: PaginationQueryDto,
@@ -74,6 +77,7 @@ export class ClientesController {
   @ApiResponse({ status: 200, description: 'Datos del cliente' })
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
+  @RequirePermission('client:read')
   async findOne(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -93,6 +97,7 @@ export class ClientesController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   @ApiResponse({ status: 409, description: 'Ya existe un cliente con este documento' })
+  @RequirePermission('client:update')
   async update(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -113,6 +118,7 @@ export class ClientesController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   @ApiResponse({ status: 409, description: 'No se puede eliminar - tiene documentos asociados' })
+  @RequirePermission('client:delete')
   async remove(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,

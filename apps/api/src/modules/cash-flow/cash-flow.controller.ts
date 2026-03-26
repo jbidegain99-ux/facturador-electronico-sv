@@ -9,6 +9,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { CashFlowService } from './cash-flow.service';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 
 @ApiTags('Cash Flow')
 @ApiBearerAuth()
@@ -20,6 +21,7 @@ export class CashFlowController {
   @Get('summary')
   @ApiOperation({ summary: 'Resumen de cash flow para el período indicado' })
   @ApiQuery({ name: 'period', required: false, type: Number, description: 'Días (default 30)' })
+  @RequirePermission('report:read')
   async getSummary(
     @CurrentUser() user: CurrentUserData,
     @Query('period') periodStr?: string,
@@ -34,6 +36,7 @@ export class CashFlowController {
   @Get('by-method')
   @ApiOperation({ summary: 'Cash flow desglosado por método de pago' })
   @ApiQuery({ name: 'period', required: false, type: Number })
+  @RequirePermission('report:read')
   async getByMethod(
     @CurrentUser() user: CurrentUserData,
     @Query('period') periodStr?: string,
@@ -49,6 +52,7 @@ export class CashFlowController {
   @Get('by-date')
   @ApiOperation({ summary: 'Cash flow por fecha (forecast)' })
   @ApiQuery({ name: 'period', required: false, type: Number })
+  @RequirePermission('report:read')
   async getByDate(
     @CurrentUser() user: CurrentUserData,
     @Query('period') periodStr?: string,
@@ -63,6 +67,7 @@ export class CashFlowController {
 
   @Get('alerts')
   @ApiOperation({ summary: 'Alertas de cash flow (cheques venciendo, etc.)' })
+  @RequirePermission('report:read')
   async getAlerts(@CurrentUser() user: CurrentUserData) {
     if (!user.tenantId) {
       throw new ForbiddenException('Usuario no tiene tenant asignado');

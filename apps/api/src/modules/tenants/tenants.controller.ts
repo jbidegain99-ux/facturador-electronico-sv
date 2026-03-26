@@ -23,6 +23,7 @@ import { BlobStorageService } from './blob-storage.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { RequireFeature } from '../plans/decorators/require-feature.decorator';
 import { PlanFeatureGuard } from '../plans/guards/plan-feature.guard';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -53,6 +54,7 @@ export class TenantsController {
   @ApiResponse({ status: 200, description: 'Datos del tenant' })
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @ApiResponse({ status: 404, description: 'Tenant no encontrado' })
+  @RequirePermission('config:read')
   async getMyTenant(@CurrentUser() user: CurrentUserData) {
     this.logger.log(`Getting tenant for user ${user.email}, tenantId: ${user.tenantId}`);
 
@@ -80,6 +82,7 @@ export class TenantsController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @ApiResponse({ status: 403, description: 'Usuario no tiene tenant asignado' })
   @ApiResponse({ status: 404, description: 'Tenant no encontrado' })
+  @RequirePermission('config:update')
   async updateMyTenant(
     @CurrentUser() user: CurrentUserData,
     @Body() updateTenantDto: UpdateTenantDto,
@@ -192,6 +195,7 @@ export class TenantsController {
   @ApiOperation({ summary: 'Subir certificado digital .p12' })
   @ApiResponse({ status: 200, description: 'Certificado subido exitosamente' })
   @ApiResponse({ status: 400, description: 'Archivo invalido o contrasena incorrecta' })
+  @RequirePermission('config:update')
   async uploadCertificate(
     @CurrentUser() user: CurrentUserData,
     @UploadedFile() file: Express.Multer.File,
@@ -254,6 +258,7 @@ export class TenantsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Eliminar certificado digital' })
   @ApiResponse({ status: 200, description: 'Certificado eliminado' })
+  @RequirePermission('config:update')
   async deleteCertificate(@CurrentUser() user: CurrentUserData) {
     if (!user.tenantId) {
       throw new ForbiddenException('Usuario no tiene tenant asignado');
@@ -289,6 +294,7 @@ export class TenantsController {
   @ApiOperation({ summary: 'Probar conexion con Ministerio de Hacienda' })
   @ApiResponse({ status: 200, description: 'Conexion exitosa' })
   @ApiResponse({ status: 400, description: 'Error de conexion' })
+  @RequirePermission('config:update')
   async testMhConnection(@CurrentUser() user: CurrentUserData) {
     if (!user.tenantId) {
       throw new ForbiddenException('Usuario no tiene tenant asignado');
@@ -420,6 +426,7 @@ export class TenantsController {
   @ApiResponse({ status: 200, description: 'Logo subido exitosamente' })
   @ApiResponse({ status: 400, description: 'Archivo invalido' })
   @ApiResponse({ status: 403, description: 'Feature no disponible en tu plan' })
+  @RequirePermission('config:update')
   async uploadLogo(
     @CurrentUser() user: CurrentUserData,
     @UploadedFile() file: Express.Multer.File,
@@ -488,6 +495,7 @@ export class TenantsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Eliminar logo del tenant' })
   @ApiResponse({ status: 200, description: 'Logo eliminado' })
+  @RequirePermission('config:update')
   async deleteLogo(@CurrentUser() user: CurrentUserData) {
     if (!user.tenantId) {
       throw new ForbiddenException('Usuario no tiene tenant asignado');

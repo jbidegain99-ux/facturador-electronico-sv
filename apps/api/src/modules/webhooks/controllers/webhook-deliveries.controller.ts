@@ -16,6 +16,7 @@ import { RequireFeature } from '../../plans/decorators/require-feature.decorator
 import { PrismaService } from '../../../prisma/prisma.service';
 import { WebhooksService } from '../webhooks.service';
 import { WebhookDeliveryService } from '../webhook-delivery.service';
+import { RequirePermission } from '../../rbac/decorators/require-permission.decorator';
 
 @ApiTags('Webhooks')
 @ApiBearerAuth()
@@ -31,6 +32,7 @@ export class WebhookDeliveriesController {
 
   @Get('events')
   @ApiOperation({ summary: 'List all available webhook events' })
+  @RequirePermission('webhook:read')
   async getAvailableEvents() {
     const events = await this.prisma.webhookEvent.findMany({
       orderBy: { eventType: 'asc' },
@@ -47,6 +49,7 @@ export class WebhookDeliveriesController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get global webhook stats for tenant' })
+  @RequirePermission('webhook:read')
   async getStats(
     @CurrentUser('tenantId') tenantId: string,
     @Query('days') days = '7',
@@ -61,6 +64,7 @@ export class WebhookDeliveriesController {
 
   @Get('deliveries')
   @ApiOperation({ summary: 'List webhook deliveries for tenant' })
+  @RequirePermission('webhook:read')
   async getDeliveries(
     @CurrentUser('tenantId') tenantId: string,
     @Query('page') page = '1',
@@ -125,6 +129,7 @@ export class WebhookDeliveriesController {
 
   @Get('deliveries/:id')
   @ApiOperation({ summary: 'Get delivery details' })
+  @RequirePermission('webhook:read')
   async getDeliveryDetail(
     @CurrentUser('tenantId') tenantId: string,
     @Param('id') deliveryId: string,
@@ -169,6 +174,7 @@ export class WebhookDeliveriesController {
 
   @Post('deliveries/:id/retry')
   @ApiOperation({ summary: 'Retry a failed delivery' })
+  @RequirePermission('webhook:manage')
   async retryDelivery(
     @CurrentUser('tenantId') tenantId: string,
     @Param('id') deliveryId: string,
@@ -185,6 +191,7 @@ export class WebhookDeliveriesController {
 
   @Post('test/:endpointId')
   @ApiOperation({ summary: 'Send a test webhook to an endpoint' })
+  @RequirePermission('webhook:manage')
   async testEndpoint(
     @CurrentUser('tenantId') tenantId: string,
     @Param('endpointId') endpointId: string,

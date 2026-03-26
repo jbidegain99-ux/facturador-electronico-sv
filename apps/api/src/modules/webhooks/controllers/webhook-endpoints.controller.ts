@@ -18,6 +18,7 @@ import { PlanFeatureGuard } from '../../plans/guards/plan-feature.guard';
 import { RequireFeature } from '../../plans/decorators/require-feature.decorator';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { WebhooksService } from '../webhooks.service';
+import { RequirePermission } from '../../rbac/decorators/require-permission.decorator';
 import * as crypto from 'crypto';
 
 interface CreateEndpointBody {
@@ -52,6 +53,7 @@ export class WebhookEndpointsController {
 
   @Get()
   @ApiOperation({ summary: 'List webhook endpoints for current tenant' })
+  @RequirePermission('webhook:read')
   async getEndpoints(@CurrentUser('tenantId') tenantId: string) {
     if (!tenantId) throw new BadRequestException('Tenant no asignado');
 
@@ -96,6 +98,7 @@ export class WebhookEndpointsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new webhook endpoint' })
+  @RequirePermission('webhook:manage')
   async createEndpoint(
     @CurrentUser('tenantId') tenantId: string,
     @Body() dto: CreateEndpointBody,
@@ -159,6 +162,7 @@ export class WebhookEndpointsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get endpoint details' })
+  @RequirePermission('webhook:read')
   async getEndpoint(
     @CurrentUser('tenantId') tenantId: string,
     @Param('id') endpointId: string,
@@ -200,6 +204,7 @@ export class WebhookEndpointsController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update webhook endpoint' })
+  @RequirePermission('webhook:manage')
   async updateEndpoint(
     @CurrentUser('tenantId') tenantId: string,
     @Param('id') endpointId: string,
@@ -284,6 +289,7 @@ export class WebhookEndpointsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete webhook endpoint' })
+  @RequirePermission('webhook:manage')
   async deleteEndpoint(
     @CurrentUser('tenantId') tenantId: string,
     @Param('id') endpointId: string,
@@ -308,6 +314,7 @@ export class WebhookEndpointsController {
 
   @Post(':id/regenerate-secret')
   @ApiOperation({ summary: 'Regenerate endpoint secret key' })
+  @RequirePermission('webhook:manage')
   async regenerateSecret(
     @CurrentUser('tenantId') tenantId: string,
     @Param('id') endpointId: string,
@@ -335,6 +342,7 @@ export class WebhookEndpointsController {
 
   @Get(':id/stats')
   @ApiOperation({ summary: 'Get endpoint delivery stats' })
+  @RequirePermission('webhook:read')
   async getEndpointStats(
     @CurrentUser('tenantId') tenantId: string,
     @Param('id') endpointId: string,

@@ -11,6 +11,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import {
   ReportsService,
   ReportByTypeResult,
@@ -52,6 +53,7 @@ export class ReportsController {
   @ApiOperation({ summary: 'Reporte de ventas por tipo de DTE' })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @RequirePermission('report:read')
   async getByType(
     @CurrentUser() user: CurrentUserData,
     @Query('startDate') startDate?: string,
@@ -66,6 +68,7 @@ export class ReportsController {
   @ApiOperation({ summary: 'Reporte por período (mensual, trimestral, anual)' })
   @ApiQuery({ name: 'period', required: false, enum: ['monthly', 'quarterly', 'annual'] })
   @ApiQuery({ name: 'year', required: false, type: Number })
+  @RequirePermission('report:read')
   async getByPeriod(
     @CurrentUser() user: CurrentUserData,
     @Query('period') period?: string,
@@ -88,6 +91,7 @@ export class ReportsController {
   @ApiOperation({ summary: 'Reporte de retenciones por tipo de impuesto' })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @RequirePermission('report:read')
   async getRetenciones(
     @CurrentUser() user: CurrentUserData,
     @Query('startDate') startDate?: string,
@@ -103,6 +107,7 @@ export class ReportsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @RequirePermission('report:read')
   async getTopClients(
     @CurrentUser() user: CurrentUserData,
     @Query('limit') limitStr?: string,
@@ -119,6 +124,7 @@ export class ReportsController {
   @ApiOperation({ summary: 'Reporte de exportaciones por país' })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @RequirePermission('report:export')
   async getExports(
     @CurrentUser() user: CurrentUserData,
     @Query('startDate') startDate?: string,
@@ -137,6 +143,7 @@ export class ReportsController {
   @ApiQuery({ name: 'period', required: false, type: String })
   @ApiQuery({ name: 'year', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @RequirePermission('report:export')
   async exportCSV(
     @CurrentUser() user: CurrentUserData,
     @Res() res: Response,

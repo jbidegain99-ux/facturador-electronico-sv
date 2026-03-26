@@ -16,6 +16,7 @@ import { RecurringInvoiceCronService } from './recurring-invoice-cron.service';
 import { CreateTemplateDto, UpdateTemplateDto } from './dto';
 import { PaginationQueryDto } from '../../common/dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { getPlanFeatures } from '../../common/plan-features';
 
 @ApiTags('recurring-invoices')
@@ -50,6 +51,7 @@ export class RecurringInvoicesController {
   @ApiOperation({ summary: 'Crear template de factura recurrente' })
   @ApiResponse({ status: 201, description: 'Template creado' })
   @ApiResponse({ status: 403, description: 'Plan no permite facturas recurrentes' })
+  @RequirePermission('dte:create')
   async create(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: CreateTemplateDto,
@@ -68,6 +70,7 @@ export class RecurringInvoicesController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'sortBy', required: false })
   @ApiQuery({ name: 'sortOrder', required: false })
+  @RequirePermission('dte:read')
   async findAll(
     @CurrentUser() user: CurrentUserData,
     @Query() query: PaginationQueryDto,
@@ -81,6 +84,7 @@ export class RecurringInvoicesController {
   @ApiOperation({ summary: 'Obtener detalle de template' })
   @ApiResponse({ status: 200, description: 'Detalle del template' })
   @ApiResponse({ status: 404, description: 'Template no encontrado' })
+  @RequirePermission('dte:read')
   async findOne(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -94,6 +98,7 @@ export class RecurringInvoicesController {
   @ApiResponse({ status: 200, description: 'Template actualizado' })
   @ApiResponse({ status: 403, description: 'Plan no permite facturas recurrentes' })
   @ApiResponse({ status: 404, description: 'Template no encontrado' })
+  @RequirePermission('dte:update')
   async update(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -108,6 +113,7 @@ export class RecurringInvoicesController {
   @Post(':id/pause')
   @ApiOperation({ summary: 'Pausar template' })
   @ApiResponse({ status: 200, description: 'Template pausado' })
+  @RequirePermission('dte:update')
   async pause(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -120,6 +126,7 @@ export class RecurringInvoicesController {
   @Post(':id/resume')
   @ApiOperation({ summary: 'Reanudar template' })
   @ApiResponse({ status: 200, description: 'Template reanudado' })
+  @RequirePermission('dte:update')
   async resume(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -132,6 +139,7 @@ export class RecurringInvoicesController {
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancelar template' })
   @ApiResponse({ status: 200, description: 'Template cancelado' })
+  @RequirePermission('dte:update')
   async cancel(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -145,6 +153,7 @@ export class RecurringInvoicesController {
   @ApiOperation({ summary: 'Ejecutar template manualmente' })
   @ApiResponse({ status: 200, description: 'Template ejecutado' })
   @ApiResponse({ status: 400, description: 'Cooldown activo - esperar antes de re-ejecutar' })
+  @RequirePermission('dte:create')
   async trigger(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -174,6 +183,7 @@ export class RecurringInvoicesController {
   @ApiOperation({ summary: 'Historial de ejecuciones del template' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @RequirePermission('dte:read')
   async getHistory(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,

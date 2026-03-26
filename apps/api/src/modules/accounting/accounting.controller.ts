@@ -24,6 +24,7 @@ import {
   UpsertMappingDto,
 } from './dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { PlanFeatureGuard } from '../plans/guards/plan-feature.guard';
 import { RequireFeature } from '../plans/decorators/require-feature.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -55,6 +56,7 @@ export class AccountingController {
 
   @Get('config')
   @ApiOperation({ summary: 'Obtener configuración de automatización contable' })
+  @RequirePermission('accounting:read')
   async getConfig(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
     const tenant = await this.prisma.tenant.findUnique({
@@ -66,6 +68,7 @@ export class AccountingController {
 
   @Patch('config')
   @ApiOperation({ summary: 'Actualizar configuración de automatización contable' })
+  @RequirePermission('config:update')
   async updateConfig(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: UpdateAccountingConfigDto,
@@ -88,6 +91,7 @@ export class AccountingController {
 
   @Get('mappings')
   @ApiOperation({ summary: 'Listar reglas de mapeo contable' })
+  @RequirePermission('accounting:read')
   async getMappings(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
     return this.prisma.accountMappingRule.findMany({
@@ -103,6 +107,7 @@ export class AccountingController {
   @Post('mappings')
   @ApiOperation({ summary: 'Crear o actualizar regla de mapeo (upsert por operación)' })
   @ApiResponse({ status: 201, description: 'Mapeo creado/actualizado' })
+  @RequirePermission('accounting:create')
   async upsertMapping(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: UpsertMappingDto,
@@ -149,6 +154,7 @@ export class AccountingController {
 
   @Delete('mappings/:id')
   @ApiOperation({ summary: 'Eliminar regla de mapeo' })
+  @RequirePermission('accounting:create')
   async deleteMapping(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -169,6 +175,7 @@ export class AccountingController {
   @Post('mappings/seed')
   @ApiOperation({ summary: 'Generar mapeos predeterminados para El Salvador' })
   @ApiResponse({ status: 201, description: 'Mapeos predeterminados creados' })
+  @RequirePermission('accounting:create')
   async seedMappings(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
     let created = 0;
@@ -224,6 +231,7 @@ export class AccountingController {
   @Post('seed')
   @ApiOperation({ summary: 'Sembrar plan de cuentas de El Salvador' })
   @ApiResponse({ status: 201, description: 'Cuentas sembradas' })
+  @RequirePermission('accounting:create')
   async seedChartOfAccounts(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
 
@@ -233,6 +241,7 @@ export class AccountingController {
 
   @Get('accounts')
   @ApiOperation({ summary: 'Obtener plan de cuentas (árbol)' })
+  @RequirePermission('accounting:read')
   async getChartOfAccounts(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
 
@@ -241,6 +250,7 @@ export class AccountingController {
 
   @Get('accounts/list')
   @ApiOperation({ summary: 'Obtener lista plana de cuentas activas' })
+  @RequirePermission('accounting:read')
   async getAccountsList(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
 
@@ -249,6 +259,7 @@ export class AccountingController {
 
   @Get('accounts/postable')
   @ApiOperation({ summary: 'Obtener cuentas que permiten movimientos' })
+  @RequirePermission('accounting:read')
   async getPostableAccounts(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
 
@@ -258,6 +269,7 @@ export class AccountingController {
   @Post('accounts')
   @ApiOperation({ summary: 'Crear cuenta contable' })
   @ApiResponse({ status: 201, description: 'Cuenta creada' })
+  @RequirePermission('accounting:create')
   async createAccount(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: CreateAccountDto,
@@ -269,6 +281,7 @@ export class AccountingController {
 
   @Patch('accounts/:id')
   @ApiOperation({ summary: 'Actualizar cuenta contable' })
+  @RequirePermission('accounting:create')
   async updateAccount(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -281,6 +294,7 @@ export class AccountingController {
 
   @Post('accounts/:id/toggle-active')
   @ApiOperation({ summary: 'Activar/desactivar cuenta contable' })
+  @RequirePermission('accounting:create')
   async toggleAccountActive(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -297,6 +311,7 @@ export class AccountingController {
   @Post('journal-entries')
   @ApiOperation({ summary: 'Crear partida contable' })
   @ApiResponse({ status: 201, description: 'Partida creada' })
+  @RequirePermission('accounting:create')
   async createJournalEntry(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: CreateJournalEntryDto,
@@ -314,6 +329,7 @@ export class AccountingController {
   @ApiQuery({ name: 'entryType', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @RequirePermission('accounting:read')
   async getJournalEntries(
     @CurrentUser() user: CurrentUserData,
     @Query() query: QueryJournalDto,
@@ -325,6 +341,7 @@ export class AccountingController {
 
   @Get('journal-entries/:id')
   @ApiOperation({ summary: 'Obtener detalle de partida contable' })
+  @RequirePermission('accounting:read')
   async getJournalEntry(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -336,6 +353,7 @@ export class AccountingController {
 
   @Post('journal-entries/:id/post')
   @ApiOperation({ summary: 'Contabilizar partida (DRAFT → POSTED)' })
+  @RequirePermission('accounting:approve')
   async postJournalEntry(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -347,6 +365,7 @@ export class AccountingController {
 
   @Post('journal-entries/:id/void')
   @ApiOperation({ summary: 'Anular partida contabilizada' })
+  @RequirePermission('accounting:approve')
   async voidJournalEntry(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -365,6 +384,7 @@ export class AccountingController {
   @ApiOperation({ summary: 'Balanza de comprobación' })
   @UseGuards(PlanFeatureGuard)
   @RequireFeature('advanced_reports')
+  @RequirePermission('accounting:read')
   async getTrialBalance(
     @CurrentUser() user: CurrentUserData,
     @Query() query: ReportQueryDto,
@@ -379,6 +399,7 @@ export class AccountingController {
   @ApiQuery({ name: 'dateTo', required: false, description: 'Fecha corte (asOfDate)' })
   @UseGuards(PlanFeatureGuard)
   @RequireFeature('advanced_reports')
+  @RequirePermission('accounting:read')
   async getBalanceSheet(
     @CurrentUser() user: CurrentUserData,
     @Query() query: ReportQueryDto,
@@ -392,6 +413,7 @@ export class AccountingController {
   @ApiOperation({ summary: 'Estado de resultados' })
   @UseGuards(PlanFeatureGuard)
   @RequireFeature('advanced_reports')
+  @RequirePermission('accounting:read')
   async getIncomeStatement(
     @CurrentUser() user: CurrentUserData,
     @Query() query: ReportQueryDto,
@@ -408,6 +430,7 @@ export class AccountingController {
   @ApiQuery({ name: 'dateTo', required: false })
   @UseGuards(PlanFeatureGuard)
   @RequireFeature('advanced_reports')
+  @RequirePermission('accounting:read')
   async getGeneralLedger(
     @CurrentUser() user: CurrentUserData,
     @Query() query: ReportQueryDto,
@@ -429,6 +452,7 @@ export class AccountingController {
   @Post('simulate-invoice')
   @ApiOperation({ summary: 'Simular impacto contable de una factura sin emitir' })
   @ApiResponse({ status: 200, description: 'Simulación de partida contable' })
+  @RequirePermission('accounting:read')
   async simulateInvoice(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: SimulateInvoiceDto,
@@ -440,6 +464,7 @@ export class AccountingController {
 
   @Get('dashboard')
   @ApiOperation({ summary: 'Resumen del dashboard contable' })
+  @RequirePermission('accounting:read')
   async getDashboard(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
 

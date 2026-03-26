@@ -12,6 +12,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SucursalesService } from './sucursales.service';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 
 interface AuthRequest {
   user: { tenantId: string; userId: string };
@@ -26,18 +27,21 @@ export class SucursalesController {
 
   @Get()
   @ApiOperation({ summary: 'Listar sucursales del tenant' })
+  @RequirePermission('branch:read')
   findAll(@Request() req: AuthRequest) {
     return this.sucursalesService.findAll(req.user.tenantId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener sucursal por ID' })
+  @RequirePermission('branch:read')
   findOne(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.sucursalesService.findOne(id, req.user.tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Crear sucursal' })
+  @RequirePermission('branch:update')
   create(
     @Request() req: AuthRequest,
     @Body() body: {
@@ -58,6 +62,7 @@ export class SucursalesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar sucursal' })
+  @RequirePermission('branch:update')
   update(
     @Request() req: AuthRequest,
     @Param('id') id: string,
@@ -80,6 +85,7 @@ export class SucursalesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar sucursal' })
+  @RequirePermission('branch:update')
   remove(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.sucursalesService.remove(id, req.user.tenantId);
   }
@@ -88,12 +94,14 @@ export class SucursalesController {
 
   @Get(':sucursalId/puntos-venta')
   @ApiOperation({ summary: 'Listar puntos de venta de una sucursal' })
+  @RequirePermission('pos:read')
   findPuntosVenta(@Request() req: AuthRequest, @Param('sucursalId') sucursalId: string) {
     return this.sucursalesService.findPuntosVenta(sucursalId, req.user.tenantId);
   }
 
   @Post(':sucursalId/puntos-venta')
   @ApiOperation({ summary: 'Crear punto de venta' })
+  @RequirePermission('pos:update')
   createPuntoVenta(
     @Request() req: AuthRequest,
     @Param('sucursalId') sucursalId: string,
@@ -104,6 +112,7 @@ export class SucursalesController {
 
   @Patch('puntos-venta/:pvId')
   @ApiOperation({ summary: 'Actualizar punto de venta' })
+  @RequirePermission('pos:update')
   updatePuntoVenta(
     @Request() req: AuthRequest,
     @Param('pvId') pvId: string,
@@ -114,6 +123,7 @@ export class SucursalesController {
 
   @Delete('puntos-venta/:pvId')
   @ApiOperation({ summary: 'Eliminar punto de venta' })
+  @RequirePermission('pos:update')
   removePuntoVenta(@Request() req: AuthRequest, @Param('pvId') pvId: string) {
     return this.sucursalesService.removePuntoVenta(pvId, req.user.tenantId);
   }

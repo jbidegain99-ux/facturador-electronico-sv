@@ -24,6 +24,7 @@ import {
 import { Public } from '../../common/decorators/public.decorator';
 import { PlanFeatureGuard } from '../plans/guards/plan-feature.guard';
 import { RequireFeature } from '../plans/decorators/require-feature.decorator';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { QuotesService } from './quotes.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
@@ -95,6 +96,7 @@ export class QuotesController {
 
   @Get('next-number')
   @ApiOperation({ summary: 'Obtener siguiente numero de cotizacion' })
+  @RequirePermission('quote:read')
   getNextNumber(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
     return this.quotesService.getNextNumber(tenantId);
@@ -102,6 +104,7 @@ export class QuotesController {
 
   @Post()
   @ApiOperation({ summary: 'Crear nueva cotizacion' })
+  @RequirePermission('quote:create')
   create(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: CreateQuoteDto,
@@ -118,6 +121,7 @@ export class QuotesController {
   @ApiQuery({ name: 'status', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String })
   @ApiQuery({ name: 'sortOrder', required: false, type: String })
+  @RequirePermission('quote:read')
   findAll(
     @CurrentUser() user: CurrentUserData,
     @Query() query: QueryQuoteDto,
@@ -129,6 +133,7 @@ export class QuotesController {
   // NOTE: group/:groupId MUST be before :id to avoid being shadowed
   @Get('group/:groupId')
   @ApiOperation({ summary: 'Ver todas las versiones de un grupo de cotizacion' })
+  @RequirePermission('quote:read')
   getQuoteVersions(
     @CurrentUser() user: CurrentUserData,
     @Param('groupId') groupId: string,
@@ -139,6 +144,7 @@ export class QuotesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener cotizacion por ID' })
+  @RequirePermission('quote:read')
   findOne(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -149,6 +155,7 @@ export class QuotesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar cotizacion (solo Borrador)' })
+  @RequirePermission('quote:update')
   update(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -160,6 +167,7 @@ export class QuotesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar cotizacion (solo Borrador)' })
+  @RequirePermission('quote:delete')
   remove(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -172,6 +180,7 @@ export class QuotesController {
 
   @Post(':id/send')
   @ApiOperation({ summary: 'Enviar cotizacion (Borrador -> Enviada)' })
+  @RequirePermission('quote:send')
   send(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -182,6 +191,7 @@ export class QuotesController {
 
   @Post(':id/approve')
   @ApiOperation({ summary: 'Aprobar cotizacion manualmente (admin)' })
+  @RequirePermission('quote:update')
   approve(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -192,6 +202,7 @@ export class QuotesController {
 
   @Post(':id/reject')
   @ApiOperation({ summary: 'Rechazar cotizacion (Enviada -> Rechazada)' })
+  @RequirePermission('quote:update')
   reject(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -203,6 +214,7 @@ export class QuotesController {
 
   @Post(':id/resend')
   @ApiOperation({ summary: 'Reenviar cotizacion despues de cambios solicitados' })
+  @RequirePermission('quote:send')
   resend(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -213,6 +225,7 @@ export class QuotesController {
 
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancelar cotizacion' })
+  @RequirePermission('quote:update')
   cancel(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -225,6 +238,7 @@ export class QuotesController {
 
   @Post(':id/convert')
   @ApiOperation({ summary: 'Convertir cotizacion a factura' })
+  @RequirePermission('quote:update', 'dte:create')
   convertToInvoice(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -237,6 +251,7 @@ export class QuotesController {
 
   @Post(':id/create-version')
   @ApiOperation({ summary: 'Crear nueva version de cotizacion (PRO)' })
+  @RequirePermission('quote:create')
   createNewVersion(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -249,6 +264,7 @@ export class QuotesController {
 
   @Get(':id/status-history')
   @ApiOperation({ summary: 'Obtener historial de estados de cotizacion' })
+  @RequirePermission('quote:read')
   getStatusHistory(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,

@@ -4,6 +4,7 @@ import { Response } from 'express';
 import { DteService } from './dte.service';
 import { PdfService } from './pdf.service';
 import { PaginationQueryDto } from '../../common/dto';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 
 interface AuthRequest extends Request {
   user: {
@@ -24,6 +25,7 @@ export class DteController {
 
   @Post()
   @ApiOperation({ summary: 'Crear nuevo DTE' })
+  @RequirePermission('dte:create')
   create(
     @Request() req: AuthRequest,
     @Body() createDteDto: { tipoDte: string; data: Record<string, unknown> },
@@ -33,12 +35,14 @@ export class DteController {
 
   @Post(':id/sign')
   @ApiOperation({ summary: 'Firmar DTE' })
+  @RequirePermission('dte:transmit')
   sign(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.dteService.signDte(id, req.user.tenantId);
   }
 
   @Post(':id/transmit')
   @ApiOperation({ summary: 'Transmitir DTE al MH' })
+  @RequirePermission('dte:transmit')
   transmit(
     @Request() req: AuthRequest,
     @Param('id') id: string,
@@ -56,6 +60,7 @@ export class DteController {
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, description: 'Campo para ordenar (createdAt, totalPagar, numeroControl)' })
   @ApiQuery({ name: 'sortOrder', required: false, description: 'Orden: asc o desc (default: desc)' })
+  @RequirePermission('dte:read')
   findAll(
     @Request() req: AuthRequest,
     @Query() query: PaginationQueryDto,
@@ -76,6 +81,7 @@ export class DteController {
 
   @Get('stats/summary')
   @ApiOperation({ summary: 'Obtener resumen de estadisticas del tenant' })
+  @RequirePermission('dte:read')
   getSummaryStats(@Request() req: AuthRequest) {
     return this.dteService.getSummaryStats(req.user.tenantId);
   }
@@ -85,6 +91,7 @@ export class DteController {
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiQuery({ name: 'groupBy', required: false, enum: ['day', 'week', 'month'] })
+  @RequirePermission('dte:read')
   getStatsByDate(
     @Request() req: AuthRequest,
     @Query('startDate') startDate?: string,
@@ -103,6 +110,7 @@ export class DteController {
   @ApiOperation({ summary: 'Obtener estadisticas por tipo de DTE' })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @RequirePermission('dte:read')
   getStatsByType(
     @Request() req: AuthRequest,
     @Query('startDate') startDate?: string,
@@ -117,6 +125,7 @@ export class DteController {
 
   @Get('stats/by-status')
   @ApiOperation({ summary: 'Obtener estadisticas por estado' })
+  @RequirePermission('dte:read')
   getStatsByStatus(@Request() req: AuthRequest) {
     return this.dteService.getStatsByStatus(req.user.tenantId);
   }
@@ -126,6 +135,7 @@ export class DteController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @RequirePermission('dte:read')
   getTopClients(
     @Request() req: AuthRequest,
     @Query('limit') limit?: string,
@@ -143,6 +153,7 @@ export class DteController {
   @Get('recent')
   @ApiOperation({ summary: 'Obtener los DTEs mas recientes' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @RequirePermission('dte:read')
   getRecentDTEs(
     @Request() req: AuthRequest,
     @Query('limit') limit?: string,
@@ -155,6 +166,7 @@ export class DteController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener DTE por ID' })
+  @RequirePermission('dte:read')
   findOne(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.dteService.findOne(id, req.user.tenantId);
   }
@@ -162,6 +174,7 @@ export class DteController {
   @Get(':id/pdf')
   @ApiOperation({ summary: 'Descargar DTE como PDF' })
   @ApiProduces('application/pdf')
+  @RequirePermission('dte:read')
   async downloadPdf(
     @Request() req: AuthRequest,
     @Param('id') id: string,
@@ -199,6 +212,7 @@ export class DteController {
 
   @Post(':id/send-email')
   @ApiOperation({ summary: 'Enviar email del DTE manualmente (para pruebas o reenvio)' })
+  @RequirePermission('dte:transmit')
   sendEmail(
     @Request() req: AuthRequest,
     @Param('id') id: string,
@@ -209,6 +223,7 @@ export class DteController {
 
   @Post(':id/anular')
   @ApiOperation({ summary: 'Anular DTE' })
+  @RequirePermission('dte:void')
   anular(
     @Request() req: AuthRequest,
     @Param('id') id: string,

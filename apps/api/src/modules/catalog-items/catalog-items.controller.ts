@@ -22,6 +22,7 @@ import {
   UpdateCategoryDto,
 } from './dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -68,6 +69,7 @@ export class CatalogItemsController {
 
   @Get('plan-limit')
   @ApiOperation({ summary: 'Get current plan limit info for catalog items' })
+  @RequirePermission('catalog:read')
   getPlanLimit(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
     return this.catalogItemsService.getPlanLimitInfo(tenantId);
@@ -79,6 +81,7 @@ export class CatalogItemsController {
 
   @Get('categories')
   @ApiOperation({ summary: 'List categories for tenant' })
+  @RequirePermission('catalog:read')
   getCategories(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
     return this.catalogItemsService.getCategories(tenantId);
@@ -86,6 +89,7 @@ export class CatalogItemsController {
 
   @Post('categories')
   @ApiOperation({ summary: 'Create a new category' })
+  @RequirePermission('catalog:manage')
   createCategory(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: CreateCategoryDto,
@@ -97,6 +101,7 @@ export class CatalogItemsController {
 
   @Patch('categories/:id')
   @ApiOperation({ summary: 'Update a category' })
+  @RequirePermission('catalog:manage')
   updateCategory(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -108,6 +113,7 @@ export class CatalogItemsController {
 
   @Delete('categories/:id')
   @ApiOperation({ summary: 'Delete a category (unlinks items)' })
+  @RequirePermission('catalog:manage')
   deleteCategory(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -123,6 +129,7 @@ export class CatalogItemsController {
 
   @Post('import')
   @ApiOperation({ summary: 'Bulk import catalog items (upsert by code)' })
+  @RequirePermission('catalog:manage')
   importItems(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: ImportCatalogItemsDto,
@@ -134,6 +141,7 @@ export class CatalogItemsController {
 
   @Get('export')
   @ApiOperation({ summary: 'Export all active catalog items' })
+  @RequirePermission('catalog:read')
   exportItems(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
     this.logger.log(`User ${user.email} exporting catalog items`);
@@ -146,6 +154,7 @@ export class CatalogItemsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a catalog item' })
+  @RequirePermission('catalog:manage')
   create(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: CreateCatalogItemDto,
@@ -156,6 +165,7 @@ export class CatalogItemsController {
 
   @Get()
   @ApiOperation({ summary: 'List catalog items with pagination and filters' })
+  @RequirePermission('catalog:read')
   findAll(
     @CurrentUser() user: CurrentUserData,
     @Query() query: QueryCatalogItemDto,
@@ -166,6 +176,7 @@ export class CatalogItemsController {
 
   @Get('search')
   @ApiOperation({ summary: 'Search catalog items by name or code' })
+  @RequirePermission('catalog:read')
   search(
     @CurrentUser() user: CurrentUserData,
     @Query('q') q: string,
@@ -181,6 +192,7 @@ export class CatalogItemsController {
 
   @Get('recent')
   @ApiOperation({ summary: 'Get recently used catalog items' })
+  @RequirePermission('catalog:read')
   getRecent(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
     return this.catalogItemsService.getRecent(tenantId);
@@ -188,6 +200,7 @@ export class CatalogItemsController {
 
   @Get('favorites')
   @ApiOperation({ summary: 'Get favorite catalog items' })
+  @RequirePermission('catalog:read')
   getFavorites(@CurrentUser() user: CurrentUserData) {
     const tenantId = this.ensureTenant(user);
     return this.catalogItemsService.getFavorites(tenantId);
@@ -195,6 +208,7 @@ export class CatalogItemsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a catalog item by ID' })
+  @RequirePermission('catalog:read')
   findOne(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -205,6 +219,7 @@ export class CatalogItemsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a catalog item' })
+  @RequirePermission('catalog:manage')
   update(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -216,6 +231,7 @@ export class CatalogItemsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a catalog item' })
+  @RequirePermission('catalog:manage')
   remove(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
@@ -226,6 +242,7 @@ export class CatalogItemsController {
 
   @Post(':id/favorite')
   @ApiOperation({ summary: 'Toggle favorite status' })
+  @RequirePermission('catalog:manage')
   toggleFavorite(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,

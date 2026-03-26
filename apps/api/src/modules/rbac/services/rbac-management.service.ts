@@ -381,6 +381,15 @@ export class RbacManagementService {
       throw new NotFoundException('Rol no encontrado en este tenant');
     }
 
+    // Check if assignment already exists
+    const existing = await this.prisma.userRoleAssignment.findFirst({
+      where: { userId, roleId: dto.roleId, scopeType: dto.scopeType, scopeId },
+    });
+
+    if (existing) {
+      throw new ConflictException('Este usuario ya tiene este rol asignado con el mismo alcance');
+    }
+
     const assignment = await this.prisma.userRoleAssignment.create({
       data: {
         userId,

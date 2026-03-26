@@ -531,16 +531,11 @@ export class DteService {
     }
   }
 
-  async signDte(dteId: string, tenantId?: string) {
-    const dte = tenantId
-      ? await this.prisma.dTE.findFirst({
-          where: { id: dteId, tenantId },
-          include: { tenant: true },
-        })
-      : await this.prisma.dTE.findUnique({
-          where: { id: dteId },
-          include: { tenant: true },
-        });
+  async signDte(dteId: string, tenantId: string) {
+    const dte = await this.prisma.dTE.findFirst({
+      where: { id: dteId, tenantId },
+      include: { tenant: true },
+    });
 
     if (!dte) {
       throw new NotFoundException('DTE no encontrado');
@@ -631,16 +626,11 @@ export class DteService {
     return updated;
   }
 
-  async transmitDte(dteId: string, nit: string, password: string, tenantId?: string) {
-    const dte = tenantId
-      ? await this.prisma.dTE.findFirst({
-          where: { id: dteId, tenantId },
-          include: { tenant: true },
-        })
-      : await this.prisma.dTE.findUnique({
-          where: { id: dteId },
-          include: { tenant: true },
-        });
+  async transmitDte(dteId: string, nit: string, password: string, tenantId: string) {
+    const dte = await this.prisma.dTE.findFirst({
+      where: { id: dteId, tenantId },
+      include: { tenant: true },
+    });
 
     if (!dte) {
       throw new NotFoundException('DTE no encontrado');
@@ -1056,15 +1046,9 @@ export class DteService {
     };
   }
 
-  async findOne(id: string, tenantId?: string) {
-    if (tenantId) {
-      return this.prisma.dTE.findFirst({
-        where: { id, tenantId },
-        include: { cliente: true, logs: true },
-      });
-    }
-    return this.prisma.dTE.findUnique({
-      where: { id },
+  async findOne(id: string, tenantId: string) {
+    return this.prisma.dTE.findFirst({
+      where: { id, tenantId },
       include: { cliente: true, logs: true },
     });
   }
@@ -1168,33 +1152,22 @@ export class DteService {
     }
   }
 
-  async findOneWithTenant(id: string, tenantId?: string) {
-    if (tenantId) {
-      return this.prisma.dTE.findFirst({
-        where: { id, tenantId },
-        include: { cliente: true, logs: true, tenant: true },
-      });
-    }
-    return this.prisma.dTE.findUnique({
-      where: { id },
+  async findOneWithTenant(id: string, tenantId: string) {
+    return this.prisma.dTE.findFirst({
+      where: { id, tenantId },
       include: { cliente: true, logs: true, tenant: true },
     });
   }
 
-  async anularDte(dteId: string, motivo: string, tenantId?: string) {
+  async anularDte(dteId: string, motivo: string, tenantId: string) {
     if (!motivo || motivo.trim().length < 10) {
       throw new BadRequestException('El motivo de anulación debe tener al menos 10 caracteres');
     }
 
-    const dte = tenantId
-      ? await this.prisma.dTE.findFirst({
-          where: { id: dteId, tenantId },
-          include: { tenant: true },
-        })
-      : await this.prisma.dTE.findUnique({
-          where: { id: dteId },
-          include: { tenant: true },
-        });
+    const dte = await this.prisma.dTE.findFirst({
+      where: { id: dteId, tenantId },
+      include: { tenant: true },
+    });
 
     if (!dte) {
       throw new NotFoundException('DTE no encontrado');

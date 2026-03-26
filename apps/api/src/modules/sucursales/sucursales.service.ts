@@ -107,6 +107,7 @@ export class SucursalesService {
     await this.prisma.puntoVenta.create({
       data: {
         sucursalId: sucursal.id,
+        tenantId,
         nombre: 'Punto de Venta Principal',
         codPuntoVentaMH: 'P001',
         codPuntoVenta: 'P001',
@@ -221,6 +222,7 @@ export class SucursalesService {
     return this.prisma.puntoVenta.create({
       data: {
         sucursalId,
+        tenantId,
         nombre: dto.nombre,
         codPuntoVentaMH: dto.codPuntoVentaMH || null,
         codPuntoVenta: dto.codPuntoVenta || null,
@@ -229,11 +231,10 @@ export class SucursalesService {
   }
 
   async updatePuntoVenta(pvId: string, tenantId: string, dto: UpdatePuntoVentaDto) {
-    const pv = await this.prisma.puntoVenta.findUnique({
-      where: { id: pvId },
-      include: { sucursal: true },
+    const pv = await this.prisma.puntoVenta.findFirst({
+      where: { id: pvId, tenantId },
     });
-    if (!pv || pv.sucursal.tenantId !== tenantId) {
+    if (!pv) {
       throw new NotFoundException('Punto de venta no encontrado');
     }
     return this.prisma.puntoVenta.update({
@@ -248,11 +249,10 @@ export class SucursalesService {
   }
 
   async removePuntoVenta(pvId: string, tenantId: string) {
-    const pv = await this.prisma.puntoVenta.findUnique({
-      where: { id: pvId },
-      include: { sucursal: true },
+    const pv = await this.prisma.puntoVenta.findFirst({
+      where: { id: pvId, tenantId },
     });
-    if (!pv || pv.sucursal.tenantId !== tenantId) {
+    if (!pv) {
       throw new NotFoundException('Punto de venta no encontrado');
     }
     const dteCount = await this.prisma.dTE.count({ where: { puntoVentaId: pvId } });

@@ -98,7 +98,7 @@ describe('RecurringInvoiceCronService', () => {
           ]),
         }),
       );
-      expect(mockRecurringService.recordSuccess).toHaveBeenCalledWith('template-1', 'dte-1');
+      expect(mockRecurringService.recordSuccess).toHaveBeenCalledWith('template-1', 'dte-1', 'tenant-1');
     });
 
     it('should throw if template could not be claimed (already processing)', async () => {
@@ -168,7 +168,7 @@ describe('RecurringInvoiceCronService', () => {
 
       await cronService.processTemplate('template-1');
 
-      expect(mockDteService.signDte).toHaveBeenCalledWith('dte-1');
+      expect(mockDteService.signDte).toHaveBeenCalledWith('dte-1', 'tenant-1');
       expect(mockRecurringService.recordSuccess).toHaveBeenCalled();
     });
 
@@ -183,7 +183,7 @@ describe('RecurringInvoiceCronService', () => {
       mockDteService.createDte.mockRejectedValue(new Error('API error'));
 
       await expect(cronService.processTemplate('template-1')).rejects.toThrow('API error');
-      expect(mockRecurringService.recordFailure).toHaveBeenCalledWith('template-1', 'API error');
+      expect(mockRecurringService.recordFailure).toHaveBeenCalledWith('template-1', 'API error', 'tenant-1');
     });
 
     it('should still record success even if signing fails', async () => {
@@ -196,7 +196,7 @@ describe('RecurringInvoiceCronService', () => {
 
       await cronService.processTemplate('template-1');
 
-      expect(mockRecurringService.recordSuccess).toHaveBeenCalledWith('template-1', 'dte-1');
+      expect(mockRecurringService.recordSuccess).toHaveBeenCalledWith('template-1', 'dte-1', 'tenant-1');
     });
   });
 

@@ -142,21 +142,21 @@ export class RecurringInvoiceCronService {
       // If mode is AUTO_SEND and autoTransmit, sign the DTE
       if (template.mode === 'AUTO_SEND' && template.autoTransmit) {
         try {
-          await this.dteService.signDte(dte.id);
+          await this.dteService.signDte(dte.id, template.tenantId);
           this.logger.log(`DTE ${dte.id} created and signed for template ${templateId}`);
         } catch (signError) {
           this.logger.warn(`DTE ${dte.id} created but signing failed: ${signError}`);
         }
       }
 
-      await this.recurringService.recordSuccess(templateId, dte.id);
+      await this.recurringService.recordSuccess(templateId, dte.id, template.tenantId);
       this.logger.log(`Successfully processed template ${templateId}, DTE ${dte.id}`);
 
       return { dteId: dte.id };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to process template ${templateId}: ${errorMessage}`);
-      await this.recurringService.recordFailure(templateId, errorMessage);
+      await this.recurringService.recordFailure(templateId, errorMessage, template.tenantId);
       throw error;
     }
   }

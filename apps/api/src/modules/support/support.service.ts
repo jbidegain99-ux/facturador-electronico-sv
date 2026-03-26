@@ -197,8 +197,8 @@ export class SupportService {
   }
 
   async getUserTicketById(tenantId: string, ticketId: string, userId: string) {
-    const ticket = await this.prisma.supportTicket.findUnique({
-      where: { id: ticketId },
+    const ticket = await this.prisma.supportTicket.findFirst({
+      where: { id: ticketId, tenantId },
       include: {
         tenant: { select: { nombre: true } },
         requester: { select: { id: true, nombre: true, email: true } },
@@ -224,10 +224,6 @@ export class SupportService {
       throw new NotFoundException('Ticket no encontrado');
     }
 
-    if (ticket.tenantId !== tenantId) {
-      throw new ForbiddenException('No tienes acceso a este ticket');
-    }
-
     return ticket;
   }
 
@@ -237,16 +233,12 @@ export class SupportService {
     userId: string,
     data: CreateCommentDto,
   ) {
-    const ticket = await this.prisma.supportTicket.findUnique({
-      where: { id: ticketId },
+    const ticket = await this.prisma.supportTicket.findFirst({
+      where: { id: ticketId, tenantId },
     });
 
     if (!ticket) {
       throw new NotFoundException('Ticket no encontrado');
-    }
-
-    if (ticket.tenantId !== tenantId) {
-      throw new ForbiddenException('No tienes acceso a este ticket');
     }
 
     const comment = await this.prisma.ticketComment.create({

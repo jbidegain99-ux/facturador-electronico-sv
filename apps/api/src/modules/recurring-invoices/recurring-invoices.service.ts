@@ -315,9 +315,9 @@ export class RecurringInvoicesService {
   /**
    * Record a successful execution
    */
-  async recordSuccess(templateId: string, dteId: string): Promise<void> {
-    const template = await this.prisma.recurringInvoiceTemplate.findUnique({
-      where: { id: templateId },
+  async recordSuccess(templateId: string, dteId: string, tenantId: string): Promise<void> {
+    const template = await this.prisma.recurringInvoiceTemplate.findFirst({
+      where: { id: templateId, tenantId },
     });
     if (!template) return;
 
@@ -353,9 +353,9 @@ export class RecurringInvoicesService {
   /**
    * Record a failed execution
    */
-  async recordFailure(templateId: string, error: string): Promise<void> {
-    const template = await this.prisma.recurringInvoiceTemplate.findUnique({
-      where: { id: templateId },
+  async recordFailure(templateId: string, error: string, tenantId: string): Promise<void> {
+    const template = await this.prisma.recurringInvoiceTemplate.findFirst({
+      where: { id: templateId, tenantId },
     });
     if (!template) return;
 

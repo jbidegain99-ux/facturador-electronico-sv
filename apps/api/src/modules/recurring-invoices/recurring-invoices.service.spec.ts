@@ -258,9 +258,9 @@ describe('RecurringInvoicesService', () => {
 
   describe('recordSuccess', () => {
     it('should create history entry and update template in transaction', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(createMockTemplate());
+      prisma.recurringInvoiceTemplate.findFirst.mockResolvedValue(createMockTemplate());
 
-      await service.recordSuccess('template-1', 'dte-1');
+      await service.recordSuccess('template-1', 'dte-1', 'tenant-1');
 
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(prisma.recurringInvoiceHistory.create).toHaveBeenCalledWith(
@@ -275,11 +275,11 @@ describe('RecurringInvoicesService', () => {
     });
 
     it('should reset consecutiveFailures to 0', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(
+      prisma.recurringInvoiceTemplate.findFirst.mockResolvedValue(
         createMockTemplate({ consecutiveFailures: 2 }),
       );
 
-      await service.recordSuccess('template-1', 'dte-1');
+      await service.recordSuccess('template-1', 'dte-1', 'tenant-1');
 
       expect(prisma.recurringInvoiceTemplate.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -292,9 +292,9 @@ describe('RecurringInvoicesService', () => {
     });
 
     it('should return early if template not found', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(null);
+      prisma.recurringInvoiceTemplate.findFirst.mockResolvedValue(null);
 
-      await service.recordSuccess('nonexistent', 'dte-1');
+      await service.recordSuccess('nonexistent', 'dte-1', 'tenant-1');
 
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
@@ -302,11 +302,11 @@ describe('RecurringInvoicesService', () => {
 
   describe('recordFailure', () => {
     it('should increment consecutiveFailures', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(
+      prisma.recurringInvoiceTemplate.findFirst.mockResolvedValue(
         createMockTemplate({ consecutiveFailures: 1 }),
       );
 
-      await service.recordFailure('template-1', 'Error msg');
+      await service.recordFailure('template-1', 'Error msg', 'tenant-1');
 
       expect(prisma.recurringInvoiceTemplate.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -319,11 +319,11 @@ describe('RecurringInvoicesService', () => {
     });
 
     it('should suspend template after 3 consecutive failures', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(
+      prisma.recurringInvoiceTemplate.findFirst.mockResolvedValue(
         createMockTemplate({ consecutiveFailures: 2 }),
       );
 
-      await service.recordFailure('template-1', 'Third failure');
+      await service.recordFailure('template-1', 'Third failure', 'tenant-1');
 
       expect(prisma.recurringInvoiceTemplate.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -336,11 +336,11 @@ describe('RecurringInvoicesService', () => {
     });
 
     it('should keep ACTIVE status with fewer than 3 failures', async () => {
-      prisma.recurringInvoiceTemplate.findUnique.mockResolvedValue(
+      prisma.recurringInvoiceTemplate.findFirst.mockResolvedValue(
         createMockTemplate({ consecutiveFailures: 0 }),
       );
 
-      await service.recordFailure('template-1', 'First failure');
+      await service.recordFailure('template-1', 'First failure', 'tenant-1');
 
       expect(prisma.recurringInvoiceTemplate.update).toHaveBeenCalledWith(
         expect.objectContaining({

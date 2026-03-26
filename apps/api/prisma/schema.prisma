@@ -90,8 +90,9 @@ model Tenant {
   codEstableMH    String? @db.NVarChar(4)
   codPuntoVentaMH String? @db.NVarChar(4)
 
-  // Sucursales
-  sucursales Sucursal[]
+  // Sucursales & Puntos de Venta
+  sucursales   Sucursal[]
+  puntosVenta  PuntoVenta[]
 
   // Payment methods
   paymentMethods PaymentMethod[]
@@ -277,6 +278,8 @@ model PuntoVenta {
   id         String   @id @default(cuid())
   sucursalId String
   sucursal   Sucursal @relation(fields: [sucursalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   nombre          String  @db.NVarChar(200)
   codPuntoVentaMH String? @db.NVarChar(4) // Codigo MH (ej: "P001")
@@ -290,6 +293,7 @@ model PuntoVenta {
 
   @@unique([sucursalId, codPuntoVentaMH])
   @@index([sucursalId])
+  @@index([tenantId])
 }
 
 // ============================================================================

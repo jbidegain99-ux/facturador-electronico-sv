@@ -100,6 +100,10 @@ model Tenant {
   // DTE Operation & Error logs
   operationLogs DteOperationLog[]
   errorLogs     DteErrorLog[]
+
+  // RBAC
+  roles           Role[]
+  roleAssignments UserRoleAssignment[]
 }
 
 model User {
@@ -128,6 +132,9 @@ model User {
   ticketComments    TicketComment[]    @relation("TicketComments")
   ticketActivities  TicketActivity[]   @relation("TicketActivities")
   ticketAttachments TicketAttachment[] @relation("TicketAttachments")
+
+  // RBAC role assignments
+  roleAssignments UserRoleAssignment[]
 
   @@index([tenantId])
 }
@@ -1680,4 +1687,104 @@ model DteErrorLog {
   @@index([tenantId, timestamp(sort: Desc)])
   @@index([dteId])
   @@map("DteErrorLog")
+}
+
+// ============================================================================
+// RBAC (Role-Based Access Control)
+// ============================================================================
+
+/// System-wide role templates (immutable). Tenants create Role instances from these.
+model RoleTemplate {
+  id          String   @id @default(cuid())
+  code        String   @unique                  // tenant_admin, branch_manager, cashier, accountant, viewer
+  name        String   @db.NVarChar(100)        // Display name
+  description String?  @db.NVarChar(500)
+  isSystem    Boolean  @default(true)           // System templates cannot be deleted
+  createdAt   DateTime @default(now())
+
+  permissions RoleTemplatePermission[]
+  roles       Role[]
+}
+
+/// System-wide permission definitions (enumerated actions on resources).
+model Permission {
+  id       String @id @default(cuid())
+  code     String @unique                       // e.g. "dte:create", "client:read"
+  resource String @db.NVarChar(50)              // e.g. "dte", "client", "branch"
+  action   String @db.NVarChar(50)              // e.g. "create", "read", "update", "delete", "void"
+  name     String @db.NVarChar(100)             // Display: "Crear DTE"
+  category String @db.NVarChar(100)             // UI grouping: "Facturación", "Clientes"
+
+  templatePermissions RoleTemplatePermission[]
+  rolePermissions     RolePermission[]
+
+  @@unique([resource, action])
+  @@index([resource])
+}
+
+/// Maps which permissions each role template grants.
+model RoleTemplatePermission {
+  id           String       @id @default(cuid())
+  templateId   String
+  permissionId String
+  template     RoleTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  permission   Permission   @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, permissionId])
+}
+
+/// Tenant-scoped roles. Can derive from a template or be fully custom.
+model Role {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  name       String   @db.NVarChar(100)         // Can be customized: "Cajero Senior"
+  templateId String?                            // null = fully custom role
+  template   RoleTemplate? @relation(fields: [templateId], references: [id])
+  isCustom   Boolean  @default(false)           // true = tenant created custom role
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  permissions RolePermission[]
+  assignments UserRoleAssignment[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+/// Maps which permissions each tenant role grants.
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+/// Assigns a role to a user within a specific scope (tenant, branch, or POS).
+model UserRoleAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  tenantId  String
+
+  /// Hierarchical scope: "tenant" | "branch" | "pos"
+  scopeType String   @db.NVarChar(20)
+  /// The ID of the scoped entity (tenantId, sucursalId, or puntoVentaId)
+  scopeId   String
+
+  assignedBy String                             // userId of who assigned this role
+  assignedAt DateTime @default(now())
+  expiresAt  DateTime?                          // Optional expiration
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([userId, roleId, scopeType, scopeId])
+  @@index([userId, tenantId])
+  @@index([tenantId])
+  @@index([scopeType, scopeId])
 }

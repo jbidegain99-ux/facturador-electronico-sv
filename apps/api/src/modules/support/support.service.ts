@@ -116,7 +116,7 @@ export class SupportService {
       },
     });
 
-    // Send confirmation email to requester (fire-and-forget)
+    // Send confirmation email to requester (outbox + immediate send)
     const createdEmail = ticketCreatedTemplate({
       ticketNumber: ticket.ticketNumber,
       subject: ticket.subject,
@@ -125,20 +125,17 @@ export class SupportService {
       nombreUsuario: ticket.requester.nombre,
     });
 
-    this.defaultEmailService
-      .sendEmail(tenantId, {
-        to: ticket.requester.email,
-        subject: `Ticket #${ticket.ticketNumber} creado - ${ticket.subject}`,
-        html: createdEmail.html,
-        text: createdEmail.text,
-      })
-      .then((result) => {
-        if (!result.success) {
-          this.logger.error(`Failed to send ticket-created email for ${ticket.ticketNumber}: ${result.errorMessage}`);
-        }
-      });
+    await this.sendNotificationWithOutbox(
+      tenantId,
+      'TICKET_CREATED',
+      ticket.id,
+      ticket.requester.email,
+      `Ticket #${ticket.ticketNumber} creado - ${ticket.subject}`,
+      createdEmail.html,
+      createdEmail.text,
+    );
 
-    // Notify super admins (fire-and-forget)
+    // Notify super admins (outbox + immediate send)
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
     const adminEmailData = ticketNewAdminTemplate({
       ticketNumber: ticket.ticketNumber,
@@ -150,26 +147,22 @@ export class SupportService {
       adminLink: `${frontendUrl}/admin/support/${ticket.id}`,
     });
 
-    this.getSuperAdmins()
-      .then((admins) => {
-        for (const admin of admins) {
-          this.defaultEmailService
-            .sendEmail('system', {
-              to: admin.email,
-              subject: `Nuevo ticket #${ticket.ticketNumber} - ${ticket.subject}`,
-              html: adminEmailData.html,
-              text: adminEmailData.text,
-            })
-            .then((result) => {
-              if (!result.success) {
-                this.logger.error(`Failed to send admin notification to ${admin.email}: ${result.errorMessage}`);
-              }
-            });
-        }
-      })
-      .catch((err: Error) => {
-        this.logger.error(`Failed to fetch super admins for ticket notification: ${err.message}`);
-      });
+    try {
+      const admins = await this.getSuperAdmins();
+      for (const admin of admins) {
+        await this.sendNotificationWithOutbox(
+          'system',
+          'TICKET_ADMIN_NOTIFY',
+          ticket.id,
+          admin.email,
+          `Nuevo ticket #${ticket.ticketNumber} - ${ticket.subject}`,
+          adminEmailData.html,
+          adminEmailData.text,
+        );
+      }
+    } catch (err) {
+      this.logger.error(`Failed to fetch super admins for ticket notification: ${(err as Error).message}`);
+    }
 
     return ticket;
   }
@@ -525,7 +518,7 @@ export class SupportService {
       ),
     ]);
 
-    // Send status change email if status was updated (fire-and-forget)
+    // Send status change email if status was updated (outbox + immediate send)
     if (data.status && data.status !== ticket.status) {
       const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
       const statusEmail = ticketStatusChangedTemplate({
@@ -537,18 +530,15 @@ export class SupportService {
         ticketLink: `${frontendUrl}/soporte/${ticketId}`,
       });
 
-      this.defaultEmailService
-        .sendEmail(ticket.tenantId, {
-          to: updatedTicket.requester.email,
-          subject: `Ticket #${ticket.ticketNumber} actualizado - ${data.status}`,
-          html: statusEmail.html,
-          text: statusEmail.text,
-        })
-        .then((result) => {
-          if (!result.success) {
-            this.logger.error(`Failed to send status-change email for ${ticket.ticketNumber}: ${result.errorMessage}`);
-          }
-        });
+      await this.sendNotificationWithOutbox(
+        ticket.tenantId,
+        'TICKET_STATUS_CHANGED',
+        ticket.id,
+        updatedTicket.requester.email,
+        `Ticket #${ticket.ticketNumber} actualizado - ${data.status}`,
+        statusEmail.html,
+        statusEmail.text,
+      );
     }
 
     return updatedTicket;
@@ -597,11 +587,12 @@ export class SupportService {
       },
     });
 
-    // Send reply notification to requester for public comments (fire-and-forget)
+    // Send reply notification to requester for public comments (outbox + immediate send)
     if (!data.isInternal) {
       const ticketWithRequester = await this.prisma.supportTicket.findUnique({
         where: { id: ticketId },
         select: {
+          id: true,
           ticketNumber: true,
           subject: true,
           tenantId: true,
@@ -619,18 +610,15 @@ export class SupportService {
           ticketLink: `${frontendUrl}/soporte/${ticketId}`,
         });
 
-        this.defaultEmailService
-          .sendEmail(ticketWithRequester.tenantId, {
-            to: ticketWithRequester.requester.email,
-            subject: `Respuesta en ticket #${ticketWithRequester.ticketNumber} - ${ticketWithRequester.subject}`,
-            html: replyEmail.html,
-            text: replyEmail.text,
-          })
-          .then((result) => {
-            if (!result.success) {
-              this.logger.error(`Failed to send reply email for ${ticketWithRequester.ticketNumber}: ${result.errorMessage}`);
-            }
-          });
+        await this.sendNotificationWithOutbox(
+          ticketWithRequester.tenantId,
+          'TICKET_REPLY',
+          ticketWithRequester.id,
+          ticketWithRequester.requester.email,
+          `Respuesta en ticket #${ticketWithRequester.ticketNumber} - ${ticketWithRequester.subject}`,
+          replyEmail.html,
+          replyEmail.text,
+        );
       }
     }
 
@@ -654,6 +642,74 @@ export class SupportService {
         assignedTo: { select: { nombre: true } },
       },
     });
+  }
+
+  // ============ NOTIFICATION OUTBOX ============
+
+  /**
+   * Creates a PendingNotification record and attempts immediate email send.
+   * If the immediate send fails, the notification-outbox cron will retry.
+   */
+  private async sendNotificationWithOutbox(
+    tenantId: string,
+    type: string,
+    referenceId: string,
+    recipientEmail: string,
+    emailSubject: string,
+    emailHtml: string,
+    emailText?: string,
+  ): Promise<void> {
+    const notification = await this.prisma.pendingNotification.create({
+      data: {
+        tenantId,
+        type,
+        referenceId,
+        recipientEmail,
+        emailSubject,
+        emailHtml,
+        emailText,
+      },
+    });
+
+    const sendStart = Date.now();
+    try {
+      const result = await this.defaultEmailService.sendEmail(tenantId, {
+        to: recipientEmail,
+        subject: emailSubject,
+        html: emailHtml,
+        text: emailText,
+      });
+
+      const sendLatencyMs = Date.now() - sendStart;
+
+      if (result.success) {
+        await this.prisma.pendingNotification.update({
+          where: { id: notification.id },
+          data: { status: 'SENT', sentAt: new Date() },
+        });
+        this.logger.log(
+          `Notification ${type} sent to ${recipientEmail} in ${sendLatencyMs}ms`,
+        );
+      } else {
+        await this.prisma.pendingNotification.update({
+          where: { id: notification.id },
+          data: { errorMessage: result.errorMessage, attemptCount: 1 },
+        });
+        this.logger.error(
+          `Immediate send failed for ${type} notification ${notification.id} (${sendLatencyMs}ms): ${result.errorMessage}`,
+        );
+      }
+    } catch (err) {
+      const sendLatencyMs = Date.now() - sendStart;
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      await this.prisma.pendingNotification.update({
+        where: { id: notification.id },
+        data: { errorMessage, attemptCount: 1 },
+      });
+      this.logger.error(
+        `Immediate send error for ${type} notification ${notification.id} (${sendLatencyMs}ms): ${errorMessage}`,
+      );
+    }
   }
 
   // ============ FILE ATTACHMENTS ============

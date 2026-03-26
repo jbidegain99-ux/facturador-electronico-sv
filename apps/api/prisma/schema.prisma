@@ -409,6 +409,28 @@ model EmailSendLog {
   @@index([dteId])
 }
 
+model PendingNotification {
+  id             String   @id @default(cuid())
+  tenantId       String
+  type           String // TICKET_CREATED, TICKET_ADMIN_NOTIFY, TICKET_STATUS_CHANGED, TICKET_REPLY
+  referenceId    String? // ticketId
+  recipientEmail String
+  emailSubject   String   @db.NVarChar(500)
+  emailHtml      String   @db.NVarChar(Max)
+  emailText      String?  @db.NVarChar(Max)
+  status         String   @default("PENDING") // PENDING, SENT, FAILED, DEAD_LETTER
+  attemptCount   Int      @default(0)
+  maxAttempts    Int      @default(3)
+  nextRetryAt    DateTime @default(now())
+  errorMessage   String?  @db.NVarChar(Max)
+  createdAt      DateTime @default(now())
+  sentAt         DateTime?
+
+  @@index([status, nextRetryAt])
+  @@index([tenantId])
+  @@index([referenceId])
+}
+
 // Solicitudes de servicio asistido
 model EmailConfigRequest {
   id       String @id @default(cuid())

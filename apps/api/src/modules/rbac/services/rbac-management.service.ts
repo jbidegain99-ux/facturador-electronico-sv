@@ -4,12 +4,17 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { randomBytes } from 'crypto';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RbacService } from './rbac.service';
 import { AuditLogsService } from '../../audit-logs/audit-logs.service';
 import { AuditAction, AuditModule } from '../../audit-logs/dto';
-import { CreateRoleDto, UpdateRoleDto, AssignRoleDto } from '../dto';
+import { DefaultEmailService } from '../../email-config/services/default-email.service';
+import { CreateRoleDto, UpdateRoleDto, AssignRoleDto, InviteUserDto } from '../dto';
 
 export interface PermissionGroup {
   category: string;
@@ -30,6 +35,8 @@ export class RbacManagementService {
     private readonly prisma: PrismaService,
     private readonly rbacService: RbacService,
     private readonly auditLogs: AuditLogsService,
+    private readonly defaultEmailService: DefaultEmailService,
+    private readonly configService: ConfigService,
   ) {}
 
   private audit(
@@ -350,6 +357,12 @@ export class RbacManagementService {
     dto: AssignRoleDto,
     assignedBy: string,
   ) {
+    // Default scopeId to tenantId when scope is tenant-level
+    const scopeId = dto.scopeId || (dto.scopeType === 'tenant' ? tenantId : '');
+    if (!scopeId) {
+      throw new BadRequestException('scopeId es requerido para scope de tipo branch o pos');
+    }
+
     // Verify user belongs to tenant
     const user = await this.prisma.user.findFirst({
       where: { id: userId, tenantId },
@@ -374,7 +387,7 @@ export class RbacManagementService {
         roleId: dto.roleId,
         tenantId,
         scopeType: dto.scopeType,
-        scopeId: dto.scopeId,
+        scopeId,
         assignedBy,
       },
       include: {
@@ -480,5 +493,142 @@ export class RbacManagementService {
     });
 
     return { deleted: true };
+  }
+
+  async inviteUser(tenantId: string, dto: InviteUserDto, invitedBy: string) {
+    // Check if email already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Ya existe un usuario con este email');
+    }
+
+    // Verify roleId belongs to tenant
+    const role = await this.prisma.role.findFirst({
+      where: { id: dto.roleId, tenantId },
+    });
+
+    if (!role) {
+      throw new NotFoundException('Rol no encontrado en este tenant');
+    }
+
+    // Hash a random temporary password
+    const tempPassword = randomBytes(16).toString('hex');
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Generate invite token
+    const inviteToken = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72 hours
+
+    // Determine scope
+    const scopeType = dto.scopeType || 'tenant';
+    const scopeId = dto.scopeId || (scopeType === 'tenant' ? tenantId : '');
+
+    if (!scopeId) {
+      throw new BadRequestException('scopeId es requerido para scope de tipo branch o pos');
+    }
+
+    // Create user and role assignment in a transaction
+    const result = await this.prisma.$transaction(async (tx: typeof this.prisma) => {
+      const newUser = await tx.user.create({
+        data: {
+          email: dto.email,
+          nombre: dto.nombre,
+          password: hashedPassword,
+          rol: 'FACTURADOR',
+          tenantId,
+          emailVerified: false,
+          emailVerificationToken: inviteToken,
+          emailVerificationExpiresAt: expiresAt,
+        },
+      });
+
+      await tx.userRoleAssignment.create({
+        data: {
+          userId: newUser.id,
+          roleId: dto.roleId,
+          tenantId,
+          scopeType,
+          scopeId,
+          assignedBy: invitedBy,
+        },
+      });
+
+      return newUser;
+    });
+
+    // Get tenant name for the email
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { nombre: true },
+    });
+    const tenantName = tenant?.nombre || 'Tu empresa';
+
+    // Send invitation email
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', '');
+    const emailHtml = `
+      <h2>Invitación a Facturosv</h2>
+      <p>Hola ${dto.nombre},</p>
+      <p>${tenantName} te ha invitado a unirte a su equipo en Facturosv.</p>
+      <p>Haz clic en el siguiente enlace para configurar tu contraseña y activar tu cuenta:</p>
+      <a href="${frontendUrl}/invite/${inviteToken}">Activar mi cuenta</a>
+      <p>Este enlace expira en 72 horas.</p>
+    `;
+
+    const emailResult = await this.defaultEmailService.sendEmail(tenantId, {
+      to: dto.email,
+      subject: 'Invitación a Facturosv - Configura tu cuenta',
+      html: emailHtml,
+    });
+
+    if (!emailResult.success) {
+      this.logger.warn(`Failed to send invite email to ${dto.email}: ${emailResult.errorMessage}`);
+    } else {
+      this.logger.log(`Invite email sent to ${dto.email}`);
+    }
+
+    // Audit log
+    this.audit(tenantId, invitedBy, AuditAction.CREATE, `Usuario invitado: ${dto.email} con rol ${role.name}`, 'User', result.id, {
+      newValue: { email: dto.email, nombre: dto.nombre, roleName: role.name },
+    });
+
+    return {
+      id: result.id,
+      email: result.email,
+      nombre: result.nombre,
+      roleName: role.name,
+    };
+  }
+
+  async acceptInvite(token: string, password: string) {
+    // Find user by invite token that hasn't expired
+    const user = await this.prisma.user.findFirst({
+      where: {
+        emailVerificationToken: token,
+        emailVerificationExpiresAt: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invitación inválida o expirada');
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Activate the user
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpiresAt: null,
+      },
+    });
+
+    return { success: true, email: user.email };
   }
 }

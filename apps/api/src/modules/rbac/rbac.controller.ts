@@ -13,8 +13,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { RequirePermission } from './decorators/require-permission.decorator';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { RbacManagementService } from './services/rbac-management.service';
-import { CreateRoleDto, UpdateRoleDto, AssignRoleDto } from './dto';
+import { CreateRoleDto, UpdateRoleDto, AssignRoleDto, InviteUserDto, AcceptInviteDto } from './dto';
 
 @ApiTags('rbac')
 @Controller('rbac')
@@ -108,5 +109,18 @@ export class RbacController {
   ) {
     const tenantId = this.ensureTenant(user);
     return this.rbacManagementService.removeAssignment(tenantId, userId, assignmentId, user.id);
+  }
+
+  @Post('invite')
+  @RequirePermission('user:manage')
+  inviteUser(@CurrentUser() user: CurrentUserData, @Body() dto: InviteUserDto) {
+    const tenantId = this.ensureTenant(user);
+    return this.rbacManagementService.inviteUser(tenantId, dto, user.id);
+  }
+
+  @Public()
+  @Post('accept-invite')
+  acceptInvite(@Body() dto: AcceptInviteDto) {
+    return this.rbacManagementService.acceptInvite(dto.token, dto.password);
   }
 }

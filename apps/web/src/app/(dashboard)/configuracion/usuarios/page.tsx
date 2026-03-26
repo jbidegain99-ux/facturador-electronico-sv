@@ -110,6 +110,13 @@ export default function UsuariosPage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Invite user dialog
+  const [inviteDialogOpen, setInviteDialogOpen] = React.useState(false);
+  const [inviteEmail, setInviteEmail] = React.useState('');
+  const [inviteName, setInviteName] = React.useState('');
+  const [inviteRoleId, setInviteRoleId] = React.useState('');
+  const [inviting, setInviting] = React.useState(false);
+
   // Assign role dialog
   const [assignDialogOpen, setAssignDialogOpen] = React.useState(false);
   const [assignUserId, setAssignUserId] = React.useState<string | null>(null);
@@ -232,6 +239,31 @@ export default function UsuariosPage() {
       toast.error(err instanceof Error ? err.message : 'Error al asignar rol');
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const handleInviteUser = async () => {
+    if (!inviteEmail || !inviteName || !inviteRoleId) return;
+    setInviting(true);
+    try {
+      await api('/rbac/invite', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: inviteEmail,
+          nombre: inviteName,
+          roleId: inviteRoleId,
+        }),
+      });
+      setInviteDialogOpen(false);
+      setInviteEmail('');
+      setInviteName('');
+      setInviteRoleId('');
+      toast.success('Invitación enviada correctamente');
+      fetchData();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al invitar usuario');
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -378,6 +410,12 @@ export default function UsuariosPage() {
 
         {/* ── Tab: Usuarios ─────────────────────────────────────────── */}
         <TabsContent value="usuarios">
+          <div className="flex justify-end mb-4">
+            <Button onClick={() => setInviteDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Invitar Usuario
+            </Button>
+          </div>
           <Card>
             <CardContent className="p-0">
               {loading ? (
@@ -745,6 +783,65 @@ export default function UsuariosPage() {
                 'Guardar Cambios'
               ) : (
                 'Crear Rol'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Invite User Dialog ─────────────────────────────────────── */}
+      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Invitar Usuario</DialogTitle>
+            <DialogDescription>
+              Se enviara un email de invitacion para que el usuario configure su contraseña
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Nombre *</label>
+              <Input
+                placeholder="Nombre completo"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Email *</label>
+              <Input
+                type="email"
+                placeholder="correo@ejemplo.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Rol *</label>
+              <Select value={inviteRoleId} onValueChange={setInviteRoleId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleInviteUser}
+              disabled={inviting || !inviteEmail || !inviteName || !inviteRoleId}
+            >
+              {inviting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</>
+              ) : (
+                'Enviar Invitacion'
               )}
             </Button>
           </DialogFooter>

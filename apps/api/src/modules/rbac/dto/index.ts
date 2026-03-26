@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsIn, IsEmail } from 'class-validator';
 
 export class CreateRoleDto {
   @IsString()
@@ -31,6 +31,35 @@ export class AssignRoleDto {
   @IsIn(['tenant', 'branch', 'pos'])
   scopeType: 'tenant' | 'branch' | 'pos';
 
+  @IsOptional()
   @IsString()
-  scopeId: string;
+  scopeId?: string;
+}
+
+export class InviteUserDto {
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  nombre: string;
+
+  @IsString()
+  roleId: string;
+
+  @IsOptional()
+  @IsIn(['tenant', 'branch', 'pos'])
+  scopeType?: string;
+
+  @IsOptional()
+  @IsString()
+  scopeId?: string;
+}
+
+export class AcceptInviteDto {
+  @IsString()
+  token: string;
+
+  @IsString()
+  password: string;
 }

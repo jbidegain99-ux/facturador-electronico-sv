@@ -130,10 +130,10 @@ export default function UsuariosPage() {
     try {
       setLoading(true);
       const [usersRes, rolesRes, permsRes, templatesRes, sucursalesRes] = await Promise.all([
-        api<User[]>('/api/v1/rbac/users').catch(() => [] as User[]),
-        api<Role[]>('/api/v1/rbac/roles').catch(() => [] as Role[]),
-        api<Permission[]>('/api/v1/rbac/permissions').catch(() => [] as Permission[]),
-        api<Template[]>('/api/v1/rbac/templates').catch(() => [] as Template[]),
+        api<User[]>('/rbac/users').catch(() => [] as User[]),
+        api<Role[]>('/rbac/roles').catch(() => [] as Role[]),
+        api<Permission[]>('/rbac/permissions').catch(() => [] as Permission[]),
+        api<Template[]>('/rbac/templates').catch(() => [] as Template[]),
         api<Sucursal[]>('/sucursales').catch(() => [] as Sucursal[]),
       ]);
       setUsers(Array.isArray(usersRes) ? usersRes : []);
@@ -207,7 +207,7 @@ export default function UsuariosPage() {
     if (!assignUserId || !assignRoleId) return;
     setAssigning(true);
     try {
-      await api(`/api/v1/rbac/users/${assignUserId}/assign`, {
+      await api(`/rbac/users/${assignUserId}/assign`, {
         method: 'POST',
         body: JSON.stringify({
           roleId: assignRoleId,
@@ -227,7 +227,7 @@ export default function UsuariosPage() {
 
   const handleRemoveAssignment = async (userId: string, assignmentId: string) => {
     try {
-      await api(`/api/v1/rbac/users/${userId}/assignments/${assignmentId}`, {
+      await api(`/rbac/users/${userId}/assignments/${assignmentId}`, {
         method: 'DELETE',
       });
       toast.success('Asignacion eliminada');
@@ -272,7 +272,7 @@ export default function UsuariosPage() {
     setSavingRole(true);
     try {
       if (editingRole) {
-        await api(`/api/v1/rbac/roles/${editingRole.id}`, {
+        await api(`/rbac/roles/${editingRole.id}`, {
           method: 'PATCH',
           body: JSON.stringify({
             name: roleName,
@@ -281,7 +281,7 @@ export default function UsuariosPage() {
         });
         toast.success('Rol actualizado');
       } else {
-        await api('/api/v1/rbac/roles', {
+        await api('/rbac/roles', {
           method: 'POST',
           body: JSON.stringify({
             name: roleName,
@@ -304,7 +304,7 @@ export default function UsuariosPage() {
     if (!deleteRoleTarget) return;
     setDeleting(true);
     try {
-      await api(`/api/v1/rbac/roles/${deleteRoleTarget.id}`, { method: 'DELETE' });
+      await api(`/rbac/roles/${deleteRoleTarget.id}`, { method: 'DELETE' });
       setDeleteRoleTarget(null);
       toast.success('Rol eliminado');
       fetchData();

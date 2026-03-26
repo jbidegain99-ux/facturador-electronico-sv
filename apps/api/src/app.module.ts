@@ -34,6 +34,9 @@ import { CashFlowModule } from './modules/cash-flow/cash-flow.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
+import { RbacModule } from './modules/rbac/rbac.module';
+import { TenantGuard } from './modules/rbac/guards/tenant.guard';
+import { RbacGuard } from './modules/rbac/guards/rbac.guard';
 
 const imports = [
   ConfigModule.forRoot({
@@ -88,6 +91,7 @@ const imports = [
   PaymentsModule,
   CashFlowModule,
   ReportsModule,
+  RbacModule,
 ];
 
 @Module({
@@ -96,6 +100,14 @@ const imports = [
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: TenantGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RbacGuard,
     },
     {
       provide: APP_GUARD,

@@ -81,6 +81,12 @@ export interface MockPrismaClient {
   haciendaConfig: {
     findUnique: jest.Mock;
   };
+  userRoleAssignment: {
+    findMany: jest.Mock;
+  };
+  permission: {
+    findMany: jest.Mock;
+  };
   $transaction: jest.Mock;
   $connect: jest.Mock;
   $disconnect: jest.Mock;
@@ -167,6 +173,12 @@ export function createMockPrismaService(): MockPrismaClient {
     },
     haciendaConfig: {
       findUnique: jest.fn().mockResolvedValue(null),
+    },
+    userRoleAssignment: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    permission: {
+      findMany: jest.fn().mockResolvedValue([]),
     },
     $transaction: jest.fn(),
     $connect: jest.fn(),

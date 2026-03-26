@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RbacService } from './rbac.service';
+import { AuditLogsService } from '../../audit-logs/audit-logs.service';
+import { AuditAction, AuditModule } from '../../audit-logs/dto';
 import { CreateRoleDto, UpdateRoleDto, AssignRoleDto } from '../dto';
 
 export interface PermissionGroup {
@@ -27,7 +29,32 @@ export class RbacManagementService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly rbacService: RbacService,
+    private readonly auditLogs: AuditLogsService,
   ) {}
+
+  private audit(
+    tenantId: string,
+    userId: string,
+    action: AuditAction,
+    description: string,
+    entityType: string,
+    entityId: string,
+    extra?: { oldValue?: unknown; newValue?: unknown },
+  ) {
+    this.auditLogs.log({
+      tenantId,
+      userId,
+      action,
+      module: AuditModule.RBAC,
+      description,
+      entityType,
+      entityId,
+      oldValue: extra?.oldValue,
+      newValue: extra?.newValue,
+    }).catch((err: Error) => {
+      this.logger.warn(`Audit log failed: ${err.message}`);
+    });
+  }
 
   async getRoles(tenantId: string) {
     const roles = await this.prisma.role.findMany({
@@ -90,7 +117,7 @@ export class RbacManagementService {
     };
   }
 
-  async createRole(tenantId: string, dto: CreateRoleDto) {
+  async createRole(tenantId: string, dto: CreateRoleDto, currentUserId: string) {
     let permissionIds = dto.permissionIds;
 
     // If templateId is provided, copy permissions from the template
@@ -136,6 +163,9 @@ export class RbacManagementService {
     });
 
     this.logger.log(`Role created: ${role.id} (${role.name}) for tenant ${tenantId}`);
+    this.audit(tenantId, currentUserId, AuditAction.CREATE, `Rol creado: ${role.name}`, 'Role', role.id, {
+      newValue: { name: role.name, permissionCount: role.permissions.length },
+    });
 
     return {
       id: role.id,
@@ -149,7 +179,7 @@ export class RbacManagementService {
     };
   }
 
-  async updateRole(tenantId: string, roleId: string, dto: UpdateRoleDto) {
+  async updateRole(tenantId: string, roleId: string, dto: UpdateRoleDto, currentUserId: string) {
     const role = await this.prisma.role.findFirst({
       where: { id: roleId, tenantId },
     });
@@ -200,11 +230,14 @@ export class RbacManagementService {
     }
 
     this.logger.log(`Role updated: ${roleId} for tenant ${tenantId}`);
+    this.audit(tenantId, currentUserId, AuditAction.UPDATE, `Rol actualizado: ${role.name}`, 'Role', roleId, {
+      newValue: { name: dto.name, permissionCount: dto.permissionIds?.length },
+    });
 
     return this.getRole(tenantId, roleId);
   }
 
-  async deleteRole(tenantId: string, roleId: string) {
+  async deleteRole(tenantId: string, roleId: string, currentUserId: string) {
     const role = await this.prisma.role.findFirst({
       where: { id: roleId, tenantId },
       include: { _count: { select: { assignments: true } } },
@@ -227,6 +260,7 @@ export class RbacManagementService {
     await this.prisma.role.delete({ where: { id: roleId } });
 
     this.logger.log(`Role deleted: ${roleId} (${role.name}) from tenant ${tenantId}`);
+    this.audit(tenantId, currentUserId, AuditAction.DELETE, `Rol eliminado: ${role.name}`, 'Role', roleId);
 
     return { deleted: true };
   }
@@ -354,6 +388,9 @@ export class RbacManagementService {
     this.logger.log(
       `Role assigned: user=${userId} role=${dto.roleId} scope=${dto.scopeType}:${dto.scopeId} tenant=${tenantId}`,
     );
+    this.audit(tenantId, assignedBy, AuditAction.CREATE, `Rol ${role.name} asignado a usuario`, 'UserRoleAssignment', assignment.id, {
+      newValue: { userId, roleName: role.name, scopeType: dto.scopeType, scopeId: dto.scopeId },
+    });
 
     return {
       id: assignment.id,
@@ -375,7 +412,8 @@ export class RbacManagementService {
       where: { id: assignmentId, userId, tenantId },
       include: {
         role: {
-          include: {
+          select: {
+            name: true,
             permissions: {
               include: { permission: { select: { code: true } } },
             },
@@ -437,6 +475,9 @@ export class RbacManagementService {
     this.logger.log(
       `Assignment removed: id=${assignmentId} user=${userId} tenant=${tenantId}`,
     );
+    this.audit(tenantId, currentUserId, AuditAction.DELETE, `Rol ${assignment.role.name} removido de usuario`, 'UserRoleAssignment', assignmentId, {
+      oldValue: { userId, roleName: assignment.role.name, scopeType: assignment.scopeType },
+    });
 
     return { deleted: true };
   }

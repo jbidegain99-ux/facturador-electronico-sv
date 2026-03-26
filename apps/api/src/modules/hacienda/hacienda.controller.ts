@@ -38,6 +38,7 @@ import {
   ValidateConnectionDto,
   ValidateConnectionResponseDto,
 } from './dto';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { HaciendaEnvironment } from './interfaces';
 
 @Controller('hacienda')
@@ -59,6 +60,7 @@ export class HaciendaController {
     description: 'Configuración de Hacienda',
     type: HaciendaConfigResponseDto,
   })
+  @RequirePermission('config:read')
   async getConfig(@CurrentUser() user: CurrentUserData) {
     if (!user.tenantId) {
       throw new BadRequestException('Usuario no tiene tenant asignado');
@@ -115,6 +117,7 @@ export class HaciendaController {
     description: 'Error de validación',
     type: QuickSetupResponseDto,
   })
+  @RequirePermission('config:update')
   async quickSetup(
     @CurrentUser() user: CurrentUserData,
     @UploadedFile() certificate: Express.Multer.File,
@@ -177,6 +180,7 @@ export class HaciendaController {
     },
   })
   @ApiResponse({ status: 200, description: 'Tipo de certificado detectado' })
+  @RequirePermission('config:update')
   async detectCertificateType(
     @CurrentUser() user: CurrentUserData,
     @UploadedFile() certificate: Express.Multer.File,
@@ -238,6 +242,7 @@ export class HaciendaController {
     description: 'Resultado de la validación',
     type: ValidateConnectionResponseDto,
   })
+  @RequirePermission('config:update')
   async validateConnection(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: ValidateConnectionDto,
@@ -260,6 +265,7 @@ export class HaciendaController {
     status: 400,
     description: 'Error de conexión',
   })
+  @RequirePermission('config:update')
   async testConnection(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: TestConnectionDto,
@@ -277,6 +283,7 @@ export class HaciendaController {
     status: 200,
     description: 'Token renovado exitosamente',
   })
+  @RequirePermission('config:update')
   async renewToken(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: RenewTokenDto,
@@ -298,6 +305,7 @@ export class HaciendaController {
     status: 400,
     description: 'No se puede cambiar al ambiente especificado',
   })
+  @RequirePermission('config:update')
   async switchEnvironment(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: SwitchEnvironmentDto,
@@ -350,6 +358,7 @@ export class HaciendaController {
     status: 400,
     description: 'Error en la configuración',
   })
+  @RequirePermission('config:update')
   async configureEnvironment(
     @CurrentUser() user: CurrentUserData,
     @Param('environment') environment: string,
@@ -398,6 +407,7 @@ export class HaciendaController {
     description: 'Progreso de pruebas',
     type: TestProgressResponseDto,
   })
+  @RequirePermission('config:read')
   async getTestProgress(@CurrentUser() user: CurrentUserData) {
     if (!user.tenantId) {
       throw new BadRequestException('Usuario no tiene tenant asignado');
@@ -416,6 +426,7 @@ export class HaciendaController {
     status: 400,
     description: 'Error al ejecutar la prueba',
   })
+  @RequirePermission('config:update')
   async executeTest(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: ExecuteTestDto,
@@ -433,6 +444,7 @@ export class HaciendaController {
     status: 200,
     description: 'Historial de pruebas',
   })
+  @RequirePermission('config:read')
   async getTestHistory(
     @CurrentUser() user: CurrentUserData,
     @Query() query: GetTestHistoryQueryDto,
@@ -455,6 +467,7 @@ export class HaciendaController {
     status: 200,
     description: 'Datos de prueba generados',
   })
+  @RequirePermission('config:update')
   async generateTestData(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: GenerateTestDataDto,
@@ -480,6 +493,7 @@ export class HaciendaController {
     status: 200,
     description: 'Lista de emisiones exitosas',
   })
+  @RequirePermission('config:read')
   async getSuccessfulEmissions(
     @CurrentUser() user: CurrentUserData,
     @Query('dteType') dteType?: string,

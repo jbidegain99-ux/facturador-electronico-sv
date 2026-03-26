@@ -48,7 +48,7 @@ export class RbacController {
   @RequirePermission('role:manage')
   createRole(@CurrentUser() user: CurrentUserData, @Body() dto: CreateRoleDto) {
     const tenantId = this.ensureTenant(user);
-    return this.rbacManagementService.createRole(tenantId, dto);
+    return this.rbacManagementService.createRole(tenantId, dto, user.id);
   }
 
   @Patch('roles/:id')
@@ -59,14 +59,14 @@ export class RbacController {
     @Body() dto: UpdateRoleDto,
   ) {
     const tenantId = this.ensureTenant(user);
-    return this.rbacManagementService.updateRole(tenantId, id, dto);
+    return this.rbacManagementService.updateRole(tenantId, id, dto, user.id);
   }
 
   @Delete('roles/:id')
   @RequirePermission('role:manage')
   deleteRole(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
     const tenantId = this.ensureTenant(user);
-    return this.rbacManagementService.deleteRole(tenantId, id);
+    return this.rbacManagementService.deleteRole(tenantId, id, user.id);
   }
 
   @Get('permissions')

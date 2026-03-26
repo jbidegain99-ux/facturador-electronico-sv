@@ -29,6 +29,7 @@ export enum AuditModule {
   SETTINGS = 'SETTINGS',
   SUPPORT = 'SUPPORT',
   ADMIN = 'ADMIN',
+  RBAC = 'RBAC',
 }
 
 export class CreateAuditLogDto {

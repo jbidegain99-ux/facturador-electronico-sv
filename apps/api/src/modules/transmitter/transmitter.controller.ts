@@ -17,6 +17,7 @@ import { DteOperationLoggerService } from '../dte/services/dte-operation-logger.
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { DTE, TipoDte, Ambiente } from '@facturador/shared';
 import { MHEnvironment } from '@facturador/mh-client';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 
 export class TransmitDto {
   nit: string;
@@ -95,6 +96,7 @@ export class TransmitterController {
   }
 
   @Post('send/:dteId')
+  @RequirePermission('dte:transmit')
   async sendDTE(
     @Param('dteId') dteId: string,
     @Body() dto: TransmitDto,
@@ -171,6 +173,7 @@ export class TransmitterController {
   }
 
   @Post('create-and-send')
+  @RequirePermission('dte:create', 'dte:transmit')
   async createAndSend(
     @Body() dto: CreateAndTransmitDto,
     @CurrentUser() user: CurrentUserData,
@@ -286,6 +289,7 @@ export class TransmitterController {
   }
 
   @Get('status/:codigoGeneracion')
+  @RequirePermission('dte:read')
   async getStatus(
     @Param('codigoGeneracion') codigoGeneracion: string,
     @Query() query: ConsultarDto,
@@ -347,6 +351,7 @@ export class TransmitterController {
   }
 
   @Get('dte/:dteId')
+  @RequirePermission('dte:read')
   getDTE(
     @Param('dteId') dteId: string,
     @CurrentUser() user: CurrentUserData,
@@ -370,6 +375,7 @@ export class TransmitterController {
   }
 
   @Get('dte/:dteId/json')
+  @RequirePermission('dte:read')
   getDTEJson(
     @Param('dteId') dteId: string,
     @CurrentUser() user: CurrentUserData,
@@ -379,6 +385,7 @@ export class TransmitterController {
   }
 
   @Get('dte/:dteId/logs')
+  @RequirePermission('dte:read')
   getDTELogs(
     @Param('dteId') dteId: string,
     @CurrentUser() user: CurrentUserData,
@@ -388,6 +395,7 @@ export class TransmitterController {
   }
 
   @Post('anular/:dteId')
+  @RequirePermission('dte:void')
   async anularDTE(
     @Param('dteId') dteId: string,
     @Body() dto: AnularDto,
@@ -416,6 +424,7 @@ export class TransmitterController {
   }
 
   @Get('job/:jobId')
+  @RequirePermission('dte:read')
   async getJobStatus(@Param('jobId') jobId: string) {
     const status = await this.transmitterService.getJobStatus(jobId);
 

@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { PaymentsService } from './payments.service';
 
 interface AuthRequest {
@@ -26,6 +27,7 @@ export class PaymentsController {
 
   @Post()
   @ApiOperation({ summary: 'Registrar método de pago para un DTE' })
+  @RequirePermission('dte:update')
   create(
     @Request() req: AuthRequest,
     @Body() body: {
@@ -43,6 +45,7 @@ export class PaymentsController {
 
   @Get()
   @ApiOperation({ summary: 'Listar métodos de pago del tenant' })
+  @RequirePermission('dte:read')
   findAll(
     @Request() req: AuthRequest,
     @Query('tipo') tipo?: string,
@@ -53,12 +56,14 @@ export class PaymentsController {
 
   @Get('dte/:dteId')
   @ApiOperation({ summary: 'Obtener método de pago por DTE ID' })
+  @RequirePermission('dte:read')
   findByDte(@Request() req: AuthRequest, @Param('dteId') dteId: string) {
     return this.paymentsService.findByDteId(dteId, req.user.tenantId);
   }
 
   @Patch(':id/status')
   @ApiOperation({ summary: 'Actualizar estado del método de pago' })
+  @RequirePermission('dte:update')
   updateStatus(
     @Request() req: AuthRequest,
     @Param('id') id: string,

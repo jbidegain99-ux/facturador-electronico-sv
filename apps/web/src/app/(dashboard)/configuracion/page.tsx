@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
-import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle, FileUp, Image } from 'lucide-react';
+import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle, FileUp, Image, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { LogoUpload } from '@/components/settings/logo-upload';
@@ -652,6 +652,37 @@ export default function ConfiguracionPage() {
                     <p className="font-medium">Gestionar Sucursales</p>
                     <p className="text-sm text-muted-foreground">
                       Crea y administra sucursales, puntos de venta y codigos de establecimiento
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* Usuarios y Roles Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Usuarios y Roles
+            </CardTitle>
+            <CardDescription>
+              Gestiona los usuarios de tu empresa y sus permisos de acceso
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/configuracion/usuarios">
+              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <Users className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Gestionar Usuarios y Roles</p>
+                    <p className="text-sm text-muted-foreground">
+                      Asigna roles, permisos y controla el acceso de cada usuario
                     </p>
                   </div>
                 </div>

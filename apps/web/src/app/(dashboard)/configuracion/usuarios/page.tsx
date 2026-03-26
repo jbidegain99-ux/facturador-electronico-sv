@@ -40,41 +40,45 @@ import { useToast } from '@/components/ui/toast';
 import { useRouter } from 'next/navigation';
 import { createApiFetcher } from '@/hooks/use-api';
 
-// ── Types ────────────────────────────────────────────────────────────
+// ── Types (matching actual API response shapes) ─────────────────────
 interface Permission {
   id: string;
   code: string;
   name: string;
-  description: string | null;
-  category: string;
+  resource: string;
+  action: string;
+  category?: string;
 }
 
-interface RolePermission {
-  permission: Permission;
+interface PermissionGroup {
+  category: string;
+  permissions: Permission[];
 }
 
 interface Role {
   id: string;
-  tenantId: string | null;
   name: string;
-  templateOrigin: string | null;
-  isSystem: boolean;
-  permissions?: RolePermission[];
-  _count?: { assignments: number; permissions: number };
+  isCustom: boolean;
+  templateCode: string | null;
+  templateName: string | null;
+  permissionCount: number;
+  assignmentCount: number;
+  permissions?: Array<{ id: string; code: string; name: string; category: string }>;
 }
 
 interface RoleAssignment {
   id: string;
-  role: { id: string; name: string };
+  roleId: string;
+  roleName: string;
   scopeType: string;
-  scopeId: string | null;
+  scopeId: string;
 }
 
 interface User {
   id: string;
   nombre: string;
   email: string;
-  rol: string;
+  legacyRole: string;
   assignments: RoleAssignment[];
 }
 
@@ -85,8 +89,10 @@ interface Sucursal {
 
 interface Template {
   id: string;
+  code: string;
   name: string;
-  permissions: RolePermission[];
+  description: string | null;
+  permissionCount: number;
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -108,7 +114,7 @@ export default function UsuariosPage() {
   const [assignDialogOpen, setAssignDialogOpen] = React.useState(false);
   const [assignUserId, setAssignUserId] = React.useState<string | null>(null);
   const [assignRoleId, setAssignRoleId] = React.useState('');
-  const [assignScopeType, setAssignScopeType] = React.useState('TENANT');
+  const [assignScopeType, setAssignScopeType] = React.useState('tenant');
   const [assignScopeId, setAssignScopeId] = React.useState('');
   const [assigning, setAssigning] = React.useState(false);
 
@@ -132,13 +138,17 @@ export default function UsuariosPage() {
       const [usersRes, rolesRes, permsRes, templatesRes, sucursalesRes] = await Promise.all([
         api<User[]>('/rbac/users').catch(() => [] as User[]),
         api<Role[]>('/rbac/roles').catch(() => [] as Role[]),
-        api<Permission[]>('/rbac/permissions').catch(() => [] as Permission[]),
+        api<PermissionGroup[]>('/rbac/permissions').catch(() => [] as PermissionGroup[]),
         api<Template[]>('/rbac/templates').catch(() => [] as Template[]),
         api<Sucursal[]>('/sucursales').catch(() => [] as Sucursal[]),
       ]);
       setUsers(Array.isArray(usersRes) ? usersRes : []);
       setRoles(Array.isArray(rolesRes) ? rolesRes : []);
-      setPermissions(Array.isArray(permsRes) ? permsRes : []);
+      // Flatten grouped permissions into flat array with category
+      const flatPerms = (Array.isArray(permsRes) ? permsRes : []).flatMap((group) =>
+        (group.permissions || []).map((p) => ({ ...p, category: group.category })),
+      );
+      setPermissions(flatPerms);
       setTemplates(Array.isArray(templatesRes) ? templatesRes : []);
       setSucursales(Array.isArray(sucursalesRes) ? sucursalesRes : []);
       setError(null);
@@ -198,7 +208,7 @@ export default function UsuariosPage() {
   const openAssignDialog = (userId: string) => {
     setAssignUserId(userId);
     setAssignRoleId('');
-    setAssignScopeType('TENANT');
+    setAssignScopeType('tenant');
     setAssignScopeId('');
     setAssignDialogOpen(true);
   };
@@ -212,7 +222,7 @@ export default function UsuariosPage() {
         body: JSON.stringify({
           roleId: assignRoleId,
           scopeType: assignScopeType,
-          scopeId: assignScopeType === 'TENANT' ? undefined : assignScopeId || undefined,
+          scopeId: assignScopeType === 'tenant' ? undefined : assignScopeId || undefined,
         }),
       });
       setAssignDialogOpen(false);
@@ -247,23 +257,28 @@ export default function UsuariosPage() {
     setRoleDialogOpen(true);
   };
 
-  const openEditRole = (role: Role) => {
+  const openEditRole = async (role: Role) => {
     setEditingRole(role);
     setRoleName(role.name);
     setRoleTemplateId('');
-    const permIds = new Set((role.permissions || []).map((rp) => rp.permission.id));
-    setSelectedPermissions(permIds);
+    // Fetch full role with permissions
+    try {
+      const fullRole = await api<{ permissions: Array<{ id: string; code: string }> }>(`/rbac/roles/${role.id}`);
+      const permIds = new Set((fullRole.permissions || []).map((p) => p.id));
+      setSelectedPermissions(permIds);
+    } catch {
+      setSelectedPermissions(new Set());
+    }
     setExpandedCategories(new Set(Object.keys(permissionsByCategory)));
     setRoleDialogOpen(true);
   };
 
   const handleTemplateChange = (templateId: string) => {
     setRoleTemplateId(templateId);
+    // When a template is selected, permissions will be copied server-side.
+    // Clear manual selection to indicate template permissions will be used.
     if (templateId) {
-      const tpl = templates.find((t) => t.id === templateId);
-      if (tpl?.permissions) {
-        setSelectedPermissions(new Set(tpl.permissions.map((rp) => rp.permission.id)));
-      }
+      setSelectedPermissions(new Set());
     }
   };
 
@@ -392,14 +407,14 @@ export default function UsuariosPage() {
                           <TableCell className="font-medium">{user.nombre}</TableCell>
                           <TableCell className="text-muted-foreground">{user.email}</TableCell>
                           <TableCell>
-                            <Badge variant="secondary">{user.rol}</Badge>
+                            <Badge variant="secondary">{user.legacyRole}</Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
                               {(user.assignments || []).map((a) => (
-                                <Badge key={a.id} variant="info" className="gap-1">
-                                  {a.role.name}
-                                  {a.scopeType !== 'TENANT' && (
+                                <Badge key={a.id} variant="outline" className="gap-1">
+                                  {a.roleName}
+                                  {a.scopeType !== 'tenant' && (
                                     <span className="text-[10px] opacity-70">
                                       ({a.scopeType})
                                     </span>
@@ -474,22 +489,22 @@ export default function UsuariosPage() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{role.name}</span>
-                              {role.isSystem && (
+                              {!role.isCustom && (
                                 <Badge variant="secondary" className="text-[10px]">Sistema</Badge>
                               )}
                             </div>
                           </TableCell>
                           <TableCell className="text-muted-foreground text-sm">
-                            {role.templateOrigin || '-'}
+                            {role.templateName || 'Personalizado'}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {role._count?.permissions ?? role.permissions?.length ?? 0}
+                              {role.permissionCount ?? 0}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {role._count?.assignments ?? 0}
+                              {role.assignmentCount ?? 0}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -502,7 +517,7 @@ export default function UsuariosPage() {
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              {!role.isSystem && (
+                              {role.isCustom && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -555,18 +570,18 @@ export default function UsuariosPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TENANT">Tenant (toda la empresa)</SelectItem>
-                  <SelectItem value="SUCURSAL">Sucursal</SelectItem>
-                  <SelectItem value="POS">Punto de Venta</SelectItem>
+                  <SelectItem value="tenant">Tenant (toda la empresa)</SelectItem>
+                  <SelectItem value="branch">Sucursal</SelectItem>
+                  <SelectItem value="pos">Punto de Venta</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            {assignScopeType !== 'TENANT' && (
+            {assignScopeType !== 'tenant' && (
               <div className="space-y-1">
                 <label className="text-sm font-medium">
-                  {assignScopeType === 'SUCURSAL' ? 'Sucursal' : 'Punto de Venta'}
+                  {assignScopeType === 'branch' ? 'Sucursal' : 'Punto de Venta'}
                 </label>
-                {assignScopeType === 'SUCURSAL' ? (
+                {assignScopeType === 'branch' ? (
                   <Select value={assignScopeId} onValueChange={setAssignScopeId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar sucursal" />
@@ -697,11 +712,9 @@ export default function UsuariosPage() {
                               />
                               <div>
                                 <div className="text-sm">{perm.name}</div>
-                                {perm.description && (
-                                  <div className="text-xs text-muted-foreground">
-                                    {perm.description}
-                                  </div>
-                                )}
+                                <div className="text-xs text-muted-foreground">
+                                  {perm.code}
+                                </div>
                               </div>
                             </label>
                           ))}

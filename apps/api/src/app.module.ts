@@ -36,6 +36,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { InvoiceTemplatesModule } from './modules/invoice-templates/invoice-templates.module';
 import { TenantGuard } from './modules/rbac/guards/tenant.guard';
 import { RbacGuard } from './modules/rbac/guards/rbac.guard';
 
@@ -94,6 +95,7 @@ const imports = [
   ReportsModule,
   RbacModule,
   ChatModule,
+  InvoiceTemplatesModule,
 ];
 
 @Module({

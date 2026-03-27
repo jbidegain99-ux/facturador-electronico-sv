@@ -919,6 +919,7 @@ export class DteService {
     // Generate PDF
     const pdfBuffer = await this.pdfService.generateInvoicePdf({
       id: dte.id,
+      tenantId: dte.tenantId,
       codigoGeneracion: dte.codigoGeneracion,
       numeroControl: dte.numeroControl,
       tipoDte: dte.tipoDte,
@@ -1099,6 +1100,7 @@ export class DteService {
     // Generate PDF
     const pdfBuffer = await this.pdfService.generateInvoicePdf({
       id: dte.id,
+      tenantId: dte.tenantId,
       codigoGeneracion: dte.codigoGeneracion,
       numeroControl: dte.numeroControl,
       tipoDte: dte.tipoDte,

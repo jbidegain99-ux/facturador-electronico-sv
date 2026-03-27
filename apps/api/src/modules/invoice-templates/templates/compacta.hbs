@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family={{config.fonts.heading}}:wght@400;600;700&family={{config.fonts.body}}:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: {{config.colors.primary}};
+      --color-secondary: {{config.colors.secondary}};
+      --color-accent: {{config.colors.accent}};
+      --color-bg: {{config.colors.background}};
+      --color-text: {{config.colors.text}};
+      --color-text-light: {{config.colors.textLight}};
+      --font-heading: '{{config.fonts.heading}}', sans-serif;
+      --font-body: '{{config.fonts.body}}', sans-serif;
+    }
+
+    @page {
+      size: {{config.pageSettings.size}};
+      margin: {{config.pageSettings.margins.top}}mm {{config.pageSettings.margins.right}}mm {{config.pageSettings.margins.bottom}}mm {{config.pageSettings.margins.left}}mm;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 9px;
+      color: var(--color-text);
+      background: var(--color-bg);
+      line-height: 1.3;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--color-primary);
+      margin-bottom: 8px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo img {
+      max-width: 100px;
+      max-height: 40px;
+      object-fit: contain;
+    }
+
+    .header-dte-type {
+      font-family: var(--font-heading);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .header-right {
+      text-align: right;
+      font-size: 8px;
+      color: var(--color-text-light);
+    }
+
+    .header-right strong { color: var(--color-text); }
+
+    .estado-inline {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 7px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .estado-procesado { background: #DEF7EC; color: #03543F; }
+    .estado-rechazado { background: #FDE8E8; color: #9B1C1C; }
+    .estado-anulado { background: #FDE8E8; color: #9B1C1C; }
+    .estado-default { background: #E1EFFE; color: #1E429F; }
+
+    .parties-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 8px;
+    }
+
+    .party {
+      flex: 1;
+    }
+
+    .party-title {
+      font-weight: 600;
+      font-size: 8px;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .party-line {
+      line-height: 1.4;
+      color: var(--color-text);
+    }
+
+    .party-line .lbl {
+      color: var(--color-text-light);
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 6px;
+      font-size: 8px;
+    }
+
+    .items-table thead th {
+      background: var(--color-primary);
+      color: #fff;
+      padding: 3px 5px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 7px;
+      text-transform: uppercase;
+    }
+
+    .items-table tbody td {
+      padding: 2px 5px;
+      border-bottom: 1px solid #F3F4F6;
+    }
+
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+
+    .bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .qr-compact {
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .qr-compact img {
+      width: 60px;
+      height: 60px;
+    }
+
+    .qr-compact .qr-label {
+      font-size: 6px;
+      color: var(--color-text-light);
+      margin-top: 2px;
+    }
+
+    .sello-compact {
+      font-size: 7px;
+      color: var(--color-text-light);
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .sello-compact strong { color: var(--color-text); }
+
+    .totals-compact {
+      min-width: 200px;
+      font-size: 8px;
+    }
+
+    .totals-compact .t-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 1px 0;
+    }
+
+    .totals-compact .t-row .lbl { color: var(--color-text-light); }
+    .totals-compact .t-row .val { font-weight: 600; }
+
+    .totals-compact .t-row.total {
+      border-top: 1.5px solid var(--color-primary);
+      margin-top: 3px;
+      padding-top: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-primary);
+      font-family: var(--font-heading);
+    }
+
+    .total-letras-compact {
+      font-size: 7px;
+      font-style: italic;
+      color: var(--color-text-light);
+      text-align: right;
+      margin-top: 2px;
+    }
+
+    .doc-footer {
+      text-align: center;
+      font-size: 6px;
+      color: var(--color-text-light);
+      margin-top: 6px;
+      padding-top: 4px;
+      border-top: 1px dashed #D1D5DB;
+    }
+
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 60px;
+      font-weight: 700;
+      color: rgba(239, 68, 68, 0.08);
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  {{#if isDemoMode}}<div class="watermark">MODO DEMO</div>{{/if}}
+
+  {{!-- HEADER: Logo + Type + Control in one row --}}
+  {{#if config.sections.header.visible}}
+  <div class="header-row">
+    <div class="header-left">
+      {{#if logoDataUrl}}
+      <div class="logo"><img src="{{logoDataUrl}}" alt="Logo"></div>
+      {{/if}}
+      <div class="header-dte-type">{{dteTypeName tipoDte}}</div>
+      <span class="estado-inline {{#if (eq estado 'PROCESADO')}}estado-procesado{{else}}{{#if (or (eq estado 'RECHAZADO') (eq estado 'ANULADO'))}}estado-rechazado{{else}}estado-default{{/if}}{{/if}}">{{estado}}</span>
+    </div>
+    <div class="header-right">
+      <div><strong>Control:</strong> {{numeroControl}}</div>
+      <div><strong>Cod.Gen:</strong> {{codigoGeneracion}}</div>
+      {{#if identificacion.fecEmi}}<div>{{formatDate identificacion.fecEmi}} {{#if identificacion.horEmi}}{{formatTime identificacion.horEmi}}{{/if}}</div>{{/if}}
+    </div>
+  </div>
+  {{/if}}
+
+  {{!-- EMISOR + RECEPTOR condensed --}}
+  <div class="parties-row">
+    {{#if config.sections.emisor.visible}}
+    <div class="party">
+      <div class="party-title">Emisor</div>
+      <div class="party-line"><strong>{{emisor.nombre}}</strong></div>
+      <div class="party-line"><span class="lbl">NIT:</span> {{emisor.nit}} {{#if emisor.nrc}}| <span class="lbl">NRC:</span> {{emisor.nrc}}{{/if}}</div>
+      {{#if emisor.direccionFormateada}}<div class="party-line">{{emisor.direccionFormateada}}</div>{{/if}}
+      <div class="party-line">{{#if emisor.telefono}}{{emisor.telefono}}{{/if}} {{#if emisor.correo}}| {{emisor.correo}}{{/if}}</div>
+    </div>
+    {{/if}}
+
+    {{#if config.sections.receptor.visible}}
+    <div class="party">
+      <div class="party-title">Receptor</div>
+      {{#if receptor.nombre}}<div class="party-line"><strong>{{receptor.nombre}}</strong></div>{{/if}}
+      {{#if receptor.nit}}<div class="party-line"><span class="lbl">NIT:</span> {{receptor.nit}} {{#if receptor.nrc}}| <span class="lbl">NRC:</span> {{receptor.nrc}}{{/if}}</div>{{/if}}
+      {{#if receptor.numDocumento}}<div class="party-line"><span class="lbl">Doc:</span> {{receptor.numDocumento}}</div>{{/if}}
+      {{#if receptor.direccionFormateada}}<div class="party-line">{{receptor.direccionFormateada}}</div>{{/if}}
+      <div class="party-line">{{#if receptor.telefono}}{{receptor.telefono}}{{/if}} {{#if receptor.correo}}| {{receptor.correo}}{{/if}}</div>
+    </div>
+    {{/if}}
+  </div>
+
+  {{!-- ITEMS TABLE --}}
+  {{#if config.sections.items.visible}}
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="width: 22px;">#</th>
+        <th style="width: 35px;">Cant</th>
+        <th>Descripción</th>
+        <th class="text-right" style="width: 60px;">P.Unit</th>
+        {{#if (or (eq tipoDte "01") (eq tipoDte "11") (eq tipoDte "14"))}}
+        <th class="text-right" style="width: 65px;">Gravada</th>
+        {{/if}}
+        {{#if (eq tipoDte "03")}}
+        <th class="text-right" style="width: 60px;">Gravada</th>
+        <th class="text-right" style="width: 55px;">IVA</th>
+        {{/if}}
+        {{#if (or (eq tipoDte "05") (eq tipoDte "06"))}}
+        <th class="text-right" style="width: 65px;">Monto</th>
+        {{/if}}
+        {{#unless (or (eq tipoDte "01") (eq tipoDte "03") (eq tipoDte "05") (eq tipoDte "06") (eq tipoDte "11") (eq tipoDte "14"))}}
+        <th class="text-right" style="width: 65px;">Subtotal</th>
+        {{/unless}}
+      </tr>
+    </thead>
+    <tbody>
+      {{#each cuerpoDocumento}}
+      <tr>
+        <td class="text-center">{{this.numItem}}</td>
+        <td class="text-center">{{this.cantidad}}</td>
+        <td>{{this.descripcion}}</td>
+        <td class="text-right">{{formatCurrency this.precioUni}}</td>
+        {{#if (or (eq ../tipoDte "01") (eq ../tipoDte "11") (eq ../tipoDte "14"))}}
+        <td class="text-right">{{formatCurrency this.ventaGravada}}</td>
+        {{/if}}
+        {{#if (eq ../tipoDte "03")}}
+        <td class="text-right">{{formatCurrency this.ventaGravada}}</td>
+        <td class="text-right">{{formatCurrency this.ivaItem}}</td>
+        {{/if}}
+        {{#if (or (eq ../tipoDte "05") (eq ../tipoDte "06"))}}
+        <td class="text-right">{{formatCurrency (or this.ventaGravada this.montoDescu this.ventaExenta)}}</td>
+        {{/if}}
+        {{#unless (or (eq ../tipoDte "01") (eq ../tipoDte "03") (eq ../tipoDte "05") (eq ../tipoDte "06") (eq ../tipoDte "11") (eq ../tipoDte "14"))}}
+        <td class="text-right">{{formatCurrency (or this.ventaGravada this.compra this.ventaExenta)}}</td>
+        {{/unless}}
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  {{/if}}
+
+  {{!-- BOTTOM: QR + Sello + Totals --}}
+  <div class="bottom-row">
+    {{#if config.sections.qrCode.visible}}
+    {{#if qrDataUrl}}
+    <div class="qr-compact">
+      <img src="{{qrDataUrl}}" alt="QR">
+      <div class="qr-label">Consulta MH</div>
+    </div>
+    {{/if}}
+    {{/if}}
+
+    {{#if config.sections.selloRecepcion.visible}}
+    {{#if selloRecibido}}
+    <div class="sello-compact">
+      <div><strong>Sello:</strong> {{selloRecibido}}</div>
+      {{#if fhProcesamiento}}<div><strong>Procesado:</strong> {{fhProcesamiento}}</div>{{/if}}
+    </div>
+    {{/if}}
+    {{/if}}
+
+    {{#if config.sections.resumen.visible}}
+    <div class="totals-compact">
+      {{#if (gt resumen.totalGravada 0)}}
+      <div class="t-row"><span class="lbl">Gravado:</span><span class="val">{{formatCurrency resumen.totalGravada}}</span></div>
+      {{/if}}
+      {{#if (gt resumen.totalExenta 0)}}
+      <div class="t-row"><span class="lbl">Exento:</span><span class="val">{{formatCurrency resumen.totalExenta}}</span></div>
+      {{/if}}
+      {{#if (gt resumen.totalNoSuj 0)}}
+      <div class="t-row"><span class="lbl">No Sujeto:</span><span class="val">{{formatCurrency resumen.totalNoSuj}}</span></div>
+      {{/if}}
+      {{#if (eq tipoDte "01")}}
+      {{#if totalIva}}
+      <div class="t-row"><span class="lbl">IVA (incl.):</span><span class="val">{{formatCurrency totalIva}}</span></div>
+      {{/if}}
+      {{/if}}
+      {{#if (eq tipoDte "03")}}
+      {{#if totalIva}}
+      <div class="t-row"><span class="lbl">IVA 13%:</span><span class="val">{{formatCurrency totalIva}}</span></div>
+      {{/if}}
+      {{/if}}
+      {{#if (gt resumen.ivaRetenido 0)}}
+      <div class="t-row"><span class="lbl">IVA Ret.:</span><span class="val">{{formatCurrency resumen.ivaRetenido}}</span></div>
+      {{/if}}
+      <div class="t-row total"><span>TOTAL</span><span>{{formatCurrency resumen.totalPagar}}</span></div>
+      {{#if resumen.totalLetras}}
+      <div class="total-letras-compact">{{resumen.totalLetras}}</div>
+      {{else}}
+      {{#if resumen.totalPagar}}
+      <div class="total-letras-compact">{{totalLetras resumen.totalPagar}}</div>
+      {{/if}}
+      {{/if}}
+    </div>
+    {{/if}}
+  </div>
+
+  {{!-- FOOTER --}}
+  {{#if config.sections.footer.visible}}
+  <div class="doc-footer">
+    DTE — {{dteTypeName tipoDte}}
+    {{#if isDemoMode}} | DOCUMENTO DE PRUEBA{{/if}}
+  </div>
+  {{/if}}
+</body>
+</html>

@@ -67,6 +67,12 @@ const PERMISSIONS: { resource: string; action: string; name: string; category: s
   // Webhooks
   { resource: 'webhook', action: 'read', name: 'Ver Webhooks', category: 'Integraciones' },
   { resource: 'webhook', action: 'manage', name: 'Gestionar Webhooks', category: 'Integraciones' },
+
+  // Plantillas de factura
+  { resource: 'template', action: 'read', name: 'Ver Plantillas', category: 'Plantillas' },
+  { resource: 'template', action: 'create', name: 'Crear Plantillas', category: 'Plantillas' },
+  { resource: 'template', action: 'update', name: 'Editar Plantillas', category: 'Plantillas' },
+  { resource: 'template', action: 'delete', name: 'Eliminar Plantillas', category: 'Plantillas' },
 ];
 
 // ─── Role Templates ───────────────────────────────────────────────────────────
@@ -90,7 +96,7 @@ const ROLE_TEMPLATES: {
     permissionPatterns: [
       'dte:*', 'client:*', 'branch:read', 'pos:read', 'pos:update',
       'report:read', 'report:export', 'catalog:read', 'quote:*',
-      'user:read',
+      'user:read', 'template:*',
     ],
   },
   {
@@ -102,6 +108,7 @@ const ROLE_TEMPLATES: {
       'client:read', 'client:create',
       'catalog:read',
       'quote:create', 'quote:read',
+      'template:read',
     ],
   },
   {
@@ -122,7 +129,7 @@ const ROLE_TEMPLATES: {
     permissionPatterns: [
       'dte:read', 'client:read', 'branch:read', 'pos:read',
       'report:read', 'catalog:read', 'quote:read',
-      'accounting:read', 'config:read',
+      'accounting:read', 'config:read', 'template:read',
     ],
   },
 ];

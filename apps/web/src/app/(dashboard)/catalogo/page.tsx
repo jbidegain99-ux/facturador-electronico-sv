@@ -180,28 +180,28 @@ const CSV_TEMPLATE = 'code,name,description,type,basePrice,costPrice,taxRate,tip
 function validateField(field: string, value: string): string {
   switch (field) {
     case 'code':
-      if (!value.trim()) return 'El codigo es requerido';
-      if (value.trim().length > 50) return 'Maximo 50 caracteres';
+      if (!value.trim()) return 'El código es requerido';
+      if (value.trim().length > 50) return 'Máximo 50 caracteres';
       return '';
     case 'name':
       if (!value.trim()) return 'El nombre es requerido';
-      if (value.trim().length < 2) return 'Minimo 2 caracteres';
-      if (value.trim().length > 200) return 'Maximo 200 caracteres';
+      if (value.trim().length < 2) return 'Mínimo 2 caracteres';
+      if (value.trim().length > 200) return 'Máximo 200 caracteres';
       return '';
     case 'basePrice': {
       if (!value.trim()) return 'El precio es requerido';
       const num = Number(value);
-      if (isNaN(num) || num < 0) return 'Debe ser un numero positivo';
+      if (isNaN(num) || num < 0) return 'Debe ser un número positivo';
       return '';
     }
     case 'costPrice': {
       if (!value.trim()) return '';
       const num = Number(value);
-      if (isNaN(num) || num < 0) return 'Debe ser un numero positivo';
+      if (isNaN(num) || num < 0) return 'Debe ser un número positivo';
       return '';
     }
     case 'description':
-      if (value.length > 500) return 'Maximo 500 caracteres';
+      if (value.length > 500) return 'Máximo 500 caracteres';
       return '';
     default:
       return '';

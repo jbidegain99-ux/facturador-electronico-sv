@@ -222,7 +222,7 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
                   #
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Descripcion
+                  Descripción
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider w-24">
                   Cant.
@@ -379,7 +379,7 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
           </div>
           <h3 className="text-lg font-medium text-foreground mb-1">No hay items en la factura</h3>
           <p className="text-sm text-muted-foreground">
-            Escribe una descripcion arriba y presiona Enter para agregar productos
+            Escribe una descripción arriba y presiona Enter para agregar productos
           </p>
         </div>
       )}

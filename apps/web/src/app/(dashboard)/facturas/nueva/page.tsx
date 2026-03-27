@@ -45,7 +45,7 @@ const AUTOSAVE_INTERVAL = 30000; // 30 seconds
 
 const CONDICIONES_PAGO = [
   { value: '01', label: 'Contado' },
-  { value: '02', label: 'A credito' },
+  { value: '02', label: 'A crédito' },
   { value: '03', label: 'Otro' },
 ];
 
@@ -798,7 +798,7 @@ export default function NuevaFacturaPage() {
         </Button>
       </div>
 
-      {/* ── Top row: Tipo DTE + Condicion de pago ───────────────── */}
+      {/* ── Top row: Tipo DTE + Condición de pago ───────────────── */}
       <div className="glass-card p-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           {/* Tipo DTE */}
@@ -838,7 +838,7 @@ export default function NuevaFacturaPage() {
           {/* Divider */}
           <div className="hidden sm:block h-8 w-px bg-border" />
 
-          {/* Condicion de pago */}
+          {/* Condición de pago */}
           <div className="flex items-center gap-3">
             <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
               {t('conditionLabel')}

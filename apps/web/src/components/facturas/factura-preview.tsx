@@ -191,7 +191,7 @@ export function FacturaPreview({
                 <thead>
                   <tr className="border-b border-border text-muted-foreground">
                     <th className="px-4 py-2 text-left">#</th>
-                    <th className="px-4 py-2 text-left">Descripcion</th>
+                    <th className="px-4 py-2 text-left">Descripción</th>
                     <th className="px-4 py-2 text-right">Cant.</th>
                     <th className="px-4 py-2 text-right">P. Unit.</th>
                     <th className="px-4 py-2 text-right">Subtotal</th>

@@ -278,12 +278,12 @@ export default function NuevoRecurrentePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="descripcion">Descripcion</Label>
+              <Label htmlFor="descripcion">Descripción</Label>
               <Input
                 id="descripcion"
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
-                placeholder="Descripcion opcional del template"
+                placeholder="Descripción opcional del template"
               />
             </div>
 
@@ -444,7 +444,7 @@ export default function NuevoRecurrentePage() {
             <div className="space-y-3">
               {/* Header */}
               <div className="grid grid-cols-12 gap-2 text-sm font-medium text-muted-foreground px-1">
-                <div className="col-span-5">Descripcion</div>
+                <div className="col-span-5">Descripción</div>
                 <div className="col-span-2">Cantidad</div>
                 <div className="col-span-2">Precio Unit.</div>
                 <div className="col-span-2">Descuento</div>
@@ -457,7 +457,7 @@ export default function NuevoRecurrentePage() {
                     <Input
                       value={item.descripcion}
                       onChange={(e) => updateItem(index, 'descripcion', e.target.value)}
-                      placeholder="Descripcion del item"
+                      placeholder="Descripción del item"
                     />
                   </div>
                   <div className="col-span-2">

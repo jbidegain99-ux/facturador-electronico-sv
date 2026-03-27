@@ -144,7 +144,7 @@ export function ItemsTable({
             </TableCell>
             <TableCell>
               <Input
-                placeholder="Descripcion del producto o servicio"
+                placeholder="Descripción del producto o servicio"
                 value={newItem.descripcion}
                 onChange={(e) => setNewItem({ ...newItem, descripcion: e.target.value })}
               />

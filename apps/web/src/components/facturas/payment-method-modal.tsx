@@ -207,7 +207,7 @@ export function PaymentMethodModal({
           {tipo === 'OTRA' && (
             <div className="space-y-3 animate-in fade-in-50 duration-200">
               <div>
-                <Label htmlFor="descripcionOtra">Descripcion</Label>
+                <Label htmlFor="descripcionOtra">Descripción</Label>
                 <Input
                   id="descripcionOtra"
                   value={descripcion}

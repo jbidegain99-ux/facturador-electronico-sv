@@ -241,7 +241,7 @@ export default function PlanConfigPage() {
                 <Package className="w-5 h-5 text-purple-500" />
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Items de catalogo</div>
+                <div className="text-sm text-muted-foreground">Items de catálogo</div>
                 <div className="text-2xl font-bold">
                   {usage ? formatLimit(usage.limits.maxCatalogItems) : '—'}
                   <span className="text-sm font-normal text-muted-foreground"> max</span>

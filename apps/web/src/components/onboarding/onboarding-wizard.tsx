@@ -310,8 +310,8 @@ export function OnboardingWizard({
                   Verifica tus datos
                 </h2>
                 <p className="text-muted-foreground">
-                  Estos son los datos que registraste. Puedes editarlos despues
-                  en Configuracion.
+                  Estos son los datos que registraste. Puedes editarlos después
+                  en Configuración.
                 </p>
               </div>
 

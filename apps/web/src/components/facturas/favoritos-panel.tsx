@@ -61,10 +61,10 @@ export function FavoritosPanel({
         <div className="text-center py-4">
           <Star className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
           <p className="text-sm text-muted-foreground">
-            Sin favoritos todavia
+            Sin favoritos todavía
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Agrega productos frecuentes para acceso rapido
+            Agrega productos frecuentes para acceso rápido
           </p>
           <Button
             variant="outline"

@@ -77,7 +77,7 @@ export function PlantillasPanel({
             No tienes plantillas guardadas
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Crea una factura y guardala como plantilla para usarla despues
+            Crea una factura y guárdala como plantilla para usarla después
           </p>
         </div>
       </div>

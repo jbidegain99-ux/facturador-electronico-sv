@@ -164,7 +164,7 @@ export function CatalogSearch({ onSelect, disabled = false }: CatalogSearchProps
             }}
             onKeyDown={handleKeyDown}
             onFocus={() => setOpen(true)}
-            placeholder="Buscar en catalogo por nombre o codigo..."
+            placeholder="Buscar en catálogo por nombre o código..."
             className="pl-9 input-rc"
             disabled={disabled}
           />
@@ -220,7 +220,7 @@ export function CatalogSearch({ onSelect, disabled = false }: CatalogSearchProps
           {/* No recent items */}
           {!isLoading && !search.trim() && !hasItems && (
             <div className="px-4 py-4 text-center text-muted-foreground">
-              <p className="text-sm">Escribe para buscar en tu catalogo</p>
+              <p className="text-sm">Escribe para buscar en tu catálogo</p>
             </div>
           )}
 

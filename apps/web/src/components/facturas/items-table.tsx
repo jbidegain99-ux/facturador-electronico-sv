@@ -155,7 +155,7 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
             value={newItem.descripcion}
             onChange={(e) => setNewItem({ ...newItem, descripcion: e.target.value })}
             onKeyDown={handleKeyDown}
-            placeholder="Escribe la descripcion del producto o servicio y presiona Enter..."
+            placeholder="Escribe la descripción del producto o servicio y presiona Enter..."
             className="input-rc"
             disabled={disabled}
           />

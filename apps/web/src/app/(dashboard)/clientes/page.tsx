@@ -418,13 +418,21 @@ export default function ClientesPage() {
         ? `${process.env.NEXT_PUBLIC_API_URL}/clientes/${editingCliente.id}`
         : `${process.env.NEXT_PUBLIC_API_URL}/clientes`;
 
+      // Clean empty optional fields to avoid backend validation errors
+      const payload = {
+        ...formData,
+        nrc: formData.nrc.trim() || undefined,
+        correo: formData.correo.trim() || undefined,
+        telefono: formData.telefono.trim() || undefined,
+      };
+
       const res = await fetch(url, {
         method: editingCliente ? 'PUT' : 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -751,13 +759,12 @@ export default function ClientesPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">{t('emailLabel')} *</label>
+              <label className="text-sm font-medium">{t('emailLabel')}</label>
               <Input
                 type="email"
                 placeholder="cliente@ejemplo.com"
                 value={formData.correo}
                 onChange={(e) => handleFormChange('correo', e.target.value)}
-                required
                 className={fieldErrors.correo ? 'border-red-500' : ''}
               />
               {fieldErrors.correo && (

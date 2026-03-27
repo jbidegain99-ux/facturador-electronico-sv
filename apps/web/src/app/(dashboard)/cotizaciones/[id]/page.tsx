@@ -149,11 +149,12 @@ const APPROVAL_STYLE_MAP: Record<string, { labelKey: string; className: string }
 
 function formatDate(dateStr: string): string {
   try {
-    return new Date(dateStr).toLocaleDateString('es-SV', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    // Use UTC methods to avoid timezone shift on date-only values
+    const d = new Date(dateStr);
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const year = d.getUTCFullYear();
+    return `${day}/${month}/${year}`;
   } catch {
     return dateStr;
   }
@@ -856,7 +857,7 @@ export default function CotizacionDetailPage() {
               <TableHead className="text-right">{tInvoices('qty')}</TableHead>
               <TableHead className="text-right">{tCommon('price')}</TableHead>
               <TableHead className="text-right">{tCommon('discount')}</TableHead>
-              <TableHead className="text-right">{tCommon('tax')}</TableHead>
+              <TableHead className="text-right">IVA (13%)</TableHead>
               <TableHead className="text-right">{tCommon('total')}</TableHead>
               {showApprovalBadges && (
                 <TableHead className="text-center">{tCommon('status')}</TableHead>

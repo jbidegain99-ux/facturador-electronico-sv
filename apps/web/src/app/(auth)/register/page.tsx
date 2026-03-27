@@ -508,6 +508,17 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        // Show field-level errors for known conflicts
+        if (res.status === 409) {
+          const msg = data.message || '';
+          if (msg.includes('correo electrónico')) {
+            setFieldErrors({ correo: msg });
+          } else if (msg.includes('NIT')) {
+            setFieldErrors({ nit: msg });
+          } else if (msg.includes('usuario')) {
+            setFieldErrors({ adminEmail: msg });
+          }
+        }
         throw new Error(data.message || t('registerError'));
       }
 
@@ -617,8 +628,9 @@ export default function RegisterPage() {
                   placeholder="0000-000000-000-0"
                   value={formData.nit}
                   onValueChange={(masked) => setFormData(prev => ({ ...prev, nit: masked }))}
-                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
+                  className={`mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground ${fieldErrors.nit ? 'border-destructive' : ''}`}
                 />
+                {fieldErrors.nit && <p className="text-sm text-destructive mt-1">{fieldErrors.nit}</p>}
               </div>
               <div>
                 <label htmlFor="nrc" className="block text-sm font-medium text-foreground">
@@ -696,13 +708,14 @@ export default function RegisterPage() {
                   maxLength={100}
                   value={formData.correo}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground"
+                  className={`mt-1 block w-full rounded-md border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-background text-foreground ${fieldErrors.correo ? 'border-destructive' : ''}`}
                 />
+                {fieldErrors.correo && <p className="text-sm text-destructive mt-1">{fieldErrors.correo}</p>}
               </div>
             </div>
           </div>
 
-          {/* Direccion */}
+          {/* Dirección */}
           <div>
             <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">{t('companyAddress')}</h3>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">

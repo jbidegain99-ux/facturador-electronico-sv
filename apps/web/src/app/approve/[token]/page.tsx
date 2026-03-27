@@ -125,11 +125,14 @@ const STATUS_DISPLAY: Record<string, StatusDisplay> = {
 
 function formatDate(dateStr: string): string {
   try {
-    return new Date(dateStr).toLocaleDateString('es-SV', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
+    // Use UTC to avoid timezone shift on date-only values
+    const d = new Date(dateStr);
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    const month = months[d.getUTCMonth()];
+    const year = d.getUTCFullYear();
+    return `${day} de ${month} de ${year}`;
   } catch {
     return dateStr;
   }
@@ -238,7 +241,7 @@ export default function QuoteApprovalPage() {
       if (!res.ok) {
         const errData = (await res.json().catch(() => ({}))) as ErrorResponse;
         throw new Error(
-          errData.message || `Error al cargar la cotizacion (${res.status})`,
+          errData.message || `Error al cargar la cotización (${res.status})`,
         );
       }
 
@@ -246,7 +249,7 @@ export default function QuoteApprovalPage() {
       setQuote(data);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Error al cargar la cotizacion';
+        err instanceof Error ? err.message : 'Error al cargar la cotización';
       setFetchError(message);
       console.error('Error fetching quote for approval:', err);
     } finally {
@@ -301,15 +304,15 @@ export default function QuoteApprovalPage() {
 
       if (!res.ok) {
         const errData = (await res.json().catch(() => ({}))) as ErrorResponse;
-        throw new Error(errData.message || 'Error al enviar la aprobacion');
+        throw new Error(errData.message || 'Error al enviar la aprobación');
       }
 
       setSubmitResult('success');
-      setSubmitMessage('La cotizacion ha sido aprobada exitosamente.');
-      toastRef.current.success('Cotizacion aprobada');
+      setSubmitMessage('La cotización ha sido aprobada exitosamente.');
+      toastRef.current.success('Cotización aprobada');
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Error al enviar la aprobacion';
+        err instanceof Error ? err.message : 'Error al enviar la aprobación';
       setSubmitResult('error');
       setSubmitMessage(message);
       toastRef.current.error(message);
@@ -347,7 +350,7 @@ export default function QuoteApprovalPage() {
 
       setSubmitResult('success');
       setSubmitMessage(
-        'Sus cambios han sido enviados al proveedor. Recibira una cotizacion actualizada pronto.',
+        'Sus cambios han sido enviados al proveedor. Recibirá una cotización actualizada pronto.',
       );
       toastRef.current.success('Cambios solicitados');
     } catch (err) {
@@ -385,16 +388,16 @@ export default function QuoteApprovalPage() {
 
       if (!res.ok) {
         const errData = (await res.json().catch(() => ({}))) as ErrorResponse;
-        throw new Error(errData.message || 'Error al rechazar la cotizacion');
+        throw new Error(errData.message || 'Error al rechazar la cotización');
       }
 
       setShowRejectDialog(false);
       setSubmitResult('success');
-      setSubmitMessage('La cotizacion ha sido rechazada.');
-      toastRef.current.success('Cotizacion rechazada');
+      setSubmitMessage('La cotización ha sido rechazada.');
+      toastRef.current.success('Cotización rechazada');
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Error al rechazar la cotizacion';
+        err instanceof Error ? err.message : 'Error al rechazar la cotización';
       setSubmitResult('error');
       setSubmitMessage(message);
       toastRef.current.error(message);
@@ -410,7 +413,7 @@ export default function QuoteApprovalPage() {
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F172A' }}>
         <div className="text-center">
           <Spinner className="h-10 w-10 text-blue-500 mx-auto" />
-          <p className="mt-4 text-gray-400 text-sm">Cargando cotizacion...</p>
+          <p className="mt-4 text-gray-400 text-sm">Cargando cotización...</p>
         </div>
       </div>
     );
@@ -432,7 +435,7 @@ export default function QuoteApprovalPage() {
             <XIcon className="h-8 w-8 text-red-400" />
           </div>
           <h2 className="text-xl font-semibold text-white mb-2">
-            No se pudo cargar la cotizacion
+            No se pudo cargar la cotización
           </h2>
           <p className="text-gray-400 text-sm">
             {fetchError ||
@@ -465,7 +468,7 @@ export default function QuoteApprovalPage() {
             </h2>
             <p className="text-gray-400 text-sm">{submitMessage}</p>
             <p className="text-gray-500 text-xs mt-4">
-              Puedes cerrar esta pagina.
+              Puedes cerrar esta página.
             </p>
           </div>
         </div>
@@ -505,7 +508,7 @@ export default function QuoteApprovalPage() {
                   Cambios enviados
                 </p>
                 <p className="text-gray-400 text-sm mt-1">
-                  Sus cambios han sido enviados al proveedor. Recibira una cotizacion actualizada pronto.
+                  Sus cambios han sido enviados al proveedor. Recibirá una cotización actualizada pronto.
                 </p>
                 <p className="text-gray-500 text-xs mt-2">
                   No es posible realizar mas cambios hasta que reciba la version actualizada.
@@ -549,13 +552,13 @@ export default function QuoteApprovalPage() {
                   }`}
                 >
                   {expired
-                    ? 'Esta cotizacion ha expirado'
-                    : `Esta cotizacion ya fue ${statusInfo.label.toLowerCase()}`}
+                    ? 'Esta cotización ha expirado'
+                    : `Esta cotización ya fue ${statusInfo.label.toLowerCase()}`}
                 </p>
                 <p className="text-gray-500 text-sm mt-1">
                   {expired
-                    ? 'La fecha de validez ha pasado. Contacta al emisor si necesitas una nueva cotizacion.'
-                    : 'No es posible realizar cambios en esta cotizacion.'}
+                    ? 'La fecha de validez ha pasado. Contacta al emisor si necesitas una nueva cotización.'
+                    : 'No es posible realizar cambios en esta cotización.'}
                 </p>
               </div>
             </div>
@@ -587,7 +590,7 @@ export default function QuoteApprovalPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl font-bold text-white">
-                  Cotizacion {quote.quoteNumber}
+                  Cotización {quote.quoteNumber}
                 </h1>
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusInfo.bgClass} ${statusInfo.textClass} border ${statusInfo.borderClass}`}
@@ -610,7 +613,7 @@ export default function QuoteApprovalPage() {
                 <span className="text-gray-300">{formatDate(quote.issueDate)}</span>
               </p>
               <p>
-                Valida hasta:{' '}
+                Válida hasta:{' '}
                 <span className={expired ? 'text-amber-400 font-medium' : 'text-gray-300'}>
                   {formatDate(quote.validUntil)}
                   {expired && ' (expirada)'}
@@ -635,11 +638,11 @@ export default function QuoteApprovalPage() {
         >
           <div className="px-6 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <h2 className="text-lg font-semibold text-white">
-              Items de la Cotizacion
+              Items de la Cotización
             </h2>
             {actionable && (
               <p className="text-gray-500 text-xs mt-1">
-                Si desea eliminar algun item, marquelo con la casilla. Luego podra solicitar cambios.
+                Si desea eliminar algún item, márquelo con la casilla. Luego podrá solicitar cambios.
               </p>
             )}
           </div>
@@ -658,7 +661,7 @@ export default function QuoteApprovalPage() {
                     #
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Descripcion
+                    Descripción
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cant.
@@ -851,7 +854,7 @@ export default function QuoteApprovalPage() {
                 }}
               >
                 <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Terminos y Condiciones
+                  Términos y Condiciones
                 </h3>
                 <p className="text-gray-300 text-sm whitespace-pre-wrap">
                   {quote.terms}
@@ -892,7 +895,7 @@ export default function QuoteApprovalPage() {
             <p className="text-gray-500 text-xs mb-5">
               {hasRemovedItems
                 ? 'Has marcado items para eliminar. Describe los cambios que necesitas y envialos al proveedor.'
-                : 'Aprueba la cotizacion tal como esta, solicita cambios, o rechazala.'}
+                : 'Aprueba la cotización tal como está, solicita cambios, o recházala.'}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -943,7 +946,7 @@ export default function QuoteApprovalPage() {
                 onChange={(e) => setComments(e.target.value)}
                 placeholder={
                   hasRemovedItems
-                    ? 'Explique que cambios necesita en la cotizacion...'
+                    ? 'Explique que cambios necesita en la cotización...'
                     : 'Agrega notas o comentarios adicionales...'
                 }
                 rows={3}
@@ -999,7 +1002,7 @@ export default function QuoteApprovalPage() {
                   ) : (
                     <CheckIcon className="h-4 w-4" />
                   )}
-                  Aprobar Cotizacion
+                  Aprobar Cotización
                 </button>
               )}
               <button
@@ -1024,7 +1027,7 @@ export default function QuoteApprovalPage() {
 
             {hasRemovedItems && (
               <p className="text-xs text-gray-500 mt-3 text-center">
-                Sus cambios seran enviados al proveedor para actualizar su cotizacion. Recibira una nueva version para su aprobacion.
+                Sus cambios serán enviados al proveedor para actualizar su cotización. Recibirá una nueva versión para su aprobación.
               </p>
             )}
           </div>
@@ -1054,7 +1057,7 @@ export default function QuoteApprovalPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">
-                Rechazar Cotizacion
+                Rechazar Cotización
               </h3>
               <button
                 type="button"
@@ -1066,7 +1069,7 @@ export default function QuoteApprovalPage() {
             </div>
 
             <p className="text-gray-400 text-sm mb-4">
-              Rechazaras completamente la cotizacion{' '}
+              Rechazarás completamente la cotización{' '}
               <span className="text-white font-medium">{quote.quoteNumber}</span>.
               Por favor indica el motivo.
             </p>
@@ -1079,7 +1082,7 @@ export default function QuoteApprovalPage() {
                 <textarea
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Describe por que rechazas esta cotizacion..."
+                  placeholder="Describe por qué rechazas esta cotización..."
                   rows={3}
                   className="w-full px-4 py-2.5 text-sm rounded-xl text-white placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-red-500/40"
                   style={{
@@ -1170,7 +1173,7 @@ export default function QuoteApprovalPage() {
                 ) : (
                   <XIcon className="h-4 w-4" />
                 )}
-                Rechazar Cotizacion
+                Rechazar Cotización
               </button>
             </div>
           </div>

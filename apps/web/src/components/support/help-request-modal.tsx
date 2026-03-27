@@ -182,11 +182,11 @@ export function HelpRequestModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Descripcion (opcional)</label>
+                <label className="block text-sm font-medium mb-2">Descripción (opcional)</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Proporciona mas detalles sobre tu problema o consulta..."
+                  placeholder="Proporciona más detalles sobre tu problema o consulta..."
                   rows={4}
                   className="input-rc"
                 />

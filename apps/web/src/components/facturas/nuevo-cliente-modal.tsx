@@ -746,15 +746,15 @@ export function NuevoClienteModal({
                 />
                 {errors.nrc && <p className="text-xs text-destructive">{errors.nrc}</p>}
                 {formData.nrc.trim() && !errors.nrc && NrcValidator.validate(formData.nrc).isValid && (
-                  <p className="text-xs text-green-600">NRC valido: {NrcValidator.validate(formData.nrc).display}</p>
+                  <p className="text-xs text-green-600">NRC válido: {NrcValidator.validate(formData.nrc).display}</p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  7 digitos (ej: 367475-0). Se normaliza automaticamente
+                  7 dígitos (ej: 367475-0). Se normaliza automáticamente
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Telefono</label>
+                <label className="text-sm font-medium text-muted-foreground">Teléfono</label>
                 <Input
                   value={formData.telefono}
                   onChange={(e) => handleChange('telefono', e.target.value)}
@@ -764,10 +764,10 @@ export function NuevoClienteModal({
             </div>
           )}
 
-          {/* Telefono para Consumidor Final */}
+          {/* Teléfono para Consumidor Final */}
           {esConsumidorFinal && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Telefono</label>
+              <label className="text-sm font-medium text-muted-foreground">Teléfono</label>
               <Input
                 value={formData.telefono}
                 onChange={(e) => handleChange('telefono', e.target.value)}

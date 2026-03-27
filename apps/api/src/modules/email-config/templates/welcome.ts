@@ -65,19 +65,19 @@ export function welcomeTemplate(data: WelcomeData): {
   const html = emailLayout({
     title: 'Bienvenido a Facturo',
     subtitle: safeEmpresa,
-    preheader: `Bienvenido a Facturo - Tu cuenta para ${nombreEmpresa} esta lista`,
+    preheader: `Bienvenido a Facturo - Tu cuenta para ${nombreEmpresa} está lista`,
     body: bodyHtml,
   });
 
   let text = `BIENVENIDO A FACTURO\n\n`;
   text += `Hola ${nombreUsuario}!\n\n`;
   text += `Tu cuenta para ${nombreEmpresa} ha sido creada exitosamente.\n`;
-  text += `Ya puedes comenzar a utilizar Facturo para gestionar tu facturacion electronica.\n\n`;
+  text += `Ya puedes comenzar a utilizar Facturo para gestionar tu facturación electrónica.\n\n`;
   text += `Con Facturo puedes:\n`;
-  text += `- Emitir Facturas, Creditos Fiscales y mas DTEs\n`;
-  text += `- Gestionar tu catalogo de clientes\n`;
+  text += `- Emitir Facturas, Créditos Fiscales y más DTEs\n`;
+  text += `- Gestionar tu catálogo de clientes\n`;
   text += `- Enviar cotizaciones profesionales\n`;
-  text += `- Consultar reportes y estadisticas\n\n`;
+  text += `- Consultar reportes y estadísticas\n\n`;
   text += `Ir al Dashboard: ${dashboardLink}\n\n`;
   text += `Tu correo de acceso es: ${email}\n`;
   text += `Si tienes alguna pregunta, no dudes en contactarnos.\n`;

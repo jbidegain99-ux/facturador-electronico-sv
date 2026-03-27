@@ -795,7 +795,7 @@ export default function ClientesPage() {
             <div className="space-y-1">
               <label className="text-sm font-medium">{t('addressLabel')}</label>
               <Input
-                placeholder="Direccion completa"
+                placeholder="Dirección completa"
                 value={formData.direccion.complemento}
                 onChange={(e) => handleDireccionChange('complemento', e.target.value)}
                 className={fieldErrors.complemento ? 'border-red-500' : ''}

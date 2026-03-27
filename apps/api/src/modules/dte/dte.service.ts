@@ -2398,11 +2398,11 @@ export class DteService {
 
     const tipoDteNames: Record<string, string> = {
       '01': 'Factura',
-      '03': 'Credito Fiscal',
-      '05': 'Nota de Credito',
-      '06': 'Nota de Debito',
-      '07': 'Nota de Remision',
-      '11': 'Factura Exportacion',
+      '03': 'Crédito Fiscal',
+      '05': 'Nota de Crédito',
+      '06': 'Nota de Débito',
+      '07': 'Nota de Remisión',
+      '11': 'Factura Exportación',
       '14': 'Factura Sujeto Excluido',
     };
 

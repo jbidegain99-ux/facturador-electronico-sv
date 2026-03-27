@@ -45,11 +45,11 @@ interface ColumnMapping {
 const CLIENT_FIELDS = [
   { key: 'tipoDocumento', label: 'Tipo Documento', required: true },
   { key: 'numDocumento', label: 'Num. Documento', required: true },
-  { key: 'nombre', label: 'Nombre / Razon Social', required: true },
-  { key: 'direccion', label: 'Direccion', required: true },
+  { key: 'nombre', label: 'Nombre / Razón Social', required: true },
+  { key: 'direccion', label: 'Dirección', required: true },
   { key: 'nrc', label: 'NRC', required: false },
   { key: 'correo', label: 'Correo', required: false },
-  { key: 'telefono', label: 'Telefono', required: false },
+  { key: 'telefono', label: 'Teléfono', required: false },
 ];
 
 function splitCSVLine(line: string, separator: string): string[] {

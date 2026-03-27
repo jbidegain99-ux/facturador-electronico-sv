@@ -215,12 +215,12 @@ export function AgregarFavoritoModal({
         <div className="space-y-4 py-2">
           <div>
             <label className="text-sm font-medium mb-1.5 block">
-              Descripcion *
+              Descripción *
             </label>
             <Input
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
-              placeholder="Ej: Servicio de consultoria"
+              placeholder="Ej: Servicio de consultoría"
               autoFocus
             />
           </div>

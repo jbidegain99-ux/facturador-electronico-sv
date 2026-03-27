@@ -712,9 +712,9 @@ export default function SucursalesPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">Direccion *</label>
+              <label className="text-sm font-medium">Dirección *</label>
               <Input
-                placeholder="Direccion completa de la sucursal"
+                placeholder="Dirección completa de la sucursal"
                 value={sucursalForm.direccion}
                 onChange={(e) => setSucursalForm(prev => ({ ...prev, direccion: e.target.value }))}
               />
@@ -740,7 +740,7 @@ export default function SucursalesPage() {
               <div className="space-y-1">
                 <label className="text-sm font-medium">Municipio</label>
                 <Input
-                  placeholder="Codigo municipio"
+                  placeholder="Código municipio"
                   value={sucursalForm.municipio}
                   onChange={(e) => setSucursalForm(prev => ({ ...prev, municipio: e.target.value.replace(/\D/g, '').slice(0, 2) }))}
                   maxLength={2}
@@ -751,7 +751,7 @@ export default function SucursalesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium">Telefono</label>
+                <label className="text-sm font-medium">Teléfono</label>
                 <Input
                   placeholder="0000-0000"
                   value={sucursalForm.telefono}

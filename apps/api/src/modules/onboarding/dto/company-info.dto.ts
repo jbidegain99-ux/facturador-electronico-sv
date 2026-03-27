@@ -21,13 +21,13 @@ export class UpdateCompanyInfoDto {
 
   @ApiProperty({ description: 'Razón social' })
   @IsString()
-  @Length(1, 250)
+  @Length(1, 250, { message: 'La razón social debe tener entre 1 y 250 caracteres' })
   razonSocial: string;
 
   @ApiPropertyOptional({ description: 'Nombre comercial' })
   @IsOptional()
   @IsString()
-  @Length(1, 250)
+  @Length(1, 250, { message: 'El nombre comercial debe tener entre 1 y 250 caracteres' })
   nombreComercial?: string;
 
   @ApiProperty({ description: 'Código de actividad económica' })

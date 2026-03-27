@@ -88,6 +88,11 @@ export function ChatMessages({ messages, isLoading, onFeedback, onSystemAction, 
 
           const isStreaming = msg.id === streamingMessageId;
 
+          // Hide empty streaming message — the bouncing dots indicator handles this state
+          if (isStreaming && !msg.content) {
+            return null;
+          }
+
           return (
             <div
               key={msg.id}
@@ -109,13 +114,9 @@ export function ChatMessages({ messages, isLoading, onFeedback, onSystemAction, 
                     'prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-a:text-facturo-violet-600 dark:prose-a:text-facturo-violet-400 prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-code:text-xs',
                     isStreaming && 'streaming-cursor',
                   )}>
-                    {msg.content ? (
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {msg.content}
-                      </ReactMarkdown>
-                    ) : isStreaming ? (
-                      <span className="text-muted-foreground text-sm">...</span>
-                    ) : null}
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
                   </div>
                 ) : (
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>

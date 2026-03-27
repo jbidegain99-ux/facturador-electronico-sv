@@ -23,7 +23,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { sidebarOpen, tenant, setTenant, setUser, setPermissions } = useAppStore();
+  const { sidebarOpen, chatSidebarOpen, tenant, setTenant, setUser, setPermissions } = useAppStore();
   const router = useRouter();
   const pathname = usePathname();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = React.useState(true);
@@ -267,7 +267,8 @@ export default function DashboardLayout({
       <div
         className={cn(
           'transition-all duration-300',
-          sidebarOpen ? 'ml-64' : 'ml-16'
+          sidebarOpen ? 'ml-64' : 'ml-16',
+          chatSidebarOpen && 'mr-[380px]'
         )}
       >
         <Header />

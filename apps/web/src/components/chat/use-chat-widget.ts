@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useAppStore } from '@/store';
 
 export interface ChatMessage {
   id: string;
@@ -10,9 +11,11 @@ export interface ChatMessage {
 }
 
 export type BubblePosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+export type ChatMode = 'bubble' | 'panel' | 'sidebar';
 
 const POSITION_KEY = 'facturo-chat-position';
 const WELCOME_KEY = 'facturo-chat-welcome-seen';
+const MODE_PREF_KEY = 'facturo-chat-mode-pref';
 
 function loadPosition(): BubblePosition {
   if (typeof window === 'undefined') return 'bottom-right';
@@ -24,22 +27,63 @@ function loadWelcomeSeen(): boolean {
   return localStorage.getItem(WELCOME_KEY) === 'true';
 }
 
+function loadModePref(): 'panel' | 'sidebar' {
+  if (typeof window === 'undefined') return 'panel';
+  return (localStorage.getItem(MODE_PREF_KEY) as 'panel' | 'sidebar') || 'panel';
+}
+
 export function useChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
+  const [mode, setModeState] = useState<ChatMode>('bubble');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [position, setPositionState] = useState<BubblePosition>(loadPosition);
   const [hasSeenWelcome, setHasSeenWelcome] = useState(loadWelcomeSeen);
   const abortRef = useRef<AbortController | null>(null);
+  const setChatSidebarOpen = useAppStore((s) => s.setChatSidebarOpen);
+
+  // Sync sidebar state to store for layout margin
+  useEffect(() => {
+    setChatSidebarOpen(mode === 'sidebar');
+  }, [mode, setChatSidebarOpen]);
+
+  const setMode = useCallback((newMode: ChatMode) => {
+    setModeState(newMode);
+    if (newMode === 'panel' || newMode === 'sidebar') {
+      localStorage.setItem(MODE_PREF_KEY, newMode);
+    }
+  }, []);
+
+  const isOpen = mode !== 'bubble';
+
+  const openChat = useCallback(() => {
+    const pref = loadModePref();
+    setMode(pref);
+  }, [setMode]);
+
+  const closeChat = useCallback(() => {
+    setMode('bubble');
+  }, [setMode]);
+
+  const toggleChat = useCallback(() => {
+    if (isOpen) {
+      closeChat();
+    } else {
+      openChat();
+    }
+  }, [isOpen, openChat, closeChat]);
+
+  const openSidebar = useCallback(() => {
+    setMode('sidebar');
+  }, [setMode]);
+
+  const closeSidebar = useCallback(() => {
+    setMode('panel');
+  }, [setMode]);
 
   const dismissWelcome = useCallback(() => {
     setHasSeenWelcome(true);
     localStorage.setItem(WELCOME_KEY, 'true');
-  }, []);
-
-  const toggleChat = useCallback(() => {
-    setIsOpen((prev) => !prev);
   }, []);
 
   const setPosition = useCallback((pos: BubblePosition) => {
@@ -169,12 +213,12 @@ export function useChatWidget() {
       }
       if (e.key === 'Escape' && isOpen) {
         e.preventDefault();
-        setIsOpen(false);
+        closeChat();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, toggleChat]);
+  }, [isOpen, toggleChat, closeChat]);
 
   // Listen for header toggle event
   useEffect(() => {
@@ -185,11 +229,16 @@ export function useChatWidget() {
 
   return {
     messages,
+    mode,
     isOpen,
     isLoading,
     sessionId,
     position,
     toggleChat,
+    openChat,
+    closeChat,
+    openSidebar,
+    closeSidebar,
     setPosition,
     sendMessage,
     sendFeedback,

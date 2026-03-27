@@ -23,6 +23,14 @@ interface AppState {
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
 
+  // Permissions
+  permissions: string[];
+  setPermissions: (permissions: string[]) => void;
+
+  // Chat sidebar
+  chatSidebarOpen: boolean;
+  setChatSidebarOpen: (open: boolean) => void;
+
   // MH Credentials (session only, not persisted)
   mhCredentials: { nit: string; password: string } | null;
   setMhCredentials: (creds: { nit: string; password: string } | null) => void;
@@ -49,6 +57,14 @@ export const useAppStore = create<AppState>()(
       sidebarOpen: true,
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+
+      // Permissions
+      permissions: [],
+      setPermissions: (permissions: string[]) => set({ permissions }),
+
+      // Chat sidebar
+      chatSidebarOpen: false,
+      setChatSidebarOpen: (chatSidebarOpen) => set({ chatSidebarOpen }),
 
       // MH Credentials
       mhCredentials: null,

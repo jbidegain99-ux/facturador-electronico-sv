@@ -224,37 +224,75 @@ export class ChatDataService {
     from: Date,
     to: Date,
   ): Promise<TenantContextItem[]> {
-    // Use CatalogItem usageCount as proxy for popularity
-    const items = await this.prisma.catalogItem.findMany({
+    // Parse line items from DTE jsonOriginal to count product frequency
+    const dtes = await this.prisma.dTE.findMany({
       where: {
         tenantId,
-        isActive: true,
-        usageCount: { gt: 0 },
+        createdAt: { gte: from, lte: to },
+        estado: { not: 'ANULADO' },
+        tipoDte: { in: ['01', '03', '11', '14'] },
       },
-      orderBy: { usageCount: 'desc' },
-      take: 5,
-      select: { name: true, type: true, usageCount: true, basePrice: true },
+      select: { jsonOriginal: true },
     });
 
-    if (items.length === 0) {
+    if (dtes.length === 0) {
       return [
         {
           label: 'Productos/servicios más vendidos',
-          data: `No hay datos de productos vendidos en el período de ${formatMonthYear(from)}.`,
+          data: `No hay documentos emitidos en ${formatMonthYear(from)}.`,
         },
       ];
     }
 
-    const list = items
+    // Aggregate line items by description
+    const productMap = new Map<string, { qty: number; revenue: number }>();
+
+    for (const dte of dtes) {
+      try {
+        const json = JSON.parse(dte.jsonOriginal);
+        const items = json.cuerpoDocumento as Array<{
+          descripcion?: string;
+          cantidad?: number;
+          ventaGravada?: number;
+        }> | undefined;
+        if (!items) continue;
+
+        for (const item of items) {
+          const name = item.descripcion?.trim();
+          if (!name) continue;
+          const existing = productMap.get(name) || { qty: 0, revenue: 0 };
+          existing.qty += Number(item.cantidad ?? 1);
+          existing.revenue += Number(item.ventaGravada ?? 0);
+          productMap.set(name, existing);
+        }
+      } catch {
+        // Skip malformed JSON
+      }
+    }
+
+    if (productMap.size === 0) {
+      return [
+        {
+          label: 'Productos/servicios más vendidos',
+          data: `No se encontraron items de línea en los documentos de ${formatMonthYear(from)}.`,
+        },
+      ];
+    }
+
+    const sorted = [...productMap.entries()]
+      .sort((a, b) => b[1].qty - a[1].qty)
+      .slice(0, 5);
+
+    const list = sorted
       .map(
-        (item, i) =>
-          `${i + 1}) ${item.name} (${item.type === 'SERVICE' ? 'Servicio' : 'Producto'}, ${item.usageCount} usos, precio: ${formatMoney(Number(item.basePrice))})`,
+        ([name, stats], i) =>
+          `${i + 1}) ${name} (${stats.qty} unidades, ${formatMoney(stats.revenue)})`,
       )
       .join(', ');
 
     return [
       {
-        label: 'Top 5 productos/servicios más vendidos',
+        label: `Top 5 productos/servicios más vendidos - ${formatMonthYear(from)}`,
         data: list,
       },
     ];

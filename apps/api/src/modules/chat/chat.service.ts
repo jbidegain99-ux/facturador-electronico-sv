@@ -44,11 +44,15 @@ export class ChatService {
       const intent = classifyIntent(dto.message);
       let tenantContext: Array<{ label: string; data: string }> | undefined;
 
+      this.logger.log(
+        `[DEBUG] classifyIntent("${dto.message.substring(0, 80)}") => ${intent ? `${intent.intent} [${intent.timeRange.from.toISOString()} - ${intent.timeRange.to.toISOString()}]` : 'null (no data intent)'}`,
+      );
+
       if (intent) {
         try {
           tenantContext = await this.chatDataService.fetchData(intent, tenantId);
           this.logger.log(
-            `Data intent: ${intent.intent}, fetched ${tenantContext.length} context items for tenant=${tenantId}`,
+            `[DEBUG] tenantContext for ${intent.intent}: ${JSON.stringify(tenantContext).substring(0, 500)}`,
           );
         } catch (dataError: unknown) {
           const dErr = dataError as { message?: string };

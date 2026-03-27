@@ -166,7 +166,7 @@ function validateField(field: string, value: string, formData: ClienteForm): str
       return '';
     case 'correo':
       if (!value) return '';
-      if (!EMAIL_PATTERN.test(value)) return 'El correo electronico no es valido';
+      if (!EMAIL_PATTERN.test(value)) return 'El correo electrónico no es válido';
       return '';
     case 'complemento':
       if (value.length > 500) return 'La direccion no puede exceder 500 caracteres';

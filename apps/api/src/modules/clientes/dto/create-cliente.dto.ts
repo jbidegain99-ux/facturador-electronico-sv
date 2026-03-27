@@ -44,7 +44,7 @@ export class CreateClienteDto {
 
   @ApiProperty({ example: 'cliente@ejemplo.com', required: false })
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'El correo electrónico no es válido' })
   @MaxLength(100, { message: 'El correo no puede exceder 100 caracteres' })
   correo?: string;
 

@@ -471,7 +471,7 @@ export function NuevoClienteModal({
       if (formData.correo.trim()) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.correo)) {
-          newErrors.correo = 'Correo no valido';
+          newErrors.correo = 'El correo electrónico no es válido';
         }
       }
     } else {
@@ -516,7 +516,7 @@ export function NuevoClienteModal({
       if (formData.correo.trim()) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.correo)) {
-          newErrors.correo = 'Correo no valido';
+          newErrors.correo = 'El correo electrónico no es válido';
         }
       }
     }
@@ -778,7 +778,7 @@ export function NuevoClienteModal({
 
           {/* Email */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">Correo Electronico</label>
+            <label className="text-sm font-medium text-muted-foreground">Correo Electrónico</label>
             <Input
               type="email"
               value={formData.correo}

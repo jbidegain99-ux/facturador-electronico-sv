@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Bell, User, LogOut, Settings, Info, X, ExternalLink, Megaphone, Zap, Shield, AlertTriangle, AlertCircle, CheckCheck, Globe, MessageCircle } from 'lucide-react';
-import { toggleChat } from '@/components/chat/chat-widget';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTranslations } from 'next-intl';
 import { locales, localeNames, type Locale } from '@/i18n/config';
@@ -281,7 +280,7 @@ export function Header() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={toggleChat}
+          onClick={() => window.dispatchEvent(new CustomEvent('facturo-chat-toggle'))}
           title={t('chat')}
         >
           <MessageCircle className="h-5 w-5" />

@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { RoutePermissionGate } from '@/components/permission-gate';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
@@ -21,7 +23,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { sidebarOpen, tenant, setTenant, setUser } = useAppStore();
+  const { sidebarOpen, tenant, setTenant, setUser, setPermissions } = useAppStore();
   const router = useRouter();
   const pathname = usePathname();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = React.useState(true);
@@ -125,6 +127,7 @@ export default function DashboardLayout({
               name: data.nombre,
               email: data.email,
               role: data.rol === 'ADMIN' ? 'admin' : 'user',
+              permissions: [],
             });
           } else {
             console.log('[Auth] Empty response body, setting user to null');
@@ -149,6 +152,37 @@ export default function DashboardLayout({
 
     loadUserData();
   }, [setUser]);
+
+  // Load user permissions
+  React.useEffect(() => {
+    const loadPermissions = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setPermissions([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/me/permissions`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setPermissions(data.permissions || []);
+        } else {
+          setPermissions([]);
+        }
+      } catch {
+        setPermissions([]);
+      }
+    };
+
+    if (isUserReady) {
+      loadPermissions();
+    }
+  }, [isUserReady, setPermissions]);
 
   React.useEffect(() => {
     const checkOnboarding = async () => {
@@ -237,8 +271,11 @@ export default function DashboardLayout({
         )}
       >
         <Header />
-        <main className="p-6">{children}</main>
+        <main className="p-6">
+          <RoutePermissionGate>{children}</RoutePermissionGate>
+        </main>
       </div>
+      <ChatWidget />
     </div>
   );
 }

@@ -21,9 +21,9 @@ export function SetupSelector({ onSelectQuickSetup, onSelectFullWizard }: SetupS
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/10 border border-purple-500/20">
             <Building2 className="h-8 w-8 text-purple-400" />
           </div>
-          <h1 className="text-3xl font-bold">Configuracion con Ministerio de Hacienda</h1>
+          <h1 className="text-3xl font-bold">Configuración con Ministerio de Hacienda</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Cual es tu situacion actual con la facturacion electronica?
+            ¿Cuál es tu situación actual con la facturación electrónica?
           </p>
         </div>
 
@@ -33,8 +33,8 @@ export function SetupSelector({ onSelectQuickSetup, onSelectFullWizard }: SetupS
           <OptionCard
             icon={<Sparkles className="h-8 w-8" />}
             title="Primera Vez"
-            description="Nunca he configurado facturacion electronica con Hacienda. Necesito solicitar ambiente de pruebas y generar mi certificado."
-            duration="5-10 dias"
+            description="Nunca he configurado facturación electrónica con Hacienda. Necesito solicitar ambiente de pruebas y generar mi certificado."
+            duration="5-10 días"
             buttonText="Proceso completo"
             onClick={onSelectFullWizard}
             variant="secondary"

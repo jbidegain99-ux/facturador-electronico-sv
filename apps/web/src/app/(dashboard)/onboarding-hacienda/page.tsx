@@ -21,7 +21,7 @@ export default function OnboardingHaciendaPage() {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        setError('No hay sesion activa');
+        setError('No hay sesión activa');
         setLoading(false);
         return;
       }

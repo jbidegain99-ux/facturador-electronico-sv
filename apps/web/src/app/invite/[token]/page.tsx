@@ -63,10 +63,10 @@ export default function AcceptInvitePage() {
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
             <h1 className="text-2xl font-bold">Cuenta activada</h1>
             <p className="text-muted-foreground">
-              Tu cuenta ha sido activada exitosamente. Ya puedes iniciar sesion.
+              Tu cuenta ha sido activada exitosamente. Ya puedes iniciar sesión.
             </p>
             <Button className="w-full" onClick={() => router.push('/login')}>
-              Ir a Iniciar Sesion
+              Ir a Iniciar Sesión
             </Button>
           </CardContent>
         </Card>

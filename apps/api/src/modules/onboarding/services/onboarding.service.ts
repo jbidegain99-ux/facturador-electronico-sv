@@ -586,32 +586,37 @@ export class OnboardingService {
       completedAt: new Date(),
     });
 
-    // Move to next step
-    const currentIndex = STEP_ORDER.indexOf(dto.step);
-    const nextStep = STEP_ORDER[currentIndex + 1];
+    // Move to next step only if it advances progress (don't regress currentStep)
+    const completedStepIndex = STEP_ORDER.indexOf(dto.step);
+    const currentStepIndex = STEP_ORDER.indexOf(onboarding.currentStep as OnboardingStep);
+    const nextStep = STEP_ORDER[completedStepIndex + 1];
 
-    if (nextStep) {
-      await this.prisma.tenantOnboarding.update({
-        where: { tenantId },
-        data: { currentStep: nextStep },
-      });
+    if (completedStepIndex >= currentStepIndex) {
+      // This step is at or beyond current progress — advance normally
+      if (nextStep) {
+        await this.prisma.tenantOnboarding.update({
+          where: { tenantId },
+          data: { currentStep: nextStep },
+        });
 
-      // Start next step record
-      await this.upsertStepRecord(onboarding.id, nextStep, {
-        status: 'IN_PROGRESS',
-        startedAt: new Date(),
-      });
-    } else {
-      // Completed all steps
-      await this.prisma.tenantOnboarding.update({
-        where: { tenantId },
-        data: {
-          currentStep: 'COMPLETED',
-          overallStatus: 'COMPLETED',
-          completedAt: new Date(),
-        },
-      });
+        // Start next step record
+        await this.upsertStepRecord(onboarding.id, nextStep, {
+          status: 'IN_PROGRESS',
+          startedAt: new Date(),
+        });
+      } else {
+        // Completed all steps
+        await this.prisma.tenantOnboarding.update({
+          where: { tenantId },
+          data: {
+            currentStep: 'COMPLETED',
+            overallStatus: 'COMPLETED',
+            completedAt: new Date(),
+          },
+        });
+      }
     }
+    // If re-completing a previous step, don't change currentStep (preserve progress)
 
     const updated = await this.prisma.tenantOnboarding.findUnique({
       where: { tenantId },
@@ -628,10 +633,16 @@ export class OnboardingService {
     const targetIndex = STEP_ORDER.indexOf(dto.step);
     const currentIndex = STEP_ORDER.indexOf(onboarding.currentStep as OnboardingStep);
 
+    // Allow navigation to completed/skipped steps regardless of position
     if (targetIndex > currentIndex) {
-      throw new BadRequestException(
-        'No puede avanzar a un paso que aún no ha alcanzado',
-      );
+      const stepRecord = await this.prisma.onboardingStepRecord.findUnique({
+        where: { onboardingId_step: { onboardingId: onboarding.id, step: dto.step } },
+      });
+      if (!stepRecord || !['COMPLETED', 'SKIPPED'].includes(stepRecord.status)) {
+        throw new BadRequestException(
+          'No puede avanzar a un paso que aún no ha completado',
+        );
+      }
     }
 
     const updated = await this.prisma.tenantOnboarding.update({
@@ -849,7 +860,7 @@ export class OnboardingService {
         order: index + 1,
         status: record?.status || 'PENDING',
         isCurrentStep: step === onboarding.currentStep,
-        canNavigateTo: index <= currentIndex,
+        canNavigateTo: index <= currentIndex || record?.status === 'COMPLETED' || record?.status === 'SKIPPED',
         stepData: record?.stepData ? JSON.parse(record.stepData) : undefined,
         notes: record?.notes,
         blockerReason: record?.blockerReason,

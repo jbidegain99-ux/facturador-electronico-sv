@@ -4,6 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SendMessageDto, ChatFeedbackDto, NimoBotRequest, NimoBotResponse } from './chat.dto';
 import { firstValueFrom } from 'rxjs';
+import { classifyIntent } from './chat-intent';
+import { ChatDataService } from './chat-data.service';
 
 @Injectable()
 export class ChatService {
@@ -15,6 +17,7 @@ export class ChatService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly chatDataService: ChatDataService,
   ) {
     this.botApiUrl = this.configService.get<string>('NIMO_BOT_API_URL') ?? '';
     this.botApiKey = this.configService.get<string>('NIMO_BOT_API_KEY') ?? '';
@@ -37,9 +40,29 @@ export class ChatService {
     }
 
     try {
+      // Classify intent and fetch tenant data if applicable
+      const intent = classifyIntent(dto.message);
+      let tenantContext: Array<{ label: string; data: string }> | undefined;
+
+      if (intent) {
+        try {
+          tenantContext = await this.chatDataService.fetchData(intent, tenantId);
+          this.logger.log(
+            `Data intent: ${intent.intent}, fetched ${tenantContext.length} context items for tenant=${tenantId}`,
+          );
+        } catch (dataError: unknown) {
+          const dErr = dataError as { message?: string };
+          this.logger.warn(
+            `Failed to fetch tenant data for intent ${intent.intent}: ${dErr.message}`,
+          );
+          // Graceful degradation: send without data
+        }
+      }
+
       const botRequest: NimoBotRequest = {
         message: dto.message,
         sessionId: dto.sessionId || undefined,
+        tenantContext,
         ragEnabled: true,
         stream: false,
       };

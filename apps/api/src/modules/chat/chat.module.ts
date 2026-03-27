@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
+import { ChatDataService } from './chat-data.service';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { ChatService } from './chat.service';
     }),
   ],
   controllers: [ChatController],
-  providers: [ChatService],
+  providers: [ChatService, ChatDataService],
   exports: [ChatService],
 })
 export class ChatModule {}

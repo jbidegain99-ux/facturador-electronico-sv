@@ -104,6 +104,9 @@ model Tenant {
   // RBAC
   roles           Role[]
   roleAssignments UserRoleAssignment[]
+
+  // Chat feedback
+  chatFeedback ChatFeedback[]
 }
 
 model User {
@@ -136,7 +139,27 @@ model User {
   // RBAC role assignments
   roleAssignments UserRoleAssignment[]
 
+  // Chat feedback
+  chatFeedback ChatFeedback[]
+
   @@index([tenantId])
+}
+
+model ChatFeedback {
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messageContent String   @db.NVarChar(2000)
+  botResponse    String   @db.NVarChar(4000)
+  rating         String
+  feedbackText   String?  @db.NVarChar(500)
+  pageRoute      String?  @db.NVarChar(200)
+  createdAt      DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([rating])
 }
 
 model Cliente {

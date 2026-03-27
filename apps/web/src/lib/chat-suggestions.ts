@@ -13,8 +13,9 @@ const SUGGESTION_MAP: PageSuggestions[] = [
     pattern: '/dashboard',
     suggestions: [
       { text: '¿Cuál es mi resumen del mes?', icon: '📊' },
+      { text: 'Comparar con el mes anterior', icon: '📈' },
+      { text: 'Proyección de ventas', icon: '🔮' },
       { text: 'Facturas vencidas', icon: '⚠️' },
-      { text: '¿Cómo leer este dashboard?', icon: '❓' },
     ],
   },
   {
@@ -28,10 +29,10 @@ const SUGGESTION_MAP: PageSuggestions[] = [
   {
     pattern: '/facturacion/facturas',
     suggestions: [
-      { text: '¿Cómo crear un CCF?', icon: '📄' },
+      { text: 'Últimas 5 facturas', icon: '📄' },
+      { text: 'Total de IVA del mes', icon: '🧾' },
       { text: '¿Cómo anular una factura?', icon: '❌' },
-      { text: 'Diferencia entre CF y CCF', icon: '❓' },
-      { text: '¿Cómo crear una Nota de Crédito?', icon: '📝' },
+      { text: 'Facturas de hoy', icon: '📅' },
     ],
   },
   {
@@ -45,16 +46,17 @@ const SUGGESTION_MAP: PageSuggestions[] = [
   {
     pattern: '/clientes',
     suggestions: [
+      { text: '¿A quién le facturo más?', icon: '👑' },
+      { text: 'Clientes nuevos del mes', icon: '🆕' },
       { text: 'Agregar nuevo cliente', icon: '👤' },
       { text: '¿Cómo importar clientes?', icon: '📥' },
-      { text: 'Diferencia NIT y NRC', icon: '❓' },
     ],
   },
   {
     pattern: '/catalogo',
     suggestions: [
       { text: '¿Cómo agregar un producto?', icon: '📦' },
-      { text: '¿Cómo configurar precios?', icon: '💲' },
+      { text: '¿Cuáles son mis productos más vendidos?', icon: '🏆' },
       { text: 'Importar catálogo masivo', icon: '📥' },
     ],
   },
@@ -69,9 +71,10 @@ const SUGGESTION_MAP: PageSuggestions[] = [
   {
     pattern: '/reportes',
     suggestions: [
-      { text: '¿Cómo exportar a CSV?', icon: '📊' },
+      { text: 'Proyección de ventas', icon: '🔮' },
+      { text: 'Ventas por sucursal', icon: '🏢' },
       { text: 'Reporte de IVA del mes', icon: '🧾' },
-      { text: '¿Cómo filtrar por fecha?', icon: '📅' },
+      { text: '¿Cómo exportar a CSV?', icon: '📊' },
     ],
   },
   {
@@ -79,7 +82,7 @@ const SUGGESTION_MAP: PageSuggestions[] = [
     suggestions: [
       { text: '¿Cómo conectar con Hacienda?', icon: '🏛️' },
       { text: 'Configurar sucursales', icon: '🏢' },
-      { text: '¿Cómo cambiar mi plan?', icon: '💳' },
+      { text: '¿Cuánto de mi plan he usado?', icon: '📊' },
     ],
   },
   {

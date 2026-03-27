@@ -4,10 +4,12 @@ import { useRef, useCallback } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import { MessageCircle, X, GripVertical, PanelRightOpen, PanelRightClose } from 'lucide-react';
 import { useChatWidget, type BubblePosition } from './use-chat-widget';
+import { useChatNudges } from './use-chat-nudges';
 import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
 import { ChatSuggestions } from './ChatSuggestions';
 import { ChatWelcome } from './ChatWelcome';
+import { NudgeTooltip } from './NudgeTooltip';
 import { useAppStore } from '@/store';
 import { cn } from '@/lib/utils';
 
@@ -169,6 +171,7 @@ export function ChatWidget() {
   } = useChatWidget();
 
   const { user } = useAppStore();
+  const { nudge, dismissNudge } = useChatNudges(isOpen);
   const showWelcome = !hasSeenWelcome && !hasMessages;
   const userName = user?.name?.split(' ')[0];
 
@@ -200,9 +203,12 @@ export function ChatWidget() {
 
   const handleBubbleClick = useCallback(() => {
     if (!isDragging.current) {
+      if (nudge.isActive && nudge.message) {
+        dismissNudge();
+      }
       openChat();
     }
-  }, [openChat]);
+  }, [openChat, nudge, dismissNudge]);
 
   const posStyle = POSITION_STYLES[position];
 
@@ -235,14 +241,21 @@ export function ChatWidget() {
           className="fixed z-50"
           style={{ width: BUBBLE_SIZE, height: BUBBLE_SIZE }}
         >
+          {/* Nudge pulse ring */}
+          {!isOpen && nudge.isActive && (
+            <span
+              className="absolute inset-0 rounded-full bg-facturo-violet-500 animate-nudge-pulse pointer-events-none"
+            />
+          )}
+
           <button
             onClick={handleBubbleClick}
             className={cn(
-              'w-full h-full rounded-full flex items-center justify-center',
+              'relative w-full h-full rounded-full flex items-center justify-center',
               'bg-facturo-violet-600 hover:bg-facturo-violet-700 text-white',
               'shadow-lg hover:shadow-xl transition-shadow',
               'cursor-grab active:cursor-grabbing',
-              'group relative',
+              'group',
             )}
           >
             {isOpen ? (
@@ -254,6 +267,21 @@ export function ChatWidget() {
               <GripVertical className="h-3.5 w-3.5 text-white" />
             </span>
           </button>
+
+          {/* Nudge tooltip */}
+          <AnimatePresence>
+            {!isOpen && nudge.isActive && nudge.type === 'tooltip' && nudge.message && (
+              <NudgeTooltip
+                message={nudge.message}
+                position={position}
+                onDismiss={dismissNudge}
+                onClick={() => {
+                  dismissNudge();
+                  openChat();
+                }}
+              />
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
 

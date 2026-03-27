@@ -401,6 +401,16 @@
 }
 
 @layer utilities {
+  /* Chat nudge pulse */
+  .animate-nudge-pulse {
+    animation: nudge-pulse 2s ease-out 3;
+  }
+
+  @keyframes nudge-pulse {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+
   /* Animation utilities */
   .animate-float {
     animation: float 6s ease-in-out infinite;

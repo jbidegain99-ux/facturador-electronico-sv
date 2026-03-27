@@ -307,19 +307,25 @@ export class PdfService {
         { text: 'Cant.', style: 'tableHeader', alignment: 'center' },
         { text: 'Descripción', style: 'tableHeader' },
         { text: 'Precio Unit.', style: 'tableHeader', alignment: 'right' },
-        { text: 'Gravado', style: 'tableHeader', alignment: 'right' },
+        { text: 'Subtotal', style: 'tableHeader', alignment: 'right' },
         { text: 'IVA (13%)', style: 'tableHeader', alignment: 'right' },
       ],
     ];
 
     items.forEach((item, index) => {
+      const ventaGravada = item.ventaGravada || 0;
+      const ventaExenta = item.ventaExenta || 0;
+      const ventaNoSuj = item.ventaNoSuj || 0;
+      const subtotalItem = ventaGravada || ventaExenta || ventaNoSuj;
+      const ivaItem = item.ivaItem || 0;
+
       itemsTableBody.push([
         { text: String(index + 1), style: 'tableCell', alignment: 'center' },
         { text: String(item.cantidad || 1), style: 'tableCell', alignment: 'center' },
         { text: item.descripcion || '', style: 'tableCell' },
         { text: this.formatCurrency(item.precioUni || 0), style: 'tableCell', alignment: 'right' },
-        { text: this.formatCurrency(item.ventaGravada || 0), style: 'tableCell', alignment: 'right' },
-        { text: this.formatCurrency(item.ivaItem || 0), style: 'tableCell', alignment: 'right' },
+        { text: this.formatCurrency(subtotalItem), style: 'tableCell', alignment: 'right' },
+        { text: ivaItem > 0 ? this.formatCurrency(ivaItem) : '-', style: 'tableCell', alignment: 'right' },
       ]);
     });
 
@@ -428,7 +434,8 @@ export class PdfService {
               widths: ['*', 80],
               body: [
                 [{ text: 'Subtotal Gravado:', alignment: 'right' as const }, { text: this.formatCurrency(resumen.totalGravada || 0), alignment: 'right' as const }],
-                [{ text: 'Subtotal Exento:', alignment: 'right' as const }, { text: this.formatCurrency(resumen.totalExenta || 0), alignment: 'right' as const }],
+                ...((resumen.totalExenta || 0) > 0 ? [[{ text: 'Subtotal Exento:', alignment: 'right' as const }, { text: this.formatCurrency(resumen.totalExenta || 0), alignment: 'right' as const }]] : []),
+                ...((resumen.totalNoSuj || 0) > 0 ? [[{ text: 'Subtotal No Sujeto:', alignment: 'right' as const }, { text: this.formatCurrency(resumen.totalNoSuj || 0), alignment: 'right' as const }]] : []),
                 [{ text: 'IVA (13%):', alignment: 'right' as const }, { text: this.formatCurrency(this.getIvaAmount(resumen, dte.data)), alignment: 'right' as const }],
                 [{ text: 'TOTAL:', alignment: 'right' as const, bold: true, fontSize: 12 }, { text: this.formatCurrency(resumen.totalPagar || resumen.montoTotalOperacion || 0), alignment: 'right' as const, bold: true, fontSize: 12 }],
               ],

@@ -467,22 +467,32 @@ export default function FacturaDetallePage() {
                     <TableHead>{t('itemDescription')}</TableHead>
                     <TableHead className="text-right">{t('qty')}</TableHead>
                     <TableHead className="text-right">{t('unitPrice')}</TableHead>
-                    <TableHead className="text-right">{t('taxable')}</TableHead>
+                    <TableHead className="text-right">{t('subtotal')}</TableHead>
                     <TableHead className="text-right">{t('iva')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.length > 0 ? (
-                    items.map((item: any, index: number) => (
+                    items.map((item: any, index: number) => {
+                      const ventaGravada = parseNumber(item.ventaGravada);
+                      const ventaExenta = parseNumber(item.ventaExenta);
+                      const ventaNoSuj = parseNumber(item.ventaNoSuj);
+                      const subtotalItem = ventaGravada || ventaExenta || ventaNoSuj;
+                      const ivaItem = parseNumber(item.ivaItem || 0);
+
+                      return (
                       <TableRow key={index}>
                         <TableCell>{item.numItem || index + 1}</TableCell>
                         <TableCell>{item.descripcion}</TableCell>
                         <TableCell className="text-right">{item.cantidad}</TableCell>
                         <TableCell className="text-right">{formatCurrency(parseNumber(item.precioUni))}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(parseNumber(item.ventaGravada))}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(parseNumber(item.ivaItem || 0))}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(subtotalItem)}</TableCell>
+                        <TableCell className="text-right">
+                          {ivaItem > 0 ? formatCurrency(ivaItem) : <span className="text-muted-foreground">-</span>}
+                        </TableCell>
                       </TableRow>
-                    ))
+                      );
+                    })
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground">
@@ -507,6 +517,18 @@ export default function FacturaDetallePage() {
                     <span className="text-muted-foreground">{t('subtotalTaxable')}</span>
                     <span>{formatCurrency(parseNumber(resumen?.totalGravada || dte.totalGravada))}</span>
                   </div>
+                  {parseNumber(resumen?.totalExenta || (dte as any).totalExenta) > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal Exento:</span>
+                      <span>{formatCurrency(parseNumber(resumen?.totalExenta || (dte as any).totalExenta))}</span>
+                    </div>
+                  )}
+                  {parseNumber(resumen?.totalNoSuj || (dte as any).totalNoSuj) > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal No Sujeto:</span>
+                      <span>{formatCurrency(parseNumber(resumen?.totalNoSuj || (dte as any).totalNoSuj))}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">IVA (13%):</span>
                     <span>{formatCurrency(parseNumber(resumen?.totalIva || dte.totalIva))}</span>
@@ -619,7 +641,7 @@ export default function FacturaDetallePage() {
             <Card className={dte.estado === 'RECHAZADO' ? 'border-red-500/50' : ''}>
               <CardHeader>
                 <CardTitle className="text-base">
-                  {dte.estado === 'RECHAZADO' ? 'Error de Transmision' : t('mhResponse')}
+                  {dte.estado === 'RECHAZADO' ? 'Error de Transmisión' : t('mhResponse')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">

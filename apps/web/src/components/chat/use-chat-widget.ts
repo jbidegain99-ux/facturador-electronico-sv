@@ -93,6 +93,39 @@ export function useChatWidget() {
     localStorage.setItem(POSITION_KEY, pos);
   }, []);
 
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+
+  const updateMessageContent = useCallback((msgId: string, content: string) => {
+    setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, content } : m));
+  }, []);
+
+  /** JSON fallback (original endpoint) */
+  const sendMessageJson = useCallback(async (
+    text: string,
+    botMsgId: string,
+    authToken: string,
+    signal: AbortSignal,
+  ) => {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/chat/message`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ message: text, sessionId: sessionId || undefined }),
+        signal,
+      },
+    );
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => null);
+      throw new Error(errorData?.message || `Error ${res.status}`);
+    }
+
+    const data: { answer: string; sessionId: string } = await res.json();
+    setSessionId(data.sessionId);
+    updateMessageContent(botMsgId, data.answer);
+  }, [sessionId, updateMessageContent]);
+
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -108,51 +141,95 @@ export function useChatWidget() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
-    setIsLoading(true);
+    const botMsgId = `bot-${Date.now()}`;
+    const botMsg: ChatMessage = {
+      id: botMsgId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+    };
 
-    // Cancel any pending request
+    setMessages((prev) => [...prev, userMsg, botMsg]);
+    setIsLoading(true);
+    setStreamingMessageId(botMsgId);
+
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No auth token');
+      const authToken = localStorage.getItem('token');
+      if (!authToken) throw new Error('No auth token');
 
+      // Try streaming first
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat/message`,
+        `${process.env.NEXT_PUBLIC_API_URL}/chat/message/stream`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            message: trimmed,
-            sessionId: sessionId || undefined,
-          }),
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+          body: JSON.stringify({ message: trimmed, sessionId: sessionId || undefined }),
           signal: controller.signal,
         },
       );
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.message || `Error ${res.status}`);
+      if (!res.ok || !res.body) {
+        // Fallback to JSON
+        await sendMessageJson(trimmed, botMsgId, authToken, controller.signal);
+        return;
       }
 
-      const data: { answer: string; sessionId: string } = await res.json();
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = '';
+      let buffer = '';
 
-      setSessionId(data.sessionId);
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-      const botMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        role: 'assistant',
-        content: data.answer,
-        timestamp: new Date(),
-      };
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
-      setMessages((prev) => [...prev, botMsg]);
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine.startsWith('data: ')) continue;
+            const jsonStr = trimmedLine.slice(6);
+
+            try {
+              const event = JSON.parse(jsonStr);
+
+              if (event.token !== undefined) {
+                accumulated += event.token;
+                updateMessageContent(botMsgId, accumulated);
+              }
+
+              if (event.done) {
+                setSessionId(event.sessionId);
+              }
+
+              if (event.error) {
+                if (accumulated) {
+                  accumulated += '\n\n*(La respuesta se interrumpió)*';
+                  updateMessageContent(botMsgId, accumulated);
+                } else {
+                  updateMessageContent(botMsgId, 'Error al procesar tu pregunta. Intenta de nuevo.');
+                }
+              }
+            } catch {
+              // Partial JSON, skip
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      // If no content arrived via stream, fallback
+      if (!accumulated) {
+        await sendMessageJson(trimmed, botMsgId, authToken, controller.signal);
+      }
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
 
@@ -161,18 +238,12 @@ export function useChatWidget() {
           ? err.message
           : 'Error al procesar tu pregunta. Intenta de nuevo.';
 
-      const errorMsg: ChatMessage = {
-        id: `error-${Date.now()}`,
-        role: 'assistant',
-        content: errorMessage,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, errorMsg]);
+      updateMessageContent(botMsgId, errorMessage);
     } finally {
       setIsLoading(false);
+      setStreamingMessageId(null);
     }
-  }, [sessionId, hasSeenWelcome, dismissWelcome]);
+  }, [sessionId, hasSeenWelcome, dismissWelcome, sendMessageJson, updateMessageContent]);
 
   const sendFeedback = useCallback(async (
     messageContent: string,
@@ -353,5 +424,6 @@ export function useChatWidget() {
     requestEscalation,
     handleSystemAction,
     isEscalating,
+    streamingMessageId,
   };
 }

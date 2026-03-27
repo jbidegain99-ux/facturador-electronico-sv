@@ -14,9 +14,10 @@ interface ChatMessagesProps {
   isLoading: boolean;
   onFeedback: (messageContent: string, botResponse: string, rating: 'up' | 'down', feedbackText?: string) => void;
   onSystemAction?: (key: string) => void;
+  streamingMessageId?: string | null;
 }
 
-export function ChatMessages({ messages, isLoading, onFeedback, onSystemAction }: ChatMessagesProps) {
+export function ChatMessages({ messages, isLoading, onFeedback, onSystemAction, streamingMessageId }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,6 +86,8 @@ export function ChatMessages({ messages, isLoading, onFeedback, onSystemAction }
             );
           }
 
+          const isStreaming = msg.id === streamingMessageId;
+
           return (
             <div
               key={msg.id}
@@ -102,15 +105,22 @@ export function ChatMessages({ messages, isLoading, onFeedback, onSystemAction }
                 )}
               >
                 {msg.role === 'assistant' ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-a:text-facturo-violet-600 dark:prose-a:text-facturo-violet-400 prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-code:text-xs">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {msg.content}
-                    </ReactMarkdown>
+                  <div className={cn(
+                    'prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-a:text-facturo-violet-600 dark:prose-a:text-facturo-violet-400 prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-code:text-xs',
+                    isStreaming && 'streaming-cursor',
+                  )}>
+                    {msg.content ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : isStreaming ? (
+                      <span className="text-muted-foreground text-sm">...</span>
+                    ) : null}
                   </div>
                 ) : (
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                 )}
-                {msg.role === 'assistant' && (
+                {msg.role === 'assistant' && !isStreaming && msg.content && (
                   <ChatFeedback
                     onFeedback={(rating, feedbackText) =>
                       onFeedback(getUserMessageBefore(index), msg.content, rating, feedbackText)

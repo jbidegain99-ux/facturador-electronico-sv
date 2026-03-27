@@ -117,6 +117,7 @@ function ChatBody({
   hasSeenWelcome,
   isOpen,
   onSystemAction,
+  streamingMessageId,
 }: {
   showWelcome: boolean;
   userName?: string;
@@ -128,6 +129,7 @@ function ChatBody({
   hasSeenWelcome: boolean;
   isOpen: boolean;
   onSystemAction: (key: string) => void;
+  streamingMessageId?: string | null;
 }) {
   return (
     <>
@@ -145,6 +147,7 @@ function ChatBody({
             isLoading={isLoading}
             onFeedback={sendFeedback}
             onSystemAction={onSystemAction}
+            streamingMessageId={streamingMessageId}
           />
         )}
       </AnimatePresence>
@@ -183,6 +186,7 @@ export function ChatWidget() {
     hasSeenWelcome,
     requestEscalation,
     handleSystemAction,
+    streamingMessageId,
   } = useChatWidget();
 
   const { user } = useAppStore();
@@ -238,6 +242,7 @@ export function ChatWidget() {
     hasSeenWelcome,
     isOpen,
     onSystemAction: handleSystemAction,
+    streamingMessageId,
   };
 
   return (

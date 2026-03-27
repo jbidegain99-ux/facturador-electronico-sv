@@ -165,6 +165,7 @@ export function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('facturo-chat-welcome-seen');
     setUser(null);
     setTenant(null);
     router.push('/login');

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Info } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatFeedback } from './ChatFeedback';
 import { cn } from '@/lib/utils';
@@ -13,9 +13,10 @@ interface ChatMessagesProps {
   messages: ChatMessage[];
   isLoading: boolean;
   onFeedback: (messageContent: string, botResponse: string, rating: 'up' | 'down', feedbackText?: string) => void;
+  onSystemAction?: (key: string) => void;
 }
 
-export function ChatMessages({ messages, isLoading, onFeedback }: ChatMessagesProps) {
+export function ChatMessages({ messages, isLoading, onFeedback, onSystemAction }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,41 +50,77 @@ export function ChatMessages({ messages, isLoading, onFeedback }: ChatMessagesPr
   return (
     <ScrollArea className="flex-1">
       <div className="p-4 space-y-4">
-        {messages.map((msg, index) => (
-          <div
-            key={msg.id}
-            className={cn(
-              'flex',
-              msg.role === 'user' ? 'justify-end' : 'justify-start',
-            )}
-          >
+        {messages.map((msg, index) => {
+          // System messages (confirmations, status)
+          if (msg.role === 'system') {
+            return (
+              <div key={msg.id} className="flex justify-center">
+                <div className="max-w-[90%] rounded-xl px-4 py-2.5 bg-facturo-violet-50 dark:bg-facturo-violet-950/30 border border-facturo-violet-200 dark:border-facturo-violet-800/50">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-4 w-4 mt-0.5 flex-shrink-0 text-facturo-violet-600 dark:text-facturo-violet-400" />
+                    <div>
+                      <p className="text-sm text-facturo-violet-700 dark:text-facturo-violet-300">{msg.content}</p>
+                      {msg.actions && onSystemAction && (
+                        <div className="flex gap-2 mt-2">
+                          {msg.actions.map((action) => (
+                            <button
+                              key={action.key}
+                              onClick={() => onSystemAction(action.key)}
+                              className={cn(
+                                'text-xs px-3 py-1.5 rounded-lg transition-colors',
+                                action.key.includes('confirm')
+                                  ? 'bg-facturo-violet-600 text-white hover:bg-facturo-violet-700'
+                                  : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                              )}
+                            >
+                              {action.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
             <div
+              key={msg.id}
               className={cn(
-                'max-w-[85%] rounded-2xl px-4 py-2.5',
-                msg.role === 'user'
-                  ? 'bg-facturo-violet-600 text-white rounded-br-md'
-                  : 'bg-muted/60 dark:bg-muted/30 border border-border/50 rounded-bl-md',
+                'flex',
+                msg.role === 'user' ? 'justify-end' : 'justify-start',
               )}
             >
-              {msg.role === 'assistant' ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-a:text-facturo-violet-600 dark:prose-a:text-facturo-violet-400 prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-code:text-xs">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {msg.content}
-                  </ReactMarkdown>
-                </div>
-              ) : (
-                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-              )}
-              {msg.role === 'assistant' && (
-                <ChatFeedback
-                  onFeedback={(rating, feedbackText) =>
-                    onFeedback(getUserMessageBefore(index), msg.content, rating, feedbackText)
-                  }
-                />
-              )}
+              <div
+                className={cn(
+                  'max-w-[85%] rounded-2xl px-4 py-2.5',
+                  msg.role === 'user'
+                    ? 'bg-facturo-violet-600 text-white rounded-br-md'
+                    : 'bg-muted/60 dark:bg-muted/30 border border-border/50 rounded-bl-md',
+                )}
+              >
+                {msg.role === 'assistant' ? (
+                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-a:text-facturo-violet-600 dark:prose-a:text-facturo-violet-400 prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-code:text-xs">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                )}
+                {msg.role === 'assistant' && (
+                  <ChatFeedback
+                    onFeedback={(rating, feedbackText) =>
+                      onFeedback(getUserMessageBefore(index), msg.content, rating, feedbackText)
+                    }
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {isLoading && (
           <div className="flex justify-start">
             <div className="bg-muted/60 dark:bg-muted/30 border border-border/50 rounded-2xl rounded-bl-md px-4 py-3">

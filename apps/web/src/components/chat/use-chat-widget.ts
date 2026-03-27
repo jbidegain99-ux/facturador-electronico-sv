@@ -5,9 +5,11 @@ import { useAppStore } from '@/store';
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
+  /** For system messages with action buttons */
+  actions?: Array<{ label: string; key: string }>;
 }
 
 export type BubblePosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
@@ -204,6 +206,109 @@ export function useChatWidget() {
     }
   }, []);
 
+  // --- Support escalation ---
+  const [isEscalating, setIsEscalating] = useState(false);
+
+  const requestEscalation = useCallback(() => {
+    if (messages.length === 0) {
+      // No conversation — navigate directly
+      window.location.href = '/soporte';
+      return;
+    }
+
+    // Show inline confirmation
+    const confirmMsg: ChatMessage = {
+      id: `system-confirm-${Date.now()}`,
+      role: 'system',
+      content: '¿Deseas crear un ticket de soporte con esta conversación?',
+      timestamp: new Date(),
+      actions: [
+        { label: 'Sí, crear ticket', key: 'confirm-escalation' },
+        { label: 'Cancelar', key: 'cancel-escalation' },
+      ],
+    };
+    setMessages((prev) => [...prev, confirmMsg]);
+  }, [messages.length]);
+
+  const handleSystemAction = useCallback(async (actionKey: string) => {
+    // Remove the system message with actions
+    setMessages((prev) => prev.filter((m) => !m.actions));
+
+    if (actionKey === 'cancel-escalation') return;
+
+    if (actionKey === 'confirm-escalation') {
+      setIsEscalating(true);
+
+      const transcript = messages
+        .filter((m) => m.role !== 'system')
+        .map((msg) => {
+          const role = msg.role === 'user' ? 'Usuario' : 'Asistente Facturo';
+          const time = new Date(msg.timestamp).toLocaleTimeString('es-SV');
+          return `[${time}] ${role}: ${msg.content}`;
+        })
+        .join('\n\n');
+
+      const description = `## Conversación con Asistente AI\n\nEste ticket fue creado automáticamente desde el chat de asistencia AI porque el usuario necesitó ayuda humana.\n\n### Transcript de la conversación:\n\n${transcript}\n\n---\n*Ticket generado automáticamente por el Asistente Facturo*`;
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No auth token');
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/support-tickets`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              type: 'GENERAL',
+              subject: `Escalación desde chat AI — ${new Date().toLocaleDateString('es-SV')}`,
+              description,
+              priority: 'MEDIUM',
+              metadata: JSON.stringify({
+                source: 'chat-escalation',
+                sessionId,
+                pageRoute: typeof window !== 'undefined' ? window.location.pathname : '',
+                messageCount: messages.filter((m) => m.role !== 'system').length,
+              }),
+            }),
+          },
+        );
+
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+
+        const successMsg: ChatMessage = {
+          id: `system-success-${Date.now()}`,
+          role: 'system',
+          content: 'Ticket creado exitosamente. Te estoy redirigiendo a soporte...',
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, successMsg]);
+
+        setTimeout(() => {
+          setMode('bubble');
+          window.location.href = '/soporte';
+        }, 1500);
+      } catch {
+        const errorMsg: ChatMessage = {
+          id: `system-error-${Date.now()}`,
+          role: 'system',
+          content: 'No se pudo crear el ticket automáticamente. Te redirijo a soporte...',
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMsg]);
+
+        setTimeout(() => {
+          window.location.href = '/soporte';
+        }, 1500);
+      } finally {
+        setIsEscalating(false);
+      }
+    }
+  }, [messages, sessionId, setMode]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -245,5 +350,8 @@ export function useChatWidget() {
     hasMessages: messages.length > 0,
     hasSeenWelcome,
     dismissWelcome,
+    requestEscalation,
+    handleSystemAction,
+    isEscalating,
   };
 }

@@ -2,7 +2,7 @@
 
 import { useRef, useCallback } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
-import { MessageCircle, X, GripVertical, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { MessageCircle, X, GripVertical, PanelRightOpen, PanelRightClose, LifeBuoy } from 'lucide-react';
 import { useChatWidget, type BubblePosition } from './use-chat-widget';
 import { useChatNudges } from './use-chat-nudges';
 import { ChatMessages } from './ChatMessages';
@@ -48,11 +48,13 @@ function ChatHeader({
   onClose,
   onExpand,
   onCollapse,
+  onEscalate,
 }: {
   mode: 'panel' | 'sidebar';
   onClose: () => void;
   onExpand?: () => void;
   onCollapse?: () => void;
+  onEscalate?: () => void;
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
@@ -66,7 +68,15 @@ function ChatHeader({
         </div>
       </div>
       <div className="flex items-center gap-1">
-        {/* Expand/collapse — hidden on mobile */}
+        {onEscalate && (
+          <button
+            onClick={onEscalate}
+            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            title="Hablar con soporte"
+          >
+            <LifeBuoy className="h-4 w-4" />
+          </button>
+        )}
         {mode === 'panel' && onExpand && (
           <button
             onClick={onExpand}
@@ -106,6 +116,7 @@ function ChatBody({
   hasMessages,
   hasSeenWelcome,
   isOpen,
+  onSystemAction,
 }: {
   showWelcome: boolean;
   userName?: string;
@@ -116,6 +127,7 @@ function ChatBody({
   hasMessages: boolean;
   hasSeenWelcome: boolean;
   isOpen: boolean;
+  onSystemAction: (key: string) => void;
 }) {
   return (
     <>
@@ -132,6 +144,7 @@ function ChatBody({
             messages={messages}
             isLoading={isLoading}
             onFeedback={sendFeedback}
+            onSystemAction={onSystemAction}
           />
         )}
       </AnimatePresence>
@@ -168,6 +181,8 @@ export function ChatWidget() {
     sendFeedback,
     hasMessages,
     hasSeenWelcome,
+    requestEscalation,
+    handleSystemAction,
   } = useChatWidget();
 
   const { user } = useAppStore();
@@ -222,6 +237,7 @@ export function ChatWidget() {
     hasMessages,
     hasSeenWelcome,
     isOpen,
+    onSystemAction: handleSystemAction,
   };
 
   return (
@@ -315,6 +331,7 @@ export function ChatWidget() {
                 mode="panel"
                 onClose={closeChat}
                 onExpand={openSidebar}
+                onEscalate={requestEscalation}
               />
               <ChatBody {...bodyProps} />
             </motion.div>
@@ -337,6 +354,7 @@ export function ChatWidget() {
               mode="sidebar"
               onClose={closeChat}
               onCollapse={closeSidebar}
+              onEscalate={requestEscalation}
             />
             <ChatBody {...bodyProps} />
           </motion.div>

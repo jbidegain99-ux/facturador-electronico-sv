@@ -7,10 +7,12 @@ import {
   Put,
   Delete,
   Param,
+  Query,
   UseGuards,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
   Logger,
   UseInterceptors,
   UploadedFile,
@@ -123,6 +125,33 @@ export class TenantsController {
   @ApiOperation({ summary: 'Actualizar tenant' })
   update(@Param('id') id: string, @Body() updateTenantDto: Partial<CreateTenantDto>) {
     return this.tenantsService.update(id, updateTenantDto);
+  }
+
+  @Get('check-email')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Verificar si un correo empresarial ya está registrado' })
+  @ApiResponse({ status: 200, description: 'Correo disponible' })
+  @ApiResponse({ status: 409, description: 'Correo ya registrado' })
+  async checkEmailAvailability(
+    @Query('email') email: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    if (!email) {
+      throw new BadRequestException('El parámetro email es requerido');
+    }
+
+    const existing = await this.prisma.tenant.findFirst({
+      where: {
+        correo: email.toLowerCase().trim(),
+        ...(user.tenantId ? { NOT: { id: user.tenantId } } : {}),
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException('Ya existe una empresa registrada con este correo electrónico');
+    }
+
+    return { available: true };
   }
 
   // ==================== ONBOARDING ENDPOINTS ====================

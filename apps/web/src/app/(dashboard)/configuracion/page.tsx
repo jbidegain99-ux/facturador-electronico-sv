@@ -246,6 +246,10 @@ export default function ConfiguracionPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
+        // Show field-level error for duplicate email
+        if (res.status === 409 && errorData.message?.includes('correo')) {
+          setFieldErrors(prev => ({ ...prev, correo: errorData.message }));
+        }
         throw new Error(errorData.message || t('saveError'));
       }
 

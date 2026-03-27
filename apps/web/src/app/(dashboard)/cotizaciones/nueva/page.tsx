@@ -256,7 +256,7 @@ export default function NuevaCotizacionPage() {
       const payload = {
         clienteId: cliente!.id,
         clienteEmail: clienteEmail || undefined,
-        validUntil: new Date(validUntil).toISOString(),
+        validUntil: validUntil,
         items: items.map((i) => ({
           description: i.descripcion,
           quantity: i.cantidad,

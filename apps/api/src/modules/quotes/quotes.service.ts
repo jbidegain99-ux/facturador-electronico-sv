@@ -81,6 +81,20 @@ export class QuotesService {
     private configService: ConfigService,
   ) {}
 
+  /**
+   * Parse a date-only string (YYYY-MM-DD) or ISO string into a Date at noon UTC,
+   * avoiding off-by-one errors caused by UTC midnight + timezone offset.
+   */
+  private parseDateOnly(dateStr: string): Date {
+    // If it's a date-only string like "2026-03-26", append noon to avoid timezone shift
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return new Date(`${dateStr}T12:00:00Z`);
+    }
+    // If it's already an ISO string with time, parse and set to noon UTC of that date
+    const d = new Date(dateStr);
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0));
+  }
+
   // ── Quote Numbering ─────────────────────────────────────────────────
 
   async getNextNumber(tenantId: string): Promise<string> {
@@ -150,7 +164,7 @@ export class QuotesService {
             ? client.direccion
             : JSON.stringify(client.direccion),
         clienteTelefono: client.telefono,
-        validUntil: new Date(dto.validUntil),
+        validUntil: this.parseDateOnly(dto.validUntil),
         status: QUOTE_STATUSES.DRAFT,
         subtotal,
         taxAmount,
@@ -338,7 +352,7 @@ export class QuotesService {
         data.clienteEmail = client.correo;
       }
     }
-    if (dto.validUntil) data.validUntil = new Date(dto.validUntil);
+    if (dto.validUntil) data.validUntil = this.parseDateOnly(dto.validUntil);
     if (dto.terms !== undefined) data.terms = dto.terms;
     if (dto.notes !== undefined) data.notes = dto.notes;
     if (dto.clienteEmail !== undefined)

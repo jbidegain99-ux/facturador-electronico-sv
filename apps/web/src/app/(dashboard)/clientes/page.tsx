@@ -437,7 +437,28 @@ export default function ClientesPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || t('saveError'));
+
+        // Map backend validation errors to field-level errors
+        if (Array.isArray(errorData.message)) {
+          const backendErrors: Record<string, string> = {};
+          const fieldNames = ['correo', 'numDocumento', 'nombre', 'nrc', 'telefono', 'tipoDocumento', 'direccion'];
+          for (const msg of errorData.message) {
+            const matchedField = fieldNames.find((f) => msg.toLowerCase().includes(f.toLowerCase()));
+            if (matchedField) {
+              backendErrors[matchedField] = msg;
+            }
+          }
+          if (Object.keys(backendErrors).length > 0) {
+            setFieldErrors(backendErrors);
+            setFormError(t('formErrors'));
+            setSaving(false);
+            return;
+          }
+        }
+
+        throw new Error(
+          Array.isArray(errorData.message) ? errorData.message.join('. ') : (errorData.message || t('saveError'))
+        );
       }
 
       closeModal();
@@ -447,7 +468,6 @@ export default function ClientesPage() {
       console.error('Error saving cliente:', err);
       const errorMessage = err instanceof Error ? err.message : t('saveError');
       setFormError(errorMessage);
-      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -674,7 +694,7 @@ export default function ClientesPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {formError && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-3 py-2 rounded text-sm">
                 {formError}

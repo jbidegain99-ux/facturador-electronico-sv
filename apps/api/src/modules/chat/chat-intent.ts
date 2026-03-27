@@ -22,7 +22,9 @@ export type DataIntent =
   // Schema-derived bonus intents
   | 'PLAN_USAGE'
   | 'RECURRING_TEMPLATES'
-  | 'HACIENDA_REJECTIONS';
+  | 'HACIENDA_REJECTIONS'
+  // Meta intent
+  | 'CAPABILITIES';
 
 export interface ClassifiedIntent {
   intent: DataIntent;
@@ -43,6 +45,18 @@ interface IntentRule {
 
 // Rules ordered by specificity (most keywords first)
 const INTENT_RULES: IntentRule[] = [
+  // --- Meta intent ---
+  {
+    intent: 'CAPABILITIES',
+    keywords: [
+      ['que', 'puedes', 'hacer'],
+      ['que', 'puedo', 'preguntar'],
+      ['como', 'puedes', 'ayudar'],
+      ['que', 'sabes', 'hacer'],
+      ['capacidades'],
+      ['funciones', 'asistente'],
+    ],
+  },
   // --- Phase 2B: New intents (more specific first) ---
   {
     intent: 'MONTH_COMPARISON',

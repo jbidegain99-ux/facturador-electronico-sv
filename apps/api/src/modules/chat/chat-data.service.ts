@@ -101,6 +101,8 @@ export class ChatDataService {
         return this.fetchRecurringTemplates(tenantId);
       case 'HACIENDA_REJECTIONS':
         return this.fetchHaciendaRejections(tenantId, from, to);
+      case 'CAPABILITIES':
+        return this.fetchCapabilities();
       default:
         return [];
     }
@@ -1130,6 +1132,19 @@ export class ChatDataService {
       {
         label: `Rechazos de Hacienda - ${period}`,
         data: `${totalRejected} documentos rechazados. ${list}`,
+      },
+    ];
+  }
+
+  // ============================================================================
+  // META INTENT
+  // ============================================================================
+
+  private fetchCapabilities(): TenantContextItem[] {
+    return [
+      {
+        label: 'Capacidades del asistente',
+        data: 'Puedo ayudarte con: 1) Datos de facturación: cuántas facturas emitiste, revenue total, IVA facturado, desglose por tipo de DTE. 2) Clientes: cuántos tienes, top clientes por facturación, clientes nuevos del mes. 3) Productos más vendidos y desglose por cliente específico. 4) Cotizaciones: estado general y por cliente. 5) Comparaciones entre meses y proyecciones de ventas. 6) Uso de tu plan (DTEs, usuarios, clientes). 7) Facturas por sucursal. 8) Facturas recurrentes activas. 9) Documentos rechazados por Hacienda. 10) Guías de la plataforma: cómo crear facturas, CCF, notas de crédito, anulaciones, configurar Hacienda y certificados.',
       },
     ];
   }

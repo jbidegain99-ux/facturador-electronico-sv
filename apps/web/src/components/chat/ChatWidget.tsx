@@ -7,6 +7,8 @@ import { useChatWidget, type BubblePosition } from './use-chat-widget';
 import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
 import { ChatSuggestions } from './ChatSuggestions';
+import { ChatWelcome } from './ChatWelcome';
+import { useAppStore } from '@/store';
 import { cn } from '@/lib/utils';
 
 const BUBBLE_SIZE = 56;
@@ -49,7 +51,11 @@ export function ChatWidget() {
     sendMessage,
     sendFeedback,
     hasMessages,
+    hasSeenWelcome,
   } = useChatWidget();
+
+  const { user } = useAppStore();
+  const showWelcome = !hasSeenWelcome && !hasMessages;
 
   const isDragging = useRef(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
@@ -172,16 +178,27 @@ export function ChatWidget() {
                 </button>
               </div>
 
-              {/* Messages */}
-              <ChatMessages
-                messages={messages}
-                isLoading={isLoading}
-                onFeedback={sendFeedback}
-              />
+              {/* Body: Welcome screen OR Messages */}
+              <AnimatePresence mode="wait">
+                {showWelcome ? (
+                  <ChatWelcome
+                    key="welcome"
+                    userName={user?.name?.split(' ')[0]}
+                    onAction={sendMessage}
+                  />
+                ) : (
+                  <ChatMessages
+                    key="messages"
+                    messages={messages}
+                    isLoading={isLoading}
+                    onFeedback={sendFeedback}
+                  />
+                )}
+              </AnimatePresence>
 
               {/* Footer: suggestions + input */}
               <div className="border-t border-border/50 p-3 space-y-2">
-                {!hasMessages && (
+                {!hasMessages && hasSeenWelcome && (
                   <ChatSuggestions onSelect={sendMessage} />
                 )}
                 <ChatInput

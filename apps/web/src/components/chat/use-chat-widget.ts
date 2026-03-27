@@ -12,10 +12,16 @@ export interface ChatMessage {
 export type BubblePosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 
 const POSITION_KEY = 'facturo-chat-position';
+const WELCOME_KEY = 'facturo-chat-welcome-seen';
 
 function loadPosition(): BubblePosition {
   if (typeof window === 'undefined') return 'bottom-right';
   return (localStorage.getItem(POSITION_KEY) as BubblePosition) || 'bottom-right';
+}
+
+function loadWelcomeSeen(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(WELCOME_KEY) === 'true';
 }
 
 export function useChatWidget() {
@@ -24,7 +30,13 @@ export function useChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [position, setPositionState] = useState<BubblePosition>(loadPosition);
+  const [hasSeenWelcome, setHasSeenWelcome] = useState(loadWelcomeSeen);
   const abortRef = useRef<AbortController | null>(null);
+
+  const dismissWelcome = useCallback(() => {
+    setHasSeenWelcome(true);
+    localStorage.setItem(WELCOME_KEY, 'true');
+  }, []);
 
   const toggleChat = useCallback(() => {
     setIsOpen((prev) => !prev);
@@ -38,6 +50,10 @@ export function useChatWidget() {
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
+
+    if (!hasSeenWelcome) {
+      dismissWelcome();
+    }
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -110,7 +126,7 @@ export function useChatWidget() {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, hasSeenWelcome, dismissWelcome]);
 
   const sendFeedback = useCallback(async (
     messageContent: string,
@@ -178,5 +194,7 @@ export function useChatWidget() {
     sendMessage,
     sendFeedback,
     hasMessages: messages.length > 0,
+    hasSeenWelcome,
+    dismissWelcome,
   };
 }

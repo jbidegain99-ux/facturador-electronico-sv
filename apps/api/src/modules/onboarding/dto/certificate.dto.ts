@@ -18,7 +18,7 @@ export class UploadTestCertificateDto {
 
   @ApiPropertyOptional({ description: 'Fecha de expiración del certificado' })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: 'La fecha de expiración debe ser una fecha válida (formato ISO 8601)' })
   expiryDate?: string;
 
   @ApiPropertyOptional({ description: 'Llave privada en base64 (solo para modo separado)' })
@@ -44,7 +44,7 @@ export class UploadProdCertificateDto {
 
   @ApiPropertyOptional({ description: 'Fecha de expiración del certificado' })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: 'La fecha de expiración debe ser una fecha válida (formato ISO 8601)' })
   expiryDate?: string;
 
   @ApiPropertyOptional({ description: 'Llave privada en base64 (solo para modo separado)' })

@@ -238,7 +238,10 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
       if (result.success) {
         toast.success(result.message || 'Prueba exitosa');
       } else {
-        toast.error(result.message || 'Prueba fallida');
+        const errorDetail = result.errors?.length
+          ? `${result.message}: ${result.errors.join(', ')}`
+          : result.message || 'Prueba fallida';
+        toast.error(errorDetail);
       }
       await refreshTestProgress();
     } catch (error) {
@@ -255,7 +258,10 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
       if (result.success) {
         toast.success(result.message || 'Prueba exitosa');
       } else {
-        toast.error(result.message || 'Prueba fallida');
+        const errorDetail = result.errors?.length
+          ? `${result.message}: ${result.errors.join(', ')}`
+          : result.message || 'Prueba fallida';
+        toast.error(errorDetail);
       }
       await refreshTestProgress();
     } catch (error) {

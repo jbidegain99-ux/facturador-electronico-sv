@@ -149,6 +149,7 @@ export interface TestProgressSummary {
   canRequestAuthorization: boolean;
   lastTestAt?: string;
   lastTestResult?: 'SUCCESS' | 'FAILED';
+  lastTestError?: string;
 }
 
 export interface TestResult {

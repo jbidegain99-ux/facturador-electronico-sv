@@ -297,6 +297,11 @@ export function ExecuteTestsStep({
               {testProgress.lastTestResult === 'SUCCESS' ? 'Exitosa' : 'Fallida'}{' '}
               ({new Date(testProgress.lastTestAt).toLocaleTimeString()})
             </span>
+            {testProgress.lastTestResult === 'FAILED' && testProgress.lastTestError && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                {testProgress.lastTestError}
+              </p>
+            )}
           </AlertDescription>
         </Alert>
       )}

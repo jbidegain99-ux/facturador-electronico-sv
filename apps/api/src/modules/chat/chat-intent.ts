@@ -91,17 +91,6 @@ const INTENT_RULES: IntentRule[] = [
     extractClient: true,
   },
   {
-    intent: 'CLIENT_INVOICES',
-    keywords: [
-      ['facturas', 'de'],
-      ['cuanto', 'le', 'facture', 'a'],
-      ['facturacion', 'de', 'cliente'],
-      ['facturado', 'a'],
-      ['cuanto', 'facture', 'a'],
-    ],
-    extractClient: true,
-  },
-  {
     intent: 'TOP_CLIENTS',
     keywords: [
       ['cliente', 'mas', 'factur'],
@@ -155,6 +144,21 @@ const INTENT_RULES: IntentRule[] = [
       ['facturas', 'mas', 'recientes'],
       ['ultimos', 'documentos'],
     ],
+  },
+  // CLIENT_INVOICES must come AFTER all specific "facturas de X" intents
+  // (RECENT_INVOICES_TODAY, LATEST_INVOICES, HACIENDA_REJECTIONS, RECURRING_TEMPLATES)
+  // because ['facturas', 'de'] is a broad catch-all for client-specific queries.
+  {
+    intent: 'CLIENT_INVOICES',
+    keywords: [
+      ['cuanto', 'le', 'facture', 'a'],
+      ['cuanto', 'facture', 'a'],
+      ['le', 'facture', 'a'],
+      ['facturado', 'a'],
+      ['facturacion', 'de'],
+      ['facturas', 'de'],
+    ],
+    extractClient: true,
   },
   {
     intent: 'NEW_CLIENTS',
@@ -443,12 +447,26 @@ function extractTimeRange(normalized: string): { from: Date; to: Date } {
  * Classify user message into a data intent.
  * Returns null if no data intent is detected (question goes to Denis without context).
  */
+/**
+ * Check if a keyword exists as a whole word (or word prefix) in the text.
+ * Uses word boundary to avoid matching 'a' inside 'cuanto'.
+ */
+function hasWord(text: string, keyword: string): boolean {
+  // For short keywords (1-2 chars), require word boundaries on both sides
+  if (keyword.length <= 2) {
+    const regex = new RegExp(`(?:^|\\s)${keyword}(?:\\s|$)`);
+    return regex.test(text);
+  }
+  // For longer keywords, substring match is fine (e.g. "factur" matches "facture", "facturado")
+  return text.includes(keyword);
+}
+
 export function classifyIntent(message: string): ClassifiedIntent | null {
   const normalized = normalize(message);
 
   for (const rule of INTENT_RULES) {
     for (const keywordGroup of rule.keywords) {
-      const allMatch = keywordGroup.every((kw) => normalized.includes(kw));
+      const allMatch = keywordGroup.every((kw) => hasWord(normalized, kw));
       if (allMatch) {
         const result: ClassifiedIntent = {
           intent: rule.intent,

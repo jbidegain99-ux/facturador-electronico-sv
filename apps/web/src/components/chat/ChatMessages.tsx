@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { MessageCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatFeedback } from './ChatFeedback';
 import { cn } from '@/lib/utils';
@@ -25,7 +26,7 @@ export function ChatMessages({ messages, isLoading, onFeedback }: ChatMessagesPr
     return (
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="text-center">
-          <div className="text-3xl mb-2">💬</div>
+          <MessageCircle className="h-8 w-8 mx-auto mb-2 text-muted-foreground/60" />
           <p className="text-sm text-muted-foreground">
             ¡Hola! Soy el asistente de Facturo.
           </p>

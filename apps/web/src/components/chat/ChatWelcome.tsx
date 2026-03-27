@@ -1,19 +1,21 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { BarChart3, FileText, Lightbulb, TrendingUp, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { LucideIcon } from 'lucide-react';
 
 interface WelcomeAction {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   message: string;
 }
 
 const ACTIONS: WelcomeAction[] = [
-  { icon: '📊', label: 'Resumen del mes', message: 'Resumen del mes' },
-  { icon: '📄', label: 'Crear una factura', message: '¿Cómo crear una factura?' },
-  { icon: '💡', label: '¿Qué puedes hacer?', message: '¿Qué puedes hacer?' },
-  { icon: '🔮', label: 'Proyección de ventas', message: 'Proyección de ventas' },
+  { icon: BarChart3, label: 'Resumen del mes', message: 'Resumen del mes' },
+  { icon: FileText, label: 'Crear una factura', message: '¿Cómo crear una factura?' },
+  { icon: Lightbulb, label: '¿Qué puedes hacer?', message: '¿Qué puedes hacer?' },
+  { icon: TrendingUp, label: 'Proyección de ventas', message: 'Proyección de ventas' },
 ];
 
 interface ChatWelcomeProps {
@@ -34,7 +36,7 @@ export function ChatWelcome({ userName, onAction }: ChatWelcomeProps) {
     >
       {/* Greeting */}
       <div className="text-center mb-5">
-        <p className="text-2xl mb-1">{greeting} 👋</p>
+        <p className="text-2xl mb-1">{greeting}</p>
         <p className="text-sm font-medium text-foreground">
           Soy tu asistente de facturación
         </p>
@@ -58,9 +60,7 @@ export function ChatWelcome({ userName, onAction }: ChatWelcomeProps) {
               'text-center group cursor-pointer',
             )}
           >
-            <span className="text-xl group-hover:scale-110 transition-transform">
-              {action.icon}
-            </span>
+            <action.icon className="h-5 w-5 text-muted-foreground group-hover:text-facturo-violet-600 dark:group-hover:text-facturo-violet-400 group-hover:scale-110 transition-all" />
             <span className="text-xs font-medium text-muted-foreground group-hover:text-facturo-violet-700 dark:group-hover:text-facturo-violet-300 transition-colors">
               {action.label}
             </span>
@@ -71,8 +71,9 @@ export function ChatWelcome({ userName, onAction }: ChatWelcomeProps) {
       {/* Support link */}
       <button
         onClick={() => onAction('Necesito hablar con soporte')}
-        className="mt-4 text-xs text-muted-foreground hover:text-facturo-violet-600 dark:hover:text-facturo-violet-400 underline underline-offset-2 transition-colors"
+        className="mt-4 flex items-center gap-1 text-xs text-muted-foreground hover:text-facturo-violet-600 dark:hover:text-facturo-violet-400 underline underline-offset-2 transition-colors"
       >
+        <HelpCircle className="h-3.5 w-3.5" />
         Hablar con soporte
       </button>
     </motion.div>

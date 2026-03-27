@@ -1,6 +1,6 @@
 export interface ChatSuggestion {
   text: string;
-  icon?: string;
+  icon?: string; // Lucide icon name key
 }
 
 interface PageSuggestions {
@@ -12,93 +12,93 @@ const SUGGESTION_MAP: PageSuggestions[] = [
   {
     pattern: '/dashboard',
     suggestions: [
-      { text: '¿Cuál es mi resumen del mes?', icon: '📊' },
-      { text: 'Comparar con el mes anterior', icon: '📈' },
-      { text: 'Proyección de ventas', icon: '🔮' },
-      { text: 'Facturas vencidas', icon: '⚠️' },
+      { text: '¿Cuál es mi resumen del mes?', icon: 'bar-chart-3' },
+      { text: 'Comparar con el mes anterior', icon: 'arrow-left-right' },
+      { text: 'Proyección de ventas', icon: 'trending-up' },
+      { text: 'Facturas vencidas', icon: 'alert-triangle' },
     ],
   },
   {
     pattern: '/facturacion/nueva',
     suggestions: [
-      { text: '¿Qué campos son obligatorios?', icon: '📋' },
-      { text: '¿Cómo agregar IVA?', icon: '💰' },
-      { text: 'Guíame paso a paso', icon: '🚀' },
+      { text: '¿Qué campos son obligatorios?', icon: 'clipboard-list' },
+      { text: '¿Cómo agregar IVA?', icon: 'calculator' },
+      { text: 'Guíame paso a paso', icon: 'footprints' },
     ],
   },
   {
     pattern: '/facturacion/facturas',
     suggestions: [
-      { text: 'Últimas 5 facturas', icon: '📄' },
-      { text: 'Total de IVA del mes', icon: '🧾' },
-      { text: '¿Cómo anular una factura?', icon: '❌' },
-      { text: 'Facturas de hoy', icon: '📅' },
+      { text: 'Últimas 5 facturas', icon: 'file-text' },
+      { text: 'Total de IVA del mes', icon: 'receipt' },
+      { text: '¿Cómo anular una factura?', icon: 'x-circle' },
+      { text: 'Facturas de hoy', icon: 'calendar' },
     ],
   },
   {
     pattern: '/cotizaciones',
     suggestions: [
-      { text: '¿Cómo crear una cotización?', icon: '📋' },
-      { text: '¿Cómo funciona el portal de aprobación?', icon: '✅' },
-      { text: 'Convertir cotización a factura', icon: '🔄' },
+      { text: '¿Cómo crear una cotización?', icon: 'clipboard-list' },
+      { text: '¿Cómo funciona el portal de aprobación?', icon: 'check-circle' },
+      { text: 'Convertir cotización a factura', icon: 'arrow-right-left' },
     ],
   },
   {
     pattern: '/clientes',
     suggestions: [
-      { text: '¿A quién le facturo más?', icon: '👑' },
-      { text: 'Clientes nuevos del mes', icon: '🆕' },
-      { text: 'Agregar nuevo cliente', icon: '👤' },
-      { text: '¿Cómo importar clientes?', icon: '📥' },
+      { text: '¿A quién le facturo más?', icon: 'crown' },
+      { text: 'Clientes nuevos del mes', icon: 'user-plus' },
+      { text: 'Agregar nuevo cliente', icon: 'user' },
+      { text: '¿Cómo importar clientes?', icon: 'download' },
     ],
   },
   {
     pattern: '/catalogo',
     suggestions: [
-      { text: '¿Cómo agregar un producto?', icon: '📦' },
-      { text: '¿Cuáles son mis productos más vendidos?', icon: '🏆' },
-      { text: 'Importar catálogo masivo', icon: '📥' },
+      { text: '¿Cómo agregar un producto?', icon: 'package' },
+      { text: '¿Cuáles son mis productos más vendidos?', icon: 'trophy' },
+      { text: 'Importar catálogo masivo', icon: 'download' },
     ],
   },
   {
     pattern: '/contabilidad',
     suggestions: [
-      { text: '¿Qué son las partidas contables?', icon: '📚' },
-      { text: '¿Cómo afecta una factura al libro diario?', icon: '📖' },
-      { text: 'Exportar libro mayor', icon: '📤' },
+      { text: '¿Qué son las partidas contables?', icon: 'book-open' },
+      { text: '¿Cómo afecta una factura al libro diario?', icon: 'book' },
+      { text: 'Exportar libro mayor', icon: 'upload' },
     ],
   },
   {
     pattern: '/reportes',
     suggestions: [
-      { text: 'Proyección de ventas', icon: '🔮' },
-      { text: 'Ventas por sucursal', icon: '🏢' },
-      { text: 'Reporte de IVA del mes', icon: '🧾' },
-      { text: '¿Cómo exportar a CSV?', icon: '📊' },
+      { text: 'Proyección de ventas', icon: 'trending-up' },
+      { text: 'Ventas por sucursal', icon: 'building-2' },
+      { text: 'Reporte de IVA del mes', icon: 'receipt' },
+      { text: '¿Cómo exportar a CSV?', icon: 'bar-chart-3' },
     ],
   },
   {
     pattern: '/configuracion',
     suggestions: [
-      { text: '¿Cómo conectar con Hacienda?', icon: '🏛️' },
-      { text: 'Configurar sucursales', icon: '🏢' },
-      { text: '¿Cuánto de mi plan he usado?', icon: '📊' },
+      { text: '¿Cómo conectar con Hacienda?', icon: 'landmark' },
+      { text: 'Configurar sucursales', icon: 'building-2' },
+      { text: '¿Cuánto de mi plan he usado?', icon: 'bar-chart-3' },
     ],
   },
   {
     pattern: '/soporte',
     suggestions: [
-      { text: 'Crear nuevo ticket', icon: '🎫' },
-      { text: '¿Cuánto tarda una respuesta?', icon: '⏱️' },
-      { text: 'Ver mis tickets abiertos', icon: '📋' },
+      { text: 'Crear nuevo ticket', icon: 'ticket' },
+      { text: '¿Cuánto tarda una respuesta?', icon: 'clock' },
+      { text: 'Ver mis tickets abiertos', icon: 'clipboard-list' },
     ],
   },
 ];
 
 const DEFAULT_SUGGESTIONS: ChatSuggestion[] = [
-  { text: '¿Qué puedo hacer en Facturo?', icon: '💡' },
-  { text: '¿Cómo crear una factura?', icon: '📄' },
-  { text: 'Necesito ayuda', icon: '🆘' },
+  { text: '¿Qué puedo hacer en Facturo?', icon: 'lightbulb' },
+  { text: '¿Cómo crear una factura?', icon: 'file-text' },
+  { text: 'Necesito ayuda', icon: 'life-buoy' },
 ];
 
 export function getSuggestionsForRoute(pathname: string): ChatSuggestion[] {

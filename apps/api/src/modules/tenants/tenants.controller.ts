@@ -17,7 +17,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiConsumes } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { TenantsService } from './tenants.service';
 import { BlobStorageService } from './blob-storage.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
@@ -48,13 +47,11 @@ export class TenantsController {
   }
 
   @Get('me')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener datos del tenant del usuario autenticado' })
   @ApiResponse({ status: 200, description: 'Datos del tenant' })
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @ApiResponse({ status: 404, description: 'Tenant no encontrado' })
-  @RequirePermission('config:read')
   async getMyTenant(@CurrentUser() user: CurrentUserData) {
     this.logger.log(`Getting tenant for user ${user.email}, tenantId: ${user.tenantId}`);
 
@@ -75,7 +72,6 @@ export class TenantsController {
   }
 
   @Put('me')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Actualizar datos del tenant del usuario autenticado' })
   @ApiResponse({ status: 200, description: 'Tenant actualizado exitosamente' })
@@ -109,7 +105,6 @@ export class TenantsController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Listar todos los tenants' })
   findAll() {
@@ -117,7 +112,6 @@ export class TenantsController {
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener tenant por ID' })
   findOne(@Param('id') id: string) {
@@ -125,7 +119,6 @@ export class TenantsController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Actualizar tenant' })
   update(@Param('id') id: string, @Body() updateTenantDto: Partial<CreateTenantDto>) {
@@ -135,7 +128,6 @@ export class TenantsController {
   // ==================== ONBOARDING ENDPOINTS ====================
 
   @Get('me/onboarding-status')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener estado del onboarding' })
   @ApiResponse({ status: 200, description: 'Estado del onboarding' })
@@ -153,6 +145,14 @@ export class TenantsController {
         haciendaConfig: {
           include: {
             environmentConfigs: true,
+          },
+        },
+        onboarding: {
+          select: {
+            testCertificate: true,
+            prodCertificate: true,
+            testApiPassword: true,
+            prodApiPassword: true,
           },
         },
       },
@@ -173,9 +173,13 @@ export class TenantsController {
       (cfg) => cfg.isValidated && cfg.currentTokenEncrypted !== null,
     );
 
-    // Support both legacy (certificatePath) and modern (HaciendaEnvironmentConfig) systems
-    const hasCertificate = !!tenant.certificatePath || hasModernCertificate;
-    const hasTestedConnection = !!tenant.mhToken || hasModernConnection;
+    // Check onboarding wizard certificate system
+    const hasOnboardingCertificate = !!(tenant.onboarding?.testCertificate || tenant.onboarding?.prodCertificate);
+    const hasOnboardingApiCredentials = !!(tenant.onboarding?.testApiPassword || tenant.onboarding?.prodApiPassword);
+
+    // Support all three systems: legacy, QuickSetup, and onboarding wizard
+    const hasCertificate = !!tenant.certificatePath || hasModernCertificate || hasOnboardingCertificate;
+    const hasTestedConnection = !!tenant.mhToken || hasModernConnection || hasOnboardingApiCredentials;
 
     return {
       hasCompanyData: true, // Always true after registration
@@ -188,7 +192,6 @@ export class TenantsController {
   }
 
   @Post('me/certificate')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('certificate'))
   @ApiConsumes('multipart/form-data')
@@ -254,7 +257,6 @@ export class TenantsController {
   }
 
   @Delete('me/certificate')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Eliminar certificado digital' })
   @ApiResponse({ status: 200, description: 'Certificado eliminado' })
@@ -289,7 +291,6 @@ export class TenantsController {
   }
 
   @Post('me/test-mh')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Probar conexion con Ministerio de Hacienda' })
   @ApiResponse({ status: 200, description: 'Conexion exitosa' })
@@ -338,7 +339,6 @@ export class TenantsController {
   }
 
   @Post('me/onboarding-complete')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Marcar onboarding como completado' })
   @ApiResponse({ status: 200, description: 'Onboarding marcado como completado' })
@@ -355,7 +355,6 @@ export class TenantsController {
   }
 
   @Post('me/onboarding-skip')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Saltar onboarding y activar modo demo' })
   @ApiResponse({ status: 200, description: 'Onboarding saltado, modo demo activado' })
@@ -385,7 +384,6 @@ export class TenantsController {
   }
 
   @Post('me/disable-demo')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Desactivar modo demo y volver al modo real' })
   @ApiResponse({ status: 200, description: 'Modo demo desactivado' })
@@ -417,7 +415,7 @@ export class TenantsController {
   // ==================== LOGO ENDPOINTS ====================
 
   @Post('me/logo')
-  @UseGuards(AuthGuard('jwt'), PlanFeatureGuard)
+  @UseGuards(PlanFeatureGuard)
   @ApiBearerAuth()
   @RequireFeature('logo_branding')
   @UseInterceptors(FileInterceptor('logo'))
@@ -491,7 +489,6 @@ export class TenantsController {
   }
 
   @Delete('me/logo')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Eliminar logo del tenant' })
   @ApiResponse({ status: 200, description: 'Logo eliminado' })

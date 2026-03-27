@@ -138,11 +138,14 @@ const INTENT_RULES: IntentRule[] = [
     intent: 'LATEST_INVOICES',
     keywords: [
       ['ultimas', 'facturas'],
+      ['ultima', 'factura'],
       ['facturas', 'recientes'],
+      ['factura', 'mas', 'reciente'],
       ['ultimas', '5'],
       ['ultimas', 'emitidas'],
       ['facturas', 'mas', 'recientes'],
       ['ultimos', 'documentos'],
+      ['ultimo', 'dte'],
     ],
   },
   // CLIENT_INVOICES must come AFTER all specific "facturas de X" intents
@@ -307,6 +310,31 @@ function normalize(text: string): string {
 }
 
 /**
+ * Strip trailing time/period words from a client name.
+ * "IBEX este mes" → "IBEX", "Wellnest en marzo" → "Wellnest"
+ */
+function stripTimeWords(name: string): string {
+  // Patterns to remove from the end (case-insensitive), ordered longest first
+  const timePatterns = [
+    /\s+(?:en\s+)?(?:los\s+)?ultimos\s+\d+\s+meses?\s*$/i,
+    /\s+(?:en\s+)?(?:el\s+)?(?:ultimo\s+)?trimestre\s*$/i,
+    /\s+(?:en\s+)?(?:el\s+)?mes\s+(?:pasado|anterior)\s*$/i,
+    /\s+(?:en\s+)?esta\s+semana\s*$/i,
+    /\s+(?:en\s+)?este\s+(?:mes|ano)\s*$/i,
+    /\s+(?:del|de\s+este)\s+(?:mes|ano)\s*$/i,
+    /\s+(?:en\s+)?(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)(?:\s+\d{4})?\s*$/i,
+    /\s+hoy\s*$/i,
+    /\s+ayer\s*$/i,
+  ];
+
+  let result = name;
+  for (const pattern of timePatterns) {
+    result = result.replace(pattern, '');
+  }
+  return result.trim();
+}
+
+/**
  * Extract client name from message for client-specific intents.
  * Looks for patterns like "a Wellnest", "de IBEX", "para The Wellnest"
  */
@@ -324,8 +352,9 @@ function extractClientName(normalized: string, original: string): string | undef
   for (const pattern of patterns) {
     const match = original.match(pattern);
     if (match?.[1]) {
-      // Clean up trailing question marks, periods etc.
-      return match[1].replace(/[¿?¡!.,;:]+$/g, '').trim();
+      // Clean up trailing punctuation, then strip time words
+      const raw = match[1].replace(/[¿?¡!.,;:]+$/g, '').trim();
+      return stripTimeWords(raw);
     }
   }
 
@@ -358,7 +387,7 @@ function extractClientName(normalized: string, original: string): string | undef
   }
 
   if (capitalizedSegments.length > 0) {
-    return capitalizedSegments.join(' ');
+    return stripTimeWords(capitalizedSegments.join(' '));
   }
 
   return undefined;

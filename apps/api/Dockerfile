@@ -37,8 +37,8 @@ RUN npm run build
 # Production stage
 FROM node:20-slim AS runner
 
-# Required for Prisma on Debian
-RUN apt-get update && apt-get install -y openssl curl --no-install-recommends \
+# Required for Prisma on Debian + TLS certificates for Azure SQL
+RUN apt-get update && apt-get install -y openssl curl ca-certificates --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

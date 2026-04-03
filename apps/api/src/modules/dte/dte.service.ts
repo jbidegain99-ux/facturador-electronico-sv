@@ -161,8 +161,6 @@ export class DteService {
     }
 
     const codigoGeneracion = uuidv4().toUpperCase();
-    const correlativo = await this.getNextCorrelativo(tenantId, tipoDte);
-    const numeroControl = await this.generateNumeroControl(tenantId, tipoDte, correlativo);
 
     // Resolve ambiente from tenant's HaciendaConfig (PRODUCTION → '01', TEST → '00')
     const ambiente = await this.resolveAmbiente(tenantId);
@@ -180,16 +178,6 @@ export class DteService {
         `Error al preparar datos del DTE: ${normalizeError instanceof Error ? normalizeError.message : 'Error desconocido'}`,
       );
     }
-
-    const jsonOriginal = {
-      ...normalizedData,
-      identificacion: {
-        ...((normalizedData.identificacion as Record<string, unknown>) || identificacionData),
-        codigoGeneracion,
-        numeroControl,
-        ambiente,
-      },
-    };
 
     // Extract totals from resumen (structure varies by DTE type)
     const resumen = normalizedData.resumen as Record<string, unknown> | undefined;
@@ -316,28 +304,50 @@ export class DteService {
       }
     }
 
-    this.logger.log(`Creating DTE record: codigoGeneracion=${codigoGeneracion}, numeroControl=${numeroControl}`);
-    this.logger.log(`Totals: gravada=${totalGravada}, iva=${totalIva}, pagar=${totalPagar}`);
-
     try {
-      const dte = await this.prisma.dTE.create({
-        data: {
-          tenantId,
-          tipoDte,
-          codigoGeneracion,
-          numeroControl,
-          jsonOriginal: JSON.stringify(jsonOriginal),
-          totalGravada: parseFloat(totalGravada.toFixed(2)),
-          totalIva: parseFloat(totalIva.toFixed(2)),
-          totalPagar: parseFloat(totalPagar.toFixed(2)),
-          estado: DTEStatus.PENDIENTE,
-          ...(clienteId && { clienteId }),
-        },
+      // Wrap correlativo read + numero control generation + DTE create in a serializable
+      // transaction to prevent concurrent requests from generating duplicate numbers.
+      const dte = await this.prisma.$transaction(async (tx) => {
+        const correlativo = await this.getNextCorrelativo(tenantId, tipoDte, tx);
+        const numeroControl = await this.generateNumeroControl(tenantId, tipoDte, correlativo);
+
+        const jsonOriginal = {
+          ...normalizedData,
+          identificacion: {
+            ...((normalizedData.identificacion as Record<string, unknown>) || identificacionData),
+            codigoGeneracion,
+            numeroControl,
+            ambiente,
+          },
+        };
+
+        this.logger.log(`Creating DTE record: codigoGeneracion=${codigoGeneracion}, numeroControl=${numeroControl}`);
+        this.logger.log(`Totals: gravada=${totalGravada}, iva=${totalIva}, pagar=${totalPagar}`);
+
+        return tx.dTE.create({
+          data: {
+            tenantId,
+            tipoDte,
+            codigoGeneracion,
+            numeroControl,
+            jsonOriginal: JSON.stringify(jsonOriginal),
+            totalGravada: parseFloat(totalGravada.toFixed(2)),
+            totalIva: parseFloat(totalIva.toFixed(2)),
+            totalPagar: parseFloat(totalPagar.toFixed(2)),
+            estado: DTEStatus.PENDIENTE,
+            ...(clienteId && { clienteId }),
+          },
+        });
+      }, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        timeout: 10000,
       });
 
       this.logger.log(`DTE created successfully: id=${dte.id}`);
 
-      await this.logDteAction(dte.id, 'CREATED', { jsonOriginal });
+      await this.logDteAction(dte.id, 'CREATED', {
+        jsonOriginal: JSON.parse(dte.jsonOriginal as string),
+      });
 
       // Trigger webhook (fire-and-forget)
       this.triggerWebhook(tenantId, 'dte.created', {
@@ -362,7 +372,7 @@ export class DteService {
       this.logger.error(`Failed to create DTE: ${error instanceof Error ? error.message : error}`);
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BadRequestException(
-          `Número de control duplicado (${numeroControl}). Intente de nuevo.`,
+          `Numero de control duplicado. Intente de nuevo.`,
         );
       }
       throw error;
@@ -1177,7 +1187,8 @@ export class DteService {
       throw new BadRequestException('El DTE ya está anulado');
     }
 
-    // Only allow cancellation for PENDIENTE, FIRMADO, PROCESADO states
+    // Only allow local cancellation for PENDIENTE and FIRMADO states.
+    // PROCESADO DTEs (accepted by MH) require formal invalidation via Hacienda.
     const cancelableStates: string[] = [DTEStatus.PENDIENTE, DTEStatus.FIRMADO, DTEStatus.PROCESADO];
     if (!cancelableStates.includes(dte.estado)) {
       throw new BadRequestException(`No se puede anular un DTE en estado ${dte.estado}`);
@@ -1187,14 +1198,12 @@ export class DteService {
     let selloAnulacion: string | null = null;
     let descripcionMh = `Anulado: ${motivo}`;
 
-    // If the DTE was PROCESADO by Hacienda, we should note that MH anulation
-    // should be done via /transmitter/anular endpoint with MH credentials.
-    // The local anulation marks it locally; MH anulation requires separate step.
+    // DTEs accepted by Hacienda (PROCESADO with sello) cannot be cancelled locally.
+    // They must go through the formal MH invalidation process via /transmitter/anular.
     if (dte.estado === DTEStatus.PROCESADO && dte.selloRecepcion) {
-      descripcionMh = `Anulado localmente: ${motivo}. Requiere anulación en Hacienda via transmitter.`;
-      this.logger.warn(
-        `DTE ${dteId} (${dte.codigoGeneracion}) anulado localmente pero tiene sello MH. ` +
-        `Se recomienda enviar anulación a Hacienda.`,
+      throw new BadRequestException(
+        'Este DTE fue aceptado por Hacienda y no puede anularse localmente. ' +
+        'Utilice el proceso de invalidación vía Hacienda (transmitter/anular).',
       );
     }
 
@@ -2100,8 +2109,13 @@ export class DteService {
     return '00';
   }
 
-  private async getNextCorrelativo(tenantId: string, tipoDte: string): Promise<number> {
-    const lastDte = await this.prisma.dTE.findFirst({
+  private async getNextCorrelativo(
+    tenantId: string,
+    tipoDte: string,
+    prismaClient?: Parameters<Parameters<typeof this.prisma.$transaction>[0]>[0],
+  ): Promise<number> {
+    const client = prismaClient || this.prisma;
+    const lastDte = await client.dTE.findFirst({
       where: { tenantId, tipoDte },
       orderBy: { createdAt: 'desc' },
     });

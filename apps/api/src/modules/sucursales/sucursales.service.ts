@@ -199,7 +199,7 @@ export class SucursalesService {
     }
 
     if (puntoVentaId) {
-      const pv = await this.prisma.puntoVenta.findUnique({ where: { id: puntoVentaId } });
+      const pv = await this.prisma.puntoVenta.findFirst({ where: { id: puntoVentaId, tenantId } });
       if (pv?.codPuntoVentaMH) codPuntoVentaMH = pv.codPuntoVentaMH;
     }
 

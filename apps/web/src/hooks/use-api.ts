@@ -107,7 +107,7 @@ interface UseMutationOptions<TData, TVariables> {
 }
 
 interface UseMutationResult<TData, TVariables> {
-  mutate: (variables: TVariables) => Promise<TData>;
+  mutate: (variables: TVariables) => void;
   mutateAsync: (variables: TVariables) => Promise<TData>;
   isLoading: boolean;
   error: Error | null;
@@ -153,7 +153,6 @@ export function useMutation<TData, TVariables = void>(
       mutateAsync(variables).catch(() => {
         // Error is handled in state
       });
-      return mutateAsync(variables);
     },
     [mutateAsync]
   );

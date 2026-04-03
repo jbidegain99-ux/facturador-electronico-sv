@@ -6,7 +6,7 @@ test.describe('Facturas Recurrentes - Detalle', () => {
    * Navigate to the first available template's detail page.
    * Skips the test if no templates exist.
    */
-  async function navigateToFirstTemplate(page: ReturnType<typeof test['_directives']> extends never ? never : Parameters<Parameters<typeof test>[1]>[0]['page']): Promise<boolean> {
+  async function navigateToFirstTemplate(page: import('@playwright/test').Page): Promise<boolean> {
     await page.goto(ROUTES.recurrentes);
     await page.waitForSelector('table, text=/No se encontraron/i', {
       timeout: TIMEOUTS.apiResponse,

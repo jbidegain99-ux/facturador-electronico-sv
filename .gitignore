@@ -27,3 +27,13 @@ web-logs.zip
 # IDE
 .vscode/
 .idea/
+
+# Archives
+*.zip
+
+# SQL files (except prisma migrations)
+*.sql
+!prisma/**/*.sql
+
+# Production env
+.env.production

@@ -1,23 +1,24 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: facturador-postgres
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: facturador-sqlserver
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-facturador}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-facturador123}
-      POSTGRES_DB: ${POSTGRES_DB:-facturador}
+      ACCEPT_EULA: 'Y'
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Facturador@2024}
+      MSSQL_PID: Developer
     ports:
-      - '5432:5432'
+      - '1433:1433'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - sqlserver_data:/var/opt/mssql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U facturador -d facturador']
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$${SA_PASSWORD:-Facturador@2024}" -Q "SELECT 1" -C -b
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
@@ -41,23 +42,25 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=sqlserver://sa:${SA_PASSWORD:-Facturador@2024}@sqlserver:1433;database=facturador;encrypt=false;trustServerCertificate=true
       - MH_API_ENV=test
     depends_on:
-      - postgres
-      - redis
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://api:3001
     depends_on:
       - api
 
 volumes:
-  postgres_data:
+  sqlserver_data:
   redis_data:

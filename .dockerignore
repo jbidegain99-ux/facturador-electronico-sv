@@ -4,3 +4,12 @@ node_modules
 dist
 .turbo
 *.log
+.env*
+coverage/
+playwright-report/
+test-results/
+.vscode/
+.idea/
+*.zip
+*.sql
+captures/

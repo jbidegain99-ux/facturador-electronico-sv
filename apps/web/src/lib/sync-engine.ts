@@ -18,6 +18,16 @@ export async function processSyncQueue(apiBaseUrl: string): Promise<void> {
 
   if (store.isSyncing) return;
 
+  // Ensure auth is fresh before syncing
+  try {
+    await fetch(`${apiBaseUrl.replace('/api/v1', '')}/api/v1/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+  } catch {
+    // Continue anyway — individual requests will fail if auth is stale
+  }
+
   const pendingItems = store.items
     .filter((item) => item.status === 'pending')
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());

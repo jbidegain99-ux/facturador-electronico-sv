@@ -1,3 +1,7 @@
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const withSerwist = require('@serwist/next').default({
   swSrc: 'src/sw.ts',
   swDest: 'public/sw.js',
@@ -19,4 +23,4 @@ const nextConfig = {
   },
 };
 
-module.exports = withSerwist(withNextIntl(nextConfig));
+module.exports = withBundleAnalyzer(withSerwist(withNextIntl(nextConfig)));

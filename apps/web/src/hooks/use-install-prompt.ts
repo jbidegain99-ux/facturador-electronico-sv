@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { trackPwaInstall } from '@/lib/sentry';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -29,6 +30,7 @@ export function useInstallPrompt() {
       setIsInstalled(true);
       setShowBanner(false);
       setDeferredPrompt(null);
+      trackPwaInstall();
     };
 
     window.addEventListener('beforeinstallprompt', handler);

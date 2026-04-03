@@ -3,6 +3,7 @@ import { ToastProvider } from '@/components/ui/toast';
 import { ThemeProvider } from '@/components/theme-provider';
 import { I18nProvider } from '@/components/i18n-provider';
 import { ServiceWorkerRegister } from '@/components/pwa/sw-register';
+import { SwUpdatePrompt } from '@/components/pwa/sw-update-prompt';
 import './globals.css';
 import '@/styles/design-tokens.css';
 
@@ -66,6 +67,7 @@ export default function RootLayout({
     <html lang="es" className="dark" suppressHydrationWarning>
       <body className="font-sans antialiased">
         <ServiceWorkerRegister />
+        <SwUpdatePrompt />
         <ThemeProvider>
           <I18nProvider>
             <ToastProvider>

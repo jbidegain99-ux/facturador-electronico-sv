@@ -7,6 +7,10 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { RoutePermissionGate } from '@/components/permission-gate';
 import { ChatWidget } from '@/components/chat/ChatWidget';
+import { BottomNav } from '@/components/mobile/bottom-nav';
+import { OnlineIndicator } from '@/components/pwa/online-indicator';
+import { InstallBanner } from '@/components/pwa/install-banner';
+import { useSyncQueueStore } from '@/store/sync-queue';
 import { cn } from '@/lib/utils';
 import type { Tenant } from '@/types';
 import { Loader2 } from 'lucide-react';
@@ -18,6 +22,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { sidebarOpen, chatSidebarOpen, tenant, setTenant, setUser, setPermissions } = useAppStore();
+  const pendingCount = useSyncQueueStore((s) => s.pendingCount());
   const pathname = usePathname();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = React.useState(true);
   const [isTenantReady, setIsTenantReady] = React.useState(false);
@@ -159,11 +164,14 @@ export default function DashboardLayout({
         )}
       >
         <Header />
-        <main className="p-6">
+        <OnlineIndicator pendingCount={pendingCount} />
+        <main className="p-6 pb-20 md:pb-6">
           <RoutePermissionGate>{children}</RoutePermissionGate>
         </main>
       </div>
       <ChatWidget />
+      <BottomNav />
+      <InstallBanner />
     </div>
   );
 }

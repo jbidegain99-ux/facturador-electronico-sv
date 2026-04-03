@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store';
+import { useOnlineStatus } from './use-online-status';
+import { db } from '@/lib/db';
 
 /** Map each nav route to the permission(s) required to see it */
 const ROUTE_PERMISSIONS: Record<string, string[]> = {
@@ -20,7 +23,33 @@ const ROUTE_PERMISSIONS: Record<string, string[]> = {
 };
 
 export function usePermissions() {
-  const permissions = useAppStore((s) => s.permissions);
+  const storePermissions = useAppStore((s) => s.permissions);
+  const user = useAppStore((s) => s.user);
+  const setPermissions = useAppStore((s) => s.setPermissions);
+  const { isOnline } = useOnlineStatus();
+  const [offlineLoaded, setOfflineLoaded] = useState(false);
+
+  // If offline and no permissions in store, load from Dexie cache
+  useEffect(() => {
+    if (!isOnline && storePermissions.length === 0 && user?.id && !offlineLoaded) {
+      db.appCache.get(`permissions-${user.id}`).then((entry) => {
+        if (entry?.value) {
+          try {
+            const cached = JSON.parse(entry.value) as string[];
+            if (cached.length > 0) {
+              setPermissions(cached);
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+      }).catch(() => {}).finally(() => {
+        setOfflineLoaded(true);
+      });
+    }
+  }, [isOnline, storePermissions.length, user?.id, offlineLoaded, setPermissions]);
+
+  const permissions = storePermissions;
 
   const hasPermission = (permission: string): boolean => {
     return permissions.includes('*') || permissions.includes(permission);

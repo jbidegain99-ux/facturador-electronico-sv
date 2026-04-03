@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import type { Tenant } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
+import { db } from '@/lib/db';
 
 export default function DashboardLayout({
   children,
@@ -92,11 +93,21 @@ export default function DashboardLayout({
   }, [setUser]);
 
   // Load user permissions
+  const user = useAppStore((s) => s.user);
   React.useEffect(() => {
     const loadPermissions = async () => {
       try {
         const data = await apiFetch<{ permissions: string[] }>('/auth/me/permissions');
-        setPermissions(data.permissions || []);
+        const perms = data.permissions || [];
+        setPermissions(perms);
+
+        // Cache permissions in Dexie for offline use
+        if (user?.id) {
+          db.appCache.put({
+            key: `permissions-${user.id}`,
+            value: JSON.stringify(perms),
+          }).catch(() => {});
+        }
       } catch {
         setPermissions([]);
       }
@@ -105,7 +116,7 @@ export default function DashboardLayout({
     if (isUserReady) {
       loadPermissions();
     }
-  }, [isUserReady, setPermissions]);
+  }, [isUserReady, setPermissions, user?.id]);
 
   React.useEffect(() => {
     const checkOnboarding = async () => {

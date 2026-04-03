@@ -59,9 +59,7 @@ export class TemplateRenderService implements OnModuleDestroy {
   private async getBrowser(): Promise<Browser> {
     if (!this.browser) {
       const { chromium } = await import('playwright');
-      const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
       this.browser = await chromium.launch({
-        ...(executablePath && { executablePath }),
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',

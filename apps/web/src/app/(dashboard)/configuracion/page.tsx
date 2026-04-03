@@ -377,11 +377,11 @@ export default function ConfiguracionPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border rounded-lg">
               <div className="flex items-center gap-4">
                 {certificateStatus === 'loaded' ? (
                   <>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
                       <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
@@ -393,7 +393,7 @@ export default function ConfiguracionPage() {
                   </>
                 ) : (
                   <>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900">
                       <AlertCircle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
@@ -657,11 +657,11 @@ export default function ConfiguracionPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border rounded-lg">
               <div className="flex items-center gap-4">
                 {demoMode ? (
                   <>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30">
                       <Sparkles className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
@@ -673,7 +673,7 @@ export default function ConfiguracionPage() {
                   </>
                 ) : (
                   <>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted">
                       <XCircle className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <div>

@@ -153,7 +153,7 @@ export function TestExecutor({
           toast.error(data.testRecord.errorMessage || 'La prueba falló');
         }
       } else {
-        throw new Error((data as any).message || 'Error al ejecutar prueba');
+        throw new Error((data as unknown as { message?: string }).message || 'Error al ejecutar prueba');
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al ejecutar prueba');

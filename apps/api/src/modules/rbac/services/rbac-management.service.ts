@@ -46,7 +46,7 @@ export class RbacManagementService {
     description: string,
     entityType: string,
     entityId: string,
-    extra?: { oldValue?: unknown; newValue?: unknown },
+    extra?: { oldValue?: Record<string, unknown>; newValue?: Record<string, unknown> },
   ) {
     this.auditLogs.log({
       tenantId,

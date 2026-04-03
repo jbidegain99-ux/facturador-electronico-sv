@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import NextImage from 'next/image';
 import {
   Image,
   Upload,
@@ -154,9 +155,11 @@ export function LogoUpload({
               <div>
                 <p className="font-medium">Logo configurado</p>
                 <div className="mt-2 p-3 bg-white dark:bg-gray-900 rounded border inline-block">
-                  <img
+                  <NextImage
                     src={logoUrl}
                     alt="Logo actual"
+                    width={200}
+                    height={80}
                     className="max-w-[200px] max-h-[80px] object-contain"
                   />
                 </div>
@@ -180,9 +183,11 @@ export function LogoUpload({
         <div className="mb-6 p-4 rounded-lg border border-primary/30 bg-primary/5">
           <p className="text-sm font-medium text-muted-foreground mb-2">Vista previa</p>
           <div className="p-3 bg-white dark:bg-gray-900 rounded border inline-block">
-            <img
+            <NextImage
               src={preview}
               alt="Preview"
+              width={200}
+              height={80}
               className="max-w-[200px] max-h-[80px] object-contain"
             />
           </div>

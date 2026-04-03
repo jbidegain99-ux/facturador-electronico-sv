@@ -1,23 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { RoutePermissionGate } from '@/components/permission-gate';
 import { ChatWidget } from '@/components/chat/ChatWidget';
 import { cn } from '@/lib/utils';
+import type { Tenant } from '@/types';
 import { Loader2 } from 'lucide-react';
-import { apiFetch, API_URL } from '@/lib/api';
-
-interface OnboardingStatus {
-  hasCompanyData: boolean;
-  hasCertificate: boolean;
-  hasTestedConnection: boolean;
-  hasFirstInvoice: boolean;
-  demoMode?: boolean;
-}
+import { apiFetch } from '@/lib/api';
 
 export default function DashboardLayout({
   children,
@@ -25,7 +18,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { sidebarOpen, chatSidebarOpen, tenant, setTenant, setUser, setPermissions } = useAppStore();
-  const router = useRouter();
   const pathname = usePathname();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = React.useState(true);
   const [isTenantReady, setIsTenantReady] = React.useState(false);
@@ -36,7 +28,6 @@ export default function DashboardLayout({
     const loadTenantData = async () => {
       // Only fetch if tenant is not already loaded
       if (tenant?.nombre) {
-        console.log('[Tenant] Already loaded:', tenant.nombre);
         setIsTenantReady(true);
         return;
       }
@@ -45,10 +36,8 @@ export default function DashboardLayout({
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
-        console.log('[Tenant] Fetching tenant data...');
-        const data = await apiFetch<Record<string, unknown>>('/tenants/me', { signal: controller.signal });
+        const data = await apiFetch<Tenant>('/tenants/me', { signal: controller.signal });
         clearTimeout(timeoutId);
-        console.log('[Tenant] Loaded:', data.nombre);
         setTenant(data);
       } catch (error) {
         clearTimeout(timeoutId);
@@ -72,10 +61,8 @@ export default function DashboardLayout({
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
-        console.log('[Auth] Fetching user profile...');
         const data = await apiFetch<{ id: string; nombre: string; email: string; rol: string }>('/auth/profile', { signal: controller.signal });
         clearTimeout(timeoutId);
-        console.log('[Auth] User loaded:', data.email);
         setUser({
           id: data.id,
           name: data.nombre,
@@ -144,7 +131,7 @@ export default function DashboardLayout({
     };
 
     checkOnboarding();
-  }, [pathname, router]);
+  }, [pathname]);
 
   const isLoading = !isUserReady || !isTenantReady ||
     (isCheckingOnboarding && pathname !== '/onboarding' && pathname !== '/onboarding-hacienda');

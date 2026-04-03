@@ -230,8 +230,8 @@ export default function FacturasPage() {
     }
     // Handle Prisma Decimal object format
     if (dte.totalPagar && typeof dte.totalPagar === 'object') {
-      const val = (dte.totalPagar as any).toString?.() || (dte.totalPagar as any).value;
-      return parseFloat(val) || 0;
+      const val = (dte.totalPagar as { toString?: () => string; value?: string }).toString?.() || (dte.totalPagar as { value?: string }).value;
+      return parseFloat(val ?? '0') || 0;
     }
     return 0;
   };

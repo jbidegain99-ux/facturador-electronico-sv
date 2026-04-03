@@ -104,7 +104,11 @@ export class SuperAdminService {
     const { page = 1, limit = 10, search, plan, status } = params;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: {
+      OR?: Array<Record<string, { contains: string }>>;
+      plan?: string;
+      planStatus?: string;
+    } = {};
 
     if (search) {
       // SQL Server uses collation for case sensitivity
@@ -229,8 +233,8 @@ export class SuperAdminService {
     const updated = await this.prisma.tenant.update({
       where: { id },
       data: {
-        plan: data.plan as any,
-        planStatus: data.planStatus as any,
+        plan: data.plan,
+        planStatus: data.planStatus,
         planExpiry: data.planExpiry,
         maxDtesPerMonth: data.maxDtesPerMonth,
         adminNotes: data.adminNotes,

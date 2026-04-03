@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
 import { AnularDteDialog } from '@/components/dte/anular-dte-dialog';
 import { formatCurrency, formatDateTime, getTipoDteName } from '@/lib/utils';
+import { DTEStatus } from '@/types';
 import {
   ArrowLeft,
   Download,
@@ -38,6 +39,47 @@ interface DteLastError {
   timestamp: string;
 }
 
+interface DteCuerpoDocumentoItem {
+  numItem?: number;
+  descripcion: string;
+  cantidad: number;
+  precioUni: string | number;
+  ventaGravada: string | number;
+  ventaExenta: string | number;
+  ventaNoSuj: string | number;
+  ivaItem?: string | number;
+}
+
+interface DteJsonData {
+  identificacion?: {
+    ambiente?: string;
+    [key: string]: unknown;
+  };
+  emisor?: {
+    nombre: string;
+    nit: string;
+    nrc?: string;
+    [key: string]: unknown;
+  };
+  receptor?: {
+    nombre: string;
+    numDocumento?: string;
+    nrc?: string;
+    correo?: string;
+    [key: string]: unknown;
+  };
+  cuerpoDocumento?: DteCuerpoDocumentoItem[];
+  resumen?: {
+    totalGravada?: string | number;
+    totalExenta?: string | number;
+    totalNoSuj?: string | number;
+    totalIva?: string | number;
+    totalPagar?: string | number;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 interface DTEDetail {
   id: string;
   numeroControl: string;
@@ -48,6 +90,8 @@ interface DTEDetail {
   fechaRecepcion?: string;
   descripcionMh?: string;
   totalGravada: string | number;
+  totalExenta?: string | number;
+  totalNoSuj?: string | number;
   totalIva: string | number;
   totalPagar: string | number;
   jsonOriginal: string;
@@ -79,7 +123,7 @@ interface DTEDetail {
   }>;
 }
 
-const timelineIcons: Record<string, any> = {
+const timelineIcons: Record<string, typeof Clock> = {
   CREATED: Clock,
   SIGNED: FileJson,
   TRANSMITTED: Send,
@@ -242,7 +286,7 @@ export default function FacturaDetallePage() {
     return parseFloat(value) || 0;
   };
 
-  const getJsonData = (): any => {
+  const getJsonData = (): DteJsonData | null => {
     if (!dte?.jsonOriginal) return null;
     try {
       return typeof dte.jsonOriginal === 'string'
@@ -299,7 +343,7 @@ export default function FacturaDetallePage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 {getTipoDteName(dte.tipoDte)}
               </h1>
-              <DTEStatusBadge status={dte.estado as any} />
+              <DTEStatusBadge status={dte.estado as DTEStatus} />
             </div>
             <p className="text-muted-foreground font-mono text-sm">
               {dte.numeroControl}
@@ -448,7 +492,7 @@ export default function FacturaDetallePage() {
                 </TableHeader>
                 <TableBody>
                   {items.length > 0 ? (
-                    items.map((item: any, index: number) => {
+                    items.map((item: DteCuerpoDocumentoItem, index: number) => {
                       const ventaGravada = parseNumber(item.ventaGravada);
                       const ventaExenta = parseNumber(item.ventaExenta);
                       const ventaNoSuj = parseNumber(item.ventaNoSuj);
@@ -492,16 +536,16 @@ export default function FacturaDetallePage() {
                     <span className="text-muted-foreground">{t('subtotalTaxable')}</span>
                     <span>{formatCurrency(parseNumber(resumen?.totalGravada || dte.totalGravada))}</span>
                   </div>
-                  {parseNumber(resumen?.totalExenta || (dte as any).totalExenta) > 0 && (
+                  {parseNumber(resumen?.totalExenta || dte.totalExenta || 0) > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal Exento:</span>
-                      <span>{formatCurrency(parseNumber(resumen?.totalExenta || (dte as any).totalExenta))}</span>
+                      <span>{formatCurrency(parseNumber(resumen?.totalExenta || dte.totalExenta || 0))}</span>
                     </div>
                   )}
-                  {parseNumber(resumen?.totalNoSuj || (dte as any).totalNoSuj) > 0 && (
+                  {parseNumber(resumen?.totalNoSuj || dte.totalNoSuj || 0) > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal No Sujeto:</span>
-                      <span>{formatCurrency(parseNumber(resumen?.totalNoSuj || (dte as any).totalNoSuj))}</span>
+                      <span>{formatCurrency(parseNumber(resumen?.totalNoSuj || dte.totalNoSuj || 0))}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">

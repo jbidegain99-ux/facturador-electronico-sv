@@ -63,7 +63,16 @@ interface Stats {
   byModule: { module: string; count: number }[];
   successRate: number;
   failureRate: number;
-  recentActivity: any[];
+  recentActivity: Array<{
+    id: string;
+    action: string;
+    module: string;
+    description: string;
+    userName: string | null;
+    tenantNombre: string | null;
+    success: boolean;
+    createdAt: string;
+  }>;
 }
 
 const actionOptions = [

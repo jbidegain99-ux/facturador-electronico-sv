@@ -24,6 +24,8 @@ import {
   HACIENDA_ENDPOINTS,
   HaciendaTestType,
   HaciendaTestStatus,
+  TestingStatus,
+  CertificateInfo,
 } from './interfaces';
 import { ConfigureEnvironmentDto, ExecuteTestDto, QuickSetupDto, ValidateConnectionDto } from './dto';
 import { GeneratedTestData } from './services/test-data-generator.service';
@@ -82,7 +84,7 @@ export class HaciendaService {
 
     return {
       activeEnvironment: config.activeEnvironment as HaciendaEnvironment,
-      testingStatus: config.testingStatus as any,
+      testingStatus: config.testingStatus as TestingStatus,
       testingStartedAt: config.testingStartedAt || undefined,
       testingCompletedAt: config.testingCompletedAt || undefined,
       productionAuthorizedAt: config.productionAuthorizedAt || undefined,
@@ -104,7 +106,7 @@ export class HaciendaService {
     dto: ConfigureEnvironmentDto,
     certificateBuffer: Buffer,
     certificateFileName: string,
-  ): Promise<{ success: boolean; message: string; certificateInfo?: any }> {
+  ): Promise<{ success: boolean; message: string; certificateInfo?: { fileName: string; validUntil: Date | null; nit: string | null; subject: string } }> {
     // Validate certificate
     const validation = await this.certificateService.validateCertificate(
       certificateBuffer,
@@ -706,7 +708,7 @@ export class HaciendaService {
 
     this.logger.log(`Executing test for emisor ${emisor.nombre} (NIT: ${emisor.nit})`);
 
-    let testRecord: any;
+    let testRecord: HaciendaTestRecord;
 
     if (dto.testType === 'EMISSION') {
       testRecord = await this.executeEmissionTest(
@@ -770,7 +772,7 @@ export class HaciendaService {
     token: string,
     certificateBuffer: Buffer,
     certificatePassword: string | undefined,
-  ): Promise<any> {
+  ): Promise<HaciendaTestRecord> {
     // Get next correlativo
     const existingRecords = await this.prisma.haciendaTestRecord.count({
       where: {
@@ -884,7 +886,7 @@ export class HaciendaService {
     token: string,
     certificateBuffer: Buffer,
     certificatePassword: string | undefined,
-  ): Promise<any> {
+  ): Promise<HaciendaTestRecord> {
     // Find the original test record
     const originalRecord = await this.prisma.haciendaTestRecord.findFirst({
       where: {
@@ -991,7 +993,7 @@ export class HaciendaService {
         dteType,
         testType: 'CANCELLATION',
         status,
-        codigoGeneracion: (cancellationData as any).identificacion?.codigoGeneracion,
+        codigoGeneracion: (cancellationData as Record<string, Record<string, string>>).identificacion?.codigoGeneracion,
         selloRecibido,
         requestPayload: JSON.stringify(cancellationData),
         responsePayload,
@@ -1022,7 +1024,11 @@ export class HaciendaService {
       return [];
     }
 
-    const where: any = {
+    const where: {
+      haciendaConfigId: string;
+      dteType?: string;
+      status?: string;
+    } = {
       haciendaConfigId: config.id,
     };
 
@@ -1122,7 +1128,7 @@ export class HaciendaService {
    * Format environment config for response
    */
   private formatEnvironmentConfig(
-    envConfig: any,
+    envConfig: HaciendaEnvironmentConfig,
     environment: HaciendaEnvironment,
   ): EnvironmentConfigResponse {
     return {

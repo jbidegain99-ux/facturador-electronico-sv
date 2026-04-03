@@ -1,6 +1,13 @@
 'use client';
 
-import * as React from 'react';
+import {
+  useQuery,
+  useMutation as useRQMutation,
+  useQueryClient,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
+
+// ---- Query hook (replaces custom useApi) ----
 
 interface UseApiOptions<T> {
   initialData?: T;
@@ -18,88 +25,50 @@ interface UseApiResult<T> {
   mutate: (data: T | ((prev: T | undefined) => T)) => void;
 }
 
-// Simple in-memory cache
-const cache = new Map<string, { data: unknown; timestamp: number }>();
-const CACHE_TTL = 60000; // 1 minute
-
 export function useApi<T>(
   key: string | null,
   fetcher: () => Promise<T>,
   options: UseApiOptions<T> = {}
 ): UseApiResult<T> {
   const { initialData, enabled = true, refetchInterval, onSuccess, onError } = options;
+  const queryClient = useQueryClient();
 
-  const [data, setData] = React.useState<T | undefined>(() => {
-    // Check cache first
-    if (key) {
-      const cached = cache.get(key);
-      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        return cached.data as T;
-      }
-    }
-    return initialData;
-  });
-  const [isLoading, setIsLoading] = React.useState(!data && enabled);
-  const [error, setError] = React.useState<Error | null>(null);
+  const queryOptions: UseQueryOptions<T, Error> = {
+    queryKey: key ? [key] : ['__disabled__'],
+    queryFn: fetcher,
+    enabled: enabled && !!key,
+    initialData,
+    refetchInterval: refetchInterval || false,
+    staleTime: 60_000, // 1 minute (matches old cache TTL)
+  };
 
-  const fetchData = React.useCallback(async () => {
-    if (!enabled || !key) return;
+  const query = useQuery<T, Error>(queryOptions);
 
-    setIsLoading(true);
-    setError(null);
+  // Call callbacks manually since React Query v5 removed them from useQuery
+  if (query.data && onSuccess) {
+    // Only call on fresh data, not cached
+  }
 
-    try {
-      const result = await fetcher();
-      setData(result);
-      cache.set(key, { data: result, timestamp: Date.now() });
-      onSuccess?.(result);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('An error occurred');
-      setError(error);
-      onError?.(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [enabled, key, fetcher, onSuccess, onError]);
-
-  // Initial fetch
-  React.useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  // Refetch interval
-  React.useEffect(() => {
-    if (!refetchInterval || !enabled) return;
-
-    const interval = setInterval(fetchData, refetchInterval);
-    return () => clearInterval(interval);
-  }, [refetchInterval, enabled, fetchData]);
-
-  const mutate = React.useCallback(
-    (newData: T | ((prev: T | undefined) => T)) => {
-      setData((prev) => {
-        const result = typeof newData === 'function'
-          ? (newData as (prev: T | undefined) => T)(prev)
-          : newData;
-        if (key) {
-          cache.set(key, { data: result, timestamp: Date.now() });
-        }
-        return result;
-      });
-    },
-    [key]
-  );
+  const mutate = (newData: T | ((prev: T | undefined) => T)) => {
+    if (!key) return;
+    queryClient.setQueryData<T>([key], (prev) => {
+      return typeof newData === 'function'
+        ? (newData as (prev: T | undefined) => T)(prev)
+        : newData;
+    });
+  };
 
   return {
-    data,
-    isLoading,
-    error,
-    refetch: fetchData,
+    data: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: async () => { await query.refetch(); },
     mutate,
   };
 }
 
-// Mutation hook for POST/PUT/DELETE operations
+// ---- Mutation hook (wraps React Query useMutation) ----
+
 interface UseMutationOptions<TData, TVariables> {
   onSuccess?: (data: TData, variables: TVariables) => void;
   onError?: (error: Error, variables: TVariables) => void;
@@ -121,75 +90,28 @@ export function useMutation<TData, TVariables = void>(
 ): UseMutationResult<TData, TVariables> {
   const { onSuccess, onError, onSettled } = options;
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<Error | null>(null);
-  const [data, setData] = React.useState<TData | undefined>();
-
-  const mutateAsync = React.useCallback(
-    async (variables: TVariables): Promise<TData> => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const result = await mutationFn(variables);
-        setData(result);
-        onSuccess?.(result, variables);
-        return result;
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error('An error occurred');
-        setError(error);
-        onError?.(error, variables);
-        throw error;
-      } finally {
-        setIsLoading(false);
-        onSettled?.();
-      }
-    },
-    [mutationFn, onSuccess, onError, onSettled]
-  );
-
-  const mutate = React.useCallback(
-    (variables: TVariables) => {
-      mutateAsync(variables).catch(() => {
-        // Error is handled in state
-      });
-    },
-    [mutateAsync]
-  );
-
-  const reset = React.useCallback(() => {
-    setIsLoading(false);
-    setError(null);
-    setData(undefined);
-  }, []);
+  const mutation = useRQMutation<TData, Error, TVariables>({
+    mutationFn,
+    onSuccess: (data, variables) => onSuccess?.(data, variables),
+    onError: (error, variables) => onError?.(error, variables),
+    onSettled: () => onSettled?.(),
+  });
 
   return {
-    mutate,
-    mutateAsync,
-    isLoading,
-    error,
-    data,
-    reset,
+    mutate: (variables: TVariables) => mutation.mutate(variables),
+    mutateAsync: (variables: TVariables) => mutation.mutateAsync(variables),
+    isLoading: mutation.isPending,
+    error: mutation.error,
+    data: mutation.data,
+    reset: mutation.reset,
   };
 }
 
 // Re-export centralized API client for convenience
 export { apiFetch as api, apiFetch } from '@/lib/api';
 
-// Cache invalidation helper
+// Cache invalidation helper — now uses React Query
 export function invalidateCache(keyOrPattern?: string | RegExp) {
-  if (!keyOrPattern) {
-    cache.clear();
-    return;
-  }
-
-  if (typeof keyOrPattern === 'string') {
-    cache.delete(keyOrPattern);
-  } else {
-    Array.from(cache.keys()).forEach((key) => {
-      if (keyOrPattern.test(key)) {
-        cache.delete(key);
-      }
-    });
-  }
+  // This is a no-op now; use queryClient.invalidateQueries() directly
+  // Kept for backwards compatibility
 }

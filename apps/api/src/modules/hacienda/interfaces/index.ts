@@ -70,7 +70,7 @@ export interface EnvironmentConfigResponse {
   tokenExpiry?: Date;
   certificateInfo?: {
     fileName: string;
-    validUntil: Date;
+    validUntil: Date | null;
     nit: string | null;
     subject: string;
   };

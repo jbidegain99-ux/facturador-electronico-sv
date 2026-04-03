@@ -23,7 +23,7 @@ interface HelpRequestModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultType?: 'EMAIL_CONFIG' | 'TECHNICAL' | 'BILLING' | 'GENERAL' | 'ONBOARDING';
-  contextData?: Record<string, any>;
+  contextData?: Record<string, unknown>;
 }
 
 const ticketTypes = [
@@ -138,7 +138,7 @@ export function HelpRequestModal({
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Tipo de solicitud</label>
-                <Select value={type} onValueChange={(val: any) => setType(val)}>
+                <Select value={type} onValueChange={(val: typeof type) => setType(val)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

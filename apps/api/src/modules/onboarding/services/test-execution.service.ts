@@ -3,6 +3,11 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { EncryptionService } from '../../email-config/services';
 import { DteType, TestResult, DteTypeSelection } from '../types/onboarding.types';
 import { ExecuteTestDto, ExecuteEventTestDto } from '../dto';
+import { Prisma } from '@prisma/client';
+
+type OnboardingWithRelations = Prisma.TenantOnboardingGetPayload<{
+  include: { testProgress: true; dteTypes: true };
+}>;
 
 // Test requirements per DTE type
 const TESTS_REQUIRED: Record<DteType, number> = {
@@ -291,7 +296,7 @@ export class TestExecutionService {
   }
 
   private async callHaciendaTestApi(
-    onboarding: any,
+    onboarding: OnboardingWithRelations,
     dto: ExecuteTestDto,
   ): Promise<{
     success: boolean;
@@ -303,8 +308,8 @@ export class TestExecutionService {
     timestamp: Date;
   }> {
     // Decrypt credentials
-    const apiPassword = this.encryptionService.decrypt(onboarding.testApiPassword);
-    const certPassword = this.encryptionService.decrypt(onboarding.testCertPassword);
+    const apiPassword = this.encryptionService.decrypt(onboarding.testApiPassword!);
+    const certPassword = this.encryptionService.decrypt(onboarding.testCertPassword!);
 
     // TODO: Implement actual Hacienda API call
     // For now, simulate a successful test
@@ -339,7 +344,7 @@ export class TestExecutionService {
   }
 
   private async callHaciendaEventApi(
-    onboarding: any,
+    onboarding: OnboardingWithRelations,
     dto: ExecuteEventTestDto,
   ): Promise<{
     success: boolean;
@@ -348,7 +353,7 @@ export class TestExecutionService {
     errors?: string[];
     timestamp: Date;
   }> {
-    const apiPassword = this.encryptionService.decrypt(onboarding.testApiPassword);
+    const apiPassword = this.encryptionService.decrypt(onboarding.testApiPassword!);
 
     console.log(`[TEST] Executing event test for ${dto.eventType}`);
 

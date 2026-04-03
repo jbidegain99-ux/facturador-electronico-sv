@@ -14,9 +14,9 @@ interface LogOptions {
   description: string;
   entityType?: string;
   entityId?: string;
-  oldValue?: any;
-  newValue?: any;
-  metadata?: any;
+  oldValue?: Record<string, unknown>;
+  newValue?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   requestPath?: string;
@@ -63,7 +63,17 @@ export class AuditLogsService {
   ) {
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: {
+      userId?: string;
+      tenantId?: string;
+      action?: string;
+      module?: string;
+      entityType?: string;
+      entityId?: string;
+      success?: boolean;
+      createdAt?: { gte?: Date; lte?: Date };
+      OR?: Array<Record<string, { contains: string }>>;
+    } = {};
 
     if (filters.userId) where.userId = filters.userId;
     if (filters.tenantId) where.tenantId = filters.tenantId;
@@ -120,7 +130,10 @@ export class AuditLogsService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const where: any = {
+    const where: {
+      createdAt: { gte: Date };
+      tenantId?: string;
+    } = {
       createdAt: { gte: startDate },
     };
 
@@ -185,7 +198,10 @@ export class AuditLogsService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const where: any = {
+    const where: {
+      createdAt: { gte: Date };
+      tenantId?: string;
+    } = {
       createdAt: { gte: startDate },
     };
 

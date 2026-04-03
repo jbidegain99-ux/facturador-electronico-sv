@@ -8,7 +8,6 @@ import {
   PerformedBy,
   AssistanceLevel,
   DteType,
-  DteTypeSelection,
 } from '../types/onboarding.types';
 import {
   StartOnboardingDto,
@@ -21,6 +20,13 @@ import {
   CompleteStepDto,
   GoToStepDto,
 } from '../dto';
+import { Prisma, DteTypeSelection as PrismaDteTypeSelection } from '@prisma/client';
+
+type OnboardingWithRelations = Prisma.TenantOnboardingGetPayload<{
+  include: { dteTypes: true; steps: true; testProgress: true };
+}> & {
+  communications?: unknown[];
+};
 
 // Step order and metadata
 const STEP_ORDER: OnboardingStep[] = [
@@ -241,6 +247,8 @@ export class OnboardingService {
       },
       include: {
         steps: true,
+        testProgress: true,
+        dteTypes: true,
       },
     });
 
@@ -833,7 +841,7 @@ export class OnboardingService {
     return names[dteType] || dteType;
   }
 
-  private formatOnboardingResponse(onboarding: any) {
+  private formatOnboardingResponse(onboarding: OnboardingWithRelations) {
     const { haciendaPassword, testCertPassword, prodCertPassword, testApiPassword, prodApiPassword, ...safe } = onboarding;
 
     return {
@@ -847,12 +855,12 @@ export class OnboardingService {
     };
   }
 
-  private buildStepsList(onboarding: any) {
+  private buildStepsList(onboarding: OnboardingWithRelations) {
     const stepRecords = onboarding.steps || [];
 
     return STEP_ORDER.map((step, index) => {
-      const record = stepRecords.find((r: any) => r.step === step);
-      const currentIndex = STEP_ORDER.indexOf(onboarding.currentStep);
+      const record = stepRecords.find((r) => r.step === step);
+      const currentIndex = STEP_ORDER.indexOf(onboarding.currentStep as OnboardingStep);
 
       return {
         step,
@@ -882,9 +890,9 @@ export class OnboardingService {
     }));
   }
 
-  private canProceedToNextStep(onboarding: any): boolean {
+  private canProceedToNextStep(onboarding: OnboardingWithRelations): boolean {
     const currentStep = onboarding.currentStep;
-    const record = onboarding.steps?.find((s: any) => s.step === currentStep);
+    const record = onboarding.steps?.find((s) => s.step === currentStep);
 
     // Can't proceed if current step is blocked or not completed
     if (record?.status === 'BLOCKED') return false;
@@ -912,7 +920,7 @@ export class OnboardingService {
     }
   }
 
-  private areAllTestsComplete(onboarding: any): boolean {
+  private areAllTestsComplete(onboarding: OnboardingWithRelations): boolean {
     if (!onboarding.testProgress) return false;
 
     const testsRequired = JSON.parse(onboarding.testProgress.testsRequired || '{}');

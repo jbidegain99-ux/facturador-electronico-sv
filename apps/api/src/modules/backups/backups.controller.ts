@@ -12,7 +12,7 @@ import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../super-admin/guards/super-admin.guard';
-import { BackupsService } from './backups.service';
+import { BackupsService, TenantBackupData } from './backups.service';
 
 @ApiTags('Backups')
 @ApiBearerAuth()
@@ -77,7 +77,7 @@ export class BackupsController {
   @ApiOperation({ summary: 'Preview tenant backup without downloading' })
   async previewTenantBackup(@Param('tenantId') tenantId: string) {
     const backupData = await this.backupsService.generateTenantBackup(tenantId);
-    const data = backupData.data as any;
+    const data = backupData.data as TenantBackupData;
     return {
       metadata: backupData.metadata,
       summary: {

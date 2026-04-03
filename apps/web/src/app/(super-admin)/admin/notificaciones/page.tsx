@@ -261,7 +261,7 @@ export default function NotificacionesPage() {
         ? `${API_URL}/admin/notifications/${editingNotification.id}`
         : `${API_URL}/admin/notifications`;
 
-      const body: any = {
+      const body: Record<string, unknown> = {
         title: form.title,
         message: form.message,
         type: form.type,

@@ -37,7 +37,7 @@ import {
   ValidateConnectionResponseDto,
 } from './dto';
 import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
-import { HaciendaEnvironment } from './interfaces';
+import { HaciendaEnvironment, DteTypeCode } from './interfaces';
 
 @Controller('hacienda')
 @ApiBearerAuth()
@@ -475,7 +475,7 @@ export class HaciendaController {
 
     return this.haciendaService.generateTestDataPreview(
       user.tenantId,
-      dto.dteType as any,
+      dto.dteType as DteTypeCode,
     );
   }
 

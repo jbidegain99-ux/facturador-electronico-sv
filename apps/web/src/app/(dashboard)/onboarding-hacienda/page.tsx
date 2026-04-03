@@ -57,15 +57,11 @@ export default function OnboardingHaciendaPage() {
             }
           } catch {
             // Empty or invalid JSON response, treat as no onboarding yet
-            console.log('No onboarding data found, starting fresh');
           }
         }
       } else if (onboardingRes.status !== 404) {
         // 404 means not started yet, which is fine
-        const text = await onboardingRes.text();
-        if (text) {
-          console.warn('Onboarding error:', text);
-        }
+        // Non-404 error, ignore silently
       }
     } catch (err) {
       console.error('Error loading onboarding:', err);

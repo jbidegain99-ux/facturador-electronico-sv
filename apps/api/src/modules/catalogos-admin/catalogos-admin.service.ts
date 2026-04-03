@@ -97,7 +97,11 @@ export class CatalogosAdminService {
       throw new NotFoundException(`Catalogo ${codigo} no encontrado`);
     }
 
-    const where: any = {
+    const where: {
+      catalogoId: string;
+      OR?: Array<{ codigo?: { contains: string }; valor?: { contains: string } }>;
+      parentCodigo?: string;
+    } = {
       catalogoId: catalogo.id,
     };
 
@@ -221,7 +225,11 @@ export class CatalogosAdminService {
       throw new NotFoundException(`Catalogo ${codigo} no encontrado`);
     }
 
-    const where: any = {
+    const where: {
+      catalogoId: string;
+      isActive: boolean;
+      parentCodigo?: string;
+    } = {
       catalogoId: catalogo.id,
       isActive: true,
     };

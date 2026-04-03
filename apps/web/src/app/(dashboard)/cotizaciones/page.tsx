@@ -44,6 +44,7 @@ import { PageSizeSelector } from '@/components/ui/page-size-selector';
 import { useTranslations } from 'next-intl';
 import { apiFetch } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
+import { QuoteListMobile } from '@/components/mobile/quote-list-mobile';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -298,7 +299,11 @@ export default function CotizacionesPage() {
 
   return (
     <FeatureGate feature="quotes_b2b" featureName="Cotizaciones" planRequired="Profesional">
-    <div className="space-y-6">
+    {/* Mobile card list */}
+    <QuoteListMobile />
+
+    {/* Desktop table view */}
+    <div className="hidden md:block space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

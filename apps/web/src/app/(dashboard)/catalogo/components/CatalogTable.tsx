@@ -97,6 +97,35 @@ export function CatalogTable({
 
   return (
     <>
+      {/* Mobile card list */}
+      <div className="space-y-2 p-3 md:hidden">
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+            onClick={() => onEdit(item)}
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <Package className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{item.name}</p>
+              <p className="text-xs text-muted-foreground font-mono">{item.code}</p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-sm font-medium">{formatPrice(item.basePrice)}</p>
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                TYPE_COLORS[item.type] || 'bg-gray-100 text-gray-800'
+              }`}>
+                {item.type === 'PRODUCT' ? tc('product') : item.type === 'SERVICE' ? tc('service') : item.type}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block">
       <Table>
         <TableHeader>
           <TableRow>
@@ -212,6 +241,7 @@ export function CatalogTable({
           ))}
         </TableBody>
       </Table>
+      </div>
       <Pagination
         page={page}
         totalPages={totalPages}

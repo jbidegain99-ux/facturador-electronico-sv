@@ -146,17 +146,17 @@ export default function CatalogoPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground"><Package className="h-6 w-6" />{tc('title')}</h1>
           <p className="text-muted-foreground mt-1">{tc('subtitle')}{data.planLimit && data.planLimit.max !== -1 && <span className="ml-2 text-sm">({data.planLimit.current}/{data.planLimit.max} items)</span>}</p>
         </div>
         {!data.fetchError && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setCategoriesModalOpen(true)}><Tag className="mr-2 h-4 w-4" />{tc('categories')}</Button>
             <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}><Upload className="mr-2 h-4 w-4" />{tCommon('import')}</Button>
             <Button variant="outline" size="sm" onClick={data.handleExport}><Download className="mr-2 h-4 w-4" />{tCommon('export')}</Button>
-            <Button onClick={openCreateModal} disabled={!!isAtLimit}><Plus className="mr-2 h-4 w-4" />{tc('newItem')}</Button>
+            <Button onClick={openCreateModal} disabled={!!isAtLimit} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" />{tc('newItem')}</Button>
           </div>
         )}
       </div>
@@ -174,9 +174,9 @@ export default function CatalogoPage() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="flex items-center justify-between px-4 py-3 border-b gap-3">
-            <div className="flex items-center gap-3">
-              <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder={tc('searchPlaceholder')} value={searchInput} onChange={e => setSearchInput(e.target.value)} className="pl-9 w-64" /></div>
+          <div className="flex flex-col gap-3 px-4 py-3 border-b sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder={tc('searchPlaceholder')} value={searchInput} onChange={e => setSearchInput(e.target.value)} className="pl-9 sm:w-64" /></div>
               {data.categories.length > 0 && (
                 <Select value={categoryFilter} onValueChange={v => { setCategoryFilter(v === '_all' ? '' : v); setPage(1); }}>
                   <SelectTrigger className="w-48"><SelectValue placeholder={tc('allCategories')} /></SelectTrigger>

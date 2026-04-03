@@ -76,16 +76,32 @@ function getNavBadge(item: (typeof navigation)[number], planCode: string, featur
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { sidebarOpen, toggleSidebar } = useAppStore();
+  const { sidebarOpen, setSidebarOpen, toggleSidebar } = useAppStore();
   const { features } = usePlanFeatures();
   const { canAccessRoute } = usePermissions();
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
 
+  const handleNavClick = () => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
+
   return (
+    <>
+    {/* Mobile backdrop */}
+    {sidebarOpen && (
+      <div
+        className="fixed inset-0 z-40 bg-black/50 md:hidden"
+        onClick={() => setSidebarOpen(false)}
+      />
+    )}
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-card border-r transition-all duration-300',
+        'fixed left-0 top-0 z-50 h-screen bg-card border-r transition-all duration-300',
+        '-translate-x-full md:translate-x-0',
+        sidebarOpen && 'translate-x-0',
         sidebarOpen ? 'w-64' : 'w-16'
       )}
     >
@@ -139,6 +155,7 @@ export function Sidebar() {
             <Link
               key={item.key}
               href={item.href}
+              onClick={handleNavClick}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
@@ -180,5 +197,6 @@ export function Sidebar() {
         </div>
       )}
     </aside>
+    </>
   );
 }

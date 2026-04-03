@@ -14,7 +14,7 @@ import { InstallBanner } from '@/components/pwa/install-banner';
 import { useSyncQueueStore } from '@/store/sync-queue';
 import { cn } from '@/lib/utils';
 import type { Tenant } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Menu } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { db } from '@/lib/db';
 
@@ -23,7 +23,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { sidebarOpen, chatSidebarOpen, tenant, setTenant, setUser, setPermissions } = useAppStore();
+  const { sidebarOpen, setSidebarOpen, chatSidebarOpen, tenant, setTenant, setUser, setPermissions } = useAppStore();
   const pendingCount = useSyncQueueStore((s) => s.pendingCount());
   const pathname = usePathname();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = React.useState(true);
@@ -171,10 +171,18 @@ export default function DashboardLayout({
       <div
         className={cn(
           'transition-all duration-300',
-          sidebarOpen ? 'ml-64' : 'ml-16',
+          sidebarOpen ? 'ml-0 md:ml-64' : 'ml-0 md:ml-16',
           chatSidebarOpen && 'mr-[380px]'
         )}
       >
+        <div className="flex items-center">
+          <button
+            className="md:hidden p-2 ml-2 mt-2"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
         <Header />
         <OnlineIndicator pendingCount={pendingCount} />
         <MhStatusBanner />

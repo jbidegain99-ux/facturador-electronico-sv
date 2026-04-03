@@ -19,6 +19,7 @@ import { DTEStatus, TipoDte } from '@/types';
 import { useTranslations } from 'next-intl';
 import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
+import { InvoiceListMobile } from '@/components/mobile/invoice-list-mobile';
 
 interface DTE {
   id: string;
@@ -238,6 +239,13 @@ export default function FacturasPage() {
 
   return (
     <div className="space-y-6">
+      {/* Mobile invoice list */}
+      <div className="md:hidden">
+        <InvoiceListMobile />
+      </div>
+
+      {/* Desktop view */}
+      <div className="hidden md:block space-y-6">
       {/* Hacienda Configuration Banner */}
       {showHaciendaBanner && (
         <HaciendaConfigBanner variant="prominent" className="mb-2" />
@@ -479,6 +487,7 @@ export default function FacturasPage() {
       </Card>
 
       <ConfirmDialog />
+      </div>{/* end desktop view */}
     </div>
   );
 }

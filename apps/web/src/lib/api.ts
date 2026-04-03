@@ -6,9 +6,28 @@
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
+let isRefreshing = false;
+
+async function tryRefreshAuth(): Promise<boolean> {
+  if (isRefreshing) return false;
+  isRefreshing = true;
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    isRefreshing = false;
+  }
+}
+
 export async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {},
+  _isRetry = false,
 ): Promise<T> {
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
@@ -20,6 +39,21 @@ export async function apiFetch<T>(
   });
 
   if (!response.ok) {
+    // Detect MH-related 503 outage
+    if (response.status === 503 && endpoint.includes('/dte')) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('mh-outage'));
+      }
+    }
+
+    // On 401, attempt a single token refresh and retry
+    if (response.status === 401 && !_isRetry) {
+      const refreshed = await tryRefreshAuth();
+      if (refreshed) {
+        return apiFetch<T>(endpoint, options, true);
+      }
+    }
+
     const errorData = await response.json().catch(() => ({}));
     const error = new Error(errorData.message || `HTTP error ${response.status}`);
     (error as ApiError).status = response.status;

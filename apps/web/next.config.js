@@ -1,5 +1,16 @@
-const createNextIntlPlugin = require('next-intl/plugin');
+const { withSentryConfig } = require('@sentry/nextjs');
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+const withSerwist = require('@serwist/next').default({
+  swSrc: 'src/sw.ts',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV === 'development',
+});
+
+const createNextIntlPlugin = require('next-intl/plugin');
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig = {
@@ -12,5 +23,9 @@ const nextConfig = {
       },
     ],
   },
-}
-module.exports = withNextIntl(nextConfig)
+};
+
+const finalConfig = withBundleAnalyzer(withSerwist(withNextIntl(nextConfig)));
+module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(finalConfig, { silent: true }, { widenClientFileUpload: true, hideSourceMaps: true, disableLogger: true })
+  : finalConfig;

@@ -16,6 +16,7 @@ import {
   CheckCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSyncQueueStore } from '@/store/sync-queue';
 
 interface Notification {
   id: string;
@@ -52,6 +53,9 @@ export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const syncPendingCount = useSyncQueueStore((s) => s.pendingCount());
+  const syncFailedCount = useSyncQueueStore((s) => s.failedCount());
+  const totalBadgeCount = unreadCount + (syncFailedCount > 0 ? syncFailedCount : 0);
 
   useEffect(() => {
     fetchUnreadCount();
@@ -137,10 +141,13 @@ export function NotificationBell() {
         className="relative p-2 rounded-lg hover:bg-white/5 transition-colors"
       >
         <Bell className="w-5 h-5 text-muted-foreground" />
-        {unreadCount > 0 && (
+        {totalBadgeCount > 0 && (
           <span className="absolute top-0 right-0 w-5 h-5 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full">
-            {unreadCount > 9 ? '9+' : unreadCount}
+            {totalBadgeCount > 9 ? '9+' : totalBadgeCount}
           </span>
+        )}
+        {syncFailedCount === 0 && syncPendingCount > 0 && (
+          <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-yellow-500 rounded-full" />
         )}
       </button>
 
@@ -159,6 +166,27 @@ export function NotificationBell() {
               </button>
             )}
           </div>
+
+          {/* Sync status */}
+          {(syncPendingCount > 0 || syncFailedCount > 0) && (
+            <div className="px-4 py-2.5 border-b border-border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Sincronizacion</p>
+              <div className="flex items-center gap-3 text-xs">
+                {syncPendingCount > 0 && (
+                  <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
+                    <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+                    {syncPendingCount} pendiente{syncPendingCount !== 1 ? 's' : ''}
+                  </span>
+                )}
+                {syncFailedCount > 0 && (
+                  <span className="flex items-center gap-1 text-red-500">
+                    <AlertCircle className="w-3 h-3" />
+                    {syncFailedCount} fallido{syncFailedCount !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Content */}
           <div className="max-h-96 overflow-y-auto">

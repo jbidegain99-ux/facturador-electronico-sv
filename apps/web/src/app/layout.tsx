@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { ToastProvider } from '@/components/ui/toast';
 import { ThemeProvider } from '@/components/theme-provider';
 import { I18nProvider } from '@/components/i18n-provider';
+import { ServiceWorkerRegister } from '@/components/pwa/sw-register';
+import { SwUpdatePrompt } from '@/components/pwa/sw-update-prompt';
 import './globals.css';
 import '@/styles/design-tokens.css';
 
@@ -21,7 +23,11 @@ export const metadata: Metadata = {
     ],
     apple: '/favicon.svg',
   },
-  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Facturo',
+  },
   openGraph: {
     type: 'website',
     locale: 'es_SV',
@@ -47,6 +53,9 @@ export const viewport: Viewport = {
   ],
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -57,6 +66,8 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark" suppressHydrationWarning>
       <body className="font-sans antialiased">
+        <ServiceWorkerRegister />
+        <SwUpdatePrompt />
         <ThemeProvider>
           <I18nProvider>
             <ToastProvider>

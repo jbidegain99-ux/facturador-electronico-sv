@@ -8,6 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api';
 import { useAppStore } from '@/store';
+import { useOnlineStatus } from '@/hooks/use-online-status';
+import { db } from '@/lib/db';
 import type { Cliente } from '@/types';
 
 // Constante para Consumidor Final
@@ -87,6 +89,7 @@ export function ClienteSearch({
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const tenant = useAppStore((s) => s.tenant);
   const tenantId = tenant?.id;
+  const { isOnline } = useOnlineStatus();
 
   // Load recent clients on mount and clean up old un-scoped key
   React.useEffect(() => {
@@ -111,6 +114,35 @@ export function ClienteSearch({
 
     setIsLoading(true);
     searchTimeoutRef.current = setTimeout(async () => {
+      if (!isOnline) {
+        try {
+          const offlineResults = await db.customers
+            .where('nombre')
+            .startsWithIgnoreCase(search)
+            .limit(10)
+            .toArray();
+          const mapped: Cliente[] = offlineResults.map(c => ({
+            id: c.serverId || `local_${c.localId}`,
+            tipoDocumento: c.tipoDocumento as Cliente['tipoDocumento'],
+            numDocumento: c.numDocumento,
+            nombre: c.nombre,
+            nrc: c.nrc,
+            correo: c.correo,
+            telefono: c.telefono,
+            direccion: c.direccion ? (typeof c.direccion === 'string' ? JSON.parse(c.direccion) : c.direccion) : undefined,
+            createdAt: c.createdAt,
+          }));
+          setResults(mapped);
+          setError(null);
+        } catch (e) {
+          console.error('Offline search failed:', e);
+          setResults([]);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
       try {
         const data = await apiFetch<{ data?: Cliente[] } | Cliente[]>(
           `/clientes?search=${encodeURIComponent(search)}&limit=10`
@@ -131,7 +163,7 @@ export function ClienteSearch({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [search]);
+  }, [search, isOnline]);
 
   // Get all options to display
   const getOptions = React.useCallback(() => {

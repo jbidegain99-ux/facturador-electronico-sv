@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { StatCardsMobile } from '@/components/mobile/stat-cards-mobile';
 import { Skeleton, SkeletonCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton';
 import {
   AreaChart,
@@ -196,10 +197,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Mobile Stat Cards — visible only on small screens */}
+      <StatCardsMobile stats={stats} isLoading={isLoading} />
+
       {isLoading ? (
         <>
           {/* Skeleton Metrics Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="hidden md:grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -228,8 +232,8 @@ export default function DashboardPage() {
         </>
       ) : (
         <>
-          {/* ── Stat Cards ── */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* ── Stat Cards (desktop only) ── */}
+          <div className="hidden md:grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {/* Facturas este mes */}
             <Card className="card-metric card-metric-purple">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

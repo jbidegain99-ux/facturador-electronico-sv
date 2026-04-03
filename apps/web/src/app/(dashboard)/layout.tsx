@@ -7,10 +7,16 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { RoutePermissionGate } from '@/components/permission-gate';
 import { ChatWidget } from '@/components/chat/ChatWidget';
+import { BottomNav } from '@/components/mobile/bottom-nav';
+import { OnlineIndicator } from '@/components/pwa/online-indicator';
+import { MhStatusBanner } from '@/components/pwa/mh-status-banner';
+import { InstallBanner } from '@/components/pwa/install-banner';
+import { useSyncQueueStore } from '@/store/sync-queue';
 import { cn } from '@/lib/utils';
 import type { Tenant } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
+import { db } from '@/lib/db';
 
 export default function DashboardLayout({
   children,
@@ -18,6 +24,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { sidebarOpen, chatSidebarOpen, tenant, setTenant, setUser, setPermissions } = useAppStore();
+  const pendingCount = useSyncQueueStore((s) => s.pendingCount());
   const pathname = usePathname();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = React.useState(true);
   const [isTenantReady, setIsTenantReady] = React.useState(false);
@@ -87,11 +94,21 @@ export default function DashboardLayout({
   }, [setUser]);
 
   // Load user permissions
+  const user = useAppStore((s) => s.user);
   React.useEffect(() => {
     const loadPermissions = async () => {
       try {
         const data = await apiFetch<{ permissions: string[] }>('/auth/me/permissions');
-        setPermissions(data.permissions || []);
+        const perms = data.permissions || [];
+        setPermissions(perms);
+
+        // Cache permissions in Dexie for offline use
+        if (user?.id) {
+          db.appCache.put({
+            key: `permissions-${user.id}`,
+            value: JSON.stringify(perms),
+          }).catch(() => {});
+        }
       } catch {
         setPermissions([]);
       }
@@ -100,7 +117,7 @@ export default function DashboardLayout({
     if (isUserReady) {
       loadPermissions();
     }
-  }, [isUserReady, setPermissions]);
+  }, [isUserReady, setPermissions, user?.id]);
 
   React.useEffect(() => {
     const checkOnboarding = async () => {
@@ -159,11 +176,15 @@ export default function DashboardLayout({
         )}
       >
         <Header />
-        <main className="p-6">
+        <OnlineIndicator pendingCount={pendingCount} />
+        <MhStatusBanner />
+        <main className="p-6 pb-20 md:pb-6">
           <RoutePermissionGate>{children}</RoutePermissionGate>
         </main>
       </div>
       <ChatWidget />
+      <BottomNav />
+      <InstallBanner />
     </div>
   );
 }

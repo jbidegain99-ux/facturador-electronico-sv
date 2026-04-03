@@ -130,9 +130,9 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur px-6">
-      {/* Company Name */}
-      <div className="min-w-0">
+    <header className="sticky top-0 z-30 flex h-14 md:h-16 items-center justify-between border-b bg-background/95 backdrop-blur px-3 md:px-6">
+      {/* Company Name - hidden on mobile to save space */}
+      <div className="min-w-0 hidden md:block">
         {tenant?.nombre ? (
           <>
             <h1 className="text-lg font-semibold truncate">
@@ -151,7 +151,7 @@ export function Header() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 md:gap-2">
         {/* Notifications Dropdown */}
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
@@ -164,7 +164,7 @@ export function Header() {
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-96">
+          <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] md:w-96">
             <DropdownMenuLabel className="flex items-center justify-between">
               <span>{t('notifications')}</span>
               {notifications.length > 0 && (

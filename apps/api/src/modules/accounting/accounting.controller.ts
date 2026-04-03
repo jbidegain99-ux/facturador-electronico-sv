@@ -38,6 +38,12 @@ import { DEFAULT_MAPPINGS } from './default-mappings.data';
 export class AccountingController {
   private readonly logger = new Logger(AccountingController.name);
 
+  /** Shared Prisma include for mapping rule queries (debit/credit account summaries). */
+  private static readonly MAPPING_INCLUDE = {
+    debitAccount: { select: { id: true, code: true, name: true } },
+    creditAccount: { select: { id: true, code: true, name: true } },
+  } as const;
+
   constructor(
     private service: AccountingService,
     private prisma: PrismaService,
@@ -96,10 +102,7 @@ export class AccountingController {
     const tenantId = this.ensureTenant(user);
     return this.prisma.accountMappingRule.findMany({
       where: { tenantId },
-      include: {
-        debitAccount: { select: { id: true, code: true, name: true } },
-        creditAccount: { select: { id: true, code: true, name: true } },
-      },
+      include: AccountingController.MAPPING_INCLUDE,
       orderBy: { operation: 'asc' },
     });
   }
@@ -129,10 +132,7 @@ export class AccountingController {
           creditAccountId: dto.creditAccountId,
           mappingConfig,
         },
-        include: {
-          debitAccount: { select: { id: true, code: true, name: true } },
-          creditAccount: { select: { id: true, code: true, name: true } },
-        },
+        include: AccountingController.MAPPING_INCLUDE,
       });
     }
 
@@ -145,10 +145,7 @@ export class AccountingController {
         creditAccountId: dto.creditAccountId,
         mappingConfig,
       },
-      include: {
-        debitAccount: { select: { id: true, code: true, name: true } },
-        creditAccount: { select: { id: true, code: true, name: true } },
-      },
+      include: AccountingController.MAPPING_INCLUDE,
     });
   }
 

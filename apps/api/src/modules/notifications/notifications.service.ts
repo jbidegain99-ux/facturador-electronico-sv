@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateNotificationDto, UpdateNotificationDto, NotificationTarget } from './dto';
+import { CreateNotificationDto, UpdateNotificationDto, NotificationTarget, NotificationType, NotificationPriority } from './dto';
 
 @Injectable()
 export class NotificationsService {
@@ -286,9 +286,9 @@ export class NotificationsService {
     return this.create({
       title,
       message,
-      type: 'PLAN_LIMIT_WARNING' as any,
-      priority: percentage >= 90 ? 'HIGH' as any : 'MEDIUM' as any,
-      target: 'SPECIFIC_TENANT' as any,
+      type: NotificationType.PLAN_LIMIT_WARNING,
+      priority: percentage >= 90 ? NotificationPriority.HIGH : NotificationPriority.MEDIUM,
+      target: NotificationTarget.SPECIFIC_TENANT,
       targetTenantId: tenantId,
       isDismissable: true,
       showOnce: true,

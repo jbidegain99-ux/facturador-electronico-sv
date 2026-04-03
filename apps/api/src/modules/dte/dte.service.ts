@@ -2314,46 +2314,37 @@ export class DteService {
     const end = endDate || new Date();
     const start = startDate || new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000); // Last 7 days default
 
-    const dtes = await this.prisma.dTE.findMany({
-      where: {
-        tenantId,
-        createdAt: { gte: start, lte: end },
-      },
-      select: {
-        createdAt: true,
-        totalPagar: true,
-        tipoDte: true,
-        estado: true,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    // SQL Server date truncation expression based on groupBy
+    let dateExpr: string;
+    switch (groupBy) {
+      case 'month':
+        dateExpr = `FORMAT(createdAt, 'yyyy-MM')`;
+        break;
+      case 'week':
+        dateExpr = `CONVERT(VARCHAR(10), DATEADD(DAY, -DATEPART(WEEKDAY, createdAt) + 1, createdAt), 23)`;
+        break;
+      default: // day
+        dateExpr = `CONVERT(VARCHAR(10), createdAt, 23)`;
+    }
 
-    // Group by date
-    const grouped: Record<string, { count: number; total: number; date: string }> = {};
+    const rows = await this.prisma.$queryRawUnsafe<
+      Array<{ period: string; count: number; total: number }>
+    >(
+      `SELECT ${dateExpr} AS period, COUNT(*) AS [count], ISNULL(SUM(totalPagar), 0) AS total
+       FROM DTE
+       WHERE tenantId = @P1 AND createdAt >= @P2 AND createdAt <= @P3
+       GROUP BY ${dateExpr}
+       ORDER BY period ASC`,
+      tenantId,
+      start,
+      end,
+    );
 
-    dtes.forEach((dte: typeof dtes[0]) => {
-      const date = dte.createdAt;
-      let key: string;
-
-      switch (groupBy) {
-        case 'month':
-          key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          break;
-        case 'week':
-          const weekStart = new Date(date);
-          weekStart.setDate(date.getDate() - date.getDay());
-          key = weekStart.toISOString().split('T')[0];
-          break;
-        default: // day
-          key = date.toISOString().split('T')[0];
-      }
-
-      if (!grouped[key]) {
-        grouped[key] = { count: 0, total: 0, date: key };
-      }
-      grouped[key].count += 1;
-      grouped[key].total += Number(dte.totalPagar) || 0;
-    });
+    // Index aggregated results by period key
+    const grouped: Record<string, { count: number; total: number }> = {};
+    for (const row of rows) {
+      grouped[row.period] = { count: Number(row.count), total: Number(row.total) };
+    }
 
     // Fill in missing dates for continuous chart
     const result: Array<{ fecha: string; cantidad: number; total: number }> = [];

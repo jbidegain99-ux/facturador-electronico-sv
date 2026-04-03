@@ -129,6 +129,16 @@ describe('AccountingAutomationService', () => {
   });
 
   describe('generateFromDTE', () => {
+    /** Set up mocks for the standard "enabled tenant, DTE found, no existing entry" path. */
+    function setupEnabledTenantMocks(dteOverride?: Record<string, unknown>) {
+      prisma.tenant.findUnique.mockResolvedValue({
+        autoJournalEnabled: true,
+        autoJournalTrigger: 'ON_APPROVED',
+      });
+      prisma.dTE.findFirst.mockResolvedValue(dteOverride ?? mockDte);
+      prisma.journalEntry.findFirst.mockResolvedValue(null);
+    }
+
     it('should return null if autoJournalEnabled is false', async () => {
       prisma.tenant.findUnique.mockResolvedValue({
         autoJournalEnabled: false,
@@ -173,12 +183,7 @@ describe('AccountingAutomationService', () => {
     });
 
     it('should return null if no mapping rule exists', async () => {
-      prisma.tenant.findUnique.mockResolvedValue({
-        autoJournalEnabled: true,
-        autoJournalTrigger: 'ON_APPROVED',
-      });
-      prisma.dTE.findFirst.mockResolvedValue(mockDte);
-      prisma.journalEntry.findFirst.mockResolvedValue(null);
+      setupEnabledTenantMocks();
       prisma.accountMappingRule.findFirst.mockResolvedValue(null);
 
       const result = await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
@@ -186,12 +191,7 @@ describe('AccountingAutomationService', () => {
     });
 
     it('should generate a 3-line entry for factura contado with mappingConfig', async () => {
-      prisma.tenant.findUnique.mockResolvedValue({
-        autoJournalEnabled: true,
-        autoJournalTrigger: 'ON_APPROVED',
-      });
-      prisma.dTE.findFirst.mockResolvedValue(mockDte);
-      prisma.journalEntry.findFirst.mockResolvedValue(null);
+      setupEnabledTenantMocks();
       prisma.accountMappingRule.findFirst.mockResolvedValue(mockMappingRule);
       prisma.accountingAccount.findUnique
         .mockResolvedValueOnce(mockCajaAccount)   // 110101 debit
@@ -219,13 +219,7 @@ describe('AccountingAutomationService', () => {
 
     it('should use simple lines (2) when no mappingConfig', async () => {
       const ruleNoConfig = { ...mockMappingRule, mappingConfig: null };
-
-      prisma.tenant.findUnique.mockResolvedValue({
-        autoJournalEnabled: true,
-        autoJournalTrigger: 'ON_APPROVED',
-      });
-      prisma.dTE.findFirst.mockResolvedValue(mockDte);
-      prisma.journalEntry.findFirst.mockResolvedValue(null);
+      setupEnabledTenantMocks();
       prisma.accountMappingRule.findFirst.mockResolvedValue(ruleNoConfig);
 
       const result = await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
@@ -242,130 +236,40 @@ describe('AccountingAutomationService', () => {
       );
     });
 
-    it('should determine VENTA_CREDITO for factura with condicionOperacion=2', async () => {
-      const creditDte = {
-        ...mockDte,
-        jsonOriginal: JSON.stringify({
-          identificacion: { condicionOperacion: 2 },
-        }),
-      };
+    // Data-driven tests for DTE type -> operation mapping
+    const operationTests: { tipoDte: string; expectedOp: string; label: string; dteOverride?: Record<string, unknown> }[] = [
+      {
+        tipoDte: '01',
+        expectedOp: 'VENTA_CREDITO',
+        label: 'factura with condicionOperacion=2',
+        dteOverride: {
+          ...mockDte,
+          jsonOriginal: JSON.stringify({ identificacion: { condicionOperacion: 2 } }),
+        },
+      },
+      { tipoDte: '05', expectedOp: 'NOTA_CREDITO', label: 'tipoDte=05' },
+      { tipoDte: '03', expectedOp: 'CREDITO_FISCAL', label: 'tipoDte=03' },
+      { tipoDte: '06', expectedOp: 'NOTA_DEBITO', label: 'tipoDte=06' },
+      { tipoDte: '07', expectedOp: 'RETENCION', label: 'tipoDte=07' },
+      { tipoDte: '14', expectedOp: 'SUJETO_EXCLUIDO', label: 'tipoDte=14' },
+    ];
 
-      prisma.tenant.findUnique.mockResolvedValue({
-        autoJournalEnabled: true,
-        autoJournalTrigger: 'ON_APPROVED',
-      });
-      prisma.dTE.findFirst.mockResolvedValue(creditDte);
-      prisma.journalEntry.findFirst.mockResolvedValue(null);
-      prisma.accountMappingRule.findFirst.mockResolvedValue(null);
+    it.each(operationTests)(
+      'should determine $expectedOp for $label',
+      async ({ tipoDte, expectedOp, dteOverride }) => {
+        const dte = dteOverride ?? { ...mockDte, tipoDte };
+        setupEnabledTenantMocks(dte);
+        prisma.accountMappingRule.findFirst.mockResolvedValue(null);
 
-      await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
+        await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
 
-      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ operation: 'VENTA_CREDITO' }),
-        }),
-      );
-    });
-
-    it('should determine NOTA_CREDITO for tipoDte=05', async () => {
-      const ncDte = { ...mockDte, tipoDte: '05' };
-
-      prisma.tenant.findUnique.mockResolvedValue({
-        autoJournalEnabled: true,
-        autoJournalTrigger: 'ON_APPROVED',
-      });
-      prisma.dTE.findFirst.mockResolvedValue(ncDte);
-      prisma.journalEntry.findFirst.mockResolvedValue(null);
-      prisma.accountMappingRule.findFirst.mockResolvedValue(null);
-
-      await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
-
-      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ operation: 'NOTA_CREDITO' }),
-        }),
-      );
-    });
-
-    it('should determine CREDITO_FISCAL for tipoDte=03', async () => {
-      const ccfDte = { ...mockDte, tipoDte: '03' };
-
-      prisma.tenant.findUnique.mockResolvedValue({
-        autoJournalEnabled: true,
-        autoJournalTrigger: 'ON_APPROVED',
-      });
-      prisma.dTE.findFirst.mockResolvedValue(ccfDte);
-      prisma.journalEntry.findFirst.mockResolvedValue(null);
-      prisma.accountMappingRule.findFirst.mockResolvedValue(null);
-
-      await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
-
-      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ operation: 'CREDITO_FISCAL' }),
-        }),
-      );
-    });
-
-    it('should determine NOTA_DEBITO for tipoDte=06', async () => {
-      const ndDte = { ...mockDte, tipoDte: '06' };
-
-      prisma.tenant.findUnique.mockResolvedValue({
-        autoJournalEnabled: true,
-        autoJournalTrigger: 'ON_APPROVED',
-      });
-      prisma.dTE.findFirst.mockResolvedValue(ndDte);
-      prisma.journalEntry.findFirst.mockResolvedValue(null);
-      prisma.accountMappingRule.findFirst.mockResolvedValue(null);
-
-      await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
-
-      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ operation: 'NOTA_DEBITO' }),
-        }),
-      );
-    });
-
-    it('should determine RETENCION for tipoDte=07', async () => {
-      const retDte = { ...mockDte, tipoDte: '07' };
-
-      prisma.tenant.findUnique.mockResolvedValue({
-        autoJournalEnabled: true,
-        autoJournalTrigger: 'ON_APPROVED',
-      });
-      prisma.dTE.findFirst.mockResolvedValue(retDte);
-      prisma.journalEntry.findFirst.mockResolvedValue(null);
-      prisma.accountMappingRule.findFirst.mockResolvedValue(null);
-
-      await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
-
-      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ operation: 'RETENCION' }),
-        }),
-      );
-    });
-
-    it('should determine SUJETO_EXCLUIDO for tipoDte=14', async () => {
-      const fseDte = { ...mockDte, tipoDte: '14' };
-
-      prisma.tenant.findUnique.mockResolvedValue({
-        autoJournalEnabled: true,
-        autoJournalTrigger: 'ON_APPROVED',
-      });
-      prisma.dTE.findFirst.mockResolvedValue(fseDte);
-      prisma.journalEntry.findFirst.mockResolvedValue(null);
-      prisma.accountMappingRule.findFirst.mockResolvedValue(null);
-
-      await service.generateFromDTE(dteId, tenantId, 'ON_APPROVED');
-
-      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ operation: 'SUJETO_EXCLUIDO' }),
-        }),
-      );
-    });
+        expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({ operation: expectedOp }),
+          }),
+        );
+      },
+    );
   });
 
   describe('reverseFromDTE', () => {

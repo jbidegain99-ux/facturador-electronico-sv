@@ -10,11 +10,18 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { Request as ExpressRequest } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../super-admin/guards/super-admin.guard';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto, UpdateNotificationDto } from './dto';
+
+interface AuthenticatedUser {
+  id: string;
+  tenantId: string;
+  tenant?: { planId?: string };
+}
 
 @ApiTags('Notifications - Admin')
 @ApiBearerAuth()
@@ -44,7 +51,7 @@ export class NotificationsAdminController {
 
   @Post()
   @ApiOperation({ summary: 'Crear nueva notificación' })
-  async create(@Body() dto: CreateNotificationDto, @Request() req: any) {
+  async create(@Body() dto: CreateNotificationDto, @Request() req: ExpressRequest & { user: AuthenticatedUser }) {
     return this.notificationsService.create(dto, req.user?.id);
   }
 
@@ -82,7 +89,7 @@ export class NotificationsUserController {
 
   @Get()
   @ApiOperation({ summary: 'Obtener notificaciones activas para el usuario actual' })
-  async getMyNotifications(@Request() req: any) {
+  async getMyNotifications(@Request() req: ExpressRequest & { user: AuthenticatedUser }) {
     const user = req.user;
     return this.notificationsService.getActiveNotificationsForUser(
       user.id,
@@ -93,7 +100,7 @@ export class NotificationsUserController {
 
   @Get('count')
   @ApiOperation({ summary: 'Obtener cantidad de notificaciones sin leer' })
-  async getUnreadCount(@Request() req: any) {
+  async getUnreadCount(@Request() req: ExpressRequest & { user: AuthenticatedUser }) {
     const user = req.user;
     const count = await this.notificationsService.getUnreadCount(
       user.id,
@@ -105,13 +112,13 @@ export class NotificationsUserController {
 
   @Post(':id/dismiss')
   @ApiOperation({ summary: 'Descartar una notificación' })
-  async dismiss(@Param('id') id: string, @Request() req: any) {
+  async dismiss(@Param('id') id: string, @Request() req: ExpressRequest & { user: AuthenticatedUser }) {
     return this.notificationsService.dismissNotification(id, req.user.id);
   }
 
   @Post('dismiss-all')
   @ApiOperation({ summary: 'Descartar todas las notificaciones' })
-  async dismissAll(@Request() req: any) {
+  async dismissAll(@Request() req: ExpressRequest & { user: AuthenticatedUser }) {
     return this.notificationsService.dismissAllForUser(req.user.id);
   }
 }

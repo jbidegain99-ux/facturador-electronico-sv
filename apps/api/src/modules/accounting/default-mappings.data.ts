@@ -17,52 +17,44 @@ export interface DefaultMapping {
   mappingConfig: DefaultMappingConfig;
 }
 
+// ----------------------------------------------------------------
+// Reusable haber/debe line sets to eliminate repeated structures
+// ----------------------------------------------------------------
+
+const HABER_VENTAS_IVA: DefaultMappingLine[] = [
+  { cuenta: '4101', monto: 'subtotal', descripcion: 'Ventas' },
+  { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal' },
+];
+
+const DEBE_CLIENTES_TOTAL: DefaultMappingLine[] = [
+  { cuenta: '110301', monto: 'total', descripcion: 'Clientes Locales' },
+];
+
+const DEBE_CAJA_TOTAL: DefaultMappingLine[] = [
+  { cuenta: '110101', monto: 'total', descripcion: 'Caja General' },
+];
+
+/** Helper to build a standard sale-type mapping (one debit account + Ventas/IVA haber). */
+function buildSaleMapping(
+  operation: string,
+  description: string,
+  debitCode: string,
+  creditCode: string,
+  debe: DefaultMappingLine[],
+): DefaultMapping {
+  return {
+    operation,
+    description,
+    debitCode,
+    creditCode,
+    mappingConfig: { debe, haber: HABER_VENTAS_IVA },
+  };
+}
+
 export const DEFAULT_MAPPINGS: DefaultMapping[] = [
-  {
-    operation: 'VENTA_CONTADO',
-    description: 'Venta al contado (Factura consumidor final)',
-    debitCode: '110101',
-    creditCode: '4101',
-    mappingConfig: {
-      debe: [
-        { cuenta: '110101', monto: 'total', descripcion: 'Caja General' },
-      ],
-      haber: [
-        { cuenta: '4101', monto: 'subtotal', descripcion: 'Ventas' },
-        { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal' },
-      ],
-    },
-  },
-  {
-    operation: 'VENTA_CREDITO',
-    description: 'Venta al crédito (Factura consumidor final)',
-    debitCode: '110301',
-    creditCode: '4101',
-    mappingConfig: {
-      debe: [
-        { cuenta: '110301', monto: 'total', descripcion: 'Clientes Locales' },
-      ],
-      haber: [
-        { cuenta: '4101', monto: 'subtotal', descripcion: 'Ventas' },
-        { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal' },
-      ],
-    },
-  },
-  {
-    operation: 'CREDITO_FISCAL',
-    description: 'Crédito Fiscal',
-    debitCode: '110301',
-    creditCode: '4101',
-    mappingConfig: {
-      debe: [
-        { cuenta: '110301', monto: 'total', descripcion: 'Clientes Locales' },
-      ],
-      haber: [
-        { cuenta: '4101', monto: 'subtotal', descripcion: 'Ventas' },
-        { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal' },
-      ],
-    },
-  },
+  buildSaleMapping('VENTA_CONTADO', 'Venta al contado (Factura consumidor final)', '110101', '4101', DEBE_CAJA_TOTAL),
+  buildSaleMapping('VENTA_CREDITO', 'Venta al crédito (Factura consumidor final)', '110301', '4101', DEBE_CLIENTES_TOTAL),
+  buildSaleMapping('CREDITO_FISCAL', 'Crédito Fiscal', '110301', '4101', DEBE_CLIENTES_TOTAL),
   {
     operation: 'NOTA_CREDITO',
     description: 'Nota de Crédito',
@@ -78,21 +70,7 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
       ],
     },
   },
-  {
-    operation: 'NOTA_DEBITO',
-    description: 'Nota de Débito',
-    debitCode: '110301',
-    creditCode: '4101',
-    mappingConfig: {
-      debe: [
-        { cuenta: '110301', monto: 'total', descripcion: 'Clientes Locales' },
-      ],
-      haber: [
-        { cuenta: '4101', monto: 'subtotal', descripcion: 'Ventas' },
-        { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal' },
-      ],
-    },
-  },
+  buildSaleMapping('NOTA_DEBITO', 'Nota de Débito', '110301', '4101', DEBE_CLIENTES_TOTAL),
   {
     operation: 'RETENCION',
     description: 'Comprobante de Retención',
@@ -107,36 +85,8 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
       ],
     },
   },
-  {
-    operation: 'NOTA_REMISION',
-    description: 'Nota de Remisión (traslado de bienes)',
-    debitCode: '110301',
-    creditCode: '4101',
-    mappingConfig: {
-      debe: [
-        { cuenta: '110301', monto: 'total', descripcion: 'Clientes Locales' },
-      ],
-      haber: [
-        { cuenta: '4101', monto: 'subtotal', descripcion: 'Ventas' },
-        { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal' },
-      ],
-    },
-  },
-  {
-    operation: 'LIQUIDACION',
-    description: 'Documento Contable de Liquidación',
-    debitCode: '110101',
-    creditCode: '4101',
-    mappingConfig: {
-      debe: [
-        { cuenta: '110101', monto: 'total', descripcion: 'Caja General' },
-      ],
-      haber: [
-        { cuenta: '4101', monto: 'subtotal', descripcion: 'Ventas' },
-        { cuenta: '210201', monto: 'iva', descripcion: 'IVA Débito Fiscal' },
-      ],
-    },
-  },
+  buildSaleMapping('NOTA_REMISION', 'Nota de Remisión (traslado de bienes)', '110301', '4101', DEBE_CLIENTES_TOTAL),
+  buildSaleMapping('LIQUIDACION', 'Documento Contable de Liquidación', '110101', '4101', DEBE_CAJA_TOTAL),
   {
     operation: 'EXPORTACION',
     description: 'Factura de Exportación',

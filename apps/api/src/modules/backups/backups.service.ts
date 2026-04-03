@@ -10,13 +10,32 @@ export interface BackupStats {
   systemStatus: 'healthy' | 'warning' | 'error';
 }
 
+interface BackupUser {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: string;
+  createdAt: Date;
+}
+
+interface BackupEmailConfig {
+  id: string;
+  provider: string;
+  authMethod: string;
+  fromEmail: string;
+  fromName: string;
+  isVerified: boolean;
+  isActive: boolean;
+  createdAt: Date;
+}
+
 export interface TenantBackupData {
-  tenant: any;
-  users: any[];
-  clientes: any[];
-  dtes: any[];
-  onboarding: any | null;
-  emailConfig: any | null;
+  tenant: Record<string, unknown>;
+  users: BackupUser[];
+  clientes: Record<string, unknown>[];
+  dtes: Record<string, unknown>[];
+  onboarding: Record<string, unknown> | null;
+  emailConfig: BackupEmailConfig | null;
 }
 
 export interface SystemBackupData {
@@ -78,49 +97,43 @@ export class BackupsService {
             cliente: true,
           },
         },
+        onboarding: {
+          include: {
+            dteTypes: true,
+            steps: true,
+          },
+        },
+        emailConfig: {
+          select: {
+            id: true,
+            provider: true,
+            authMethod: true,
+            fromEmail: true,
+            fromName: true,
+            isVerified: true,
+            isActive: true,
+            createdAt: true,
+            // Exclude sensitive fields like apiKey, passwords
+          },
+        },
       },
     });
 
-    const backupData: TenantBackupData[] = [];
-
-    for (const tenant of tenants) {
-      const onboarding = await this.prisma.tenantOnboarding.findUnique({
-        where: { tenantId: tenant.id },
-        include: {
-          dteTypes: true,
-          steps: true,
-        },
-      });
-
-      const emailConfig = await this.prisma.tenantEmailConfig.findUnique({
-        where: { tenantId: tenant.id },
-        select: {
-          id: true,
-          provider: true,
-          authMethod: true,
-          fromEmail: true,
-          fromName: true,
-          isVerified: true,
-          isActive: true,
-          createdAt: true,
-          // Exclude sensitive fields like apiKey, passwords
-        },
-      });
-
-      backupData.push({
-        tenant: {
-          ...tenant,
-          usuarios: undefined, // Remove nested relation
-          clientes: undefined,
-          dtes: undefined,
-        },
-        users: tenant.usuarios,
-        clientes: tenant.clientes,
-        dtes: tenant.dtes,
-        onboarding,
-        emailConfig,
-      });
-    }
+    const backupData: TenantBackupData[] = tenants.map((tenant) => ({
+      tenant: {
+        ...tenant,
+        usuarios: undefined,
+        clientes: undefined,
+        dtes: undefined,
+        onboarding: undefined,
+        emailConfig: undefined,
+      },
+      users: tenant.usuarios,
+      clientes: tenant.clientes,
+      dtes: tenant.dtes,
+      onboarding: tenant.onboarding,
+      emailConfig: tenant.emailConfig,
+    }));
 
     return {
       metadata: {

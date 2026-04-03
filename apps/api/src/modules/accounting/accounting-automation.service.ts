@@ -19,6 +19,34 @@ interface DteAmounts {
   totalIva: number;
 }
 
+/** Full DTE type names used in journal entry descriptions. */
+const DTE_FULL_NAMES: Record<string, string> = {
+  '01': 'Factura',
+  '03': 'Crédito Fiscal',
+  '05': 'Nota de Crédito',
+  '06': 'Nota de Débito',
+  '04': 'Nota de Remisión',
+  '07': 'Retención',
+  '09': 'Liquidación',
+  '11': 'Exportación',
+  '14': 'Sujeto Excluido',
+  '34': 'Retención CRS',
+};
+
+/** Short DTE type abbreviations used in journal line descriptions. */
+const DTE_SHORT_NAMES: Record<string, string> = {
+  '01': 'Factura',
+  '03': 'CCF',
+  '05': 'NC',
+  '06': 'ND',
+  '04': 'NR',
+  '07': 'RET',
+  '09': 'DCL',
+  '11': 'FEX',
+  '14': 'FSE',
+  '34': 'CRS',
+};
+
 @Injectable()
 export class AccountingAutomationService {
   private readonly logger = new Logger(AccountingAutomationService.name);
@@ -125,19 +153,7 @@ export class AccountingAutomationService {
     }
 
     // 8. Create journal entry and post it
-    const tipoDteNames: Record<string, string> = {
-      '01': 'Factura',
-      '03': 'Crédito Fiscal',
-      '05': 'Nota de Crédito',
-      '06': 'Nota de Débito',
-      '04': 'Nota de Remisión',
-      '07': 'Retención',
-      '09': 'Liquidación',
-      '11': 'Exportación',
-      '14': 'Sujeto Excluido',
-      '34': 'Retención CRS',
-    };
-    const dteLabel = tipoDteNames[dte.tipoDte] || `DTE ${dte.tipoDte}`;
+    const dteLabel = DTE_FULL_NAMES[dte.tipoDte] || `DTE ${dte.tipoDte}`;
     const description = `${dteLabel} ${dte.numeroControl} - Auto`;
 
     const entry = await this.accountingService.createJournalEntry(
@@ -252,51 +268,30 @@ export class AccountingAutomationService {
     }
 
     const lines: { accountId: string; description: string; debit: number; credit: number }[] = [];
+    const prefix = DTE_SHORT_NAMES[tipoDte] || 'DTE';
 
-    const tipoDteNames: Record<string, string> = {
-      '01': 'Factura',
-      '03': 'CCF',
-      '05': 'NC',
-      '06': 'ND',
-      '04': 'NR',
-      '07': 'RET',
-      '09': 'DCL',
-      '11': 'FEX',
-      '14': 'FSE',
-      '34': 'CRS',
-    };
-    const prefix = tipoDteNames[tipoDte] || 'DTE';
+    // Process debit then credit lines using shared logic
+    const sides: { mappingLines: MappingLine[]; side: 'debit' | 'credit' }[] = [
+      { mappingLines: config.debe, side: 'debit' },
+      { mappingLines: config.haber, side: 'credit' },
+    ];
 
-    // Process debit lines
-    for (const line of config.debe) {
-      const account = await this.findAccountByCode(tenantId, line.cuenta);
-      if (!account) continue;
+    for (const { mappingLines, side } of sides) {
+      for (const line of mappingLines) {
+        const account = await this.findAccountByCode(tenantId, line.cuenta);
+        if (!account) continue;
 
-      const amount = this.resolveAmount(line.monto, amounts);
-      if (amount <= 0) continue;
+        const amount = this.resolveAmount(line.monto, amounts);
+        if (amount <= 0) continue;
 
-      lines.push({
-        accountId: account.id,
-        description: `${prefix} - ${line.descripcion || account.name}`,
-        debit: Math.round(amount * 100) / 100,
-        credit: 0,
-      });
-    }
-
-    // Process credit lines
-    for (const line of config.haber) {
-      const account = await this.findAccountByCode(tenantId, line.cuenta);
-      if (!account) continue;
-
-      const amount = this.resolveAmount(line.monto, amounts);
-      if (amount <= 0) continue;
-
-      lines.push({
-        accountId: account.id,
-        description: `${prefix} - ${line.descripcion || account.name}`,
-        debit: 0,
-        credit: Math.round(amount * 100) / 100,
-      });
+        const rounded = Math.round(amount * 100) / 100;
+        lines.push({
+          accountId: account.id,
+          description: `${prefix} - ${line.descripcion || account.name}`,
+          debit: side === 'debit' ? rounded : 0,
+          credit: side === 'credit' ? rounded : 0,
+        });
+      }
     }
 
     return lines;
@@ -311,19 +306,7 @@ export class AccountingAutomationService {
     totalPagar: number,
     tipoDte: string,
   ): { accountId: string; description: string; debit: number; credit: number }[] {
-    const tipoDteNames: Record<string, string> = {
-      '01': 'Factura',
-      '03': 'CCF',
-      '05': 'NC',
-      '06': 'ND',
-      '04': 'NR',
-      '07': 'RET',
-      '09': 'DCL',
-      '11': 'FEX',
-      '14': 'FSE',
-      '34': 'CRS',
-    };
-    const prefix = tipoDteNames[tipoDte] || 'DTE';
+    const prefix = DTE_SHORT_NAMES[tipoDte] || 'DTE';
     const amount = Math.round(totalPagar * 100) / 100;
 
     return [

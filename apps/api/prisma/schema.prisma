@@ -1316,6 +1316,7 @@ model Quote {
   approvedTotal     Decimal? @db.Decimal(12, 2)
 
   // Content — lineItems relation is primary, items kept for backward compat
+  /// @deprecated Use lineItems relation instead. Dual-written for backward compat only.
   items       String?         @db.NVarChar(Max) // Legacy JSON array
   lineItems   QuoteLineItem[]
   terms       String?         @db.NVarChar(2000)
@@ -1659,7 +1660,7 @@ model WebhookDelivery {
 
 model DteOperationLog {
   id       String @id @default(cuid())
-  tenantId String @db.NVarChar(1000)
+  tenantId String @db.NVarChar(50)
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   dteId     String  @db.NVarChar(36)
@@ -1686,7 +1687,7 @@ model DteErrorLog {
   operationLogId String
   operationLog   DteOperationLog @relation(fields: [operationLogId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  tenantId String @db.NVarChar(1000)
+  tenantId String @db.NVarChar(50)
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   dteId     String?  @db.NVarChar(36)

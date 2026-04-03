@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn, formatCurrency } from '@/lib/utils';
 import { apiFetch } from '@/lib/api';
+import { useOnlineStatus } from '@/hooks/use-online-status';
+import { db } from '@/lib/db';
 
 interface CatalogItem {
   id: string;
@@ -38,10 +40,38 @@ export function CatalogSearch({ onSelect, disabled = false }: CatalogSearchProps
   const [highlightedIndex, setHighlightedIndex] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const { isOnline } = useOnlineStatus();
 
   // Load recent items on mount
   React.useEffect(() => {
     const loadRecent = async () => {
+      if (!isOnline) {
+        try {
+          const offlineRecent = await db.catalogItems
+            .orderBy('name')
+            .limit(5)
+            .toArray();
+          const mapped: CatalogItem[] = offlineRecent.map(item => ({
+            id: item.serverId || `local_${item.localId}`,
+            code: item.code,
+            name: item.name,
+            description: item.description,
+            type: item.type as CatalogItem['type'],
+            basePrice: item.basePrice,
+            tipoItem: item.type === 'SERVICE' ? 2 : 1,
+            uniMedida: item.uniMedida,
+            taxRate: item.taxRate,
+            isFavorite: false,
+            usageCount: 0,
+            isActive: item.isActive,
+          }));
+          setRecentItems(mapped);
+        } catch (e) {
+          console.error('Offline recent items failed:', e);
+        }
+        return;
+      }
+
       try {
         const data = await apiFetch<CatalogItem[]>('/catalog-items/recent');
         if (Array.isArray(data)) {
@@ -53,7 +83,7 @@ export function CatalogSearch({ onSelect, disabled = false }: CatalogSearchProps
     };
 
     loadRecent();
-  }, []);
+  }, [isOnline]);
 
   // Debounced search
   React.useEffect(() => {
@@ -68,6 +98,37 @@ export function CatalogSearch({ onSelect, disabled = false }: CatalogSearchProps
 
     setIsLoading(true);
     searchTimeoutRef.current = setTimeout(async () => {
+      if (!isOnline) {
+        try {
+          const offlineResults = await db.catalogItems
+            .where('name')
+            .startsWithIgnoreCase(search)
+            .limit(10)
+            .toArray();
+          const mapped: CatalogItem[] = offlineResults.map(item => ({
+            id: item.serverId || `local_${item.localId}`,
+            code: item.code,
+            name: item.name,
+            description: item.description,
+            type: item.type as CatalogItem['type'],
+            basePrice: item.basePrice,
+            tipoItem: item.type === 'SERVICE' ? 2 : 1,
+            uniMedida: item.uniMedida,
+            taxRate: item.taxRate,
+            isFavorite: false,
+            usageCount: 0,
+            isActive: item.isActive,
+          }));
+          setResults(mapped);
+        } catch (e) {
+          console.error('Offline catalog search failed:', e);
+          setResults([]);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
       try {
         const data = await apiFetch<CatalogItem[]>(
           `/catalog-items/search?q=${encodeURIComponent(search)}&limit=10`
@@ -85,7 +146,7 @@ export function CatalogSearch({ onSelect, disabled = false }: CatalogSearchProps
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [search]);
+  }, [search, isOnline]);
 
   const displayItems = search.trim() ? results : recentItems;
   const hasItems = displayItems.length > 0;

@@ -21,7 +21,11 @@ export const metadata: Metadata = {
     ],
     apple: '/favicon.svg',
   },
-  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Facturo',
+  },
   openGraph: {
     type: 'website',
     locale: 'es_SV',
@@ -47,6 +51,9 @@ export const viewport: Viewport = {
   ],
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({

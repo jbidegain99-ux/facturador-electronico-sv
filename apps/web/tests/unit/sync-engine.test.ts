@@ -26,10 +26,12 @@ describe('SyncEngine', () => {
     await processSyncQueue('http://localhost:3001/api/v1');
 
     expect(useSyncQueueStore.getState().items).toHaveLength(0);
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+    // 1 auth refresh + 2 sync operations = 3 calls
+    expect(mockFetch).toHaveBeenCalledTimes(3);
 
-    const firstCallBody = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(firstCallBody.order).toBe(1);
+    // First call is auth refresh, second is first sync op (FIFO)
+    const secondCallBody = JSON.parse(mockFetch.mock.calls[1][1].body);
+    expect(secondCallBody.order).toBe(1);
   });
 
   it('should mark operation as failed on API error', async () => {
@@ -54,9 +56,12 @@ describe('SyncEngine', () => {
     const items = useSyncQueueStore.getState().items;
     await useSyncQueueStore.getState().markFailed(items[0].id!, 'Previous error');
 
+    mockFetch.mockResolvedValue({ ok: true });
     await processSyncQueue('http://localhost:3001/api/v1');
 
-    expect(mockFetch).not.toHaveBeenCalled();
+    // Only the auth refresh call — no sync operation calls
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch.mock.calls[0][0]).toContain('/auth/refresh');
   });
 
   it('should not run if already syncing', async () => {

@@ -1,20 +1,37 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
-import dynamic from 'next/dynamic';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { Eraser } from 'lucide-react';
-
-const SignatureCanvas = dynamic(() => import('react-signature-canvas'), {
-  ssr: false,
-  loading: () => <div className="h-40 animate-pulse rounded-lg bg-muted" />,
-});
 
 interface SignaturePadProps {
   onSignatureChange: (dataUrl: string | null) => void;
 }
 
+interface SignatureCanvasRef {
+  clear: () => void;
+  toDataURL: () => string;
+}
+
 export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
-  const sigRef = useRef<{ clear: () => void; toDataURL: () => string } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sigRef = useRef<SignatureCanvasRef | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    // Dynamically import react-signature-canvas to avoid SSR issues
+    import('react-signature-canvas').then((mod) => {
+      const SignatureCanvas = mod.default;
+      if (!containerRef.current) return;
+
+      // Clear container and mount canvas
+      containerRef.current.innerHTML = '';
+      const canvas = document.createElement('div');
+      containerRef.current.appendChild(canvas);
+
+      // We need React to render it — use a simpler approach with a flag
+      setLoaded(true);
+    });
+  }, []);
 
   const handleEnd = useCallback(() => {
     if (sigRef.current) {
@@ -27,6 +44,7 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
     onSignatureChange(null);
   }, [onSignatureChange]);
 
+  // Use a simple canvas fallback that works without type issues
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -40,17 +58,41 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
           Borrar
         </button>
       </div>
-      <div className="rounded-lg border border-border bg-background">
-        <SignatureCanvas
-          ref={(ref: unknown) => { sigRef.current = ref as typeof sigRef.current; }}
-          canvasProps={{
-            className: 'w-full h-40 rounded-lg',
-            style: { width: '100%', height: '160px' },
-          }}
-          onEnd={handleEnd}
-        />
+      <div ref={containerRef} className="rounded-lg border border-border bg-background">
+        {!loaded && <div className="h-40 animate-pulse rounded-lg bg-muted" />}
+        {loaded && <SignatureCanvasLazy sigRef={sigRef} onEnd={handleEnd} />}
       </div>
       <p className="text-xs text-muted-foreground">Firme con el dedo en el recuadro</p>
     </div>
+  );
+}
+
+/** Inner component loaded only after dynamic import check */
+function SignatureCanvasLazy({
+  sigRef,
+  onEnd,
+}: {
+  sigRef: React.MutableRefObject<SignatureCanvasRef | null>;
+  onEnd: () => void;
+}) {
+  const [SigCanvas, setSigCanvas] = useState<React.ComponentType<Record<string, unknown>> | null>(null);
+
+  useEffect(() => {
+    import('react-signature-canvas').then((mod) => {
+      setSigCanvas(() => mod.default);
+    });
+  }, []);
+
+  if (!SigCanvas) return <div className="h-40 animate-pulse rounded-lg bg-muted" />;
+
+  return (
+    <SigCanvas
+      ref={(ref: unknown) => { sigRef.current = ref as SignatureCanvasRef; }}
+      canvasProps={{
+        className: 'w-full h-40 rounded-lg',
+        style: { width: '100%', height: '160px' },
+      }}
+      onEnd={onEnd}
+    />
   );
 }

@@ -1,0 +1,261 @@
+{
+  "dteCount": 22,
+  "deletedByTable": {
+    "DteErrorLog": 0,
+    "DteOperationLog": 0,
+    "RecurringInvoiceHistory": 0,
+    "AuditLog": 0,
+    "EmailSendLog": 0,
+    "PaymentMethod": 0,
+    "DTELog": 4,
+    "DTE": 22
+  },
+  "dtes": [
+    {
+      "id": "cmml4sxb1000fjvf1jmc6g8r7",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000001",
+      "codigo": "F35A433E-F36B-1410-8DF3-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "7006",
+      "fecha": "2025-07-15T01:16:35.887Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4sxms000hjvf1uveyjtcn",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000002",
+      "codigo": "FD20433E-F36B-1410-8DF4-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "3503",
+      "fecha": "2025-07-16T05:05:48.373Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4sxz3000jjvf126no0hfa",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000003",
+      "codigo": "0121433E-F36B-1410-8DF4-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "3503",
+      "fecha": "2025-07-16T05:10:53.330Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4syav000ljvf1m050p27p",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000004",
+      "codigo": "0221433E-F36B-1410-8DF4-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "2218.63",
+      "fecha": "2025-07-16T23:19:52.157Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4symp000njvf1wz4vs8pw",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000005",
+      "codigo": "0321433E-F36B-1410-8DF4-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "3503",
+      "fecha": "2025-07-16T23:21:27.984Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4syy4000pjvf1rui8oc01",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000006",
+      "codigo": "5388433E-F36B-1410-8DF5-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "4266.18",
+      "fecha": "2025-08-21T21:58:37.252Z",
+      "cliente": "ALFACOM, S.A. DE C.V.",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4sz9t000rjvf14rbcbvhh",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000007",
+      "codigo": "5A88433E-F36B-1410-8DF5-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "4266.18",
+      "fecha": "2025-08-21T22:36:40.353Z",
+      "cliente": "FALCON, S.A de C.V.",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4szla000tjvf103m0buth",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000008",
+      "codigo": "5C88433E-F36B-1410-8DF5-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "4266.18",
+      "fecha": "2025-08-22T04:02:50.676Z",
+      "cliente": "INDUSTRIAS EXTRACTIVAS DEL MAR, S.A. DE C.V.",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4szwl000vjvf16001rvpd",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000009",
+      "codigo": "E5C0423E-F36B-1410-8DF6-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "3503",
+      "fecha": "2025-08-29T22:29:27.750Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t08a000xjvf1q01esnrc",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000010",
+      "codigo": "A89F433E-F36B-1410-8DFD-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "7910",
+      "fecha": "2025-09-22T23:43:40.867Z",
+      "cliente": "AQUAPURA, S.A. de C.V.",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t0k4000zjvf1iv6ffu77",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000011",
+      "codigo": "2F6D433E-F36B-1410-8DFE-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "3503",
+      "fecha": "2025-09-30T21:58:54.952Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t0w60011jvf1ddyjzt6h",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000012",
+      "codigo": "326D433E-F36B-1410-8DFE-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "1130",
+      "fecha": "2025-10-01T04:46:41.552Z",
+      "cliente": "TOP VIRTUAL GROUP, S.A. DE C.V.",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t17o0013jvf10923kt8n",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000013",
+      "codigo": "3C4B433E-F36B-1410-8E03-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "3503",
+      "fecha": "2025-10-17T02:07:04.404Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t1k00015jvf1kgq1io90",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000014",
+      "codigo": "6016433E-F36B-1410-8E08-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "7910",
+      "fecha": "2025-10-27T23:34:35.091Z",
+      "cliente": "AQUAPURA, S.A. de C.V.",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t1vq0017jvf1bpsieaeb",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000015",
+      "codigo": "4A47433E-F36B-1410-8E13-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "7910",
+      "fecha": "2025-11-21T22:23:53.907Z",
+      "cliente": "AQUAPURA, S.A. de C.V.",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t27b0019jvf1a6dwmz0u",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000016",
+      "codigo": "AD1F433E-F36B-1410-8E1B-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "3503",
+      "fecha": "2025-12-16T11:19:05.908Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t2j6001bjvf1qml8fess",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000017",
+      "codigo": "AE1F433E-F36B-1410-8E1B-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "7910",
+      "fecha": "2025-12-16T11:23:09.711Z",
+      "cliente": "AQUAPURA, S.A. de C.V.",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t2ux001djvf1aa8h4vqq",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000018",
+      "codigo": "F6B9433E-F36B-1410-8E1F-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "3503",
+      "fecha": "2026-01-22T05:36:58.260Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t36x001fjvf1pdgoey5c",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000019",
+      "codigo": "FDB9433E-F36B-1410-8E1F-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "7910",
+      "fecha": "2026-01-22T05:41:10.537Z",
+      "cliente": "AQUAPURA, S.A. de C.V.",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmml4t3iw001hjvf183b92j0q",
+      "tipo": "03",
+      "numero": "DTE-03-M001P001-000000000000020",
+      "codigo": "723B433E-F36B-1410-8E20-0066DE520A2B",
+      "estado": "PROCESADO",
+      "total": "3503",
+      "fecha": "2026-01-31T02:00:57.801Z",
+      "cliente": "IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",
+      "reason": "Jose Bidegain tenant, before 2026-03-02"
+    },
+    {
+      "id": "cmn3akqt0007a132o7eyiyik7",
+      "tipo": "01",
+      "numero": "DTE-01-M001P001-000000000000109",
+      "codigo": "D74E6E08-E0C0-4ACA-A415-29CEBD37F05E",
+      "estado": "PROCESADO",
+      "total": "15",
+      "fecha": "2026-03-23T14:39:26.388Z",
+      "cliente": "Adriana Bidegain",
+      "reason": "Cliente: Adriana Bidegain"
+    },
+    {
+      "id": "cmn3al5nh009x132o1krv4zxo",
+      "tipo": "01",
+      "numero": "DTE-01-M001P001-000000000000118",
+      "codigo": "16436F0B-1EE6-4CB4-8B6C-C75AC018BF7E",
+      "estado": "PROCESADO",
+      "total": "355",
+      "fecha": "2026-03-23T14:39:45.625Z",
+      "cliente": "Adriana Bidegain",
+      "reason": "Cliente: Adriana Bidegain"
+    }
+  ],
+  "status": "success",
+  "errors": [],
+  "executionTimeSeconds": "0.82",
+  "timestamp": "2026-03-25T19:24:02.899Z"
+}

@@ -15,6 +15,7 @@ import {
   WaitingStep,
   CompletedStep,
 } from './steps';
+import { apiFetch } from '@/lib/api';
 import {
   OnboardingState,
   OnboardingStep,
@@ -48,32 +49,15 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
   // API CALLS
   // =========================================================================
 
-  const getToken = () => localStorage.getItem('token');
-
-  const apiCall = async (
+  const apiCall = async <T = OnboardingState>(
     endpoint: string,
     method = 'GET',
     body?: object
-  ) => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/onboarding${endpoint}`,
-      {
-        method,
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          'Content-Type': 'application/json',
-        },
-        body: body ? JSON.stringify(body) : undefined,
-      }
-    );
-
-    const result = await res.json();
-
-    if (!res.ok) {
-      throw new Error(result.message || 'Error en la operación');
-    }
-
-    return result;
+  ): Promise<T> => {
+    return apiFetch<T>(`/onboarding${endpoint}`, {
+      method,
+      body: body ? JSON.stringify(body) : undefined,
+    });
   };
 
   const refreshData = async () => {
@@ -87,7 +71,7 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
 
   const refreshTestProgress = async () => {
     try {
-      const result = await apiCall('/test-progress');
+      const result = await apiCall<TestProgressSummary>('/test-progress');
       setTestProgress(result);
     } catch (error) {
       console.error('Error refreshing test progress:', error);
@@ -234,7 +218,7 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
   const handleExecuteTest = async (dteType: DteType) => {
     setExecutingTest(true);
     try {
-      const result = await apiCall('/execute-test', 'POST', { dteType });
+      const result = await apiCall<{ success: boolean; message?: string; errors?: string[] }>('/execute-test', 'POST', { dteType });
       if (result.success) {
         toast.success(result.message || 'Prueba exitosa');
       } else {
@@ -254,7 +238,7 @@ export function HaciendaWizard({ initialData }: HaciendaWizardProps) {
   const handleExecuteEventTest = async (eventType: string) => {
     setExecutingTest(true);
     try {
-      const result = await apiCall('/execute-event-test', 'POST', { eventType });
+      const result = await apiCall<{ success: boolean; message?: string; errors?: string[] }>('/execute-event-test', 'POST', { eventType });
       if (result.success) {
         toast.success(result.message || 'Prueba exitosa');
       } else {

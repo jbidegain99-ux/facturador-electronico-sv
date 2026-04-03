@@ -16,6 +16,7 @@ import type {
   HaciendaEnvironment,
   TestProgress,
 } from './types';
+import { apiFetch } from '@/lib/api';
 
 type ViewMode = 'loading' | 'selector' | 'quick-setup' | 'configured';
 
@@ -37,34 +38,18 @@ export default function HaciendaConfigPage() {
   const loadConfig = React.useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/config`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const data = await apiFetch<HaciendaConfig>('/hacienda/config');
+      setConfig(data);
+      setActiveEnvironment(data.activeEnvironment || 'TEST');
 
-      if (res.ok) {
-        const data = await res.json();
-        setConfig(data);
-        setActiveEnvironment(data.activeEnvironment || 'TEST');
+      // Determine view mode based on configuration state
+      const hasTestConfig = data.testConfig?.isConfigured;
+      const hasProdConfig = data.prodConfig?.isConfigured;
 
-        // Determine view mode based on configuration state
-        const hasTestConfig = data.testConfig?.isConfigured;
-        const hasProdConfig = data.prodConfig?.isConfigured;
-
-        if (hasTestConfig || hasProdConfig) {
-          setViewMode('configured');
-        } else {
-          setViewMode('selector');
-        }
+      if (hasTestConfig || hasProdConfig) {
+        setViewMode('configured');
       } else {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.message || 'Error al cargar configuracion');
+        setViewMode('selector');
       }
     } catch (error) {
       toastRef.current.error(
@@ -79,21 +64,8 @@ export default function HaciendaConfigPage() {
   // Load test progress
   const loadTestProgress = React.useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/progress`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        setTestProgress(data);
-      }
+      const data = await apiFetch<TestProgress>('/hacienda/tests/progress');
+      setTestProgress(data);
     } catch (error) {
       console.error('Error loading test progress:', error);
     }

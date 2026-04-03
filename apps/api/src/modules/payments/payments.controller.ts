@@ -7,9 +7,7 @@ import {
   Body,
   Request,
   Query,
-  UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 import { PaymentsService } from './payments.service';
@@ -20,7 +18,6 @@ interface AuthRequest {
 
 @ApiTags('Payments')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}

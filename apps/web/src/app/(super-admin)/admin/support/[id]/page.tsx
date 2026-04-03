@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -15,15 +16,13 @@ import {
   AlertCircle,
   Mail,
   CheckCircle,
-  Activity,
-} from 'lucide-react';
+  Activity } from 'lucide-react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface TicketDetail {
@@ -112,8 +111,7 @@ export default function TicketDetailPage() {
     TECHNICAL: tSupport('typeTechnical'),
     BILLING: tSupport('typeBilling'),
     GENERAL: tSupport('typeGeneral'),
-    ONBOARDING: tSupport('typeOnboarding'),
-  };
+    ONBOARDING: tSupport('typeOnboarding') };
 
   const statusLabels: Record<string, string> = {
     PENDING: tSupport('statusPending'),
@@ -121,15 +119,13 @@ export default function TicketDetailPage() {
     IN_PROGRESS: tSupport('statusInProgress'),
     WAITING_CUSTOMER: t('statusWaitingClient'),
     RESOLVED: tSupport('statusResolved'),
-    CLOSED: tSupport('statusClosed'),
-  };
+    CLOSED: tSupport('statusClosed') };
 
   const priorityLabels: Record<string, string> = {
     LOW: tSupport('priorityLow'),
     MEDIUM: tSupport('priorityMedium'),
     HIGH: tSupport('priorityHigh'),
-    URGENT: tSupport('priorityUrgent'),
-  };
+    URGENT: tSupport('priorityUrgent') };
 
   const actionLabels: Record<string, string> = {
     CREATED: t('activityTicketCreated'),
@@ -138,8 +134,7 @@ export default function TicketDetailPage() {
     PRIORITY_CHANGED: t('activityPriorityChanged'),
     COMMENT_ADDED: t('activityCommentAdded'),
     RESOLVED: t('activityResolved'),
-    CLOSED: t('activityClosed'),
-  };
+    CLOSED: t('activityClosed') };
 
   useEffect(() => {
     fetchTicket();
@@ -149,12 +144,9 @@ export default function TicketDetailPage() {
   const fetchTicket = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/${params.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/support-tickets/${params.id}`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) {
@@ -176,12 +168,9 @@ export default function TicketDetailPage() {
 
   const fetchAdmins = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/admins`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/support-tickets/admins`, { credentials: 'include',
+          headers: { } }
       );
 
       if (res.ok) {
@@ -196,7 +185,6 @@ export default function TicketDetailPage() {
   const handleUpdate = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
 
       const body: Record<string, string | null> = {};
       if (status !== ticket?.status) body.status = status;
@@ -212,15 +200,11 @@ export default function TicketDetailPage() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/${params.id}`,
-        {
+        `${API_URL}/admin/support-tickets/${params.id}`, { credentials: 'include',
           method: 'PATCH',
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(body),
-        }
+            'Content-Type': 'application/json' },
+          body: JSON.stringify(body) }
       );
 
       if (!res.ok) throw new Error(t('updateError'));
@@ -239,21 +223,15 @@ export default function TicketDetailPage() {
 
     try {
       setAddingComment(true);
-      const token = localStorage.getItem('token');
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/${params.id}/comments`,
-        {
+        `${API_URL}/admin/support-tickets/${params.id}/comments`, { credentials: 'include',
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+            'Content-Type': 'application/json' },
           body: JSON.stringify({
             content: newComment,
-            isInternal,
-          }),
-        }
+            isInternal }) }
       );
 
       if (!res.ok) throw new Error(t('commentError'));
@@ -274,8 +252,7 @@ export default function TicketDetailPage() {
       IN_PROGRESS: 'bg-purple-500/20 text-purple-400',
       WAITING_CUSTOMER: 'bg-orange-500/20 text-orange-400',
       RESOLVED: 'bg-green-500/20 text-green-400',
-      CLOSED: 'bg-gray-500/20 text-gray-400',
-    };
+      CLOSED: 'bg-gray-500/20 text-gray-400' };
     return badges[status] || 'bg-gray-500/20 text-gray-400';
   };
 
@@ -284,8 +261,7 @@ export default function TicketDetailPage() {
       LOW: 'bg-gray-500/20 text-gray-400',
       MEDIUM: 'bg-blue-500/20 text-blue-400',
       HIGH: 'bg-orange-500/20 text-orange-400',
-      URGENT: 'bg-red-500/20 text-red-400',
-    };
+      URGENT: 'bg-red-500/20 text-red-400' };
     return badges[priority] || 'bg-gray-500/20 text-gray-400';
   };
 
@@ -492,8 +468,7 @@ export default function TicketDetailPage() {
                       day: '2-digit',
                       month: 'short',
                       hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                      minute: '2-digit' })}
                   </span>
                 </div>
               ))}

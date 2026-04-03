@@ -9,6 +9,7 @@ import { RoutePermissionGate } from '@/components/permission-gate';
 import { ChatWidget } from '@/components/chat/ChatWidget';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { apiFetch, API_URL } from '@/lib/api';
 
 interface OnboardingStatus {
   hasCompanyData: boolean;
@@ -33,13 +34,6 @@ export default function DashboardLayout({
   // Load tenant data on mount
   React.useEffect(() => {
     const loadTenantData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.log('[Tenant] No token, skipping fetch');
-        setIsTenantReady(true);
-        return;
-      }
-
       // Only fetch if tenant is not already loaded
       if (tenant?.nombre) {
         console.log('[Tenant] Already loaded:', tenant.nombre);
@@ -52,27 +46,10 @@ export default function DashboardLayout({
 
       try {
         console.log('[Tenant] Fetching tenant data...');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/tenants/me`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            signal: controller.signal,
-          }
-        );
-
+        const data = await apiFetch<Record<string, unknown>>('/tenants/me', { signal: controller.signal });
         clearTimeout(timeoutId);
-        console.log('[Tenant] Response status:', response.status);
-
-        if (response.ok) {
-          const text = await response.text();
-          if (text) {
-            const data = JSON.parse(text);
-            console.log('[Tenant] Loaded:', data.nombre);
-            setTenant(data);
-          }
-        }
+        console.log('[Tenant] Loaded:', data.nombre);
+        setTenant(data);
       } catch (error) {
         clearTimeout(timeoutId);
         if (error instanceof DOMException && error.name === 'AbortError') {
@@ -91,52 +68,21 @@ export default function DashboardLayout({
   // Load user data on mount
   React.useEffect(() => {
     const loadUserData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.log('[Auth] No token, setting user to null');
-        setUser(null);
-        setIsUserReady(true);
-        return;
-      }
-
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
         console.log('[Auth] Fetching user profile...');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            signal: controller.signal,
-          }
-        );
-
+        const data = await apiFetch<{ id: string; nombre: string; email: string; rol: string }>('/auth/profile', { signal: controller.signal });
         clearTimeout(timeoutId);
-        console.log('[Auth] Response status:', response.status);
-
-        if (response.ok) {
-          const text = await response.text();
-          if (text) {
-            const data = JSON.parse(text);
-            console.log('[Auth] User loaded:', data.email);
-            setUser({
-              id: data.id,
-              name: data.nombre,
-              email: data.email,
-              role: data.rol === 'ADMIN' ? 'admin' : 'user',
-              permissions: [],
-            });
-          } else {
-            console.log('[Auth] Empty response body, setting user to null');
-            setUser(null);
-          }
-        } else {
-          console.log('[Auth] Not authenticated (status:', response.status, ')');
-          setUser(null);
-        }
+        console.log('[Auth] User loaded:', data.email);
+        setUser({
+          id: data.id,
+          name: data.nombre,
+          email: data.email,
+          role: data.rol === 'ADMIN' ? 'admin' : 'user',
+          permissions: [],
+        });
       } catch (error) {
         clearTimeout(timeoutId);
         setUser(null);
@@ -156,24 +102,9 @@ export default function DashboardLayout({
   // Load user permissions
   React.useEffect(() => {
     const loadPermissions = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setPermissions([]);
-        return;
-      }
-
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/me/permissions`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setPermissions(data.permissions || []);
-        } else {
-          setPermissions([]);
-        }
+        const data = await apiFetch<{ permissions: string[] }>('/auth/me/permissions');
+        setPermissions(data.permissions || []);
       } catch {
         setPermissions([]);
       }
@@ -193,43 +124,12 @@ export default function DashboardLayout({
       }
 
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          // No token, redirect to login
-          router.push('/login');
-          return;
-        }
-
         // Add timeout to prevent hanging forever
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            signal: controller.signal,
-          }
-        );
-
+        await apiFetch('/tenants/me/onboarding-status', { signal: controller.signal });
         clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          // If unauthorized, redirect to login
-          if (response.status === 401) {
-            localStorage.removeItem('token');
-            router.push('/login');
-            return;
-          }
-          // For other errors, just continue to dashboard
-          setIsCheckingOnboarding(false);
-          return;
-        }
-
-        // Parse response safely - non-JSON responses shouldn't crash the app
-        await response.json().catch(() => null);
 
         // No forced redirect - allow users to navigate freely
         // Individual pages will show HaciendaConfigBanner when needed

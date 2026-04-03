@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { API_URL } from '@/lib/api';
 
 interface CertificateDetection {
   type: 'MH_XML' | 'PKCS12' | 'PEM' | 'DER';
@@ -30,8 +31,7 @@ export function CertificateStep({
   certificate: initialCertificate,
   certificatePassword: initialPassword,
   onSubmit,
-  onBack,
-}: CertificateStepProps) {
+  onBack }: CertificateStepProps) {
   const [certificate, setCertificate] = React.useState<File | null>(initialCertificate);
   const [password, setPassword] = React.useState(initialPassword);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -68,14 +68,11 @@ export function CertificateStep({
       const formData = new FormData();
       formData.append('certificate', file);
 
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/certificates/detect-type`,
-        {
+        `${API_URL}/hacienda/certificates/detect-type`, { credentials: 'include',
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        },
+          headers: { },
+          body: formData },
       );
 
       if (res.ok) {

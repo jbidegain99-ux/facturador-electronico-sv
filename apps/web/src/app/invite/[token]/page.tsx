@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://facturador-api-sv.azurewebsites.net/api/v1';
+// API_URL imported from @/lib/api
 
 export default function AcceptInvitePage() {
   const params = useParams();

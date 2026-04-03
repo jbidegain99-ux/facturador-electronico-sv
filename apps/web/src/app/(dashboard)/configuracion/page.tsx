@@ -10,6 +10,7 @@ import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, Chevro
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { LogoUpload } from '@/components/settings/logo-upload';
+import { apiFetch } from '@/lib/api';
 
 const NRC_PATTERN = /^\d{1,7}(-\d)?$/;
 const PHONE_PATTERN = /^\d{4}-\d{4}$/;
@@ -85,36 +86,13 @@ export default function ConfiguracionPage() {
   // Load tenant data and demo status on mount
   React.useEffect(() => {
     const loadData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError(tCommon('noSession'));
-        setLoading(false);
-        return;
-      }
-
       try {
         // Fetch tenant data and onboarding status in parallel
-        const [tenantRes, statusRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/tenants/me`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }),
+        const [data, statusData] = await Promise.all([
+          apiFetch<TenantData>('/tenants/me'),
+          apiFetch<{ demoMode?: boolean; hasCertificate?: boolean }>('/tenants/me/onboarding-status').catch(() => null),
         ]);
 
-        if (!tenantRes.ok) {
-          const errorData = await tenantRes.json().catch(() => ({}));
-          throw new Error(errorData.message || t('loadError'));
-        }
-
-        const data: TenantData = await tenantRes.json();
         setFormData({
           nombre: data.nombre || '',
           nit: data.nit || '',
@@ -126,8 +104,7 @@ export default function ConfiguracionPage() {
         setTenant(data);
         setLogoUrl(data.logoUrl ?? null);
 
-        if (statusRes.ok) {
-          const statusData = await statusRes.json();
+        if (statusData) {
           setDemoMode(statusData.demoMode || false);
           if (statusData.hasCertificate && !statusData.demoMode) {
             setCertificateStatus('loaded');
@@ -145,34 +122,17 @@ export default function ConfiguracionPage() {
   }, [setTenant]);
 
   const toggleDemoMode = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError(tCommon('noSession'));
-      return;
-    }
-
     setTogglingDemo(true);
     setError(null);
 
     try {
       const endpoint = demoMode
-        ? `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/disable-demo`
-        : `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-skip`;
+        ? '/tenants/me/disable-demo'
+        : '/tenants/me/onboarding-skip';
 
-      const res = await fetch(endpoint, {
+      const data = await apiFetch<{ demoMode: boolean; message: string }>(endpoint, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
       });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || t('demoModeError'));
-      }
-
-      const data = await res.json();
       setDemoMode(data.demoMode);
       setSuccess(data.message);
     } catch (err) {
@@ -203,12 +163,6 @@ export default function ConfiguracionPage() {
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError(tCommon('noSession'));
-      return;
-    }
-
     // Validate all editable fields
     const errors: Record<string, string> = {};
     errors.nombre = validateConfigField('nombre', formData.nombre || '');
@@ -229,12 +183,8 @@ export default function ConfiguracionPage() {
     setSuccess(null);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tenants/me`, {
+      const updatedTenant = await apiFetch<TenantData>('/tenants/me', {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           nombre: formData.nombre,
           nrc: formData.nrc,
@@ -243,21 +193,15 @@ export default function ConfiguracionPage() {
           direccion: formData.direccion,
         }),
       });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        // Show field-level error for duplicate email
-        if (res.status === 409 && errorData.message?.includes('correo')) {
-          setFieldErrors(prev => ({ ...prev, correo: errorData.message }));
-        }
-        throw new Error(errorData.message || t('saveError'));
-      }
-
-      const updatedTenant = await res.json();
       setTenant(updatedTenant);
       setSuccess(t('saveSuccess'));
     } catch (err) {
       console.error('Error saving tenant:', err);
+      // Show field-level error for duplicate email
+      const apiErr = err as { status?: number; data?: { message?: string } };
+      if (apiErr.status === 409 && apiErr.data?.message?.includes('correo')) {
+        setFieldErrors(prev => ({ ...prev, correo: apiErr.data!.message! }));
+      }
       setError(err instanceof Error ? err.message : t('saveError'));
     } finally {
       setSaving(false);

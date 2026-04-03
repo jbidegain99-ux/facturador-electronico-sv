@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import {
   Database,
@@ -14,23 +15,20 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Info,
-} from 'lucide-react';
+  Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  DialogTitle } from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 
 interface Catalogo {
   id: string;
@@ -87,12 +85,9 @@ export default function CatalogosPage() {
   const fetchCatalogos = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/catalogos`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) {
@@ -111,13 +106,10 @@ export default function CatalogosPage() {
   const handleSeed = async () => {
     try {
       setSeeding(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/seed`,
-        {
+        `${API_URL}/admin/catalogos/seed`, { credentials: 'include',
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al crear catalogos');
@@ -133,13 +125,10 @@ export default function CatalogosPage() {
   const handleSeedDepartamentos = async () => {
     try {
       setSeeding(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/seed/departamentos`,
-        {
+        `${API_URL}/admin/catalogos/seed/departamentos`, { credentials: 'include',
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al crear departamentos');
@@ -154,12 +143,9 @@ export default function CatalogosPage() {
 
   const handleExport = async (codigo: string) => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/${codigo}/export`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/catalogos/${codigo}/export`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al exportar');
@@ -192,12 +178,9 @@ export default function CatalogosPage() {
 
   const loadDepartamentos = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/CAT-012/items?limit=20`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/catalogos/CAT-012/items?limit=20`, { credentials: 'include',
+          headers: { } }
       );
       if (res.ok) {
         const data: ItemsResponse = await res.json();
@@ -216,19 +199,15 @@ export default function CatalogosPage() {
   ) => {
     try {
       setItemsLoading(true);
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '20',
         ...(search && { search }),
-        ...(parentCodigo && { parentCodigo }),
-      });
+        ...(parentCodigo && { parentCodigo }) });
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/catalogos/${codigo}/items?${params}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/catalogos/${codigo}/items?${params}`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al cargar items');

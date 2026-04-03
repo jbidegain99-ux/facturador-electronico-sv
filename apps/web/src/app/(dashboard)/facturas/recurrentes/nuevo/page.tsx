@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,10 +65,8 @@ export default function NuevoRecurrentePage() {
   React.useEffect(() => {
     const checkApi = async () => {
       try {
-        const token = localStorage.getItem('token');
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices?page=1&limit=1`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          `${API_URL}/recurring-invoices?page=1&limit=1`, { credentials: 'include', headers: { } },
         );
         if (res.status === 404) {
           setApiUnavailable(true);
@@ -105,8 +104,7 @@ export default function NuevoRecurrentePage() {
       descripcion: catalogItem.name,
       cantidad: 1,
       precioUnitario: Number(catalogItem.basePrice),
-      descuento: 0,
-    };
+      descuento: 0 };
     setItems([...items, newItem]);
   };
 
@@ -132,7 +130,6 @@ export default function NuevoRecurrentePage() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const body: Record<string, unknown> = {
         nombre: nombre.trim(),
         descripcion: descripcion.trim() || undefined,
@@ -143,8 +140,7 @@ export default function NuevoRecurrentePage() {
         autoTransmit,
         items,
         startDate,
-        notas: notas.trim() || undefined,
-      };
+        notas: notas.trim() || undefined };
 
       if (interval === 'MONTHLY' || interval === 'YEARLY') {
         body.anchorDay = parseInt(anchorDay, 10);
@@ -157,15 +153,10 @@ export default function NuevoRecurrentePage() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices`,
-        {
+        `${API_URL}/recurring-invoices`, { credentials: 'include',
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(body),
-        },
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body) },
       );
 
       if (!res.ok) {

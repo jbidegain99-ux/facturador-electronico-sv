@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { apiFetch } from '@/lib/api';
 
 interface ParsedRow {
   [key: string]: string;
@@ -209,29 +210,15 @@ export default function MigracionPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
       const mappedData = getMappedData();
 
-      const res = await fetch(`${baseUrl}/migration/clientes`, {
+      const importResult = await apiFetch<ImportResult>('/migration/clientes', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           clientes: mappedData,
           fileName,
         }),
       });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ message: 'Error al importar' }));
-        throw new Error(data.message || 'Error al importar');
-      }
-
-      const importResult: ImportResult = await res.json();
       setResult(importResult);
       setStep('result');
     } catch (err) {

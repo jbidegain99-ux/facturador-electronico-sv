@@ -10,14 +10,14 @@ import {
   Key,
   Server,
   ArrowRight,
-  RefreshCw,
-} from 'lucide-react';
+  RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import type { QuickSetupData } from '../QuickSetupWizard';
+import { API_URL } from '@/lib/api';
 
 interface ValidationStepProps {
   data: QuickSetupData;
@@ -83,14 +83,11 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
       setPhase('saving');
 
       // Call quick-setup endpoint
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/hacienda/quick-setup`, {
+      const res = await fetch(`${API_URL}/hacienda/quick-setup`, { credentials: 'include',
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
         },
-        body: formData,
-      });
+        body: formData });
 
       const response: ValidationResult = await res.json();
 
@@ -121,8 +118,7 @@ export function ValidationStep({ data, onBack, onComplete }: ValidationStepProps
     'validating-auth': 'Verificando credenciales con Hacienda...',
     saving: 'Guardando configuracion...',
     complete: 'Configuracion completada!',
-    error: 'Error en la configuracion',
-  };
+    error: 'Error en la configuracion' };
 
   if (phase === 'complete' && result?.success) {
     return (

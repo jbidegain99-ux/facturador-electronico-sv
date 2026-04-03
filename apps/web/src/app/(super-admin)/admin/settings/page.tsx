@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { Server, Database, Mail, Shield, BookOpen, Gauge, Bell, FileText, HardDrive, Webhook, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
@@ -33,7 +34,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">API URL</span>
               <span className="text-white text-sm font-mono">
-                {process.env.NEXT_PUBLIC_API_URL || 'No configurado'}
+                {API_URL || 'No configurado'}
               </span>
             </div>
           </div>

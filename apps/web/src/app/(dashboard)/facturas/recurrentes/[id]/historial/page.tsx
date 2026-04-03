@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -34,14 +35,12 @@ interface HistoryResponse {
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   SUCCESS: <CheckCircle className="h-4 w-4 text-green-600" />,
   FAILED: <XCircle className="h-4 w-4 text-red-600" />,
-  SKIPPED: <AlertTriangle className="h-4 w-4 text-yellow-600" />,
-};
+  SKIPPED: <AlertTriangle className="h-4 w-4 text-yellow-600" /> };
 
 const STATUS_COLORS: Record<string, string> = {
   SUCCESS: 'bg-green-100 text-green-800',
   FAILED: 'bg-red-100 text-red-800',
-  SKIPPED: 'bg-yellow-100 text-yellow-800',
-};
+  SKIPPED: 'bg-yellow-100 text-yellow-800' };
 
 export default function HistorialRecurrentePage() {
   const t = useTranslations('recurring');
@@ -67,15 +66,12 @@ export default function HistorialRecurrentePage() {
     setLoading(true);
     setFetchError(null);
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: limit.toString(),
-      });
+        limit: limit.toString() });
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices/${templateId}/history?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        `${API_URL}/recurring-invoices/${templateId}/history?${params}`, { credentials: 'include', headers: { } },
       );
 
       if (!res.ok) {

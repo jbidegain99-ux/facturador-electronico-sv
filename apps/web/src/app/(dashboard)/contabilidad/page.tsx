@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/toast';
 import { UpsellBanner } from '@/components/ui/upsell-banner';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { useTranslations } from 'next-intl';
+import { API_URL } from '@/lib/api';
 import {
   DollarSign,
   TrendingUp,
@@ -23,8 +24,7 @@ import {
   FlaskConical,
   AlertTriangle,
   Check,
-  Settings2,
-} from 'lucide-react';
+  Settings2 } from 'lucide-react';
 
 interface DashboardData {
   totalAssets: number;
@@ -59,8 +59,7 @@ function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('es-SV', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(amount);
+    minimumFractionDigits: 2 }).format(amount);
 }
 
 export default function ContabilidadPage() {
@@ -80,12 +79,9 @@ export default function ContabilidadPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`${API_URL}/accounting/dashboard`, { credentials: 'include',
+        headers: { } });
 
       if (!res.ok) return;
       const json = await res.json().catch(() => null);
@@ -102,11 +98,9 @@ export default function ContabilidadPage() {
   const handleSeedAccounts = async () => {
     setSeeding(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/seed`, {
+      const res = await fetch(`${API_URL}/accounting/seed`, { credentials: 'include',
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
         toastRef.current.success(t('chartOfAccounts'), `${(json as { created?: number }).created ?? 0}`);
@@ -131,24 +125,19 @@ export default function ContabilidadPage() {
     setSimulating(true);
     setSimResult(null);
     try {
-      const token = localStorage.getItem('token');
       const totalGravada = Math.round((amount / 1.13) * 100) / 100;
       const totalIva = Math.round((amount - totalGravada) * 100) / 100;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/simulate-invoice`, {
+      const res = await fetch(`${API_URL}/accounting/simulate-invoice`, { credentials: 'include',
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json' },
         body: JSON.stringify({
           totalGravada,
           totalIva,
           totalPagar: amount,
           tipoDte: '01',
-          description: `Simulación: Factura por $${amount.toFixed(2)}`,
-        }),
-      });
+          description: `Simulación: Factura por $${amount.toFixed(2)}` }) });
 
       const json = await res.json().catch(() => ({}));
       if (res.ok) {

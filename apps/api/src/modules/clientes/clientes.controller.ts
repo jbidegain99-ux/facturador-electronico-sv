@@ -7,12 +7,10 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { ClientesService } from './clientes.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
@@ -22,7 +20,6 @@ import { RequirePermission } from '../rbac/decorators/require-permission.decorat
 
 @ApiTags('clientes')
 @Controller('clientes')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class ClientesController {
   private readonly logger = new Logger(ClientesController.name);

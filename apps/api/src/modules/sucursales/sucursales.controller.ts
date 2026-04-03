@@ -7,9 +7,7 @@ import {
   Param,
   Body,
   Request,
-  UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SucursalesService } from './sucursales.service';
 import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
@@ -20,7 +18,6 @@ interface AuthRequest {
 
 @ApiTags('Sucursales')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller('sucursales')
 export class SucursalesController {
   constructor(private readonly sucursalesService: SucursalesService) {}

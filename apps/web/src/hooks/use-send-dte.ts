@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { apiFetch } from '@/lib/api';
 
 interface DteError {
   userMessage: string;
@@ -30,21 +31,12 @@ export function useSendDte() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-
-      const response = await fetch(`${apiUrl}/transmitter/send/${dteId}`, {
+      const data = await apiFetch<SendDteResult>(`/transmitter/send/${dteId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ nit, password }),
       });
 
-      const data: SendDteResult = await response.json();
-
-      if (!response.ok || !data.success) {
+      if (!data.success) {
         const dteError: DteError = {
           userMessage: data.userMessage || data.error || 'Error al transmitir DTE',
           suggestedAction: data.suggestedAction || 'Intenta nuevamente o contacta a soporte.',

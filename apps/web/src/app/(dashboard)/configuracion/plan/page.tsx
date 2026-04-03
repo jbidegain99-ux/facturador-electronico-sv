@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/card';
 import { usePlanFeatures, FeatureCode } from '@/hooks/use-plan-features';
 import { usePlanSupport } from '@/hooks/use-plan-support';
+import { apiFetch } from '@/lib/api';
 
 interface UsageData {
   planCode: string;
@@ -94,19 +95,7 @@ export default function PlanConfigPage() {
   const [loadingUsage, setLoadingUsage] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoadingUsage(false);
-      return;
-    }
-
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/plans/my-usage`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) return null;
-        return res.json().catch(() => null) as Promise<UsageData | null>;
-      })
+    apiFetch<UsageData>('/plans/my-usage')
       .then((data) => {
         if (data) setUsage(data);
       })

@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,8 +10,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   BarChart3,
@@ -23,8 +23,7 @@ import {
   Loader2,
   PieChart,
   Globe,
-  Shield,
-} from 'lucide-react';
+  Shield } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton, SkeletonCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
@@ -135,8 +134,7 @@ export default function ReportesPage() {
       case 'custom':
         return {
           start: startDate ? new Date(startDate) : null,
-          end: endDate ? new Date(endDate) : null,
-        };
+          end: endDate ? new Date(endDate) : null };
     }
 
     return { start, end };
@@ -144,14 +142,12 @@ export default function ReportesPage() {
 
   // Fetch all data
   const fetchData = React.useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     setIsLoading(true);
     const { start, end } = getDateRange();
 
-    const headers = { Authorization: `Bearer ${token}` };
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const headers = { };
+    const baseUrl = API_URL;
 
     // Build query params
     const params = new URLSearchParams();
@@ -161,11 +157,11 @@ export default function ReportesPage() {
 
     try {
       const [summaryRes, chartRes, typeRes, statusRes, clientsRes] = await Promise.all([
-        fetch(`${baseUrl}/dte/stats/summary`, { headers }),
-        fetch(`${baseUrl}/dte/stats/by-date?${params}`, { headers }),
-        fetch(`${baseUrl}/dte/stats/by-type?${params}`, { headers }),
-        fetch(`${baseUrl}/dte/stats/by-status`, { headers }),
-        fetch(`${baseUrl}/dte/stats/top-clients?${params}&limit=5`, { headers }),
+        fetch(`${API_URL}/dte/stats/summary`, { credentials: 'include', headers }),
+        fetch(`${API_URL}/dte/stats/by-date?${params}`, { credentials: 'include', headers }),
+        fetch(`${API_URL}/dte/stats/by-type?${params}`, { credentials: 'include', headers }),
+        fetch(`${API_URL}/dte/stats/by-status`, { credentials: 'include', headers }),
+        fetch(`${API_URL}/dte/stats/top-clients?${params}&limit=5`, { credentials: 'include', headers }),
       ]);
 
       if (summaryRes.ok) setSummary(await summaryRes.json());
@@ -206,12 +202,10 @@ export default function ReportesPage() {
 
   // Fetch advanced report
   const fetchAdvancedReport = React.useCallback(async (tab: string) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
     setAdvLoading(true);
 
-    const headers = { Authorization: `Bearer ${token}` };
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const headers = { };
+    const baseUrl = API_URL;
     const { start, end } = getDateRange();
     const params = new URLSearchParams();
     if (start) params.set('startDate', start.toISOString());
@@ -221,13 +215,13 @@ export default function ReportesPage() {
       if (tab === 'by-period') {
         params.set('period', advPeriodType);
         params.set('year', String(advYear));
-        const res = await fetch(`${baseUrl}/reports/by-period?${params}`, { headers });
+        const res = await fetch(`${API_URL}/reports/by-period?${params}`, { credentials: 'include', headers });
         if (res.ok) setPeriodData(await res.json());
       } else if (tab === 'retenciones') {
-        const res = await fetch(`${baseUrl}/reports/retenciones?${params}`, { headers });
+        const res = await fetch(`${API_URL}/reports/retenciones?${params}`, { credentials: 'include', headers });
         if (res.ok) setRetencionesData(await res.json());
       } else if (tab === 'exports') {
-        const res = await fetch(`${baseUrl}/reports/exports?${params}`, { headers });
+        const res = await fetch(`${API_URL}/reports/exports?${params}`, { credentials: 'include', headers });
         if (res.ok) setExportsData(await res.json());
       }
     } catch (e) {
@@ -243,9 +237,7 @@ export default function ReportesPage() {
 
   // Server-side CSV export
   const handleAdvancedExportCSV = () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const baseUrl = API_URL;
     const { start, end } = getDateRange();
     const params = new URLSearchParams({ reportType: advancedTab });
     if (start) params.set('startDate', start.toISOString());
@@ -256,9 +248,8 @@ export default function ReportesPage() {
     }
 
     // Use fetch with auth header then download
-    fetch(`${baseUrl}/reports/export-csv?${params}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`${API_URL}/reports/export-csv?${params}`, { credentials: 'include',
+      headers: { } })
       .then((res) => res.blob())
       .then((blob) => {
         const url = URL.createObjectURL(blob);
@@ -282,8 +273,7 @@ export default function ReportesPage() {
     FIRMADO: 'bg-blue-500',
     PENDIENTE: 'bg-yellow-500',
     RECHAZADO: 'bg-red-500',
-    ANULADO: 'bg-muted-foreground',
-  };
+    ANULADO: 'bg-muted-foreground' };
 
   // Type colors for pie chart
   const typeColors = ['#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#ec4899'];

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { API_URL } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   FileText,
@@ -12,8 +13,7 @@ import {
   CheckCircle2,
   Sparkles,
   Files,
-  Calculator,
-} from 'lucide-react';
+  Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -21,8 +21,7 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 import { ClienteSearch } from '@/components/facturas/cliente-search';
 import { CatalogSearch } from '@/components/facturas/catalog-search';
 import type { CatalogItem } from '@/components/facturas/catalog-search';
@@ -106,29 +105,16 @@ const initialState: FacturaFormState = {
   items: [],
   condicionPago: '01',
   sucursalId: '',
-  puntoVentaId: '',
-};
+  puntoVentaId: '' };
 
 // ── Helper: track catalog usage after successful emission ──────────
 async function trackCatalogUsage(catalogIds: string[]) {
   if (catalogIds.length === 0) return;
   try {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-    // Fire-and-forget PATCH for each catalog item used
-    await Promise.allSettled(
-      catalogIds.map((id) =>
-        fetch(`${apiUrl}/catalog-items/${id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ lastUsedAt: new Date().toISOString() }),
-        })
-      )
-    );
+    await fetch(`${API_URL}/catalog-items/track-usage`, { credentials: 'include',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: catalogIds }) });
   } catch {
     // Usage tracking is non-critical
   }
@@ -173,11 +159,8 @@ export default function NuevaFacturaPage() {
 
   // ── Load sucursales on mount ───────────────────────────────────────
   React.useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sucursales`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`${API_URL}/sucursales`, { credentials: 'include',
+      headers: { } })
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         const list = Array.isArray(data) ? data : [];
@@ -201,11 +184,8 @@ export default function NuevaFacturaPage() {
       setPuntosVenta([]);
       return;
     }
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sucursales/${sucursalId}/puntos-venta`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`${API_URL}/sucursales/${sucursalId}/puntos-venta`, { credentials: 'include',
+      headers: { } })
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         const list = Array.isArray(data) ? data : [];
@@ -268,8 +248,7 @@ export default function NuevaFacturaPage() {
         setShowPreview(false);
         setShowNuevoCliente(false);
         setShowSaveTemplate(false);
-      },
-    },
+      } },
     { enabled: !isEmitting }
   );
 
@@ -321,16 +300,14 @@ export default function NuevaFacturaPage() {
 
     const newItems: ItemFactura[] = usedTemplate.items.map((item, index) => ({
       ...item,
-      id: `item-${Date.now()}-${index}`,
-    }));
+      id: `item-${Date.now()}-${index}` }));
 
     setFormState(prev => ({
       ...prev,
       tipoDte: (usedTemplate.tipoDte || '01') as CreatableTipoDte,
       cliente: usedTemplate.cliente as Cliente | null,
       items: newItems,
-      condicionPago: usedTemplate.condicionPago,
-    }));
+      condicionPago: usedTemplate.condicionPago }));
 
     toastRef.current.success(t('templateApplied', { name: template.name }));
   };
@@ -355,8 +332,7 @@ export default function NuevaFacturaPage() {
       descuento: 0,
       subtotal,
       iva,
-      total: subtotal + iva,
-    };
+      total: subtotal + iva };
 
     updateForm('items', [...items, newItem]);
     toastRef.current.success(t('favoriteAdded', { name: favorite.descripcion }));
@@ -384,8 +360,7 @@ export default function NuevaFacturaPage() {
       descuento: 0,
       subtotal,
       iva,
-      total: subtotal + iva,
-    };
+      total: subtotal + iva };
 
     updateForm('items', [...items, newItem]);
     setCatalogRefs((prev) => [...prev, { itemId, catalogId: catalogItem.id }]);
@@ -403,12 +378,9 @@ export default function NuevaFacturaPage() {
 
   const loadInvoiceForDuplicate = async (dteId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API_URL}/dte/${dteId}`, { credentials: 'include', headers: { } }
       );
 
       if (!response.ok) return;
@@ -437,8 +409,7 @@ export default function NuevaFacturaPage() {
               iva: (item.ivaItem as number) || 0,
               total:
                 ((item.ventaGravada as number) || 0) +
-                ((item.ivaItem as number) || 0),
-            })
+                ((item.ivaItem as number) || 0) })
           );
 
           setFormState(prev => ({
@@ -446,8 +417,7 @@ export default function NuevaFacturaPage() {
             tipoDte: dte.tipoDte as CreatableTipoDte,
             cliente: null,
             items: duplicatedItems,
-            condicionPago: '01',
-          }));
+            condicionPago: '01' }));
           toastRef.current.success(t('duplicateMsg'));
         } catch {
           toastRef.current.error(t('loadDuplicateError'));
@@ -497,11 +467,6 @@ export default function NuevaFacturaPage() {
     setErrors({});
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error(t('noSessionLogin'));
-      }
-
       const getSubtotal = () => items.reduce((sum, i) => sum + i.subtotal, 0);
       const getTotalIvaCalc = () => items.reduce((sum, i) => sum + i.iva, 0);
       const getTotal = () => items.reduce((sum, i) => sum + i.total, 0);
@@ -523,8 +488,7 @@ export default function NuevaFacturaPage() {
             tipoContingencia: null,
             fecEmi: new Date().toISOString().split('T')[0],
             horEmi: new Date().toTimeString().split(' ')[0],
-            tipoMoneda: 'USD',
-          },
+            tipoMoneda: 'USD' },
           receptor: cliente
             ? {
                 tipoDocumento: cliente.tipoDocumento || '13',
@@ -535,8 +499,7 @@ export default function NuevaFacturaPage() {
                 descActividad: cliente.descActividad || null,
                 direccion: cliente.direccion || null,
                 telefono: cliente.telefono || null,
-                correo: cliente.correo || null,
-              }
+                correo: cliente.correo || null }
             : null,
           cuerpoDocumento: items.map((item, index) => ({
             numItem: index + 1,
@@ -553,8 +516,7 @@ export default function NuevaFacturaPage() {
             tributos: item.esGravado ? ['20'] : null,
             psv: 0,
             noGravado: 0,
-            ivaItem: item.iva,
-          })),
+            ivaItem: item.iva })),
           resumen: {
             totalNoSuj: 0,
             totalExenta: items.filter(i => i.esExento).reduce((sum, i) => sum + i.subtotal, 0),
@@ -577,20 +539,11 @@ export default function NuevaFacturaPage() {
             saldoFavor: 0,
             condicionOperacion: parseInt(condicionPago),
             pagos: null,
-            numPagoElectronico: null,
-          },
-        },
-      };
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/dte`, {
+            numPagoElectronico: null } } };
+      const response = await fetch(`${API_URL}/dte`, { credentials: 'include',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(dteData),
-      });
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dteData) });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -611,8 +564,7 @@ export default function NuevaFacturaPage() {
       setSuccessData({
         id: createdDte.id,
         numeroControl:
-          createdDte.numeroControl || createdDte.codigoGeneracion,
-      });
+          createdDte.numeroControl || createdDte.codigoGeneracion });
       setShowPreview(false);
       localStorage.removeItem(DRAFT_KEY);
 
@@ -631,8 +583,7 @@ export default function NuevaFacturaPage() {
           particleCount: 100,
           spread: 70,
           origin: { y: 0.6 },
-          colors: ['#8b5cf6', '#06b6d4', '#22c55e'],
-        });
+          colors: ['#8b5cf6', '#06b6d4', '#22c55e'] });
       } catch {
         // Confetti not critical
       }

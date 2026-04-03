@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 
 interface EnvironmentConfig {
   environment: string;
@@ -67,18 +68,8 @@ export function TenantHaciendaConfig({ tenantId, tenantName }: TenantHaciendaCon
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/hacienda/${tenantId}/config`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        setConfig(data);
-      }
+      const data = await apiFetch<HaciendaConfig>(`/admin/hacienda/${tenantId}/config`);
+      setConfig(data);
     } catch (err) {
       console.error('Error fetching hacienda config:', err);
     } finally {

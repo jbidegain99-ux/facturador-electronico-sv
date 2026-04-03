@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -13,8 +14,7 @@ import {
   MessageSquare,
   Plus,
   Loader2,
-  Shield,
-} from 'lucide-react';
+  Shield } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,15 +23,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  DialogTrigger } from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 import { useTranslations } from 'next-intl';
 import { usePlanSupport } from '@/hooks/use-plan-support';
 
@@ -66,8 +64,7 @@ const typeLabels: Record<string, string> = {
   TECHNICAL: 'Técnico',
   BILLING: 'Facturación',
   GENERAL: 'General',
-  ONBOARDING: 'Onboarding',
-};
+  ONBOARDING: 'Onboarding' };
 
 const statusLabels: Record<string, string> = {
   PENDING: 'Pendiente',
@@ -75,15 +72,13 @@ const statusLabels: Record<string, string> = {
   IN_PROGRESS: 'En Progreso',
   WAITING_CUSTOMER: 'Esperando Respuesta',
   RESOLVED: 'Resuelto',
-  CLOSED: 'Cerrado',
-};
+  CLOSED: 'Cerrado' };
 
 const priorityLabels: Record<string, string> = {
   LOW: 'Baja',
   MEDIUM: 'Media',
   HIGH: 'Alta',
-  URGENT: 'Urgente',
-};
+  URGENT: 'Urgente' };
 
 type SlaStatus = 'none' | 'ok' | 'warning' | 'breached' | 'met';
 
@@ -162,19 +157,15 @@ export default function SoportePage() {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const baseUrl = API_URL;
 
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '10',
-      });
+        limit: '10' });
 
       const res = await fetch(
-        `${baseUrl}/support-tickets?${params}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/support-tickets?${params}`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) {
@@ -209,22 +200,17 @@ export default function SoportePage() {
 
     try {
       setCreating(true);
-      const token = localStorage.getItem('token');
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const baseUrl = API_URL;
 
-      const res = await fetch(`${baseUrl}/support-tickets`, {
+      const res = await fetch(`${API_URL}/support-tickets`, { credentials: 'include',
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: newTicketType,
           priority: newTicketPriority,
           subject: newTicketSubject,
-          description: newTicketDescription,
-        }),
-      });
+          description: newTicketDescription }) });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({ message: ts('createTicket') }));
@@ -253,8 +239,7 @@ export default function SoportePage() {
       IN_PROGRESS: 'bg-purple-500/20 text-purple-600 dark:text-purple-400',
       WAITING_CUSTOMER: 'bg-orange-500/20 text-orange-600 dark:text-orange-400',
       RESOLVED: 'bg-green-500/20 text-green-600 dark:text-green-400',
-      CLOSED: 'bg-muted text-muted-foreground',
-    };
+      CLOSED: 'bg-muted text-muted-foreground' };
     return badges[status] || 'bg-muted text-muted-foreground';
   };
 
@@ -263,8 +248,7 @@ export default function SoportePage() {
       LOW: 'bg-muted text-muted-foreground',
       MEDIUM: 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
       HIGH: 'bg-orange-500/20 text-orange-600 dark:text-orange-400',
-      URGENT: 'bg-red-500/20 text-red-600 dark:text-red-400',
-    };
+      URGENT: 'bg-red-500/20 text-red-600 dark:text-red-400' };
     return badges[priority] || 'bg-muted text-muted-foreground';
   };
 
@@ -510,8 +494,7 @@ export default function SoportePage() {
                         {new Date(ticket.createdAt).toLocaleDateString('es', {
                           day: '2-digit',
                           month: 'short',
-                          year: 'numeric',
-                        })}
+                          year: 'numeric' })}
                       </td>
                       <td className="px-4 py-3">
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />

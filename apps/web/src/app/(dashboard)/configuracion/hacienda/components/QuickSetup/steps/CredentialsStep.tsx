@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import type { HaciendaEnvironment } from '../../../types';
+import { API_URL } from '@/lib/api';
 
 interface CredentialsStepProps {
   apiUser: string;
@@ -23,8 +24,7 @@ export function CredentialsStep({
   apiPassword: initialPassword,
   environment,
   onSubmit,
-  onBack,
-}: CredentialsStepProps) {
+  onBack }: CredentialsStepProps) {
   const [apiUser, setApiUser] = React.useState(initialUser);
   const [apiPassword, setApiPassword] = React.useState(initialPassword);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -54,19 +54,13 @@ export function CredentialsStep({
     // Optional: validate credentials before proceeding
     setValidating(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/hacienda/validate-connection`, {
+      const res = await fetch(`${API_URL}/hacienda/validate-connection`, { credentials: 'include',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           apiUser: apiUser.trim(),
           apiPassword,
-          environment,
-        }),
-      });
+          environment }) });
 
       const result = await res.json();
 

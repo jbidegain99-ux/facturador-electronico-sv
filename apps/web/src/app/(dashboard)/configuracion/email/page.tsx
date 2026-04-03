@@ -26,6 +26,7 @@ import {
   EMAIL_PROVIDERS,
   ConnectionTestResult,
 } from '@/types/email-config';
+import { apiFetch } from '@/lib/api';
 
 export default function EmailConfigPage() {
   const router = useRouter();
@@ -47,31 +48,18 @@ export default function EmailConfigPage() {
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/email-config`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.configured) {
-          setConfig(data);
-          setSelectedProvider(data.provider);
-          setFormData({
-            provider: data.provider,
-            authMethod: data.authMethod,
-            fromEmail: data.fromEmail,
-            fromName: data.fromName,
-            replyToEmail: data.replyToEmail,
-            rateLimitPerHour: data.rateLimitPerHour,
-          });
-        }
+      const data = await apiFetch<EmailConfig & { configured?: boolean }>('/email-config');
+      if (data.configured) {
+        setConfig(data as EmailConfig);
+        setSelectedProvider(data.provider);
+        setFormData({
+          provider: data.provider,
+          authMethod: data.authMethod,
+          fromEmail: data.fromEmail,
+          fromName: data.fromName,
+          replyToEmail: data.replyToEmail,
+          rateLimitPerHour: data.rateLimitPerHour,
+        });
       }
     } catch (error) {
       console.error('Error loading email config:', error);
@@ -109,25 +97,10 @@ export default function EmailConfigPage() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/email-config`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.message || 'Error al guardar');
-      }
-
-      const data = await res.json();
+      const data = await apiFetch<{ message?: string }>('/email-config', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
       toast.success(data.message || 'Configuración guardada');
       setHasChanges(false);
       await loadConfig();
@@ -139,19 +112,9 @@ export default function EmailConfigPage() {
   };
 
   const handleTestConnection = async (): Promise<ConnectionTestResult> => {
-    const token = localStorage.getItem('token');
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/email-config/test-connection`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const data = await res.json();
+    const data = await apiFetch<ConnectionTestResult>('/email-config/test-connection', {
+      method: 'POST',
+    });
 
     if (data.success) {
       toast.success(data.message);
@@ -163,20 +126,10 @@ export default function EmailConfigPage() {
   };
 
   const handleSendTest = async (email: string) => {
-    const token = localStorage.getItem('token');
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/email-config/send-test`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ recipientEmail: email }),
-      }
-    );
-
-    const data = await res.json();
+    const data = await apiFetch<{ success: boolean; message: string }>('/email-config/send-test', {
+      method: 'POST',
+      body: JSON.stringify({ recipientEmail: email }),
+    });
 
     if (data.success) {
       toast.success(data.message);
@@ -189,26 +142,15 @@ export default function EmailConfigPage() {
   const handleToggleActive = async () => {
     if (!config) return;
 
-    const token = localStorage.getItem('token');
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/email-config/activate`,
-      {
+    try {
+      const data = await apiFetch<{ message: string }>('/email-config/activate', {
         method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ isActive: !config.isActive }),
-      }
-    );
-
-    const data = await res.json();
-
-    if (res.ok) {
+      });
       toast.success(data.message);
       await loadConfig();
-    } else {
-      toast.error(data.message || 'Error al actualizar');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al actualizar');
     }
   };
 

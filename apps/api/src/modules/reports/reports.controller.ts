@@ -3,11 +3,9 @@ import {
   Get,
   Query,
   Res,
-  UseGuards,
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
@@ -23,7 +21,6 @@ import {
 
 @ApiTags('Reports')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}

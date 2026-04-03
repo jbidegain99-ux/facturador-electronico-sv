@@ -1,9 +1,11 @@
-import { Controller, Post, Get, Body, UseGuards, Request, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request, Req, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
-import { Request as ExpressRequest } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
+import { RbacService } from '../rbac/services/rbac.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -25,7 +27,34 @@ interface AuthRequest extends Request {
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  private readonly isProduction: boolean;
+
+  constructor(
+    private authService: AuthService,
+    private rbacService: RbacService,
+    private configService: ConfigService,
+  ) {
+    this.isProduction = configService.get('NODE_ENV') === 'production';
+  }
+
+  private setAuthCookie(res: Response, token: string) {
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: this.isProduction,
+      sameSite: this.isProduction ? 'none' : 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+  }
+
+  private clearAuthCookie(res: Response) {
+    res.clearCookie('auth_token', {
+      httpOnly: true,
+      secure: this.isProduction,
+      sameSite: this.isProduction ? 'none' : 'lax',
+      path: '/',
+    });
+  }
 
   @Public()
   @Post('login')
@@ -33,10 +62,21 @@ export class AuthController {
   @ApiOperation({ summary: 'Iniciar sesion' })
   @ApiResponse({ status: 200, description: 'Login exitoso' })
   @ApiResponse({ status: 401, description: 'Credenciales invalidas' })
-  async login(@Body() loginDto: LoginDto, @Req() req: ExpressRequest) {
+  async login(@Body() loginDto: LoginDto, @Req() req: ExpressRequest, @Res({ passthrough: true }) res: Response) {
     const ipAddress = req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
     const userAgent = req.headers['user-agent'] || 'unknown';
-    return this.authService.login(loginDto.email, loginDto.password, ipAddress, userAgent);
+    const result = await this.authService.login(loginDto.email, loginDto.password, ipAddress, userAgent);
+    this.setAuthCookie(res, result.access_token);
+    return result;
+  }
+
+  @Post('logout')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cerrar sesion' })
+  @ApiResponse({ status: 200, description: 'Sesion cerrada' })
+  async logout(@Res({ passthrough: true }) res: Response) {
+    this.clearAuthCookie(res);
+    return { message: 'Sesion cerrada exitosamente' };
   }
 
   @Public()
@@ -58,6 +98,20 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   async getProfile(@Request() req: AuthRequest) {
     return this.authService.getProfile(req.user.id);
+  }
+
+  @Get('me/permissions')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener permisos efectivos del usuario autenticado' })
+  @ApiResponse({ status: 200, description: 'Lista de permisos del usuario' })
+  @ApiResponse({ status: 401, description: 'No autenticado' })
+  async getMyPermissions(@Request() req: AuthRequest) {
+    const { id, tenantId } = req.user;
+    if (!tenantId) {
+      return { permissions: [] };
+    }
+    const permSet = await this.rbacService.getEffectivePermissions(id, tenantId);
+    return { permissions: Array.from(permSet) };
   }
 
   @Public()

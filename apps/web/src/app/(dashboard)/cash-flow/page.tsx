@@ -30,6 +30,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { apiFetch } from '@/lib/api';
 
 // --- Types ---
 
@@ -96,28 +97,15 @@ export default function CashFlowPage() {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     setLoading(true);
 
     Promise.all([
-      fetch(`${apiUrl}/cash-flow/summary?period=${period}`, { headers }).then((r) =>
-        r.ok ? r.json() : null,
-      ),
-      fetch(`${apiUrl}/cash-flow/alerts`, { headers }).then((r) =>
-        r.ok ? r.json() : [],
-      ),
+      apiFetch<CashFlowSummary | null>(`/cash-flow/summary?period=${period}`).catch(() => null),
+      apiFetch<CashFlowAlert[]>('/cash-flow/alerts').catch(() => []),
     ])
       .then(([summaryData, alertsData]) => {
-        setSummary(summaryData as CashFlowSummary | null);
-        setAlerts((alertsData as CashFlowAlert[]) || []);
+        setSummary(summaryData);
+        setAlerts(alertsData || []);
       })
       .catch(() => {
         setSummary(null);

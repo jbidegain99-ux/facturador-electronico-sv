@@ -28,6 +28,7 @@ import { useToast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
 import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
+import { apiFetch } from '@/lib/api';
 
 interface Cliente {
   id: string;
@@ -223,13 +224,6 @@ export default function ClientesPage() {
 
   // Fetch clientes
   const fetchClientes = React.useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError(tCommon('noSession'));
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -239,21 +233,9 @@ export default function ClientesPage() {
       params.set('sortOrder', sortOrder);
       if (search) params.set('search', search);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || t('loadError'));
-      }
-
-      const data = await res.json();
+      const data = await apiFetch<ClientesResponse>(`/clientes?${params}`);
       // Defensive: handle both {data: [...], total, ...} and plain array responses
-      const items = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+      const items = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? (data as unknown as Cliente[]) : [];
       const parsedTotal = Number(data?.total);
       const parsedTotalPages = Number(data?.totalPages);
       setClientes(items);
@@ -387,11 +369,6 @@ export default function ClientesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setFormError(tCommon('noSession'));
-      return;
-    }
 
     // Validate all fields
     const errors: Record<string, string> = {};
@@ -414,9 +391,9 @@ export default function ClientesPage() {
     setFormError(null);
 
     try {
-      const url = editingCliente
-        ? `${process.env.NEXT_PUBLIC_API_URL}/clientes/${editingCliente.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/clientes`;
+      const endpoint = editingCliente
+        ? `/clientes/${editingCliente.id}`
+        : `/clientes`;
 
       // Clean empty optional fields to avoid backend validation errors
       const payload = {
@@ -426,46 +403,34 @@ export default function ClientesPage() {
         telefono: formData.telefono.trim() || undefined,
       };
 
-      const res = await fetch(url, {
+      await apiFetch(endpoint, {
         method: editingCliente ? 'PUT' : 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(payload),
       });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-
-        // Map backend validation errors to field-level errors
-        if (Array.isArray(errorData.message)) {
-          const backendErrors: Record<string, string> = {};
-          const fieldNames = ['correo', 'numDocumento', 'nombre', 'nrc', 'telefono', 'tipoDocumento', 'direccion'];
-          for (const msg of errorData.message) {
-            const matchedField = fieldNames.find((f) => msg.toLowerCase().includes(f.toLowerCase()));
-            if (matchedField) {
-              backendErrors[matchedField] = msg;
-            }
-          }
-          if (Object.keys(backendErrors).length > 0) {
-            setFieldErrors(backendErrors);
-            setFormError(t('formErrors'));
-            setSaving(false);
-            return;
-          }
-        }
-
-        throw new Error(
-          Array.isArray(errorData.message) ? errorData.message.join('. ') : (errorData.message || t('saveError'))
-        );
-      }
 
       closeModal();
       fetchClientes();
       toast.success(editingCliente ? t('updateSuccess') : t('createSuccess'));
     } catch (err) {
       console.error('Error saving cliente:', err);
+      // Map backend validation errors to field-level errors
+      const apiErr = err as { data?: { message?: string | string[] } };
+      if (Array.isArray(apiErr.data?.message)) {
+        const backendErrors: Record<string, string> = {};
+        const fieldNames = ['correo', 'numDocumento', 'nombre', 'nrc', 'telefono', 'tipoDocumento', 'direccion'];
+        for (const msg of apiErr.data!.message as string[]) {
+          const matchedField = fieldNames.find((f) => msg.toLowerCase().includes(f.toLowerCase()));
+          if (matchedField) {
+            backendErrors[matchedField] = msg;
+          }
+        }
+        if (Object.keys(backendErrors).length > 0) {
+          setFieldErrors(backendErrors);
+          setFormError(t('formErrors'));
+          setSaving(false);
+          return;
+        }
+      }
       const errorMessage = err instanceof Error ? err.message : t('saveError');
       setFormError(errorMessage);
     } finally {
@@ -474,24 +439,9 @@ export default function ClientesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     setDeleting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || t('deleteError'));
-      }
-
+      await apiFetch(`/clientes/${id}`, { method: 'DELETE' });
       setDeleteConfirm(null);
       fetchClientes();
       toast.success(t('deleteSuccess'));

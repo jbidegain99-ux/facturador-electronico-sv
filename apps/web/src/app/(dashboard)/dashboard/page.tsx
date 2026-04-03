@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { apiFetch } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DTEStatusBadge } from '@/components/dte/dte-status-badge';
@@ -132,39 +133,14 @@ export default function DashboardPage() {
 
   React.useEffect(() => {
     const fetchDashboardData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
-      const headers = { Authorization: `Bearer ${token}` };
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      const safeFetch = async (url: string): Promise<Response | null> => {
-        try {
-          return await fetch(url, { headers });
-        } catch (err) {
-          console.warn(`[Dashboard] Failed to fetch ${url}:`, err);
-          return null;
-        }
-      };
-
       try {
-        const [statsRes, planRes] = await Promise.all([
-          safeFetch(`${baseUrl}/dashboard/stats`),
-          safeFetch(`${baseUrl}/plans/my-usage`),
+        const [statsData, planData] = await Promise.all([
+          apiFetch<DashboardStats>('/dashboard/stats').catch(() => null),
+          apiFetch<PlanUsage>('/plans/my-usage').catch(() => null),
         ]);
 
-        if (statsRes?.ok) {
-          const data = await statsRes.json().catch(() => null);
-          if (data) setStats(data);
-        }
-
-        if (planRes?.ok) {
-          const data = await planRes.json().catch(() => null);
-          if (data) setPlanUsage(data);
-        }
+        if (statsData) setStats(statsData);
+        if (planData) setPlanUsage(planData);
       } catch (error) {
         console.error('[Dashboard] Error fetching dashboard data:', error);
       } finally {

@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
@@ -235,7 +236,7 @@ export default function QuoteApprovalPage() {
     setLoading(true);
     setFetchError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const apiUrl = API_URL || '';
       const res = await fetch(`${apiUrl}/quotes/public/approve/${token}`);
 
       if (!res.ok) {
@@ -291,7 +292,7 @@ export default function QuoteApprovalPage() {
 
     setSubmitting(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const apiUrl = API_URL || '';
       const res = await fetch(`${apiUrl}/quotes/public/approve/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -331,7 +332,7 @@ export default function QuoteApprovalPage() {
 
     setSubmitting(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const apiUrl = API_URL || '';
       const res = await fetch(`${apiUrl}/quotes/public/request-changes/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -374,7 +375,7 @@ export default function QuoteApprovalPage() {
 
     setSubmitting(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const apiUrl = API_URL || '';
       const res = await fetch(`${apiUrl}/quotes/public/reject/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

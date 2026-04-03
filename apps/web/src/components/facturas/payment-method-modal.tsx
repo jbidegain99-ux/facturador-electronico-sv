@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, Banknote, CreditCard, Building2, Receipt, HelpCircle } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 type TipoMetodoPago = 'EFECTIVO' | 'TRANSFERENCIA' | 'CHEQUE' | 'TARJETA' | 'OTRA';
 
@@ -54,16 +55,8 @@ export function PaymentMethodModal({
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No autenticado');
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/payments`, {
+      await apiFetch('/payments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           dteId,
           tipo,
@@ -74,11 +67,6 @@ export function PaymentMethodModal({
           referencia: tipo !== 'EFECTIVO' ? referencia : undefined,
         }),
       });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error((data as { message?: string }).message || 'Error al registrar pago');
-      }
 
       onSuccess();
     } catch (err) {

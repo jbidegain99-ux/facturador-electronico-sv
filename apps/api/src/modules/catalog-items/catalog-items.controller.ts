@@ -7,11 +7,9 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { CatalogItemsService, CatalogItemRow } from './catalog-items.service';
 import {
@@ -49,7 +47,6 @@ class ImportCatalogItemsDto {
 
 @ApiTags('catalog-items')
 @Controller('catalog-items')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class CatalogItemsController {
   private readonly logger = new Logger(CatalogItemsController.name);
@@ -146,6 +143,22 @@ export class CatalogItemsController {
     const tenantId = this.ensureTenant(user);
     this.logger.log(`User ${user.email} exporting catalog items`);
     return this.catalogItemsService.exportItems(tenantId);
+  }
+
+  // =========================================================================
+  // USAGE TRACKING
+  // =========================================================================
+
+  @Post('track-usage')
+  @ApiOperation({ summary: 'Batch track usage for catalog items used in an invoice' })
+  @RequirePermission('catalog:read')
+  trackUsage(
+    @CurrentUser() user: CurrentUserData,
+    @Body() body: { ids: string[] },
+  ) {
+    const tenantId = this.ensureTenant(user);
+    const ids = Array.isArray(body.ids) ? body.ids.slice(0, 100) : [];
+    return this.catalogItemsService.trackUsage(tenantId, ids);
   }
 
   // =========================================================================

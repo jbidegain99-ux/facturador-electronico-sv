@@ -1,0 +1,167 @@
+{
+  "audit_date": "2026-03-12",
+  "phase1_critical": [
+    {
+      "tipo": "05",
+      "nombre": "Nota de Crédito",
+      "why_critical": "Already in TipoDte union and has accounting mapping, but CANNOT be created because DteValidatorService has no schema. Tenants need credit notes for returns, cancellations, and price corrections. This is a compliance requirement.",
+      "current_state": "PARTIAL - accounting ready, validation/builder/normalization missing",
+      "effort": "MEDIUM",
+      "timeline_days": 4,
+      "tasks": [
+        "Create Zod schema for tipo 05 in dte-validator.service.ts",
+        "Add buildNotaCredito() to dte-builder.service.ts (must include documentoRelacionado reference to original DTE)",
+        "Add tipo '05' normalization branch in normalizeJsonForHacienda()",
+        "Add CreateNotaCreditoDto with required referenceDocumentId field",
+        "Unit tests for validation, building, normalization",
+        "Integration test for DTE creation → accounting reversal entry"
+      ]
+    },
+    {
+      "tipo": "06",
+      "nombre": "Nota de Débito",
+      "why_critical": "Needed for surcharges, interest, and corrections that increase the original amount. Same gap as tipo 05 - defined but not creatable.",
+      "current_state": "PARTIAL - accounting ready, validation/builder/normalization missing",
+      "effort": "MEDIUM",
+      "timeline_days": 4,
+      "tasks": [
+        "Create Zod schema for tipo 06 in dte-validator.service.ts",
+        "Add buildNotaDebito() to dte-builder.service.ts (must include documentoRelacionado)",
+        "Add tipo '06' normalization branch in normalizeJsonForHacienda()",
+        "Unit tests"
+      ]
+    },
+    {
+      "tipo": "14",
+      "nombre": "Factura de Sujeto Excluido",
+      "why_critical": "Required for purchases from individuals without NIT (agricultural products, small vendors). El Salvador tax law requires this for expense deductibility. Accounting mapping already exists (SUJETO_EXCLUIDO).",
+      "current_state": "PARTIAL - accounting ready, validation/builder/normalization missing",
+      "effort": "MEDIUM",
+      "timeline_days": 3,
+      "tasks": [
+        "Create Zod schema for tipo 14 (different receptor structure - no NIT required)",
+        "Add buildFacturaSujetoExcluido() to dte-builder.service.ts",
+        "Add tipo '14' normalization (no IVA fields)",
+        "Unit tests"
+      ]
+    }
+  ],
+  "phase2_important": [
+    {
+      "tipo": "11",
+      "nombre": "Factura de Exportación",
+      "why_important": "Required for any business exporting goods/services. IVA = 0%. Already referenced in PDF labels and analytics but NOT in TipoDte union - dangerous inconsistency.",
+      "current_state": "NOT IMPLEMENTED but partially referenced in UI code",
+      "effort": "HIGH",
+      "timeline_days": 6,
+      "tasks": [
+        "Add '11' to TipoDte type union in packages/shared/src/types/dte.types.ts",
+        "Add '11' to DTE_TYPES constant in packages/shared/src/constants.ts",
+        "Create Zod schema for tipo 11 (different fields: destinatario instead of receptor, incoterms, etc.)",
+        "Add buildFacturaExportacion() to dte-builder.service.ts",
+        "Add tipo '11' normalization (0% IVA, export-specific fields)",
+        "Add EXPORTACION accounting mapping (no IVA line)",
+        "Schema migration if needed for export-specific fields",
+        "Unit and integration tests"
+      ]
+    },
+    {
+      "tipo": "07",
+      "nombre": "Comprobante de Retención",
+      "why_important": "Needed for withholding tax documentation. In TipoDte union but has NO accounting mapping.",
+      "current_state": "PARTIAL - in type union and PDF labels, but no validation/builder/normalization/accounting",
+      "effort": "HIGH",
+      "timeline_days": 5,
+      "tasks": [
+        "Create Zod schema for tipo 07",
+        "Add buildComprobanteRetencion() to builder",
+        "Add tipo '07' normalization",
+        "Define RETENCION accounting mapping (new operation)",
+        "Add to AccountingAutomationService operation determination",
+        "Create default mapping rule in default-mappings.data.ts",
+        "Tests"
+      ]
+    }
+  ],
+  "phase3_nice_to_have": [
+    {
+      "tipo": "04",
+      "nombre": "Nota de Remisión",
+      "why_nice_to_have": "Used for goods transfer between locations. Less common for typical invoicing workflows. No financial impact (no IVA, no sale).",
+      "current_state": "NOT IMPLEMENTED",
+      "effort": "MEDIUM",
+      "timeline_days": 4,
+      "tasks": [
+        "Add '04' to TipoDte union",
+        "Full pipeline: schema, builder, normalizer",
+        "Accounting: may not need journal entry (no financial transaction)",
+        "Tests"
+      ]
+    },
+    {
+      "tipo": "09",
+      "nombre": "Comprobante de Liquidación",
+      "why_nice_to_have": "Specialized document for settlement operations. Uncommon use case.",
+      "current_state": "NOT IMPLEMENTED",
+      "effort": "MEDIUM",
+      "timeline_days": 4,
+      "tasks": [
+        "Add '09' to TipoDte union",
+        "Full pipeline: schema, builder, normalizer, accounting",
+        "Tests"
+      ]
+    },
+    {
+      "tipo": "34",
+      "nombre": "Comprobante de Donación",
+      "why_nice_to_have": "Only for donations. Very specialized use case. Low demand from typical tenants.",
+      "current_state": "NOT IMPLEMENTED",
+      "effort": "LOW",
+      "timeline_days": 3,
+      "tasks": [
+        "Add '34' to TipoDte union",
+        "Full pipeline: schema, builder, normalizer",
+        "Accounting: donation-specific mapping",
+        "Tests"
+      ]
+    }
+  ],
+  "cross_cutting_issues": [
+    {
+      "issue": "Hardcoded IVA rate (13%) in normalizeJsonForHacienda()",
+      "impact": "Will break for tipo 11 (0% IVA), tipo 14 (no IVA), and any future rate changes",
+      "fix": "Extract IVA rate from DTE type or catalog tributo. Line 1179-1180 of dte.service.ts",
+      "effort": "LOW",
+      "timeline_days": 1
+    },
+    {
+      "issue": "normalizeJsonForHacienda() only has 2 branches: tipo '03' and 'everything else'",
+      "impact": "All non-03 types get generic handling that may not match Hacienda schema requirements",
+      "fix": "Add explicit normalization branches for each supported type with type-specific field handling",
+      "effort": "HIGH",
+      "timeline_days": 5
+    },
+    {
+      "issue": "Type '11' referenced in code but not in TipoDte type union",
+      "impact": "TypeScript won't catch errors. PDF and email will show labels but creation will fail at type level",
+      "fix": "Either add '11' to TipoDte or remove all references until implemented",
+      "effort": "LOW",
+      "timeline_days": 0.5
+    },
+    {
+      "issue": "DteValidatorService only has 2 schemas (01, 03) - all other types return 'Schema not implemented'",
+      "impact": "Blocks creation of any DTE type beyond 01 and 03",
+      "fix": "Add Zod schemas for each DTE type per Hacienda specification",
+      "effort": "HIGH",
+      "timeline_days": 8
+    }
+  ],
+  "estimated_total": {
+    "phase1_days": 11,
+    "phase2_days": 11,
+    "phase3_days": 11,
+    "cross_cutting_days": 14,
+    "total_days": 35,
+    "note": "Days are estimated for a single developer. Cross-cutting issues should be addressed in phase 1 as they affect all types."
+  }
+}

@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn, formatDate } from '@/lib/utils';
+import { apiFetch, apiUpload } from '@/lib/api';
 
 interface CertificateInfo {
   filename: string;
@@ -102,28 +103,14 @@ export function CertificadoUpload({
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('certificate', file);
       formData.append('password', password);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/certificate`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
+      const result = await apiUpload<{ expiresAt?: string; subject?: string }>(
+        '/tenants/me/certificate',
+        formData,
       );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al subir certificado');
-      }
-
-      const result = await response.json();
       setUploadedCert({
         filename: file.name,
         uploadedAt: new Date().toISOString(),
@@ -147,20 +134,7 @@ export function CertificadoUpload({
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/certificate`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar certificado');
-      }
+      await apiFetch('/tenants/me/certificate', { method: 'DELETE' });
 
       setUploadedCert(undefined);
     } catch (err) {

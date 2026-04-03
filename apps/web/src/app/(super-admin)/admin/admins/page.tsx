@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { Users, Plus, Trash2, AlertCircle } from 'lucide-react';
 
@@ -24,10 +25,8 @@ export default function AdminsPage() {
 
   const fetchAdmins = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/admins`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`${API_URL}/super-admin/admins`, { credentials: 'include',
+        headers: { } });
 
       if (!res.ok) throw new Error('Error al cargar administradores');
       const data = await res.json();
@@ -43,15 +42,11 @@ export default function AdminsPage() {
     e.preventDefault();
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/admins`, {
+      const res = await fetch(`${API_URL}/super-admin/admins`, { credentials: 'include',
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+          'Content-Type': 'application/json' },
+        body: JSON.stringify(formData) });
 
       if (!res.ok) throw new Error('Error al crear administrador');
       setShowModal(false);

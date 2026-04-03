@@ -1,0 +1,137 @@
+================================================================================
+CODE SNIPPETS REFERENCE — Auditoría DTE + Contable (2026-03-12)
+================================================================================
+
+1. TIPO DTE — TYPE DEFINITION
+   File: packages/shared/src/types/dte.types.ts
+   ─────────────────────────────────────────────
+   export type TipoDte = '01' | '03' | '05' | '06' | '07' | '14';
+
+   MISSING: '04', '09', '11', '34'
+
+2. DTE CONSTANTS
+   File: packages/shared/src/constants.ts
+   ─────────────────────────────────────────────
+   DTE_TYPES = {
+     '01': 'FACTURA',
+     '03': 'CCF',
+     '05': 'NOTA_CREDITO',
+     '06': 'NOTA_DEBITO',
+     '07': 'COMPROBANTE_RETENCION',
+     '14': 'FACTURA_SUJETO_EXCLUIDO',
+   }
+
+3. DTE VALIDATOR — ONLY 2 SCHEMAS
+   File: apps/api/src/modules/dte/services/dte-validator.service.ts
+   ─────────────────────────────────────────────
+   private schemas: Record<string, z.ZodSchema> = {
+     '01': FacturaSchema,
+     '03': CCFSchema,
+   };
+
+   // All other types return: "Schema not implemented for type XX"
+
+4. DTE BUILDER — ONLY 2 BUILDERS
+   File: apps/api/src/modules/dte/services/dte-builder.service.ts
+   ─────────────────────────────────────────────
+   buildFactura()  → tipo 01
+   buildCCF()      → tipo 03
+
+   // No builders for 05, 06, 07, 14
+
+5. NORMALIZE JSON — ONLY 2 BRANCHES
+   File: apps/api/src/modules/dte/dte.service.ts (lines 1074-1241)
+   ─────────────────────────────────────────────
+   if (tipoDte === '03') {
+     // CCF-specific normalization
+     // - NIT-based receptor
+     // - ivaPerci1/ivaRete1 instead of totalIva
+     // - codTributo on items
+   } else {
+     // Generic fallback for ALL other types
+     // - Only adds emisor and null placeholders
+   }
+
+6. HARDCODED IVA RATE
+   File: apps/api/src/modules/dte/dte.service.ts (line ~1179)
+   ─────────────────────────────────────────────
+   const IVA_RATE = 0.13;
+   Math.round((totalGravada * IVA_RATE * 100) / 100)
+
+7. ACCOUNTING AUTOMATION — OPERATION DETERMINATION
+   File: apps/api/src/modules/accounting/accounting-automation.service.ts (lines 193-210)
+   ─────────────────────────────────────────────
+   tipoDte '01' + condicionOperacion=1  → 'VENTA_CONTADO'
+   tipoDte '01' + condicionOperacion=2  → 'VENTA_CREDITO'
+   tipoDte '03'                         → 'CREDITO_FISCAL'
+   tipoDte '05'                         → 'NOTA_CREDITO'
+   tipoDte '06'                         → 'NOTA_DEBITO'
+   tipoDte '14'                         → 'SUJETO_EXCLUIDO'
+
+   // Types 04, 07, 09, 11, 34 → NO mapping → no journal entry created
+
+8. ACCOUNTING TRIGGER POINTS IN DTE SERVICE
+   File: apps/api/src/modules/dte/dte.service.ts
+   ─────────────────────────────────────────────
+   Line 306:  triggerAccountingEntry(dte.id, tenantId, 'ON_CREATED')
+   Line 386:  triggerAccountingEntry(dte.id, tenantId, 'ON_APPROVED')
+   Line 460:  triggerAccountingEntry(dte.id, tenantId, 'ON_APPROVED')
+   Line 602:  triggerAccountingEntry(dte.id, dte.tenantId, 'ON_APPROVED')
+   Line 666:  triggerAccountingEntry(dte.id, dte.tenantId, 'ON_APPROVED')
+   Line 1052: triggerAccountingReversal(dteId, dte.tenantId)
+
+9. DEFAULT ACCOUNTING MAPPINGS
+   File: apps/api/src/modules/accounting/default-mappings.data.ts
+   ─────────────────────────────────────────────
+   VENTA_CONTADO:    Debit 110101 (Caja)     → Credit 4101 (Ventas) + 210201 (IVA)
+   VENTA_CREDITO:    Debit 110301 (Clientes)  → Credit 4101 (Ventas) + 210201 (IVA)
+   CREDITO_FISCAL:   Debit 110301 (Clientes)  → Credit 4101 (Ventas) + 210201 (IVA)
+   NOTA_CREDITO:     Debit 4101+210201        → Credit 110301 (Clientes)
+   NOTA_DEBITO:      Debit 110301 (Clientes)  → Credit 4101 (Ventas) + 210201 (IVA)
+   SUJETO_EXCLUIDO:  Debit 110101 (Caja)      → Credit 4101 (Ventas, sin IVA)
+
+10. TYPE '11' INCONSISTENCY — Referenced but not defined
+    ─────────────────────────────────────────────
+    pdf.service.ts:     getTipoDteLabel() includes '11': 'Factura de Exportacion'
+    dte.service.ts:     tipoDteNames includes '11': 'Factura Exportacion'
+    dte.types.ts:       TipoDte does NOT include '11'
+
+11. DTE PRISMA MODEL (key fields)
+    File: apps/api/prisma/schema.prisma
+    ─────────────────────────────────────────────
+    model DTE {
+      id               String    @id @default(cuid())
+      tenantId         String
+      tipoDte          String            // ← String, NOT enum
+      codigoGeneracion String    @unique
+      numeroControl    String
+      jsonOriginal     String
+      jsonFirmado      String?
+      estado           String    @default("PENDIENTE")
+      totalGravada     Decimal   @db.Decimal(12, 2)
+      totalIva         Decimal   @db.Decimal(12, 2)
+      totalPagar       Decimal   @db.Decimal(12, 2)
+      // ... more fields
+      @@unique([tenantId, numeroControl])
+    }
+
+12. JOURNAL ENTRY MODEL (key fields)
+    File: apps/api/prisma/schema.prisma
+    ─────────────────────────────────────────────
+    model JournalEntry {
+      id                String    @id @default(cuid())
+      tenantId          String
+      entryNumber       String
+      sourceType        String?           // 'DTE'
+      sourceDocumentId  String?           // DTE id
+      status            String    @default("DRAFT")  // DRAFT→POSTED→VOIDED
+      totalDebit        Decimal   @db.Decimal(15, 2)
+      totalCredit       Decimal   @db.Decimal(15, 2)
+      lines             JournalEntryLine[]
+      @@unique([tenantId, entryNumber])
+      @@index([sourceType, sourceDocumentId])
+    }
+
+================================================================================
+END OF REFERENCE
+================================================================================

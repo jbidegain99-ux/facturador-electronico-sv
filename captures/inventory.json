@@ -1,0 +1,386 @@
+[
+  {
+    "file": "screenshots/01_dashboard/dashboard_full.png",
+    "flow": "01_dashboard",
+    "type": "screenshot",
+    "description": "Vista completa del dashboard después de login",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/01_dashboard/dashboard_stats.png",
+    "flow": "01_dashboard",
+    "type": "screenshot",
+    "description": "Tarjetas de estadísticas del dashboard"
+  },
+  {
+    "file": "screenshots/01_dashboard/dashboard_chart.png",
+    "flow": "01_dashboard",
+    "type": "screenshot",
+    "description": "Gráfico de ingresos mensuales"
+  },
+  {
+    "file": "screenshots/01_dashboard/dashboard_middle.png",
+    "flow": "01_dashboard",
+    "type": "screenshot",
+    "description": "Sección media del dashboard",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/01_dashboard/dashboard_bottom.png",
+    "flow": "01_dashboard",
+    "type": "screenshot",
+    "description": "Sección inferior del dashboard",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_01_dashboard.webm",
+    "flow": "flow_01_dashboard",
+    "type": "video",
+    "description": "Video del flujo flow_01_dashboard"
+  },
+  {
+    "file": "screenshots/02_factura/facturas_list.png",
+    "flow": "02_factura",
+    "type": "screenshot",
+    "description": "Lista de facturas existentes",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/02_factura/factura_form_empty.png",
+    "flow": "02_factura",
+    "type": "screenshot",
+    "description": "Formulario vacío de nueva factura",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/02_factura/factura_cliente_select.png",
+    "flow": "02_factura",
+    "type": "screenshot",
+    "description": "Seleccionando un cliente del dropdown",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/02_factura/factura_form_progress.png",
+    "flow": "02_factura",
+    "type": "screenshot",
+    "description": "Formulario con datos parciales",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/02_factura/factura_form_bottom.png",
+    "flow": "02_factura",
+    "type": "screenshot",
+    "description": "Parte inferior del formulario de factura",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_02_crear_factura.webm",
+    "flow": "flow_02_crear_factura",
+    "type": "video",
+    "description": "Video del flujo flow_02_crear_factura"
+  },
+  {
+    "file": "screenshots/02_factura/factura_detail.png",
+    "flow": "02_factura",
+    "type": "screenshot",
+    "description": "Vista de detalle de una factura existente",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_02b_factura_detalle.webm",
+    "flow": "flow_02b_factura_detalle",
+    "type": "video",
+    "description": "Video del flujo flow_02b_factura_detalle"
+  },
+  {
+    "file": "screenshots/03_ccf/ccf_tipo_select.png",
+    "flow": "03_ccf",
+    "type": "screenshot",
+    "description": "Seleccionando tipo CCF",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/03_ccf/ccf_form_empty.png",
+    "flow": "03_ccf",
+    "type": "screenshot",
+    "description": "Formulario vacío para CCF",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/03_ccf/ccf_form_bottom.png",
+    "flow": "03_ccf",
+    "type": "screenshot",
+    "description": "Parte inferior del formulario CCF",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_03_crear_ccf.webm",
+    "flow": "flow_03_crear_ccf",
+    "type": "video",
+    "description": "Video del flujo flow_03_crear_ccf"
+  },
+  {
+    "file": "screenshots/04_cotizaciones/quotes_list.png",
+    "flow": "04_cotizaciones",
+    "type": "screenshot",
+    "description": "Lista de cotizaciones con diferentes estados",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/04_cotizaciones/quotes_list_scroll.png",
+    "flow": "04_cotizaciones",
+    "type": "screenshot",
+    "description": "Lista de cotizaciones (continuación)",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/04_cotizaciones/quote_new_form.png",
+    "flow": "04_cotizaciones",
+    "type": "screenshot",
+    "description": "Formulario de nueva cotización",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/04_cotizaciones/quote_new_form_bottom.png",
+    "flow": "04_cotizaciones",
+    "type": "screenshot",
+    "description": "Parte inferior del formulario de cotización",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/04_cotizaciones/quote_detail.png",
+    "flow": "04_cotizaciones",
+    "type": "screenshot",
+    "description": "Detalle de una cotización",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/04_cotizaciones/quote_detail_bottom.png",
+    "flow": "04_cotizaciones",
+    "type": "screenshot",
+    "description": "Detalle de cotización (parte inferior)",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_04_cotizaciones.webm",
+    "flow": "flow_04_cotizaciones",
+    "type": "video",
+    "description": "Video del flujo flow_04_cotizaciones"
+  },
+  {
+    "file": "screenshots/05_contabilidad/accounting_dashboard.png",
+    "flow": "05_contabilidad",
+    "type": "screenshot",
+    "description": "Vista principal de contabilidad",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/05_contabilidad/accounting_journal.png",
+    "flow": "05_contabilidad",
+    "type": "screenshot",
+    "description": "Libro diario con partidas",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/05_contabilidad/accounting_journal_scroll.png",
+    "flow": "05_contabilidad",
+    "type": "screenshot",
+    "description": "Libro diario (continuación)",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/05_contabilidad/accounting_entry_detail.png",
+    "flow": "05_contabilidad",
+    "type": "screenshot",
+    "description": "Detalle de una partida contable",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/05_contabilidad/accounting_ledger.png",
+    "flow": "05_contabilidad",
+    "type": "screenshot",
+    "description": "Libro mayor",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/05_contabilidad/accounting_accounts.png",
+    "flow": "05_contabilidad",
+    "type": "screenshot",
+    "description": "Catálogo de cuentas",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/05_contabilidad/accounting_balance.png",
+    "flow": "05_contabilidad",
+    "type": "screenshot",
+    "description": "Balance general",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/05_contabilidad/accounting_results.png",
+    "flow": "05_contabilidad",
+    "type": "screenshot",
+    "description": "Estado de resultados",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_05_contabilidad.webm",
+    "flow": "flow_05_contabilidad",
+    "type": "video",
+    "description": "Video del flujo flow_05_contabilidad"
+  },
+  {
+    "file": "screenshots/06_clientes/clients_list.png",
+    "flow": "06_clientes",
+    "type": "screenshot",
+    "description": "Lista de clientes",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/06_clientes/clients_list_scroll.png",
+    "flow": "06_clientes",
+    "type": "screenshot",
+    "description": "Lista de clientes (continuación)",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/06_clientes/clients_search.png",
+    "flow": "06_clientes",
+    "type": "screenshot",
+    "description": "Búsqueda de clientes",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/06_clientes/client_detail.png",
+    "flow": "06_clientes",
+    "type": "screenshot",
+    "description": "Detalle de un cliente",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_06_clientes.webm",
+    "flow": "flow_06_clientes",
+    "type": "video",
+    "description": "Video del flujo flow_06_clientes"
+  },
+  {
+    "file": "screenshots/07_recurrentes/recurring_list.png",
+    "flow": "07_recurrentes",
+    "type": "screenshot",
+    "description": "Lista de facturas recurrentes activas",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/07_recurrentes/recurring_list_scroll.png",
+    "flow": "07_recurrentes",
+    "type": "screenshot",
+    "description": "Lista de recurrentes (continuación)",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/07_recurrentes/recurring_detail.png",
+    "flow": "07_recurrentes",
+    "type": "screenshot",
+    "description": "Detalle de factura recurrente",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_07_recurrentes.webm",
+    "flow": "flow_07_recurrentes",
+    "type": "video",
+    "description": "Video del flujo flow_07_recurrentes"
+  },
+  {
+    "file": "screenshots/08_catalogo/catalogo_list.png",
+    "flow": "08_catalogo",
+    "type": "screenshot",
+    "description": "Catálogo de productos y servicios",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/08_catalogo/catalogo_list_scroll.png",
+    "flow": "08_catalogo",
+    "type": "screenshot",
+    "description": "Catálogo (continuación)",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_08_catalogo.webm",
+    "flow": "flow_08_catalogo",
+    "type": "video",
+    "description": "Video del flujo flow_08_catalogo"
+  },
+  {
+    "file": "screenshots/09_configuracion/config_main.png",
+    "flow": "09_configuracion",
+    "type": "screenshot",
+    "description": "Página principal de configuración",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/09_configuracion/config_hacienda.png",
+    "flow": "09_configuracion",
+    "type": "screenshot",
+    "description": "Configuración de Hacienda",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/09_configuracion/config_plan.png",
+    "flow": "09_configuracion",
+    "type": "screenshot",
+    "description": "Configuración del plan",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "screenshots/09_configuracion/perfil.png",
+    "flow": "09_configuracion",
+    "type": "screenshot",
+    "description": "Perfil del usuario",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "videos/flow_09_configuracion.webm",
+    "flow": "flow_09_configuracion",
+    "type": "video",
+    "description": "Video del flujo flow_09_configuracion"
+  }
+]

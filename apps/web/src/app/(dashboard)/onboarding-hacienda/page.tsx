@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import Link from 'next/link';
 import { Loader2, AlertTriangle, Settings, Mail } from 'lucide-react';
@@ -19,32 +20,18 @@ export default function OnboardingHaciendaPage() {
 
   const loadOnboardingData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No hay sesión activa');
-        setLoading(false);
-        return;
-      }
 
       // Fetch both onboarding status and data in parallel
       const [statusRes, onboardingRes] = await Promise.all([
         fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`,
-          {
+          `${API_URL}/tenants/me/onboarding-status`, { credentials: 'include',
             headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
+              'Content-Type': 'application/json' } }
         ),
         fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/onboarding`,
-          {
+          `${API_URL}/onboarding`, { credentials: 'include',
             headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
+              'Content-Type': 'application/json' } }
         ),
       ]);
 

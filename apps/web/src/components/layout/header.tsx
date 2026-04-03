@@ -15,6 +15,7 @@ import {
 import { Bell, User, LogOut, Settings, Info, X, ExternalLink, Megaphone, Zap, Shield, AlertTriangle, AlertCircle, CheckCheck, Globe, MessageCircle } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTranslations } from 'next-intl';
+import { apiFetch } from '@/lib/api';
 import { locales, localeNames, type Locale } from '@/i18n/config';
 
 interface SystemNotification {
@@ -70,73 +71,37 @@ export function Header() {
 
   const fetchUnreadCount = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications/count`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) {
-        if (res.status !== 404) console.warn(`[Header] /notifications/count returned ${res.status}`);
-        return;
-      }
-
-      const data = await res.json().catch(() => null);
-      if (data && typeof data.count === 'number') {
+      const data = await apiFetch<{ count: number }>('/notifications/count');
+      if (typeof data.count === 'number') {
         setUnreadCount(data.count);
       }
     } catch (err) {
-      console.warn('[Header] Error fetching notification count:', err);
+      // Silently ignore 404 (endpoint may not exist yet)
+      if ((err as { status?: number }).status !== 404) {
+        console.warn('[Header] Error fetching notification count:', err);
+      }
     }
   };
 
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) {
-        if (res.status !== 404) console.warn(`[Header] /notifications returned ${res.status}`);
-        return;
-      }
-
-      const data = await res.json().catch(() => null);
+      const data = await apiFetch<SystemNotification[]>('/notifications');
       if (Array.isArray(data)) {
         setNotifications(data);
       }
     } catch (err) {
-      console.warn('[Header] Error fetching notifications:', err);
+      if ((err as { status?: number }).status !== 404) {
+        console.warn('[Header] Error fetching notifications:', err);
+      }
     }
   };
 
   const dismissNotification = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/dismiss`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (res.ok) {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
+      await apiFetch(`/notifications/${id}/dismiss`, { method: 'POST' });
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.warn('[Header] Error dismissing notification:', err);
     }
@@ -144,27 +109,15 @@ export function Header() {
 
   const dismissAll = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications/dismiss-all`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (res.ok) {
-        setNotifications([]);
-        setUnreadCount(0);
-      }
+      await apiFetch('/notifications/dismiss-all', { method: 'POST' });
+      setNotifications([]);
+      setUnreadCount(0);
     } catch (err) {
       console.warn('[Header] Error dismissing all notifications:', err);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
     localStorage.removeItem('facturo-chat-welcome-seen');
     setUser(null);
     setTenant(null);

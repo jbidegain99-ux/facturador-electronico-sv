@@ -15,7 +15,6 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { SuperAdminGuard } from '../super-admin/guards/super-admin.guard';
 import {
@@ -45,7 +44,6 @@ import { OnboardingStatus, OnboardingStep, StepStatus } from './types/onboarding
 
 @ApiTags('onboarding')
 @Controller('onboarding')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class OnboardingController {
   constructor(
@@ -335,7 +333,7 @@ export class OnboardingController {
 
 @ApiTags('admin-onboarding')
 @Controller('admin/onboarding')
-@UseGuards(AuthGuard('jwt'), SuperAdminGuard)
+@UseGuards(SuperAdminGuard)
 @ApiBearerAuth()
 export class OnboardingAdminController {
   constructor(

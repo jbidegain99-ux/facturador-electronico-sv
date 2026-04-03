@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -14,8 +15,7 @@ import {
   Paperclip,
   Download,
   FileText,
-  Loader2,
-} from 'lucide-react';
+  Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 
@@ -63,8 +63,7 @@ const typeLabels: Record<string, string> = {
   TECHNICAL: 'Problema Técnico',
   BILLING: 'Facturación',
   GENERAL: 'General',
-  ONBOARDING: 'Onboarding',
-};
+  ONBOARDING: 'Onboarding' };
 
 const statusLabels: Record<string, string> = {
   PENDING: 'Pendiente',
@@ -72,15 +71,13 @@ const statusLabels: Record<string, string> = {
   IN_PROGRESS: 'En Progreso',
   WAITING_CUSTOMER: 'Esperando tu Respuesta',
   RESOLVED: 'Resuelto',
-  CLOSED: 'Cerrado',
-};
+  CLOSED: 'Cerrado' };
 
 const priorityLabels: Record<string, string> = {
   LOW: 'Baja',
   MEDIUM: 'Media',
   HIGH: 'Alta',
-  URGENT: 'Urgente',
-};
+  URGENT: 'Urgente' };
 
 export default function TicketDetailPage() {
   const ts = useTranslations('support');
@@ -103,14 +100,11 @@ export default function TicketDetailPage() {
   const fetchTicket = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const baseUrl = API_URL;
 
       const res = await fetch(
-        `${baseUrl}/support-tickets/${params.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/support-tickets/${params.id}`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) {
@@ -128,11 +122,9 @@ export default function TicketDetailPage() {
 
   const fetchAttachments = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${baseUrl}/support-tickets/${params.id}/attachments`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const baseUrl = API_URL;
+      const res = await fetch(`${API_URL}/support-tickets/${params.id}/attachments`, { credentials: 'include',
+        headers: { } });
       if (res.ok) {
         const data = await res.json().catch(() => []);
         if (Array.isArray(data)) setAttachments(data);
@@ -148,16 +140,14 @@ export default function TicketDetailPage() {
 
     try {
       setUploading(true);
-      const token = localStorage.getItem('token');
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const baseUrl = API_URL;
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch(`${baseUrl}/support-tickets/${params.id}/attachments`, {
+      const res = await fetch(`${API_URL}/support-tickets/${params.id}/attachments`, { credentials: 'include',
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+        headers: { },
+        body: formData });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -185,21 +175,15 @@ export default function TicketDetailPage() {
 
     try {
       setAddingComment(true);
-      const token = localStorage.getItem('token');
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const baseUrl = API_URL;
 
       const res = await fetch(
-        `${baseUrl}/support-tickets/${params.id}/comments`,
-        {
+        `${API_URL}/support-tickets/${params.id}/comments`, { credentials: 'include',
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+            'Content-Type': 'application/json' },
           body: JSON.stringify({
-            content: newComment,
-          }),
-        }
+            content: newComment }) }
       );
 
       if (!res.ok) throw new Error(tCommon('error'));
@@ -219,8 +203,7 @@ export default function TicketDetailPage() {
       IN_PROGRESS: 'bg-purple-500/20 text-purple-400',
       WAITING_CUSTOMER: 'bg-orange-500/20 text-orange-400',
       RESOLVED: 'bg-green-500/20 text-green-400',
-      CLOSED: 'bg-muted text-muted-foreground',
-    };
+      CLOSED: 'bg-muted text-muted-foreground' };
     return badges[status] || 'bg-muted text-muted-foreground';
   };
 
@@ -229,8 +212,7 @@ export default function TicketDetailPage() {
       LOW: 'bg-muted text-muted-foreground',
       MEDIUM: 'bg-blue-500/20 text-blue-400',
       HIGH: 'bg-orange-500/20 text-orange-400',
-      URGENT: 'bg-red-500/20 text-red-400',
-    };
+      URGENT: 'bg-red-500/20 text-red-400' };
     return badges[priority] || 'bg-muted text-muted-foreground';
   };
 
@@ -341,8 +323,7 @@ export default function TicketDetailPage() {
                         month: 'short',
                         year: 'numeric',
                         hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                        minute: '2-digit' })}
                     </span>
                   </div>
                   <p className="text-muted-foreground whitespace-pre-wrap">{comment.content}</p>
@@ -417,7 +398,7 @@ export default function TicketDetailPage() {
               {attachments.map((att) => (
                 <a
                   key={att.id}
-                  href={`${process.env.NEXT_PUBLIC_API_URL}/support-tickets/attachments/${att.id}/download`}
+                  href={`${API_URL}/support-tickets/attachments/${att.id}/download`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors text-sm group"
@@ -465,8 +446,7 @@ export default function TicketDetailPage() {
                   {new Date(ticket.createdAt).toLocaleDateString('es', {
                     day: '2-digit',
                     month: 'short',
-                    year: 'numeric',
-                  })}
+                    year: 'numeric' })}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -475,8 +455,7 @@ export default function TicketDetailPage() {
                   {new Date(ticket.updatedAt).toLocaleDateString('es', {
                     day: '2-digit',
                     month: 'short',
-                    year: 'numeric',
-                  })}
+                    year: 'numeric' })}
                 </span>
               </div>
               {ticket.resolvedAt && (
@@ -486,8 +465,7 @@ export default function TicketDetailPage() {
                     {new Date(ticket.resolvedAt).toLocaleDateString('es', {
                       day: '2-digit',
                       month: 'short',
-                      year: 'numeric',
-                    })}
+                      year: 'numeric' })}
                   </span>
                 </div>
               )}

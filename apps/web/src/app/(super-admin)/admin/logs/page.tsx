@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import {
   ScrollText,
@@ -16,23 +17,20 @@ import {
   Clock,
   Eye,
   RefreshCw,
-  Trash2,
-} from 'lucide-react';
+  Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  DialogTitle } from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 
 interface AuditLog {
   id: string;
@@ -92,8 +90,7 @@ const actionColors: Record<string, string> = {
   SEND: 'bg-orange-500/20 text-orange-400',
   SIGN: 'bg-pink-500/20 text-pink-400',
   TRANSMIT: 'bg-emerald-500/20 text-emerald-400',
-  CONFIG_CHANGE: 'bg-amber-500/20 text-amber-400',
-};
+  CONFIG_CHANGE: 'bg-amber-500/20 text-amber-400' };
 
 interface DteError {
   id: string;
@@ -172,12 +169,9 @@ export default function LogsPage() {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/audit-logs/stats`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/audit-logs/stats`, { credentials: 'include',
+          headers: { } }
       );
 
       if (res.ok) {
@@ -192,12 +186,10 @@ export default function LogsPage() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
 
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '25',
-      });
+        limit: '25' });
 
       if (search) params.append('search', search);
       if (actionFilter && actionFilter !== 'ALL') params.append('action', actionFilter);
@@ -208,10 +200,8 @@ export default function LogsPage() {
       if (endDate) params.append('endDate', endDate);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/audit-logs?${params}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/audit-logs?${params}`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al cargar logs');
@@ -237,14 +227,13 @@ export default function LogsPage() {
     if (!tenantId) return;
     try {
       setLoadingDteErrors(true);
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const base = process.env.NEXT_PUBLIC_API_URL;
+      const headers = { };
+      const base = API_URL;
 
       const [errorsRes, summaryRes, opsRes] = await Promise.all([
-        fetch(`${base}/super-admin/logs/tenant-errors?tenantId=${tenantId}&limit=30`, { headers }),
-        fetch(`${base}/super-admin/logs/error-summary?tenantId=${tenantId}`, { headers }),
-        fetch(`${base}/super-admin/logs/operations?tenantId=${tenantId}&limit=50`, { headers }),
+        fetch(`${base}/super-admin/logs/tenant-errors?tenantId=${tenantId}&limit=30`, { credentials: 'include', headers }),
+        fetch(`${base}/super-admin/logs/error-summary?tenantId=${tenantId}`, { credentials: 'include', headers }),
+        fetch(`${base}/super-admin/logs/operations?tenantId=${tenantId}&limit=50`, { credentials: 'include', headers }),
       ]);
 
       if (errorsRes.ok) setDteErrors(await errorsRes.json());
@@ -273,8 +262,7 @@ export default function LogsPage() {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
-    });
+      minute: '2-digit' });
   };
 
   const parseJson = (value: string | null) => {

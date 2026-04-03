@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api';
 
 interface OnboardingStatus {
   hasCompanyData: boolean;
@@ -217,25 +218,8 @@ export function useOnboardingStatus() {
   React.useEffect(() => {
     async function fetchStatus() {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setIsLoading(false);
-          return;
-        }
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setStatus(data);
-        }
+        const data = await apiFetch<OnboardingStatus>('/tenants/me/onboarding-status');
+        setStatus(data);
       } catch (error) {
         console.error('Error fetching onboarding status:', error);
       } finally {

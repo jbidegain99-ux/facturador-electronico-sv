@@ -14,10 +14,11 @@ import { WebhooksModule } from '../webhooks/webhooks.module';
 import { AccountingModule } from '../accounting/accounting.module';
 import { SucursalesModule } from '../sucursales/sucursales.module';
 import { HaciendaModule } from '../hacienda/hacienda.module';
+import { InboundWebhooksController } from '../webhooks/controllers/inbound.controller';
 
 @Module({
-  imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, forwardRef(() => WebhooksModule), forwardRef(() => AccountingModule), SucursalesModule, HaciendaModule],
-  controllers: [DteController],
+  imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, WebhooksModule, forwardRef(() => AccountingModule), SucursalesModule, HaciendaModule],
+  controllers: [DteController, InboundWebhooksController],
   providers: [DteBuilderService, DteValidatorService, DteService, PdfService, DteErrorMapperService, DteOperationLoggerService],
   exports: [DteBuilderService, DteValidatorService, DteService, PdfService, DteErrorMapperService, DteOperationLoggerService],
 })

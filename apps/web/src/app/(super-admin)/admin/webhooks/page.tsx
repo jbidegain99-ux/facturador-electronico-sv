@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,8 +11,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   CheckCircle2,
@@ -20,8 +20,7 @@ import {
   BarChart3,
   RefreshCw,
   Webhook,
-  Building2,
-} from 'lucide-react';
+  Building2 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -37,14 +36,11 @@ interface TenantWebhookSummary {
 
 // ─── API helpers ─────────────────────────────────────────────────────────────
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE = API_URL || 'http://localhost:3001';
 
 function authHeaders(): Record<string, string> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   return {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
+    'Content-Type': 'application/json' };
 }
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
@@ -60,9 +56,8 @@ export default function AdminWebhooksPage() {
   const loadData = useCallback(async () => {
     try {
       // Fetch all tenants with webhook data
-      const res = await fetch(`${API_BASE}/admin/webhooks/summary`, {
-        headers: authHeaders(),
-      });
+      const res = await fetch(`${API_URL}/admin/webhooks/summary`, { credentials: 'include',
+        headers: authHeaders() });
       if (!res.ok) {
         // If admin endpoint doesn't exist yet, show empty state
         setSummaries([]);

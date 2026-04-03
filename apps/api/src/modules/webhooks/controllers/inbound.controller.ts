@@ -8,8 +8,6 @@ import {
   Logger,
   UnauthorizedException,
   BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../../../common/decorators/public.decorator';
@@ -55,7 +53,7 @@ export class InboundWebhooksController {
 
   constructor(
     private prisma: PrismaService,
-    @Inject(forwardRef(() => DteService)) private dteService: DteService,
+    private dteService: DteService,
   ) {}
 
   /**

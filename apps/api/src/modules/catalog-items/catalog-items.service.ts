@@ -261,6 +261,25 @@ export class CatalogItemsService {
     return { message: 'Item eliminado correctamente' };
   }
 
+  async trackUsage(tenantId: string, ids: string[]): Promise<{ updated: number }> {
+    if (ids.length === 0) return { updated: 0 };
+
+    // Only update items belonging to this tenant
+    const result = await this.prisma.catalogItem.updateMany({
+      where: {
+        id: { in: ids },
+        tenantId,
+      },
+      data: {
+        usageCount: { increment: 1 },
+        lastUsedAt: new Date(),
+      },
+    });
+
+    this.logger.log(`Tracked usage for ${result.count} catalog items (tenant ${tenantId})`);
+    return { updated: result.count };
+  }
+
   async toggleFavorite(tenantId: string, id: string): Promise<CatalogItem> {
     const item = await this.findOne(tenantId, id);
 

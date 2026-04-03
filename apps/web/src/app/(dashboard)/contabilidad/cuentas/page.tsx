@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { useTranslations } from 'next-intl';
+import { apiFetch } from '@/lib/api';
 import {
   ChevronRight,
   ChevronDown,
@@ -218,26 +219,13 @@ export default function CuentasPage() {
 
   const fetchAccounts = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const [treeRes, listRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/accounts`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/accounts/list`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+      const [treeData, listData] = await Promise.all([
+        apiFetch<AccountingAccount[]>('/accounting/accounts').catch(() => []),
+        apiFetch<AccountingAccount[]>('/accounting/accounts/list').catch(() => []),
       ]);
 
-      if (treeRes.ok) {
-        const treeData = await treeRes.json().catch(() => []);
-        if (Array.isArray(treeData)) setAccounts(treeData);
-      }
-      if (listRes.ok) {
-        const listData = await listRes.json().catch(() => []);
-        if (Array.isArray(listData)) setFlatAccounts(listData);
-      }
+      if (Array.isArray(treeData)) setAccounts(treeData);
+      if (Array.isArray(listData)) setFlatAccounts(listData);
     } catch {
       // Non-critical
     } finally {
@@ -275,20 +263,11 @@ export default function CuentasPage() {
   const handleSeed = async () => {
     setSeeding(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/seed`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json().catch(() => ({}));
-      if (res.ok) {
-        toastRef.current.success(t('seedSuccess'), `${(json as { created?: number }).created ?? 0}`);
-        fetchAccounts();
-      } else {
-        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('saveError'));
-      }
-    } catch {
-      toastRef.current.error(tCommon('error'), t('connectionError'));
+      const json = await apiFetch<{ created?: number }>('/accounting/seed', { method: 'POST' });
+      toastRef.current.success(t('seedSuccess'), `${json.created ?? 0}`);
+      fetchAccounts();
+    } catch (err) {
+      toastRef.current.error(tCommon('error'), err instanceof Error ? err.message : t('saveError'));
     } finally {
       setSeeding(false);
     }
@@ -317,19 +296,10 @@ export default function CuentasPage() {
 
   const handleToggleActive = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/accounts/${id}/toggle-active`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        fetchAccounts();
-      } else {
-        const json = await res.json().catch(() => ({}));
-        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('stateChangeError'));
-      }
-    } catch {
-      toastRef.current.error(tCommon('error'), t('connectionError'));
+      await apiFetch(`/accounting/accounts/${id}/toggle-active`, { method: 'POST' });
+      fetchAccounts();
+    } catch (err) {
+      toastRef.current.error(tCommon('error'), err instanceof Error ? err.message : t('stateChangeError'));
     }
   };
 
@@ -341,10 +311,9 @@ export default function CuentasPage() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      const url = editingId
-        ? `${process.env.NEXT_PUBLIC_API_URL}/accounting/accounts/${editingId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/accounting/accounts`;
+      const endpoint = editingId
+        ? `/accounting/accounts/${editingId}`
+        : `/accounting/accounts`;
 
       const body: Record<string, unknown> = {
         code: form.code,
@@ -357,25 +326,15 @@ export default function CuentasPage() {
       };
       if (form.parentId) body.parentId = form.parentId;
 
-      const res = await fetch(url, {
+      await apiFetch(endpoint, {
         method: editingId ? 'PATCH' : 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(body),
       });
-
-      const json = await res.json().catch(() => ({}));
-      if (res.ok) {
-        toastRef.current.success(editingId ? t('accountUpdated') : t('accountCreated'), `${form.code} - ${form.name}`);
-        setShowForm(false);
-        fetchAccounts();
-      } else {
-        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('saveError'));
-      }
-    } catch {
-      toastRef.current.error(tCommon('error'), t('connectionError'));
+      toastRef.current.success(editingId ? t('accountUpdated') : t('accountCreated'), `${form.code} - ${form.name}`);
+      setShowForm(false);
+      fetchAccounts();
+    } catch (err) {
+      toastRef.current.error(tCommon('error'), err instanceof Error ? err.message : t('saveError'));
     } finally {
       setSaving(false);
     }

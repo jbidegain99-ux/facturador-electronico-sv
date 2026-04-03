@@ -1,0 +1,2215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte de Clientes - Facturosv.com</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; padding: 24px; }
+  .header { text-align: center; margin-bottom: 32px; }
+  .header h1 { font-size: 24px; color: #1a1a2e; }
+  .header .subtitle { color: #666; margin-top: 4px; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; max-width: 900px; margin-left: auto; margin-right: auto; }
+  .summary-card { background: #fff; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .summary-card .label { font-size: 12px; text-transform: uppercase; color: #888; }
+  .summary-card .value { font-size: 24px; font-weight: 700; color: #1a1a2e; margin-top: 4px; }
+  .summary-card .value.money { color: #16a34a; }
+  .empresa-section { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
+  .empresa-section h2 { font-size: 18px; margin-bottom: 16px; color: #1a1a2e; }
+  .empresa-stats { font-size: 14px; font-weight: 400; color: #888; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f8f9fa; padding: 8px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+  td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; }
+  tr:hover td { background: #f8f9fa; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .total { font-weight: 700; }
+  .total-label { text-align: right; font-weight: 700; }
+  .mono { font-family: 'SF Mono', monospace; font-size: 12px; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #fff; }
+  .tipo-01 { background: #3b82f6; }
+  .tipo-03 { background: #8b5cf6; }
+  .tipo-05 { background: #ef4444; }
+  .tipo-06 { background: #f59e0b; }
+  .tipo-11 { background: #06b6d4; }
+  .tipo-14 { background: #10b981; }
+  .estado { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; }
+  .estado.procesado { background: #dcfce7; color: #166534; }
+  .estado.pendiente { background: #fef3c7; color: #92400e; }
+  .estado.rechazado, .estado.error { background: #fee2e2; color: #991b1b; }
+  tfoot td { border-top: 2px solid #e5e7eb; background: #f8f9fa; }
+  .footer { text-align: center; color: #999; font-size: 12px; margin-top: 32px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Reporte de Clientes - Facturosv.com</h1>
+    <div class="subtitle">Fecha de corte: 2026-03-25 | Generado: 2026-03-25T19:37:07.552Z</div>
+  </div>
+
+  <div class="summary">
+    <div class="summary-card"><div class="label">Empresas</div><div class="value">6</div></div>
+    <div class="summary-card"><div class="label">Clientes</div><div class="value">119</div></div>
+    <div class="summary-card"><div class="label">DTEs Validos</div><div class="value">185</div></div>
+    <div class="summary-card"><div class="label">Total Ventas</div><div class="value money">$85,974.92</div></div>
+  </div>
+
+  
+      <div class="empresa-section">
+        <h2>ALFACOM, SA DE CV  <span class="empresa-stats">1 DTEs &mdash; Total: $15.00</span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th><th>Tipo DTE</th><th>Numero Control</th><th>Concepto</th>
+              <th>Gravada</th><th>IVA</th><th>Total</th><th>Estado</th><th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td>ADITIVOS DE EL SALVADOR, SA DE CV </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000001</td>
+          <td>Office 365 Standard mensual</td>
+          <td class="num">$15.00</td>
+          <td class="num">$0.00</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-11</td>
+        </tr></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="total-label">Total ALFACOM, SA DE CV </td>
+              <td class="num total">$15.00</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="empresa-section">
+        <h2>Demo Empresa <span class="empresa-stats">30 DTEs &mdash; Total: $5,090.36</span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th><th>Tipo DTE</th><th>Numero Control</th><th>Concepto</th>
+              <th>Gravada</th><th>IVA</th><th>Total</th><th>Estado</th><th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td>Servicios Digitales SV S.A.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000013</td>
+          <td>Licencia Facturo Plan Profesional (+2 más)</td>
+          <td class="num">$109.98</td>
+          <td class="num">$14.30</td>
+          <td class="num total">$124.28</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-11</td>
+        </tr>
+        <tr>
+          <td>Restaurante El Buen Sabor</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000017</td>
+          <td>Pack PYME (Básico + Contabilidad)</td>
+          <td class="num">$44.99</td>
+          <td class="num">$5.85</td>
+          <td class="num total">$50.84</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-10</td>
+        </tr>
+        <tr>
+          <td>Importadora XYZ Ltda.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000012</td>
+          <td>Licencia Facturo Plan Enterprise</td>
+          <td class="num">$499.95</td>
+          <td class="num">$64.99</td>
+          <td class="num total">$564.94</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-10</td>
+        </tr>
+        <tr>
+          <td>Farmacia Central</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000016</td>
+          <td>Licencia Facturo Plan Básico (+1 más)</td>
+          <td class="num">$64.99</td>
+          <td class="num">$8.45</td>
+          <td class="num total">$73.44</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-09</td>
+        </tr>
+        <tr>
+          <td>Panadería Don Juan</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000015</td>
+          <td>Capacitación virtual (por hora)</td>
+          <td class="num">$45.00</td>
+          <td class="num">$5.85</td>
+          <td class="num total">$50.85</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-08</td>
+        </tr>
+        <tr>
+          <td>Constructora Moderna S.A.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000011</td>
+          <td>Auditoría de cumplimiento DTE</td>
+          <td class="num">$250.00</td>
+          <td class="num">$32.50</td>
+          <td class="num total">$282.50</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-07</td>
+        </tr>
+        <tr>
+          <td>María Elena García</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000014</td>
+          <td>Certificado de firma electrónica</td>
+          <td class="num">$50.00</td>
+          <td class="num">$6.50</td>
+          <td class="num total">$56.50</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-06</td>
+        </tr>
+        <tr>
+          <td>Tech Solutions S.A.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000010</td>
+          <td>Integración API personalizada</td>
+          <td class="num">$300.00</td>
+          <td class="num">$39.00</td>
+          <td class="num total">$339.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-05</td>
+        </tr>
+        <tr>
+          <td>Roberto Martínez Flores</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000013</td>
+          <td>Capacitación presencial (por hora)</td>
+          <td class="num">$150.00</td>
+          <td class="num">$19.50</td>
+          <td class="num total">$169.50</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Distribuidora ABC S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000009</td>
+          <td>Licencia Facturo Plan Profesional (+1 más)</td>
+          <td class="num">$84.99</td>
+          <td class="num">$11.05</td>
+          <td class="num total">$96.04</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-01</td>
+        </tr>
+        <tr>
+          <td>Farmacia Central</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000012</td>
+          <td>Licencia Facturo Plan Básico</td>
+          <td class="num">$29.99</td>
+          <td class="num">$3.90</td>
+          <td class="num total">$33.89</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-26</td>
+        </tr>
+        <tr>
+          <td>Hotel Vista Real</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000008</td>
+          <td>Hosting dedicado (+1 más)</td>
+          <td class="num">$120.00</td>
+          <td class="num">$15.60</td>
+          <td class="num total">$135.60</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-23</td>
+        </tr>
+        <tr>
+          <td>Taller Mecánico Express</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000011</td>
+          <td>Consultoría tributaria (por hora)</td>
+          <td class="num">$120.00</td>
+          <td class="num">$15.60</td>
+          <td class="num total">$135.60</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-20</td>
+        </tr>
+        <tr>
+          <td>Restaurante El Buen Sabor</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000010</td>
+          <td>Pack PYME (Básico + Contabilidad)</td>
+          <td class="num">$44.99</td>
+          <td class="num">$5.85</td>
+          <td class="num total">$50.84</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Servicios Digitales SV S.A.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000007</td>
+          <td>Licencia Facturo Plan Enterprise (+1 más)</td>
+          <td class="num">$224.97</td>
+          <td class="num">$29.25</td>
+          <td class="num total">$254.22</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-16</td>
+        </tr>
+        <tr>
+          <td>María Elena García</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000009</td>
+          <td>Consultoría tributaria (por hora)</td>
+          <td class="num">$240.00</td>
+          <td class="num">$31.20</td>
+          <td class="num total">$271.20</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-13</td>
+        </tr>
+        <tr>
+          <td>Clínica San Rafael</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000006</td>
+          <td>Implementación inicial</td>
+          <td class="num">$150.00</td>
+          <td class="num">$19.50</td>
+          <td class="num total">$169.50</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-10</td>
+        </tr>
+        <tr>
+          <td>Librería El Conocimiento</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000008</td>
+          <td>Licencia Facturo Plan Básico (+1 más)</td>
+          <td class="num">$49.98</td>
+          <td class="num">$6.50</td>
+          <td class="num total">$56.48</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-08</td>
+        </tr>
+        <tr>
+          <td>Distribuidora ABC S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000005</td>
+          <td>Licencia Facturo Plan Profesional (+1 más)</td>
+          <td class="num">$84.99</td>
+          <td class="num">$11.05</td>
+          <td class="num total">$96.04</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-05</td>
+        </tr>
+        <tr>
+          <td>Roberto Martínez Flores</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000007</td>
+          <td>Capacitación virtual (por hora)</td>
+          <td class="num">$45.00</td>
+          <td class="num">$5.85</td>
+          <td class="num total">$50.85</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-02-02</td>
+        </tr>
+        <tr>
+          <td>Constructora Moderna S.A.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000004</td>
+          <td>Integración API personalizada (+1 más)</td>
+          <td class="num">$500.00</td>
+          <td class="num">$65.00</td>
+          <td class="num total">$565.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-28</td>
+        </tr>
+        <tr>
+          <td>Panadería Don Juan</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000006</td>
+          <td>Capacitación presencial (por hora)</td>
+          <td class="num">$225.00</td>
+          <td class="num">$29.25</td>
+          <td class="num total">$254.25</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-25</td>
+        </tr>
+        <tr>
+          <td>Farmacia Central</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000005</td>
+          <td>Licencia Facturo Plan Básico</td>
+          <td class="num">$29.99</td>
+          <td class="num">$3.90</td>
+          <td class="num total">$33.89</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-22</td>
+        </tr>
+        <tr>
+          <td>Importadora XYZ Ltda.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000003</td>
+          <td>Licencia Facturo Plan Enterprise (+1 más)</td>
+          <td class="num">$339.95</td>
+          <td class="num">$44.19</td>
+          <td class="num total">$384.14</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-20</td>
+        </tr>
+        <tr>
+          <td>Restaurante El Buen Sabor</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000004</td>
+          <td>Pack PYME (Básico + Contabilidad)</td>
+          <td class="num">$44.99</td>
+          <td class="num">$5.85</td>
+          <td class="num total">$50.84</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-18</td>
+        </tr>
+        <tr>
+          <td>Tech Solutions S.A.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000002</td>
+          <td>Implementación inicial (+1 más)</td>
+          <td class="num">$350.00</td>
+          <td class="num">$45.50</td>
+          <td class="num total">$395.50</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-15</td>
+        </tr>
+        <tr>
+          <td>María Elena García</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000003</td>
+          <td>Certificado de firma electrónica</td>
+          <td class="num">$100.00</td>
+          <td class="num">$13.00</td>
+          <td class="num total">$113.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-12</td>
+        </tr>
+        <tr>
+          <td>Distribuidora ABC S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000001</td>
+          <td>Licencia Facturo Plan Profesional (+1 más)</td>
+          <td class="num">$84.99</td>
+          <td class="num">$11.05</td>
+          <td class="num total">$96.04</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-10</td>
+        </tr>
+        <tr>
+          <td>Roberto Martínez Flores</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000002</td>
+          <td>Capacitación virtual (por hora)</td>
+          <td class="num">$90.00</td>
+          <td class="num">$11.70</td>
+          <td class="num total">$101.70</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-08</td>
+        </tr>
+        <tr>
+          <td>María Elena García</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000001</td>
+          <td>Licencia Facturo Plan Básico</td>
+          <td class="num">$29.99</td>
+          <td class="num">$3.90</td>
+          <td class="num total">$33.89</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-01-05</td>
+        </tr></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="total-label">Total Demo Empresa</td>
+              <td class="num total">$5,090.36</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="empresa-section">
+        <h2>E2E Test e2e_1773364306020 <span class="empresa-stats">10 DTEs &mdash; Total: $14,675.00</span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th><th>Tipo DTE</th><th>Numero Control</th><th>Concepto</th>
+              <th>Gravada</th><th>IVA</th><th>Total</th><th>Estado</th><th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td>Cooperativa Test e2e_1773364306020</td>
+          <td><span class="badge tipo-14">14</span> Factura de Sujeto Excluido</td>
+          <td class="mono">DTE-14-M001P001-000000000000001</td>
+          <td>Compra sujeto excluido E2E</td>
+          <td class="num">$2,000.00</td>
+          <td class="num">$0.00</td>
+          <td class="num total">$2,000.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Export Co USA e2e_1773364306020</td>
+          <td><span class="badge tipo-11">11</span> Factura de Exportación</td>
+          <td class="mono">DTE-11-M001P001-000000000000001</td>
+          <td>Export Service E2E</td>
+          <td class="num">$5,000.00</td>
+          <td class="num">$0.00</td>
+          <td class="num total">$5,000.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Test Liquidacion e2e_1773364306020</td>
+          <td><span class="badge tipo-09">09</span> Tipo 09</td>
+          <td class="mono">DTE-09-M001P001-000000000000001</td>
+          <td>N/A</td>
+          <td class="num">$1,200.00</td>
+          <td class="num">$156.00</td>
+          <td class="num total">$1,332.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Test Retencion e2e_1773364306020</td>
+          <td><span class="badge tipo-07">07</span> Tipo 07</td>
+          <td class="mono">DTE-07-M001P001-000000000000001</td>
+          <td>Retencion IVA E2E</td>
+          <td class="num">$1,500.00</td>
+          <td class="num">$15.00</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Cliente ND e2e_1773364306020</td>
+          <td><span class="badge tipo-06">06</span> Nota de Débito</td>
+          <td class="mono">DTE-06-M001P001-000000000000001</td>
+          <td>Cargo adicional E2E</td>
+          <td class="num">$300.00</td>
+          <td class="num">$39.00</td>
+          <td class="num total">$339.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Cliente NC Ref e2e_1773364306020</td>
+          <td><span class="badge tipo-05">05</span> Nota de Crédito</td>
+          <td class="mono">DTE-05-M001P001-000000000000001</td>
+          <td>Devolucion parcial E2E</td>
+          <td class="num">$500.00</td>
+          <td class="num">$65.00</td>
+          <td class="num total">$565.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Cliente NC Ref e2e_1773364306020</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000002</td>
+          <td>Item para NC</td>
+          <td class="num">$2,000.00</td>
+          <td class="num">$260.00</td>
+          <td class="num total">$2,260.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Test NR e2e_1773364306020</td>
+          <td><span class="badge tipo-04">04</span> Tipo 04</td>
+          <td class="mono">DTE-04-M001P001-000000000000001</td>
+          <td>Item remitido E2E</td>
+          <td class="num">$800.00</td>
+          <td class="num">$104.00</td>
+          <td class="num total">$904.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Test CCF e2e_1773364306020</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000001</td>
+          <td>Servicio CCF E2E</td>
+          <td class="num">$1,000.00</td>
+          <td class="num">$130.00</td>
+          <td class="num total">$1,130.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Cooperativa Test e2e_1773364306020</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000001</td>
+          <td>Servicio de prueba E2E</td>
+          <td class="num">$1,000.00</td>
+          <td class="num">$130.00</td>
+          <td class="num total">$1,130.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="total-label">Total E2E Test e2e_1773364306020</td>
+              <td class="num total">$14,675.00</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="empresa-section">
+        <h2>Aurora SA de CV <span class="empresa-stats">6 DTEs &mdash; Total: $1,059.77</span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th><th>Tipo DTE</th><th>Numero Control</th><th>Concepto</th>
+              <th>Gravada</th><th>IVA</th><th>Total</th><th>Estado</th><th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td>JOSSELINE JANETT GÓMEZ MEJÍA</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000005</td>
+          <td>Pili Cracker (+1 más)</td>
+          <td class="num">$-5.00</td>
+          <td class="num">$-0.65</td>
+          <td class="num total">$-5.65</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-25</td>
+        </tr>
+        <tr>
+          <td>JOSSELINE JANETT GÓMEZ MEJÍA</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000004</td>
+          <td>Pili Cracker</td>
+          <td class="num">$100.00</td>
+          <td class="num">$13.00</td>
+          <td class="num total">$113.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-25</td>
+        </tr>
+        <tr>
+          <td>Preueba cliente DUI</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000003</td>
+          <td>producto 1</td>
+          <td class="num">$97.36</td>
+          <td class="num">$12.66</td>
+          <td class="num total">$110.02</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-25</td>
+        </tr>
+        <tr>
+          <td>JOSSELINE JANETT GÓMEZ MEJÍA</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000002</td>
+          <td>Pili Cracker (+1 más)</td>
+          <td class="num">$0.00</td>
+          <td class="num">$0.00</td>
+          <td class="num total">$220.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-24</td>
+        </tr>
+        <tr>
+          <td>JOSSELINE JANETT GÓMEZ MEJÍA</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000001</td>
+          <td>Morteros #5 (+2 más)</td>
+          <td class="num">$400.80</td>
+          <td class="num">$52.10</td>
+          <td class="num total">$452.90</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-18</td>
+        </tr>
+        <tr>
+          <td>Anna Perez</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000001</td>
+          <td>item prueba</td>
+          <td class="num">$150.00</td>
+          <td class="num">$19.50</td>
+          <td class="num total">$169.50</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-11</td>
+        </tr></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="total-label">Total Aurora SA de CV</td>
+              <td class="num total">$1,059.77</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="empresa-section">
+        <h2>Republicode <span class="empresa-stats">17 DTEs &mdash; Total: $49,006.85</span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th><th>Tipo DTE</th><th>Numero Control</th><th>Concepto</th>
+              <th>Gravada</th><th>IVA</th><th>Total</th><th>Estado</th><th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td>IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000029</td>
+          <td>Servicio de Outsourcing de Programador Febrero 2026</td>
+          <td class="num">$3,100.00</td>
+          <td class="num">$403.00</td>
+          <td class="num total">$3,503.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000028</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000027</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000026</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000025</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000024</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000023</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000011</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000022</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000010</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000009</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000008</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000007</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000006</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-16</td>
+        </tr>
+        <tr>
+          <td>The Wellnest S.A. de C.V.</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000005</td>
+          <td>Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento</td>
+          <td class="num">$2,654.87</td>
+          <td class="num">$345.13</td>
+          <td class="num total">$3,000.00</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-16</td>
+        </tr>
+        <tr>
+          <td>Aquapura</td>
+          <td><span class="badge tipo-05">05</span> Nota de Crédito</td>
+          <td class="mono">DTE-05-M001P001-000000000000001</td>
+          <td>Berlines</td>
+          <td class="num">$0.75</td>
+          <td class="num">$0.10</td>
+          <td class="num total">$0.85</td>
+          <td><span class="estado rechazado">RECHAZADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE</td>
+          <td><span class="badge tipo-03">03</span> Comprobante de Crédito Fiscal</td>
+          <td class="mono">DTE-03-M001P001-000000000000021</td>
+          <td>Servicio de Outsourcing de Programador Marzo 2026</td>
+          <td class="num">$3,100.00</td>
+          <td class="num">$403.00</td>
+          <td class="num total">$3,503.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-12</td>
+        </tr></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="total-label">Total Republicode</td>
+              <td class="num total">$49,006.85</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="empresa-section">
+        <h2>Wellnest <span class="empresa-stats">121 DTEs &mdash; Total: $16,127.94</span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th><th>Tipo DTE</th><th>Numero Control</th><th>Concepto</th>
+              <th>Gravada</th><th>IVA</th><th>Total</th><th>Estado</th><th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td>María Fernanda Amaya</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000123</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-25</td>
+        </tr>
+        <tr>
+          <td>Gabriela González Lucha</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000122</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$61.94</td>
+          <td class="num">$8.05</td>
+          <td class="num total">$69.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-24</td>
+        </tr>
+        <tr>
+          <td>Sophia Valles</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000121</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Paola Nasser</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000120</td>
+          <td>Paquete de 80 clases - Wellnest Studio</td>
+          <td class="num">$314.16</td>
+          <td class="num">$40.84</td>
+          <td class="num total">$355.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Esther Umanzor</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000119</td>
+          <td>Paquete de 80 clases - Wellnest Studio</td>
+          <td class="num">$314.16</td>
+          <td class="num">$40.84</td>
+          <td class="num total">$355.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Francisco torres</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000117</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Victoria Sosa</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000116</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Sophia Valles</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000115</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Sophia Valles</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000114</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Vanessa Herrera</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000113</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Luz Marina Avalos</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000112</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$61.94</td>
+          <td class="num">$8.05</td>
+          <td class="num total">$69.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Génesis Romero </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000111</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Ale Escamilla</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000110</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Lidia Ramirez</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000108</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$61.94</td>
+          <td class="num">$8.05</td>
+          <td class="num total">$69.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Axa Torres</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000107</td>
+          <td>Paquete de 12 clases - Wellnest Studio</td>
+          <td class="num">$84.07</td>
+          <td class="num">$10.93</td>
+          <td class="num total">$95.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Nicolle Peña</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000106</td>
+          <td>Paquete de 16 clases - Wellnest Studio</td>
+          <td class="num">$81.42</td>
+          <td class="num">$10.58</td>
+          <td class="num total">$92.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Wendy Portillo</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000105</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Estefany Molina</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000104</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Andrea</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000103</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-22</td>
+        </tr>
+        <tr>
+          <td>Karla Beatriz Morales Alfaro</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000102</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-21</td>
+        </tr>
+        <tr>
+          <td>JANCY EYLLEN RODRÍGUEZ </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000101</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-21</td>
+        </tr>
+        <tr>
+          <td>Andrea Mariel Pérez Torres</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000100</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-21</td>
+        </tr>
+        <tr>
+          <td>Amanda Obando</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000099</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-20</td>
+        </tr>
+        <tr>
+          <td>Pamela Abarca</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000098</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-20</td>
+        </tr>
+        <tr>
+          <td>Mario Palencia</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000097</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-20</td>
+        </tr>
+        <tr>
+          <td>Claudia Perez</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000096</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-19</td>
+        </tr>
+        <tr>
+          <td>Laura Perez Gavidia</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000095</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-19</td>
+        </tr>
+        <tr>
+          <td>Pamela Abarca</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000094</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-18</td>
+        </tr>
+        <tr>
+          <td>Luz Chacón </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000093</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-18</td>
+        </tr>
+        <tr>
+          <td>Gabriela González Lucha</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000092</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-18</td>
+        </tr>
+        <tr>
+          <td>Gabriela Alas</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000091</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>Gabriella Amaya</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000090</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>Stephanie Fernández</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000089</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-17</td>
+        </tr>
+        <tr>
+          <td>María José Ramirez</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000088</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-16</td>
+        </tr>
+        <tr>
+          <td>Catalina Arias</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000087</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$61.94</td>
+          <td class="num">$8.05</td>
+          <td class="num total">$69.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-14</td>
+        </tr>
+        <tr>
+          <td>Ana Carolina Saade Interiano</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000086</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Daniela Flores</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000085</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Nicole Flores</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000084</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Nicole Flores</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000083</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Gabriela Braghieri</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000082</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Vanessa Nunez</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000081</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Vanessa Nunez</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000080</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado procesado">PROCESADO</span></td>
+          <td>2026-03-13</td>
+        </tr>
+        <tr>
+          <td>Alana Gp</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000079</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-12</td>
+        </tr>
+        <tr>
+          <td>Abril Balibrera </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000078</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-12</td>
+        </tr>
+        <tr>
+          <td>Beatriz Molina</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000077</td>
+          <td>Paquete de 2 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-12</td>
+        </tr>
+        <tr>
+          <td>Milagro erazo</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000076</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-11</td>
+        </tr>
+        <tr>
+          <td>Andrea Lopez</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000075</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-11</td>
+        </tr>
+        <tr>
+          <td>Yutsil De La Luz</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000074</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$61.94</td>
+          <td class="num">$8.05</td>
+          <td class="num total">$69.99</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-11</td>
+        </tr>
+        <tr>
+          <td>Matilde Delgado</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M001P001-000000000000073</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-10</td>
+        </tr>
+        <tr>
+          <td>Katherine Figueroa </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000072</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-10</td>
+        </tr>
+        <tr>
+          <td>Andrea Lemus </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000071</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-08</td>
+        </tr>
+        <tr>
+          <td>Ana Carolina Saade Interiano</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000070</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-07</td>
+        </tr>
+        <tr>
+          <td>Karla Amaya</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000069</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-06</td>
+        </tr>
+        <tr>
+          <td>Camila Montoya</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000068</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-06</td>
+        </tr>
+        <tr>
+          <td>Patricia Rivas</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000067</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$61.94</td>
+          <td class="num">$8.05</td>
+          <td class="num total">$69.99</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-06</td>
+        </tr>
+        <tr>
+          <td>Laura Rivas </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000066</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$13.27</td>
+          <td class="num">$1.73</td>
+          <td class="num total">$15.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-05</td>
+        </tr>
+        <tr>
+          <td>Barry Sia</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000065</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-05</td>
+        </tr>
+        <tr>
+          <td>Hadren Quijano</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000064</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$44.24</td>
+          <td class="num">$5.75</td>
+          <td class="num total">$49.99</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-04</td>
+        </tr>
+        <tr>
+          <td>Hazel Aguilar </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000063</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-04</td>
+        </tr>
+        <tr>
+          <td>Ivette Martinez</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000062</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-04</td>
+        </tr>
+        <tr>
+          <td>Barry Mahdi </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000061</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-04</td>
+        </tr>
+        <tr>
+          <td>Lourdes pacas </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000060</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-04</td>
+        </tr>
+        <tr>
+          <td>Nubia Carbajal</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000059</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>paola monterrosa </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000058</td>
+          <td>Paquete de 12 clases - Wellnest Studio</td>
+          <td class="num">$71.46</td>
+          <td class="num">$9.29</td>
+          <td class="num total">$80.75</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Stephanie Rosales de Monge</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000057</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Jorge Alejandro Mira Avelar </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000056</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Andrea Michelle Mónchez Interiano </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000055</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Carmen María Lara Sandoval</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000054</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Dianna Linne</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000053</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Rocío Padilla</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000052</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Katherine Nicole Recinos Morales</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000051</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Karla Gallardo</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000050</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Denisse Menjívar</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000049</td>
+          <td>Paquete de 5 clases - Wellnest Studio</td>
+          <td class="num">$57.52</td>
+          <td class="num">$7.48</td>
+          <td class="num total">$65.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Rocio rivas </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000048</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Emmety Pleitez </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000047</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Erenia Sosa</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000046</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Auxy</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000045</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Claudia</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000044</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Carmen Araujo</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000043</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Nicole urquilla</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000042</td>
+          <td>Paquete de 12 clases - Wellnest Studio</td>
+          <td class="num">$71.46</td>
+          <td class="num">$9.29</td>
+          <td class="num total">$80.75</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Mariana Zelaya</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000041</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Roxana Portillo</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000040</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Adriana Abigail Ramírez Aguilar </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000039</td>
+          <td>Paquete de 12 clases - Wellnest Studio</td>
+          <td class="num">$71.46</td>
+          <td class="num">$9.29</td>
+          <td class="num total">$80.75</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Diana Cecilia Rosales Portillo</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000038</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Gabriel Aguiar </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000037</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Dayana Posada</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000036</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Allison </td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000035</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Geisel</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000034</td>
+          <td>Paquete de 12 clases - Wellnest Studio</td>
+          <td class="num">$71.46</td>
+          <td class="num">$9.29</td>
+          <td class="num total">$80.75</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Nayheli Michelle Herrera Quevedo</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000033</td>
+          <td>Paquete de 12 clases - Wellnest Studio</td>
+          <td class="num">$71.46</td>
+          <td class="num">$9.29</td>
+          <td class="num total">$80.75</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Katerine Dayana Rodríguez Portillo</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000032</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$52.65</td>
+          <td class="num">$6.84</td>
+          <td class="num total">$59.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Karla Beatriz Morales Alfaro</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000031</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Sofía Merino</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000030</td>
+          <td>Paquete de 5 clases - Wellnest Studio</td>
+          <td class="num">$57.52</td>
+          <td class="num">$7.48</td>
+          <td class="num total">$65.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Alessandra Esquivel</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000029</td>
+          <td>Paquete de 12 clases - Wellnest Studio</td>
+          <td class="num">$71.46</td>
+          <td class="num">$9.29</td>
+          <td class="num total">$80.75</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Paola Nicole Alvarado Erazo</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000028</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-03</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000027</td>
+          <td>Paquete de 80 clases - Wellnest Studio</td>
+          <td class="num">$314.16</td>
+          <td class="num">$40.84</td>
+          <td class="num total">$355.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-01</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000026</td>
+          <td>Paquete de 80 clases - Wellnest Studio</td>
+          <td class="num">$314.16</td>
+          <td class="num">$40.84</td>
+          <td class="num total">$355.00</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-01</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000025</td>
+          <td>Paquete de 4 clases - Wellnest Studio</td>
+          <td class="num">$37.60</td>
+          <td class="num">$4.89</td>
+          <td class="num total">$42.49</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-03-01</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000024</td>
+          <td>Paquete de 80 clases - Wellnest Studio</td>
+          <td class="num">$355.00</td>
+          <td class="num">$46.15</td>
+          <td class="num total">$401.15</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-24</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000023</td>
+          <td>Paquete de 80 clases - Wellnest Studio</td>
+          <td class="num">$355.00</td>
+          <td class="num">$46.15</td>
+          <td class="num total">$401.15</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000022</td>
+          <td>prueba</td>
+          <td class="num">$7,755.00</td>
+          <td class="num">$1,008.15</td>
+          <td class="num total">$8,763.15</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000021</td>
+          <td>Paquete de 24 clases - Wellnest Studio</td>
+          <td class="num">$145.00</td>
+          <td class="num">$18.85</td>
+          <td class="num total">$163.85</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000020</td>
+          <td>Paquete de 16 clases - Wellnest Studio</td>
+          <td class="num">$115.00</td>
+          <td class="num">$14.95</td>
+          <td class="num total">$129.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000019</td>
+          <td>Paquete de 8 clases - Wellnest Studio</td>
+          <td class="num">$69.99</td>
+          <td class="num">$9.10</td>
+          <td class="num total">$79.09</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000018</td>
+          <td>Paquete de 80 clases - Wellnest Studio</td>
+          <td class="num">$355.00</td>
+          <td class="num">$46.15</td>
+          <td class="num total">$401.15</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000017</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000016</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000015</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000014</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>test</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000013</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$1.00</td>
+          <td class="num">$0.13</td>
+          <td class="num total">$1.13</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000012</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000011</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000010</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000009</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000008</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000007</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000006</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000005</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000004</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Jose Bidegain</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000003</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>Test Timeout Check</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000002</td>
+          <td>Paquete de 1 clases - Wellnest Studio</td>
+          <td class="num">$15.00</td>
+          <td class="num">$1.95</td>
+          <td class="num total">$16.95</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr>
+        <tr>
+          <td>María García Test</td>
+          <td><span class="badge tipo-01">01</span> Factura</td>
+          <td class="mono">DTE-01-M638P001-000000000000001</td>
+          <td>Paquete de 10 clases - Wellnest Studio</td>
+          <td class="num">$70.00</td>
+          <td class="num">$9.10</td>
+          <td class="num total">$79.10</td>
+          <td><span class="estado pendiente">PENDIENTE</span></td>
+          <td>2026-02-18</td>
+        </tr></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="total-label">Total Wellnest</td>
+              <td class="num total">$16,127.94</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+  <div class="footer">Facturosv.com &mdash; Reporte generado automaticamente</div>
+</body>
+</html>

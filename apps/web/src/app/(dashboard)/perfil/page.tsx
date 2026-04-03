@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -100,28 +101,18 @@ export default function PerfilPage() {
   const [passwordForm, setPasswordForm] = React.useState<ChangePasswordForm>({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: '',
-  });
+    confirmPassword: '' });
   const [fieldErrors, setFieldErrors] = React.useState<FieldErrors>({});
   const [changingPassword, setChangingPassword] = React.useState(false);
 
   // Load profile
   React.useEffect(() => {
     const loadProfile = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No hay sesion activa');
-        setLoading(false);
-        return;
-      }
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
+        const res = await fetch(`${API_URL}/auth/profile`, { credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+            'Content-Type': 'application/json' } });
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
@@ -158,27 +149,18 @@ export default function PerfilPage() {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toastErrorRef.current('Error', 'No hay sesion activa');
-      return;
-    }
 
     setChangingPassword(true);
     setFieldErrors({});
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`, {
+      const res = await fetch(`${API_URL}/auth/change-password`, { credentials: 'include',
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json' },
         body: JSON.stringify({
           currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        }),
-      });
+          newPassword: passwordForm.newPassword }) });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));

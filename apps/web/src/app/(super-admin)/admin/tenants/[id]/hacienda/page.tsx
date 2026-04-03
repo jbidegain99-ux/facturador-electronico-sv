@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -14,8 +15,7 @@ import {
   RefreshCw,
   Wifi,
   Key,
-  FileCheck,
-} from 'lucide-react';
+  FileCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface EnvironmentConfig {
@@ -94,8 +94,7 @@ export default function AdminHaciendaConfigPage() {
   }, [tenantId]);
 
   const getAuthHeaders = (): Record<string, string> => {
-    const token = localStorage.getItem('token');
-    return { Authorization: `Bearer ${token}` };
+    return { };
   };
 
   const fetchData = async () => {
@@ -104,8 +103,8 @@ export default function AdminHaciendaConfigPage() {
       const headers = getAuthHeaders();
 
       const [configRes, tenantRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/hacienda/${tenantId}/config`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${tenantId}`, { headers }),
+        fetch(`${API_URL}/admin/hacienda/${tenantId}/config`, { credentials: 'include', headers }),
+        fetch(`${API_URL}/super-admin/tenants/${tenantId}`, { credentials: 'include', headers }),
       ]);
 
       if (configRes.ok) {
@@ -115,8 +114,7 @@ export default function AdminHaciendaConfigPage() {
         // Fetch test progress if configured
         if (configData.testConfig?.isConfigured || configData.prodConfig?.isConfigured) {
           const progressRes = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/admin/hacienda/${tenantId}/tests/progress`,
-            { headers }
+            `${API_URL}/admin/hacienda/${tenantId}/tests/progress`, { credentials: 'include', headers }
           );
           if (progressRes.ok) {
             setTestProgress(await progressRes.json());
@@ -152,14 +150,11 @@ export default function AdminHaciendaConfigPage() {
       formData.append('certificatePassword', certificatePassword);
       formData.append('certificate', certificateFile);
 
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/hacienda/${tenantId}/quick-setup`,
-        {
+        `${API_URL}/admin/hacienda/${tenantId}/quick-setup`, { credentials: 'include',
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
+          headers: { },
+          body: formData }
       );
 
       const data = await res.json();
@@ -176,8 +171,7 @@ export default function AdminHaciendaConfigPage() {
       } else {
         setSetupResult({
           success: false,
-          message: data.message || data.error || 'Error en la configuracion',
-        });
+          message: data.message || data.error || 'Error en la configuracion' });
       }
     } catch (err) {
       setSetupResult({ success: false, message: 'Error de conexion' });
@@ -193,22 +187,18 @@ export default function AdminHaciendaConfigPage() {
       setActionResult(null);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/hacienda/${tenantId}/test-connection`,
-        {
+        `${API_URL}/admin/hacienda/${tenantId}/test-connection`, { credentials: 'include',
           method: 'POST',
           headers: {
             ...getAuthHeaders(),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ environment: config.activeEnvironment }),
-        }
+            'Content-Type': 'application/json' },
+          body: JSON.stringify({ environment: config.activeEnvironment }) }
       );
 
       const data = await res.json();
       setActionResult({
         success: data.success,
-        message: data.success ? 'Conexion exitosa con Hacienda' : data.error || 'Error de conexion',
-      });
+        message: data.success ? 'Conexion exitosa con Hacienda' : data.error || 'Error de conexion' });
       fetchData();
     } catch (err) {
       setActionResult({ success: false, message: 'Error al probar conexion' });
@@ -224,15 +214,12 @@ export default function AdminHaciendaConfigPage() {
       setActionResult(null);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/hacienda/${tenantId}/renew-token`,
-        {
+        `${API_URL}/admin/hacienda/${tenantId}/renew-token`, { credentials: 'include',
           method: 'POST',
           headers: {
             ...getAuthHeaders(),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ environment: config.activeEnvironment }),
-        }
+            'Content-Type': 'application/json' },
+          body: JSON.stringify({ environment: config.activeEnvironment }) }
       );
 
       const data = await res.json();
@@ -240,8 +227,7 @@ export default function AdminHaciendaConfigPage() {
         success: data.success,
         message: data.success
           ? `Token renovado. Expira: ${new Date(data.expiresAt).toLocaleString('es')}`
-          : data.error || 'Error al renovar token',
-      });
+          : data.error || 'Error al renovar token' });
       fetchData();
     } catch (err) {
       setActionResult({ success: false, message: 'Error al renovar token' });
@@ -256,15 +242,12 @@ export default function AdminHaciendaConfigPage() {
       setActionResult(null);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/hacienda/${tenantId}/switch-environment`,
-        {
+        `${API_URL}/admin/hacienda/${tenantId}/switch-environment`, { credentials: 'include',
           method: 'POST',
           headers: {
             ...getAuthHeaders(),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ environment: newEnv }),
-        }
+            'Content-Type': 'application/json' },
+          body: JSON.stringify({ environment: newEnv }) }
       );
 
       const data = await res.json();
@@ -272,8 +255,7 @@ export default function AdminHaciendaConfigPage() {
         success: data.success,
         message: data.success
           ? `Ambiente cambiado a ${newEnv === 'PRODUCTION' ? 'Produccion' : 'Pruebas'}`
-          : data.error || 'Error al cambiar ambiente',
-      });
+          : data.error || 'Error al cambiar ambiente' });
       fetchData();
     } catch (err) {
       setActionResult({ success: false, message: 'Error al cambiar ambiente' });
@@ -630,8 +612,7 @@ export default function AdminHaciendaConfigPage() {
                     {new Date(envConfig.certificateInfo.validUntil).toLocaleDateString('es', {
                       year: 'numeric',
                       month: 'long',
-                      day: 'numeric',
-                    })}
+                      day: 'numeric' })}
                   </span>
                 </div>
               </div>

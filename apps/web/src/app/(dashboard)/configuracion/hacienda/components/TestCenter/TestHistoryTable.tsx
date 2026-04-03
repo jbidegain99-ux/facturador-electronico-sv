@@ -8,32 +8,29 @@ import {
   Loader2,
   Send,
   Ban,
-  RefreshCw,
-} from 'lucide-react';
+  RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  TableRow } from '@/components/ui/table';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { DTE_TYPES, type TestRecord, type DteTypeCode, type HaciendaTestType, type HaciendaTestStatus } from '../../types';
+import { API_URL } from '@/lib/api';
 
 export function TestHistoryTable() {
   const [loading, setLoading] = React.useState(true);
@@ -44,20 +41,15 @@ export function TestHistoryTable() {
   const loadHistory = React.useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       if (filterDteType !== 'all') params.set('dteType', filterDteType);
       if (filterStatus !== 'all') params.set('status', filterStatus);
       params.set('limit', '50');
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/history?${params}`,
-        {
+        `${API_URL}/hacienda/tests/history?${params}`, { credentials: 'include',
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+            'Content-Type': 'application/json' } }
       );
 
       if (res.ok) {

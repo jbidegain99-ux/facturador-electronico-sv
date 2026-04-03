@@ -10,21 +10,20 @@ import {
   RefreshCw,
   Shield,
   Calendar,
-  AlertCircle,
-} from 'lucide-react';
+  AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/toast';
 import type { HaciendaEnvironment, EnvironmentConfigData } from '../types';
+import { apiFetch, apiUpload, apiRawFetch, API_URL } from '@/lib/api';
 
 interface EnvironmentConfigProps {
   environment: HaciendaEnvironment;
@@ -39,8 +38,7 @@ export function EnvironmentConfig({
   config,
   disabled = false,
   disabledMessage,
-  onConfigured,
-}: EnvironmentConfigProps) {
+  onConfigured }: EnvironmentConfigProps) {
   const toast = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -69,15 +67,9 @@ export function EnvironmentConfig({
       setCertificateFile(file);
 
       // Detect certificate type
-      const formData = new FormData();
-      formData.append('certificate', file);
-      const authToken = localStorage.getItem('token');
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/hacienda/certificates/detect-type`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${authToken}` },
-        body: formData,
-      })
-        .then((r) => (r.ok ? r.json() : null))
+      const detectFormData = new FormData();
+      detectFormData.append('certificate', file);
+      apiUpload<{ requiresPassword?: boolean }>('/hacienda/certificates/detect-type', detectFormData)
         .then((data) => {
           if (data && !data.requiresPassword) {
             setCertificatePassword('');
@@ -103,7 +95,6 @@ export function EnvironmentConfig({
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('apiUser', apiUser);
       formData.append('apiPassword', apiPassword);
@@ -114,29 +105,13 @@ export function EnvironmentConfig({
         formData.append('certificate', certificateFile);
       }
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/config/${environment}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      const data = await res.json();
-
-      if (res.ok) {
-        toast.success(data.message || 'Configuración guardada');
-        onConfigured();
-        // Clear form
-        setApiPassword('');
-        setCertificatePassword('');
-        setCertificateFile(null);
-      } else {
-        throw new Error(data.message || 'Error al guardar');
-      }
+      const data = await apiUpload<{ message?: string }>(`/hacienda/config/${environment}`, formData);
+      toast.success(data.message || 'Configuración guardada');
+      onConfigured();
+      // Clear form
+      setApiPassword('');
+      setCertificatePassword('');
+      setCertificateFile(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al guardar');
     } finally {
@@ -147,27 +122,12 @@ export function EnvironmentConfig({
   const handleTestConnection = async () => {
     setTesting(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/config/test-connection`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ environment }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (res.ok) {
-        toast.success(data.message || 'Conexión exitosa');
-        onConfigured();
-      } else {
-        throw new Error(data.message || 'Error de conexión');
-      }
+      const data = await apiFetch<{ message?: string }>('/hacienda/config/test-connection', {
+        method: 'POST',
+        body: JSON.stringify({ environment }),
+      });
+      toast.success(data.message || 'Conexión exitosa');
+      onConfigured();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error de conexión');
     } finally {
@@ -178,27 +138,12 @@ export function EnvironmentConfig({
   const handleRenewToken = async () => {
     setRenewing(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/config/renew-token`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ environment }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (res.ok) {
-        toast.success('Token renovado exitosamente');
-        onConfigured();
-      } else {
-        throw new Error(data.message || 'Error al renovar token');
-      }
+      await apiFetch('/hacienda/config/renew-token', {
+        method: 'POST',
+        body: JSON.stringify({ environment }),
+      });
+      toast.success('Token renovado exitosamente');
+      onConfigured();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al renovar');
     } finally {

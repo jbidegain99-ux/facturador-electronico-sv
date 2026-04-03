@@ -23,6 +23,7 @@ import { NuevoClienteModal } from '@/components/facturas/nuevo-cliente-modal';
 import { useToast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
 import { formatCurrency } from '@/lib/utils';
+import { apiFetch, API_URL } from '@/lib/api';
 import type { Cliente, ItemFactura } from '@/types';
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -74,21 +75,14 @@ export default function NuevaCotizacionPage() {
 
     const loadQuote = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        const res = await fetch(`${apiUrl}/quotes/${editId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!res.ok) {
+        let quote: Record<string, unknown>;
+        try {
+          quote = await apiFetch<Record<string, unknown>>(`/quotes/${editId}`);
+        } catch {
           toastRef.current.error(t('cantLoadQuote'));
           router.push('/cotizaciones');
           return;
         }
-
-        const quote = await res.json();
 
         // Set client
         if (quote.client) {
@@ -249,10 +243,6 @@ export default function NuevaCotizacionPage() {
     setErrors({});
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error(tCommon('noSession'));
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const payload = {
         clienteId: cliente!.id,
         clienteEmail: clienteEmail || undefined,
@@ -273,53 +263,24 @@ export default function NuevaCotizacionPage() {
 
       if (editId) {
         // Update existing
-        const res = await fetch(`${apiUrl}/quotes/${editId}`, {
+        await apiFetch(`/quotes/${editId}`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
           body: JSON.stringify(payload),
         });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(
-            (errData as { message?: string }).message ||
-              t('updateError'),
-          );
-        }
       } else {
         // Create new
-        const res = await fetch(`${apiUrl}/quotes`, {
+        const created = await apiFetch<{ id: string }>(`/quotes`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
           body: JSON.stringify(payload),
         });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(
-            (errData as { message?: string }).message ||
-              t('createError'),
-          );
-        }
-
-        const created = await res.json();
-        quoteId = (created as { id: string }).id;
+        quoteId = created.id;
       }
 
       // If andSend, transition to SENT
       if (andSend && quoteId) {
-        const sendRes = await fetch(`${apiUrl}/quotes/${quoteId}/send`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!sendRes.ok) {
+        try {
+          await apiFetch(`/quotes/${quoteId}/send`, { method: 'POST' });
+        } catch {
           toastRef.current.warning(
             t('savedNotSent'),
           );

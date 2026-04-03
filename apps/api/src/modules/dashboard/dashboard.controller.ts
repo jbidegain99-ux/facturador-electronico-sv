@@ -1,13 +1,11 @@
-import { Controller, Get, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { DashboardService } from './dashboard.service';
 import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
 
 @ApiTags('dashboard')
 @Controller('dashboard')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}

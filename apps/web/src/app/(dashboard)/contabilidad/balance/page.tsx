@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/toast';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { ArrowLeft, Loader2, Landmark, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { apiFetch } from '@/lib/api';
 
 interface BalanceSheetAccount {
   code: string;
@@ -79,22 +80,10 @@ export default function BalancePage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/reports/balance-sheet`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.ok) {
-        const json = await res.json().catch(() => null);
-        if (json) setData(json);
-      } else {
-        const json = await res.json().catch(() => ({}));
-        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('balanceError'));
-      }
-    } catch {
-      toastRef.current.error(tCommon('error'), t('connectionError'));
+      const json = await apiFetch<BalanceSheetData>('/accounting/reports/balance-sheet');
+      if (json) setData(json);
+    } catch (err) {
+      toastRef.current.error(tCommon('error'), err instanceof Error ? err.message : t('balanceError'));
     } finally {
       setLoading(false);
     }

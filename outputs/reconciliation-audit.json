@@ -1,0 +1,297 @@
+{
+  "timestamp": "2026-03-25T19:54:52.238Z",
+  "wellnestSite": {
+    "totalPurchases": 244,
+    "paidPurchases": 79,
+    "freePurchases": 165,
+    "totalRevenue": 3327.0599999999968,
+    "uniqueCustomers": 191
+  },
+  "facturador": {
+    "totalDtes": 121,
+    "totalAmount": 16127.940000000002,
+    "withPurchaseId": 120,
+    "withoutPurchaseId": 1
+  },
+  "matching": {
+    "matched": 94,
+    "byPurchaseId": 15,
+    "byNameAmountDate": 79,
+    "toCreate": 2,
+    "toCreateAmount": 0,
+    "skippedTrial": 148,
+    "skippedFree": 0,
+    "orphanDtes": 27
+  },
+  "toCreate": [
+    {
+      "purchaseId": "cmmzfy9kn000cidbqiq8ft3p0",
+      "customer": "Adriana Bidegain",
+      "email": "adriana_llopez@hotmail.com",
+      "amount": 0,
+      "package": "Wellnest Trimestral (80 clases)",
+      "classCount": 80,
+      "date": "2026-03-20T21:58:50.615Z",
+      "documentId": null,
+      "documentType": null,
+      "reason": "Enviada al facturador pero sin DTE ($0)"
+    },
+    {
+      "purchaseId": "cmmjek9ku0001fia4nzggf48z",
+      "customer": "Adriana Bidegain",
+      "email": "adriana_llopez@hotmail.com",
+      "amount": 0,
+      "package": "1 Clase",
+      "classCount": 1,
+      "date": "2026-03-09T16:35:39.006Z",
+      "documentId": null,
+      "documentType": null,
+      "reason": "Enviada al facturador pero sin DTE ($0)"
+    }
+  ],
+  "orphanDtes": [
+    {
+      "dteId": "cmm786q3e003wwlk0l5kssj20",
+      "numero": "DTE-01-M638P001-000000000000027",
+      "cliente": "Jose Bidegain",
+      "amount": 355,
+      "estado": "PENDIENTE",
+      "date": "2026-03-01T04:03:55.418Z",
+      "purchaseId": "cmm7861gv0005nndcemao407r_cmm786oxo000mnndcnxpd4rgd"
+    },
+    {
+      "dteId": "cmm786p90003swlk0l8hglixc",
+      "numero": "DTE-01-M638P001-000000000000026",
+      "cliente": "Jose Bidegain",
+      "amount": 355,
+      "estado": "PENDIENTE",
+      "date": "2026-03-01T04:03:54.324Z",
+      "purchaseId": "cmm7861gv0005nndcemao407r_cmm786owg000knndcpuxa9d7r"
+    },
+    {
+      "dteId": "cmm782dz6003owlk0if71f46c",
+      "numero": "DTE-01-M638P001-000000000000025",
+      "cliente": "Jose Bidegain",
+      "amount": 42.49,
+      "estado": "PENDIENTE",
+      "date": "2026-03-01T04:00:33.084Z",
+      "purchaseId": "cmm781l440007jb46zd1zg2xh_cmm782dgr000ejb460vp1grhm"
+    },
+    {
+      "dteId": "cmm17f3qp000w9vhhlp3wy983",
+      "numero": "DTE-01-M638P001-000000000000024",
+      "cliente": "Jose Bidegain",
+      "amount": 401.15,
+      "estado": "PENDIENTE",
+      "date": "2026-02-24T22:55:49.676Z",
+      "purchaseId": "cmm17eewl0003zrj5vh8t3uz6_cmm17f3db000azrj5auerstc5"
+    },
+    {
+      "dteId": "cmlsn6v8o000c9vhhvp9q94um",
+      "numero": "DTE-01-M638P001-000000000000023",
+      "cliente": "Jose Bidegain",
+      "amount": 401.15,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T23:07:23.686Z",
+      "purchaseId": "cmlsn656n0003ahe0ozj9agca_cmlsn6uu7000aahe0isgwff6o"
+    },
+    {
+      "dteId": "cmlshfsmb000bzhpzztxmimdt",
+      "numero": "DTE-01-M638P001-000000000000022",
+      "cliente": "Jose Bidegain",
+      "amount": 8763.15,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T20:26:22.499Z",
+      "purchaseId": null
+    },
+    {
+      "dteId": "cmlsgsnkj000lbgr668ij8b4f",
+      "numero": "DTE-01-M638P001-000000000000021",
+      "cliente": "Jose Bidegain",
+      "amount": 163.85,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T20:08:22.867Z",
+      "purchaseId": "cmlsgs6f00003ur20v204l5go_cmlsgsn6d000aur20io6n3h8e"
+    },
+    {
+      "dteId": "cmlsg9r3d000hbgr63qjx71p7",
+      "numero": "DTE-01-M638P001-000000000000020",
+      "cliente": "Jose Bidegain",
+      "amount": 129.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T19:53:40.969Z",
+      "purchaseId": "cmlsg99d20008wa52175zx34x_cmlsg9qlm000fwa52bhgemen3"
+    },
+    {
+      "dteId": "cmlsg0aov000bbgr6ri0cc25h",
+      "numero": "DTE-01-M638P001-000000000000019",
+      "cliente": "Jose Bidegain",
+      "amount": 79.09,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T19:46:19.807Z",
+      "purchaseId": "cmlsfzkyk0003tqfapluau2ij_cmlsg095r0004wa52kukh03ur"
+    },
+    {
+      "dteId": "cmlsernp0003bk0wf4oo9ypqe",
+      "numero": "DTE-01-M638P001-000000000000018",
+      "cliente": "Jose Bidegain",
+      "amount": 401.15,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T19:11:37.135Z",
+      "purchaseId": "cmlseqqsr00032gl3xxhfitw9_cmlsern35000a2gl3o96qhbz9"
+    },
+    {
+      "dteId": "cmlsddz8p0034k0wf479u36lr",
+      "numero": "DTE-01-M638P001-000000000000017",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:32:59.305Z",
+      "purchaseId": "cmlsdded3000ek62mwrqg7y8m_cmlsddylu000lk62mn1kip4i0"
+    },
+    {
+      "dteId": "cmlsdc002002yk0wf1c593qrg",
+      "numero": "DTE-01-M638P001-000000000000016",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:31:26.978Z",
+      "purchaseId": "cmlsdbcw20003k62m8eridvvb_cmlsdbzk3000ak62mntejrk4n"
+    },
+    {
+      "dteId": "cmlsd9n96002sk0wf8rymtd8q",
+      "numero": "DTE-01-M638P001-000000000000015",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:29:37.146Z",
+      "purchaseId": "cmlscv4gp000ez3dphbefrcjk_cmlscvuvm000lz3dpcfvtnvk4"
+    },
+    {
+      "dteId": "cmlsd9mfd002mk0wfvaoz7z2s",
+      "numero": "DTE-01-M638P001-000000000000014",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:29:36.068Z",
+      "purchaseId": "cmlscswis0003z3dph0ed96oo_cmlsctiex000az3dpk1cpeljo"
+    },
+    {
+      "dteId": "cmlscymmu002gk0wf512vrr4w",
+      "numero": "DTE-01-M638P001-000000000000013",
+      "cliente": "test",
+      "amount": 1.13,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:21:03.126Z",
+      "purchaseId": "connectivity-test"
+    },
+    {
+      "dteId": "cmlscqq4c002ak0wffj78ee9g",
+      "numero": "DTE-01-M638P001-000000000000012",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:14:54.396Z",
+      "purchaseId": "cmlschzsw0003c7ws1mwie3bi_cmlscjwn6000ac7ws7ibs0c2n"
+    },
+    {
+      "dteId": "cmlscqpal0024k0wfjul4szby",
+      "numero": "DTE-01-M638P001-000000000000011",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:14:53.325Z",
+      "purchaseId": "cmlsc3bi20010llykaffin8nv_cmlsc4fy70017llykegndhtr2"
+    },
+    {
+      "dteId": "cmlscqohp001yk0wfo7eb68o7",
+      "numero": "DTE-01-M638P001-000000000000010",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:14:52.285Z",
+      "purchaseId": "cmlsbzwym000pllykejxrd01e_cmlsc0crw000wllyk5lg63px1"
+    },
+    {
+      "dteId": "cmlscqnbz001sk0wfqb8mfcn6",
+      "numero": "DTE-01-M638P001-000000000000009",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:14:50.783Z",
+      "purchaseId": "cmlsbxrpm000ellyk3kfowcc6_cmlsbz8bm000lllyknef3e3ll"
+    },
+    {
+      "dteId": "cmlscqmcw001mk0wfuq2lbiv0",
+      "numero": "DTE-01-M638P001-000000000000008",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:14:49.520Z",
+      "purchaseId": "cmlsbtumk0003llykk2i75z2z_cmlsbul9i000allyk33x22t7e"
+    },
+    {
+      "dteId": "cmlscqle7001gk0wfad6c1fzn",
+      "numero": "DTE-01-M638P001-000000000000007",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:14:48.272Z",
+      "purchaseId": "cmls6kwq90002xpk4juwv4ua5_cmls6mr0i0009xpk4e78q9cd7"
+    },
+    {
+      "dteId": "cmlscqkg7001ak0wfw8vxj9fc",
+      "numero": "DTE-01-M638P001-000000000000006",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:14:47.048Z",
+      "purchaseId": "cmls5m9kp000312ijahb5uakz_cmls5myek000a12ijnqxrjzbs"
+    },
+    {
+      "dteId": "cmlscqjbo0014k0wfxp3x8z1y",
+      "numero": "DTE-01-M638P001-000000000000005",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:14:45.588Z",
+      "purchaseId": "cmls4h8pi000rpx064ryst43d_cmls4hxm6000ypx06w62cz4ie"
+    },
+    {
+      "dteId": "cmlscqhrs000yk0wf438dsmbj",
+      "numero": "DTE-01-M638P001-000000000000004",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T18:14:43.576Z",
+      "purchaseId": "cmls44o0a0009px06lbdsoa35_cmls46r7r000gpx06mjk8n879"
+    },
+    {
+      "dteId": "cmlsbr33k000rk0wf83oufu8a",
+      "numero": "DTE-01-M638P001-000000000000003",
+      "cliente": "Jose Bidegain",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T17:47:11.600Z",
+      "purchaseId": "cmls7dlo2000378iw9cegisx9_cmls7ecvq000a78iwe3shczk4"
+    },
+    {
+      "dteId": "cmls9gksl000kk0wf7a1kz3b3",
+      "numero": "DTE-01-M638P001-000000000000002",
+      "cliente": "Test Timeout Check",
+      "amount": 16.95,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T16:43:02.083Z",
+      "purchaseId": "test-purchase-timeout-check"
+    },
+    {
+      "dteId": "cmls5k7ip000ck0wfiyi6oc3j",
+      "numero": "DTE-01-M638P001-000000000000001",
+      "cliente": "María García Test",
+      "amount": 79.1,
+      "estado": "PENDIENTE",
+      "date": "2026-02-18T14:53:53.041Z",
+      "purchaseId": "purchase_test_1739890000"
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
+import { apiFetch, API_URL } from '@/lib/api';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -16,22 +17,14 @@ export default function AdminLoginPage() {
   useEffect(() => {
     // Check if already logged in as super admin
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.rol === 'SUPER_ADMIN') {
-              router.push('/admin');
-              return;
-            }
-          }
-        } catch (err) {
-          // Token invalid, continue to login
+      try {
+        const data = await apiFetch<{ rol: string }>('/auth/profile');
+        if (data.rol === 'SUPER_ADMIN') {
+          router.push('/admin');
+          return;
         }
+      } catch {
+        // Not authenticated, continue to login
       }
       setCheckingAuth(false);
     };
@@ -44,8 +37,9 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
@@ -62,6 +56,7 @@ export default function AdminLoginPage() {
         throw new Error('Acceso denegado. Esta página es solo para Super Administradores.');
       }
 
+      // TODO: remove after full cookie migration
       localStorage.setItem('token', data.access_token);
       router.push('/admin');
     } catch (err) {

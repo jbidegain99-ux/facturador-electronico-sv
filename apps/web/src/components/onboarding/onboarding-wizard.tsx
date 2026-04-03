@@ -19,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { apiFetch, apiUpload } from '@/lib/api';
 
 interface OnboardingWizardProps {
   tenantData?: {
@@ -125,26 +126,11 @@ export function OnboardingWizard({
     setCertificateError(null);
 
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('certificate', certificateFile);
       formData.append('password', certificatePassword);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/certificate`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || 'Error al subir certificado');
-      }
+      await apiUpload('/tenants/me/certificate', formData);
 
       setCertificateUploaded(true);
     } catch (error) {
@@ -161,22 +147,7 @@ export function OnboardingWizard({
     setConnectionError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/test-mh`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || 'Error en conexion con MH');
-      }
+      await apiFetch('/tenants/me/test-mh', { method: 'POST' });
 
       setConnectionTested(true);
     } catch (error) {

@@ -24,6 +24,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
+import { usePermissions } from '@/hooks/use-permissions';
 import { useTranslations } from 'next-intl';
 
 type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'cashFlow' | 'accounting' | 'catalog' | 'webhooks' | 'branches' | 'support' | 'settings';
@@ -77,6 +78,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useAppStore();
   const { features } = usePlanFeatures();
+  const { canAccessRoute } = usePermissions();
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
 
@@ -124,7 +126,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex flex-col gap-1 p-2">
-        {navigation.map((item) => {
+        {navigation.filter((item) => canAccessRoute(item.href)).map((item) => {
           // Para Dashboard, solo activo si es exactamente /dashboard
           // Para otras rutas, activo si es exacta o es subruta
           const isActive = item.href === '/dashboard'

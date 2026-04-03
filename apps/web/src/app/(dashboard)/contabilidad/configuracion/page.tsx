@@ -65,13 +65,7 @@ const OPERATION_LABELS: Record<string, string> = {
   SUJETO_EXCLUIDO: 'Sujeto Excluido',
 };
 
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('token');
-  return {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
-}
+import { apiFetch, API_URL } from '@/lib/api';
 
 export default function ConfiguracionContablePage() {
   const [config, setConfig] = useState<AccountingConfig | null>(null);
@@ -88,27 +82,15 @@ export default function ConfiguracionContablePage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const headers = getAuthHeaders();
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      const [configRes, mappingsRes, accountsRes] = await Promise.all([
-        fetch(`${baseUrl}/accounting/config`, { headers }),
-        fetch(`${baseUrl}/accounting/mappings`, { headers }),
-        fetch(`${baseUrl}/accounting/accounts/postable`, { headers }),
+      const [configData, mappingsData, accountsData] = await Promise.all([
+        apiFetch<AccountingConfig>('/accounting/config').catch(() => null),
+        apiFetch<MappingRule[]>('/accounting/mappings').catch(() => []),
+        apiFetch<PostableAccount[]>('/accounting/accounts/postable').catch(() => []),
       ]);
 
-      if (configRes.ok) {
-        const configData = await configRes.json().catch(() => null);
-        if (configData) setConfig(configData as AccountingConfig);
-      }
-      if (mappingsRes.ok) {
-        const mappingsData = await mappingsRes.json().catch(() => []);
-        if (Array.isArray(mappingsData)) setMappings(mappingsData as MappingRule[]);
-      }
-      if (accountsRes.ok) {
-        const accountsData = await accountsRes.json().catch(() => []);
-        if (Array.isArray(accountsData)) setAccounts(accountsData as PostableAccount[]);
-      }
+      if (configData) setConfig(configData);
+      if (Array.isArray(mappingsData)) setMappings(mappingsData);
+      if (Array.isArray(accountsData)) setAccounts(accountsData);
     } catch {
       toastRef.current.error('Error', 'No se pudo cargar la configuración');
     } finally {
@@ -124,19 +106,15 @@ export default function ConfiguracionContablePage() {
     if (!config) return;
     setSaving(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/config`, {
+      const updated = await apiFetch<AccountingConfig>('/accounting/config', {
         method: 'PATCH',
-        headers: getAuthHeaders(),
         body: JSON.stringify({ autoJournalEnabled: !config.autoJournalEnabled }),
       });
-      if (res.ok) {
-        const updated = await res.json().catch(() => null) as AccountingConfig | null;
-        if (updated) setConfig(updated);
-        toastRef.current.success(
-          'Configuración actualizada',
-          !config.autoJournalEnabled ? 'Automatización activada' : 'Automatización desactivada',
-        );
-      }
+      if (updated) setConfig(updated);
+      toastRef.current.success(
+        'Configuración actualizada',
+        !config.autoJournalEnabled ? 'Automatización activada' : 'Automatización desactivada',
+      );
     } catch {
       toastRef.current.error('Error', 'No se pudo actualizar');
     } finally {
@@ -147,16 +125,12 @@ export default function ConfiguracionContablePage() {
   const handleChangeTrigger = async (trigger: string) => {
     setSaving(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/config`, {
+      const updated = await apiFetch<AccountingConfig>('/accounting/config', {
         method: 'PATCH',
-        headers: getAuthHeaders(),
         body: JSON.stringify({ autoJournalTrigger: trigger }),
       });
-      if (res.ok) {
-        const updated = await res.json().catch(() => null) as AccountingConfig | null;
-        if (updated) setConfig(updated);
-        toastRef.current.success('Trigger actualizado');
-      }
+      if (updated) setConfig(updated);
+      toastRef.current.success('Trigger actualizado');
     } catch {
       toastRef.current.error('Error', 'No se pudo actualizar');
     } finally {
@@ -167,22 +141,16 @@ export default function ConfiguracionContablePage() {
   const handleSeedMappings = async () => {
     setSeeding(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/mappings/seed`, {
+      const json = await apiFetch<{ created?: number; skipped?: number }>('/accounting/mappings/seed', {
         method: 'POST',
-        headers: getAuthHeaders(),
       });
-      const json = await res.json().catch(() => ({})) as { created?: number; skipped?: number };
-      if (res.ok) {
-        toastRef.current.success(
-          'Mapeos creados',
-          `${json.created ?? 0} creados, ${json.skipped ?? 0} existentes`,
-        );
-        fetchAll();
-      } else {
-        toastRef.current.error('Error', 'No se pudieron crear los mapeos');
-      }
+      toastRef.current.success(
+        'Mapeos creados',
+        `${json.created ?? 0} creados, ${json.skipped ?? 0} existentes`,
+      );
+      fetchAll();
     } catch {
-      toastRef.current.error('Error', 'Error de conexión');
+      toastRef.current.error('Error', 'No se pudieron crear los mapeos');
     } finally {
       setSeeding(false);
     }
@@ -190,14 +158,9 @@ export default function ConfiguracionContablePage() {
 
   const handleDeleteMapping = async (id: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/mappings/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) {
-        setMappings(prev => prev.filter(m => m.id !== id));
-        toastRef.current.success('Mapeo eliminado');
-      }
+      await apiFetch(`/accounting/mappings/${id}`, { method: 'DELETE' });
+      setMappings(prev => prev.filter(m => m.id !== id));
+      toastRef.current.success('Mapeo eliminado');
     } catch {
       toastRef.current.error('Error', 'No se pudo eliminar');
     }
@@ -466,21 +429,15 @@ function MappingEditor({ mapping, accounts, onClose, onSaved }: MappingEditorPro
         body.mappingConfig = { debe: debeLines, haber: haberLines };
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/mappings`, {
+      await apiFetch('/accounting/mappings', {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: JSON.stringify(body),
       });
-
-      if (res.ok) {
-        toastRef.current.success('Mapeo guardado');
-        onSaved();
-      } else {
-        const json = await res.json().catch(() => ({})) as { message?: string };
-        toastRef.current.error('Error', json.message || 'No se pudo guardar');
-      }
-    } catch {
-      toastRef.current.error('Error', 'Error de conexión');
+      toastRef.current.success('Mapeo guardado');
+      onSaved();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudo guardar';
+      toastRef.current.error('Error', msg);
     } finally {
       setSaving(false);
     }

@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { FeatureGate } from '@/components/plan-features/FeatureGate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,16 +14,14 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  TableRow } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,8 +40,7 @@ import {
   Loader2,
   Webhook,
   Send,
-  RotateCcw,
-} from 'lucide-react';
+  RotateCcw } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
 import { formatDateTime } from '@/lib/utils';
@@ -96,21 +94,17 @@ interface WebhookEventOption {
 
 // ─── API helpers ─────────────────────────────────────────────────────────────
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE = API_URL || 'http://localhost:3001';
 
 function authHeaders(): Record<string, string> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   return {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
+    'Content-Type': 'application/json' };
 }
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_URL}${path}`, { credentials: 'include',
     ...options,
-    headers: { ...authHeaders(), ...options?.headers },
-  });
+    headers: { ...authHeaders(), ...options?.headers } });
   const json = await res.json().catch(() => ({ status: res.status, message: 'Error de red' }));
   if (!res.ok) throw new Error(json.message || `HTTP ${res.status}`);
   return json as T;
@@ -179,8 +173,7 @@ export default function WebhooksPage() {
     try {
       await api(`/webhooks/endpoints/${endpointId}`, {
         method: 'PUT',
-        body: JSON.stringify({ isActive: !currentActive }),
-      });
+        body: JSON.stringify({ isActive: !currentActive }) });
       await loadEndpoints();
       toastRef.current.success(!currentActive ? t('endpointActivated') : t('endpointDeactivated'));
     } catch {
@@ -494,8 +487,7 @@ export default function WebhooksPage() {
 function StatusBadge({
   isActive,
   lastUsedAt,
-  t,
-}: {
+  t }: {
   isActive: boolean;
   lastUsedAt: string | null;
   t: ReturnType<typeof useTranslations>;
@@ -520,8 +512,7 @@ function StatusBadge({
 
 function DeliveryStatusBadge({
   status,
-  t,
-}: {
+  t }: {
   status: string;
   t: ReturnType<typeof useTranslations>;
 }) {
@@ -545,8 +536,7 @@ function CreateEndpointDialog({
   availableEvents,
   onSuccess,
   t,
-  tCommon,
-}: {
+  tCommon }: {
   availableEvents: WebhookEventOption[];
   onSuccess: () => void;
   t: ReturnType<typeof useTranslations>;
@@ -581,8 +571,7 @@ function CreateEndpointDialog({
     try {
       const res = await api<{ data: { secretKey: string } }>('/webhooks/endpoints', {
         method: 'POST',
-        body: JSON.stringify({ name, url, events: selectedEvents }),
-      });
+        body: JSON.stringify({ name, url, events: selectedEvents }) });
       setCreatedSecret(res.data.secretKey);
       toastRef.current.success(t('endpointCreated'));
       onSuccess();

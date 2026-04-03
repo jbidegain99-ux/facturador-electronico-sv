@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { apiFetch } from '@/lib/api';
 import {
   Bell,
   X,
@@ -77,54 +78,28 @@ export function NotificationBell() {
 
   const fetchUnreadCount = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications/count`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) {
-        if (res.status !== 404) console.warn(`[NotificationBell] /notifications/count returned ${res.status}`);
-        return;
-      }
-
-      const data = await res.json().catch(() => null);
-      if (data && typeof data.count === 'number') {
+      const data = await apiFetch<{ count: number }>('/notifications/count');
+      if (typeof data.count === 'number') {
         setUnreadCount(data.count);
       }
     } catch (err) {
-      console.warn('[NotificationBell] Error fetching notification count:', err);
+      if ((err as { status?: number }).status !== 404) {
+        console.warn('[NotificationBell] Error fetching notification count:', err);
+      }
     }
   };
 
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) {
-        if (res.status !== 404) console.warn(`[NotificationBell] /notifications returned ${res.status}`);
-        return;
-      }
-
-      const data = await res.json().catch(() => null);
+      const data = await apiFetch<Notification[]>('/notifications');
       if (Array.isArray(data)) {
         setNotifications(data);
       }
     } catch (err) {
-      console.warn('[NotificationBell] Error fetching notifications:', err);
+      if ((err as { status?: number }).status !== 404) {
+        console.warn('[NotificationBell] Error fetching notifications:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -132,20 +107,9 @@ export function NotificationBell() {
 
   const dismissNotification = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/dismiss`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (res.ok) {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
+      await apiFetch(`/notifications/${id}/dismiss`, { method: 'POST' });
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.warn('[NotificationBell] Error dismissing notification:', err);
     }
@@ -153,20 +117,9 @@ export function NotificationBell() {
 
   const dismissAll = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications/dismiss-all`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (res.ok) {
-        setNotifications([]);
-        setUnreadCount(0);
-      }
+      await apiFetch('/notifications/dismiss-all', { method: 'POST' });
+      setNotifications([]);
+      setUnreadCount(0);
     } catch (err) {
       console.warn('[NotificationBell] Error dismissing all notifications:', err);
     }

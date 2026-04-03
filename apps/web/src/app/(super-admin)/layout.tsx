@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 import {
   LayoutDashboard,
   Building2,
@@ -57,33 +58,16 @@ export default function SuperAdminLayout({
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        router.push('/admin/login');
-        return;
-      }
-
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!res.ok) {
-          throw new Error('Unauthorized');
-        }
-
-        const userData = await res.json();
+        const userData = await apiFetch<User>('/auth/profile');
 
         if (userData.rol !== 'SUPER_ADMIN') {
-          localStorage.removeItem('token');
           router.push('/admin/login');
           return;
         }
 
         setUser(userData);
-      } catch (err) {
-        localStorage.removeItem('token');
+      } catch {
         router.push('/admin/login');
         return;
       } finally {
@@ -94,7 +78,8 @@ export default function SuperAdminLayout({
     checkAuth();
   }, [router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // TODO: call /auth/logout endpoint when available
     localStorage.removeItem('token');
     router.push('/admin/login');
   };

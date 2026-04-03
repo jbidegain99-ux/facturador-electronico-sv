@@ -147,7 +147,7 @@ export class DteService {
     };
   }
 
-  async createDte(tenantId: string | null | undefined, tipoDte: string, data: Record<string, unknown>) {
+  async createDte(tenantId: string | null | undefined, tipoDte: string, data: Record<string, unknown>, sucursalId?: string, puntoVentaId?: string) {
     this.logger.log(`Creating DTE for tenant ${tenantId}, type ${tipoDte}`);
 
     // Validate tenantId
@@ -309,7 +309,7 @@ export class DteService {
       // transaction to prevent concurrent requests from generating duplicate numbers.
       const dte = await this.prisma.$transaction(async (tx) => {
         const correlativo = await this.getNextCorrelativo(tenantId, tipoDte, tx);
-        const numeroControl = await this.generateNumeroControl(tenantId, tipoDte, correlativo);
+        const numeroControl = await this.generateNumeroControl(tenantId, tipoDte, correlativo, sucursalId, puntoVentaId);
 
         const jsonOriginal = {
           ...normalizedData,
@@ -336,6 +336,8 @@ export class DteService {
             totalPagar: parseFloat(totalPagar.toFixed(2)),
             estado: DTEStatus.PENDIENTE,
             ...(clienteId && { clienteId }),
+            ...(sucursalId && { sucursalId }),
+            ...(puntoVentaId && { puntoVentaId }),
           },
         });
       }, {

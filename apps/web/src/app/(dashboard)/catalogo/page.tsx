@@ -12,15 +12,13 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  DialogTitle } from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 import {
   Plus,
   Search,
@@ -37,13 +35,13 @@ import {
   Tag,
   AlertTriangle,
   X,
-  Check,
-} from 'lucide-react';
+  Check } from 'lucide-react';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
 import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
 import { useTranslations } from 'next-intl';
+import { API_URL } from '@/lib/api';
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -134,8 +132,7 @@ const EMPTY_FORM: ItemForm = {
   uniMedida: '99',
   tributo: '20',
   taxRate: '13.00',
-  categoryId: '',
-};
+  categoryId: '' };
 
 // ─── Constants ─────────────────────────────────────────────
 
@@ -148,13 +145,11 @@ const TABS = [
 
 const TYPE_LABELS: Record<string, string> = {
   PRODUCT: 'Producto',
-  SERVICE: 'Servicio',
-};
+  SERVICE: 'Servicio' };
 
 const TYPE_COLORS: Record<string, string> = {
   PRODUCT: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  SERVICE: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-};
+  SERVICE: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' };
 
 const TRIBUTO_OPTIONS = [
   { value: '20', label: 'IVA 13%', rate: '13.00' },
@@ -284,6 +279,7 @@ export default function CatalogoPage() {
   const [planLimit, setPlanLimit] = React.useState<PlanLimitInfo | null>(null);
 
   // Filter state
+  const [searchInput, setSearchInput] = React.useState('');
   const [search, setSearch] = React.useState('');
   const [tab, setTab] = React.useState('');
   const [categoryFilter, setCategoryFilter] = React.useState('');
@@ -291,6 +287,15 @@ export default function CatalogoPage() {
   const [limit, setLimit] = React.useState(20);
   const [sortBy, setSortBy] = React.useState('createdAt');
   const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('desc');
+
+  // Debounce search input
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -324,8 +329,7 @@ export default function CatalogoPage() {
   const [units, setUnits] = React.useState<UnidadMedida[]>([]);
 
   const getAuthHeaders = (): Record<string, string> => {
-    const token = localStorage.getItem('token');
-    return { Authorization: `Bearer ${token}` };
+    return { };
   };
 
   // ─── Load units of measure ──────────────────────────────
@@ -334,8 +338,7 @@ export default function CatalogoPage() {
     const loadUnits = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/catalogs/unidades-medida`,
-          { headers: getAuthHeaders() },
+          `${API_URL}/catalogs/unidades-medida`, { credentials: 'include', headers: getAuthHeaders() },
         );
         if (res.ok) {
           const data = await res.json().catch(() => []);
@@ -353,8 +356,7 @@ export default function CatalogoPage() {
   const fetchCategories = React.useCallback(async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/categories`,
-        { headers: getAuthHeaders() },
+        `${API_URL}/catalog-items/categories`, { credentials: 'include', headers: getAuthHeaders() },
       );
       if (res.ok) {
         const data = await res.json().catch(() => []);
@@ -372,8 +374,7 @@ export default function CatalogoPage() {
   const fetchPlanLimit = React.useCallback(async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/plan-limit`,
-        { headers: getAuthHeaders() },
+        `${API_URL}/catalog-items/plan-limit`, { credentials: 'include', headers: getAuthHeaders() },
       );
       if (res.ok) {
         const data = await res.json().catch(() => null);
@@ -396,8 +397,7 @@ export default function CatalogoPage() {
         page: page.toString(),
         limit: limit.toString(),
         sortBy,
-        sortOrder,
-      });
+        sortOrder });
       if (search) params.set('search', search);
       if (categoryFilter) params.set('categoryId', categoryFilter);
 
@@ -408,8 +408,7 @@ export default function CatalogoPage() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items?${params}`,
-        { headers: getAuthHeaders() },
+        `${API_URL}/catalog-items?${params}`, { credentials: 'include', headers: getAuthHeaders() },
       );
 
       if (!res.ok) {
@@ -486,8 +485,7 @@ export default function CatalogoPage() {
       uniMedida: String(item.uniMedida),
       tributo: item.tributo || '20',
       taxRate: String(item.taxRate),
-      categoryId: item.categoryId || '',
-    });
+      categoryId: item.categoryId || '' });
     setFieldErrors({});
     setIsModalOpen(true);
   };
@@ -510,8 +508,7 @@ export default function CatalogoPage() {
     setFormData((prev) => ({
       ...prev,
       tributo: value,
-      taxRate: option?.rate || '0.00',
-    }));
+      taxRate: option?.rate || '0.00' }));
   };
 
   // ─── Save ───────────────────────────────────────────────
@@ -540,25 +537,22 @@ export default function CatalogoPage() {
         uniMedida: Number(formData.uniMedida),
         tributo: formData.tributo,
         taxRate: Number(formData.taxRate),
-        categoryId: formData.categoryId || null,
-      };
+        categoryId: formData.categoryId || null };
       if (formData.costPrice.trim()) {
         body.costPrice = Number(formData.costPrice);
       }
 
       const isEdit = !!editingItem;
       const url = isEdit
-        ? `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/${editingItem.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/catalog-items`;
+        ? `${API_URL}/catalog-items/${editingItem.id}`
+        : `${API_URL}/catalog-items`;
 
-      const res = await fetch(url, {
+      const res = await fetch(url, { credentials: 'include',
         method: isEdit ? 'PATCH' : 'POST',
         headers: {
           ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+          'Content-Type': 'application/json' },
+        body: JSON.stringify(body) });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -589,11 +583,9 @@ export default function CatalogoPage() {
     setDeleting(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/${deleteConfirm.id}`,
-        {
+        `${API_URL}/catalog-items/${deleteConfirm.id}`, { credentials: 'include',
           method: 'DELETE',
-          headers: getAuthHeaders(),
-        },
+          headers: getAuthHeaders() },
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -617,11 +609,9 @@ export default function CatalogoPage() {
   const handleToggleFavorite = async (item: CatalogItem) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/${item.id}/favorite`,
-        {
+        `${API_URL}/catalog-items/${item.id}/favorite`, { credentials: 'include',
           method: 'POST',
-          headers: getAuthHeaders(),
-        },
+          headers: getAuthHeaders() },
       );
       if (!res.ok) throw new Error(tc('favoriteError'));
       setItems((prev) =>
@@ -641,12 +631,10 @@ export default function CatalogoPage() {
     setSavingCat(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/categories`,
-        {
+        `${API_URL}/catalog-items/categories`, { credentials: 'include',
           method: 'POST',
           headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: newCatName.trim(), color: newCatColor }),
-        },
+          body: JSON.stringify({ name: newCatName.trim(), color: newCatColor }) },
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -667,12 +655,10 @@ export default function CatalogoPage() {
     setSavingCat(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/categories/${editingCat.id}`,
-        {
+        `${API_URL}/catalog-items/categories/${editingCat.id}`, { credentials: 'include',
           method: 'PATCH',
           headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: editCatName.trim(), color: editCatColor }),
-        },
+          body: JSON.stringify({ name: editCatName.trim(), color: editCatColor }) },
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -693,8 +679,7 @@ export default function CatalogoPage() {
     if (!confirm(tc('deleteCategoryConfirm', { name: cat.name }))) return;
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/categories/${cat.id}`,
-        { method: 'DELETE', headers: getAuthHeaders() },
+        `${API_URL}/catalog-items/categories/${cat.id}`, { credentials: 'include', method: 'DELETE', headers: getAuthHeaders() },
       );
       if (!res.ok) throw new Error(tc('categoryDeleteError'));
       toast.success(tc('categoryDeleted'));
@@ -762,16 +747,13 @@ export default function CatalogoPage() {
         taxRate: fieldMap['taxrate'] !== undefined && row[fieldMap['taxrate']] ? Number(row[fieldMap['taxrate']]) : 13.0,
         tipoItem: fieldMap['tipoitem'] !== undefined && row[fieldMap['tipoitem']] ? Number(row[fieldMap['tipoitem']]) : 1,
         uniMedida: fieldMap['unimedida'] !== undefined && row[fieldMap['unimedida']] ? Number(row[fieldMap['unimedida']]) : 99,
-        tributo: fieldMap['tributo'] !== undefined ? row[fieldMap['tributo']] : '20',
-      }));
+        tributo: fieldMap['tributo'] !== undefined ? row[fieldMap['tributo']] : '20' }));
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/import`,
-        {
+        `${API_URL}/catalog-items/import`, { credentials: 'include',
           method: 'POST',
           headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rows: importRows }),
-        },
+          body: JSON.stringify({ rows: importRows }) },
       );
 
       if (!res.ok) {
@@ -803,8 +785,7 @@ export default function CatalogoPage() {
   const handleExport = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/catalog-items/export`,
-        { headers: getAuthHeaders() },
+        `${API_URL}/catalog-items/export`, { credentials: 'include', headers: getAuthHeaders() },
       );
       if (!res.ok) throw new Error(tc('exportError'));
       const data = await res.json();
@@ -948,8 +929,8 @@ export default function CatalogoPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={tc('searchPlaceholder')}
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-9 w-64"
                 />
               </div>
@@ -1081,8 +1062,7 @@ export default function CatalogoPage() {
                             className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium"
                             style={{
                               backgroundColor: item.category.color ? `${item.category.color}20` : '#6366f120',
-                              color: item.category.color || '#6366f1',
-                            }}
+                              color: item.category.color || '#6366f1' }}
                           >
                             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.category.color || '#6366f1' }} />
                             {item.category.name}

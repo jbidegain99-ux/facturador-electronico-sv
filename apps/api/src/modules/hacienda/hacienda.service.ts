@@ -704,11 +704,7 @@ export class HaciendaService {
       codPuntoVenta: null,
     };
 
-    this.logger.log(`=== EMISOR DATA ===`);
-    this.logger.log(`NIT: ${emisor.nit}`);
-    this.logger.log(`NRC: ${emisor.nrc}`);
-    this.logger.log(`Nombre: ${emisor.nombre}`);
-    this.logger.log(`codActividad: ${emisor.codActividad}`);
+    this.logger.log(`Executing test for emisor ${emisor.nombre} (NIT: ${emisor.nit})`);
 
     let testRecord: any;
 
@@ -799,9 +795,7 @@ export class HaciendaService {
 
     try {
       // Sign the DTE
-      this.logger.log(`=== SIGNING DTE ===`);
-      this.logger.log(`Certificate buffer length: ${certificateBuffer.length}`);
-      this.logger.log(`Certificate starts with: ${certificateBuffer.toString('utf8').substring(0, 50)}`);
+      this.logger.log(`Signing DTE: certificate loaded (${certificateBuffer.length} bytes)`);
 
       const jws = await this.certificateService.signPayload(
         certificateBuffer,
@@ -809,13 +803,7 @@ export class HaciendaService {
         testData,
       );
 
-      // Log JWS details
-      const jwsParts = jws.split('.');
-      const jwsHeader = JSON.parse(Buffer.from(jwsParts[0], 'base64url').toString());
-      this.logger.log(`=== JWS CREATED ===`);
-      this.logger.log(`JWS Header: ${JSON.stringify(jwsHeader)}`);
-      this.logger.log(`JWS Length: ${jws.length}`);
-      this.logger.log(`JWS (first 100 chars): ${jws.substring(0, 100)}`);
+      this.logger.log(`JWS generated for DTE ${dteType} (${jws.length} chars)`);
 
       // Send to Hacienda
       const baseUrl = HACIENDA_URLS.TEST;
@@ -829,9 +817,7 @@ export class HaciendaService {
         documento: jws,
       };
 
-      this.logger.log(`=== SENDING TO HACIENDA ===`);
-      this.logger.log(`URL: ${url}`);
-      this.logger.log(`Request body (without documento): ${JSON.stringify({ ...requestBody, documento: '[JWS_OMITTED]' })}`);
+      this.logger.log(`Sending DTE ${dteType} to Hacienda: ${url}`);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -845,8 +831,7 @@ export class HaciendaService {
       const result = await response.json();
       responsePayload = JSON.stringify(result);
 
-      this.logger.log(`=== HACIENDA RESPONSE ===`);
-      this.logger.log(`Response: ${responsePayload}`);
+      this.logger.log(`Hacienda response: status=${response.status}, estado=${result.estado}, sello=${result.selloRecibido || 'N/A'}`);
 
       if (result.estado === 'PROCESADO') {
         status = 'SUCCESS';
@@ -937,9 +922,7 @@ export class HaciendaService {
     let responsePayload: string | null = null;
 
     try {
-      // Log cancellation data for debugging
-      this.logger.log(`=== CANCELLATION DATA ===`);
-      this.logger.log(`Cancellation payload: ${JSON.stringify(cancellationData, null, 2)}`);
+      this.logger.log(`Cancellation request for DTE ${dteType}, codigoGeneracion=${codigoGeneracionToCancel}`);
 
       // Sign the cancellation document
       const jws = await this.certificateService.signPayload(
@@ -966,11 +949,8 @@ export class HaciendaService {
         }),
       });
 
-      // Log raw response for debugging
       const responseText = await response.text();
-      this.logger.log(`=== CANCELLATION RAW RESPONSE ===`);
-      this.logger.log(`Status: ${response.status}`);
-      this.logger.log(`Response text: ${responseText}`);
+      this.logger.log(`Cancellation response: status=${response.status}`);
 
       let result;
       try {
@@ -980,9 +960,7 @@ export class HaciendaService {
       }
       responsePayload = JSON.stringify(result);
 
-      // Log full response for debugging
-      this.logger.log(`=== CANCELLATION RESPONSE ===`);
-      this.logger.log(`Response: ${responsePayload}`);
+      this.logger.log(`Cancellation parsed: estado=${result.estado}, sello=${result.selloRecibido || 'N/A'}`);
 
       if (result.estado === 'PROCESADO') {
         status = 'SUCCESS';

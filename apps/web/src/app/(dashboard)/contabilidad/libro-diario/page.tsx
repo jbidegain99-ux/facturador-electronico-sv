@@ -13,9 +13,9 @@ import {
   X,
   FileText,
   ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+  ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { apiFetch, API_URL } from '@/lib/api';
 
 interface JournalEntryLine {
   id: string;
@@ -76,16 +76,14 @@ function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('es-SV', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(amount);
+    minimumFractionDigits: 2 }).format(amount);
 }
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('es-SV', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric',
-  });
+    day: 'numeric' });
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -93,13 +91,11 @@ function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     DRAFT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
     POSTED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    VOIDED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  };
+    VOIDED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' };
   const labels: Record<string, string> = {
     DRAFT: t('draftStatus'),
     POSTED: t('postedStatus'),
-    VOIDED: t('voidedStatus'),
-  };
+    VOIDED: t('voidedStatus') };
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[status] || 'bg-muted text-muted-foreground'}`}>
       {labels[status] || status}
@@ -124,14 +120,12 @@ function OriginBadge({ entry }: { entry: JournalEntry }) {
     MANUAL: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
     AUTOMATIC: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
     ADJUSTMENT: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    CLOSING: 'bg-muted text-muted-foreground',
-  };
+    CLOSING: 'bg-muted text-muted-foreground' };
   const labels: Record<string, string> = {
     MANUAL: 'Manual',
     AUTOMATIC: 'Auto',
     ADJUSTMENT: 'Ajuste',
-    CLOSING: 'Cierre',
-  };
+    CLOSING: 'Cierre' };
 
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[entry.entryType] || 'bg-muted text-muted-foreground'}`}>
@@ -168,32 +162,21 @@ export default function LibroDiarioPage() {
     entryDate: new Date().toISOString().split('T')[0],
     description: '',
     entryType: 'MANUAL',
-    lines: [{ ...EMPTY_LINE }, { ...EMPTY_LINE }],
-  });
+    lines: [{ ...EMPTY_LINE }, { ...EMPTY_LINE }] });
   const toast = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
 
   const fetchEntries = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
       const params = new URLSearchParams({ page: String(page), limit: '20' });
       if (statusFilter) params.set('status', statusFilter);
       if (entryTypeFilter) params.set('entryType', entryTypeFilter);
       if (dateFrom) params.set('dateFrom', dateFrom);
       if (dateTo) params.set('dateTo', dateTo);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/accounting/journal-entries?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      if (res.ok) {
-        const json = await res.json().catch(() => null);
-        if (json) setEntries(json);
-      }
+      const json = await apiFetch<PaginatedEntries>(`/accounting/journal-entries?${params}`);
+      if (json) setEntries(json);
     } catch {
       // Non-critical
     } finally {
@@ -203,16 +186,8 @@ export default function LibroDiarioPage() {
 
   const fetchAccounts = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/accounts/postable`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const json = await res.json().catch(() => []);
-        if (Array.isArray(json)) setAccounts(json);
-      }
+      const json = await apiFetch<PostableAccount[]>('/accounting/accounts/postable');
+      if (Array.isArray(json)) setAccounts(json);
     } catch {
       // Non-critical
     }
@@ -224,23 +199,20 @@ export default function LibroDiarioPage() {
   const handleAddLine = () => {
     setForm(prev => ({
       ...prev,
-      lines: [...prev.lines, { ...EMPTY_LINE }],
-    }));
+      lines: [...prev.lines, { ...EMPTY_LINE }] }));
   };
 
   const handleRemoveLine = (index: number) => {
     if (form.lines.length <= 2) return;
     setForm(prev => ({
       ...prev,
-      lines: prev.lines.filter((_, i) => i !== index),
-    }));
+      lines: prev.lines.filter((_, i) => i !== index) }));
   };
 
   const handleLineChange = (index: number, field: keyof LineForm, value: string) => {
     setForm(prev => ({
       ...prev,
-      lines: prev.lines.map((line, i) => i === index ? { ...line, [field]: value } : line),
-    }));
+      lines: prev.lines.map((line, i) => i === index ? { ...line, [field]: value } : line) }));
   };
 
   const totalDebit = form.lines.reduce((sum, l) => sum + (parseFloat(l.debit) || 0), 0);
@@ -259,7 +231,6 @@ export default function LibroDiarioPage() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const body = {
         entryDate: form.entryDate,
         description: form.description,
@@ -270,35 +241,23 @@ export default function LibroDiarioPage() {
             accountId: l.accountId,
             description: l.description,
             debit: parseFloat(l.debit) || 0,
-            credit: parseFloat(l.credit) || 0,
-          })),
-      };
+            credit: parseFloat(l.credit) || 0 })) };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/journal-entries`, {
+      const json = await apiFetch<{ entryNumber?: string }>('/accounting/journal-entries', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(body),
       });
-
-      const json = await res.json().catch(() => ({}));
-      if (res.ok) {
-        toastRef.current.success(t('entryCreated'), `${(json as { entryNumber?: string }).entryNumber || ''}`);
-        setShowForm(false);
-        setForm({
-          entryDate: new Date().toISOString().split('T')[0],
-          description: '',
-          entryType: 'MANUAL',
-          lines: [{ ...EMPTY_LINE }, { ...EMPTY_LINE }],
-        });
-        fetchEntries();
-      } else {
-        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('createEntryError'));
-      }
-    } catch {
-      toastRef.current.error(tCommon('error'), t('connectionError'));
+      toastRef.current.success(t('entryCreated'), `${json.entryNumber || ''}`);
+      setShowForm(false);
+      setForm({
+        entryDate: new Date().toISOString().split('T')[0],
+        description: '',
+        entryType: 'MANUAL',
+        lines: [{ ...EMPTY_LINE }, { ...EMPTY_LINE }],
+      });
+      fetchEntries();
+    } catch (err) {
+      toastRef.current.error(tCommon('error'), err instanceof Error ? err.message : t('connectionError'));
     } finally {
       setSaving(false);
     }
@@ -307,21 +266,12 @@ export default function LibroDiarioPage() {
   const handlePost = async (id: string) => {
     setPosting(id);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/journal-entries/${id}/post`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        toastRef.current.success(t('entryPosted'));
-        fetchEntries();
-        setShowDetail(null);
-      } else {
-        const json = await res.json().catch(() => ({}));
-        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('postError'));
-      }
-    } catch {
-      toastRef.current.error(tCommon('error'), t('connectionError'));
+      await apiFetch(`/accounting/journal-entries/${id}/post`, { method: 'POST' });
+      toastRef.current.success(t('entryPosted'));
+      fetchEntries();
+      setShowDetail(null);
+    } catch (err) {
+      toastRef.current.error(tCommon('error'), err instanceof Error ? err.message : t('postError'));
     } finally {
       setPosting(null);
     }
@@ -332,25 +282,15 @@ export default function LibroDiarioPage() {
     if (!reason) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/journal-entries/${id}/void`, {
+      await apiFetch(`/accounting/journal-entries/${id}/void`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ reason }),
       });
-      if (res.ok) {
-        toastRef.current.success(t('entryVoided'));
-        fetchEntries();
-        setShowDetail(null);
-      } else {
-        const json = await res.json().catch(() => ({}));
-        toastRef.current.error(tCommon('error'), (json as { message?: string }).message || t('voidError'));
-      }
-    } catch {
-      toastRef.current.error(tCommon('error'), t('connectionError'));
+      toastRef.current.success(t('entryVoided'));
+      fetchEntries();
+      setShowDetail(null);
+    } catch (err) {
+      toastRef.current.error(tCommon('error'), err instanceof Error ? err.message : t('voidError'));
     }
   };
 

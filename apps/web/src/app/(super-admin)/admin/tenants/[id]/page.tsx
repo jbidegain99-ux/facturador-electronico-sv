@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -18,8 +19,7 @@ import {
   Clock,
   ChevronRight,
   MessageSquare,
-  Mail,
-} from 'lucide-react';
+  Mail } from 'lucide-react';
 import { TenantEmailConfig } from '@/components/admin/tenant-email-config';
 import { TenantHaciendaConfig } from '@/components/admin/tenant-hacienda-config';
 import { TenantPlanManager } from '@/components/admin/tenant-plan-manager';
@@ -95,14 +95,10 @@ export default function TenantDetailPage() {
 
   const fetchTenant = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${params.id}`,
-        {
+        `${API_URL}/super-admin/tenants/${params.id}`, { credentials: 'include',
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          } }
       );
 
       if (!res.ok) {
@@ -124,12 +120,9 @@ export default function TenantDetailPage() {
 
   const fetchTickets = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/tenant/${params.id}?limit=5`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/support-tickets/tenant/${params.id}?limit=5`, { credentials: 'include',
+          headers: { } }
       );
       if (res.ok) {
         const data = await res.json();
@@ -147,8 +140,7 @@ export default function TenantDetailPage() {
       IN_PROGRESS: 'bg-purple-500/20 text-purple-400',
       WAITING_CUSTOMER: 'bg-orange-500/20 text-orange-400',
       RESOLVED: 'bg-green-500/20 text-green-400',
-      CLOSED: 'bg-gray-500/20 text-gray-400',
-    };
+      CLOSED: 'bg-gray-500/20 text-gray-400' };
     return badges[status] || 'bg-gray-500/20 text-gray-400';
   };
 
@@ -158,28 +150,21 @@ export default function TenantDetailPage() {
     IN_PROGRESS: tSupport('statusInProgress'),
     WAITING_CUSTOMER: tSupport('statusWaiting'),
     RESOLVED: tSupport('statusResolved'),
-    CLOSED: tSupport('statusClosed'),
-  };
+    CLOSED: tSupport('statusClosed') };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${params.id}`,
-        {
+        `${API_URL}/super-admin/tenants/${params.id}`, { credentials: 'include',
           method: 'PUT',
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+            'Content-Type': 'application/json' },
           body: JSON.stringify({
             plan,
             planStatus,
             maxDtesPerMonth,
-            adminNotes,
-          }),
-        }
+            adminNotes }) }
       );
 
       if (!res.ok) throw new Error(t('saveError'));
@@ -196,8 +181,7 @@ export default function TenantDetailPage() {
     const badges: Record<string, string> = {
       STARTER: 'badge-warning',
       PROFESSIONAL: 'badge-success',
-      ENTERPRISE: 'bg-purple-500/20 text-purple-400',
-    };
+      ENTERPRISE: 'bg-purple-500/20 text-purple-400' };
     return badges[plan] || 'badge-info';
   };
 
@@ -206,8 +190,7 @@ export default function TenantDetailPage() {
       ACTIVE: 'badge-success',
       SUSPENDED: 'badge-error',
       CANCELLED: 'badge-warning',
-      EXPIRED: 'badge-error',
-    };
+      EXPIRED: 'badge-error' };
     return badges[status] || 'badge-info';
   };
 
@@ -288,8 +271,7 @@ export default function TenantDetailPage() {
                     {new Date(tenant.createdAt).toLocaleDateString('es', {
                       year: 'numeric',
                       month: 'long',
-                      day: 'numeric',
-                    })}
+                      day: 'numeric' })}
                   </div>
                 </div>
               </div>

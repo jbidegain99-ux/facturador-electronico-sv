@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import {
   HardDrive,
@@ -13,8 +14,7 @@ import {
   FileText,
   Building2,
   Loader2,
-  AlertCircle,
-} from 'lucide-react';
+  AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/toast';
@@ -55,21 +55,17 @@ export default function BackupsPage() {
   const [summary, setSummary] = React.useState<DataSummary | null>(null);
   const [tenants, setTenants] = React.useState<Tenant[]>([]);
 
-  const getToken = () => localStorage.getItem('token');
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const token = getToken();
       const headers = {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      };
+        'Content-Type': 'application/json' };
 
       const [statsRes, summaryRes, tenantsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/backups/stats`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/backups/summary`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants?limit=100`, { headers }),
+        fetch(`${API_URL}/admin/backups/stats`, { credentials: 'include', headers }),
+        fetch(`${API_URL}/admin/backups/summary`, { credentials: 'include', headers }),
+        fetch(`${API_URL}/super-admin/tenants?limit=100`, { credentials: 'include', headers }),
       ]);
 
       if (statsRes.ok) {
@@ -97,15 +93,11 @@ export default function BackupsPage() {
   const handleGenerateFullBackup = async () => {
     setGenerating('full');
     try {
-      const token = getToken();
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/backups/generate/full`,
-        {
+        `${API_URL}/admin/backups/generate/full`, { credentials: 'include',
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          } }
       );
 
       if (!res.ok) {
@@ -134,15 +126,11 @@ export default function BackupsPage() {
   const handleGenerateTenantBackup = async (tenantId: string, tenantName: string) => {
     setGenerating(tenantId);
     try {
-      const token = getToken();
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/backups/generate/tenant/${tenantId}`,
-        {
+        `${API_URL}/admin/backups/generate/tenant/${tenantId}`, { credentials: 'include',
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          } }
       );
 
       if (!res.ok) {

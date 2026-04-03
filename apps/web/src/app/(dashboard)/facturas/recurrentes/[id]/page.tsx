@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -22,8 +23,7 @@ import {
   Zap,
   History,
   Plus,
-  Trash2,
-} from 'lucide-react';
+  Trash2 } from 'lucide-react';
 
 interface TemplateItem {
   descripcion: string;
@@ -75,14 +75,12 @@ const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'bg-green-100 text-green-800',
   PAUSED: 'bg-yellow-100 text-yellow-800',
   SUSPENDED_ERROR: 'bg-red-100 text-red-800',
-  CANCELLED: 'bg-gray-100 text-gray-800',
-};
+  CANCELLED: 'bg-gray-100 text-gray-800' };
 
 const HISTORY_STATUS_COLORS: Record<string, string> = {
   SUCCESS: 'bg-green-100 text-green-800',
   FAILED: 'bg-red-100 text-red-800',
-  SKIPPED: 'bg-yellow-100 text-yellow-800',
-};
+  SKIPPED: 'bg-yellow-100 text-yellow-800' };
 
 const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
@@ -101,15 +99,13 @@ export default function RecurrenteDetallePage() {
     ACTIVE: t('statusActive'),
     PAUSED: t('statusPaused'),
     SUSPENDED_ERROR: t('statusSuspended'),
-    CANCELLED: t('statusCancelled'),
-  };
+    CANCELLED: t('statusCancelled') };
 
   const INTERVAL_LABELS: Record<string, string> = {
     DAILY: t('freqDaily'),
     WEEKLY: t('freqWeekly'),
     MONTHLY: t('freqMonthly'),
-    YEARLY: t('freqYearly'),
-  };
+    YEARLY: t('freqYearly') };
 
   const [template, setTemplate] = React.useState<TemplateDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -129,10 +125,8 @@ export default function RecurrenteDetallePage() {
   const fetchTemplate = React.useCallback(async () => {
     setFetchError(null);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        `${API_URL}/recurring-invoices/${id}`, { credentials: 'include', headers: { } },
       );
       if (!res.ok) {
         if (res.status === 404) {
@@ -175,16 +169,13 @@ export default function RecurrenteDetallePage() {
         title: t('cancelTemplate'),
         description: t('cancelConfirm'),
         confirmText: t('cancelTemplate'),
-        variant: 'destructive',
-      });
+        variant: 'destructive' });
       if (!ok) return;
     }
 
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices/${id}/${action}`,
-        { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+        `${API_URL}/recurring-invoices/${id}/${action}`, { credentials: 'include', method: 'POST', headers: { } },
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -200,7 +191,6 @@ export default function RecurrenteDetallePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const body: Record<string, unknown> = {
         nombre,
         descripcion: descripcion || undefined,
@@ -208,19 +198,13 @@ export default function RecurrenteDetallePage() {
         autoTransmit,
         notas: notas || undefined,
         items,
-        endDate: endDate || undefined,
-      };
+        endDate: endDate || undefined };
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices/${id}`,
-        {
+        `${API_URL}/recurring-invoices/${id}`, { credentials: 'include',
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(body),
-        },
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body) },
       );
 
       if (!res.ok) {

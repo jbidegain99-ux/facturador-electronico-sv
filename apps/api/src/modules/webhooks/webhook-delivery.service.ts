@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WebhooksService } from './webhooks.service';
+import { EncryptionService } from '../email-config/services/encryption.service';
 
 interface DeliveryWithEndpoint {
   id: string;
@@ -47,6 +48,7 @@ export class WebhookDeliveryService implements OnModuleInit {
   constructor(
     private prisma: PrismaService,
     private webhooksService: WebhooksService,
+    private encryptionService: EncryptionService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -126,9 +128,10 @@ export class WebhookDeliveryService implements OnModuleInit {
 
     try {
       const payloadString = delivery.payload;
+      const decryptedSecret = this.encryptionService.decrypt(delivery.endpoint.secretKey);
       const signature = this.webhooksService.generateSignature(
         payloadString,
-        delivery.endpoint.secretKey,
+        decryptedSecret,
       );
 
       const storedHeaders: ParsedHeaders = JSON.parse(delivery.headers);

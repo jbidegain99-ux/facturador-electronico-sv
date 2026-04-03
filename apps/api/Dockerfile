@@ -16,10 +16,6 @@ COPY packages ./packages
 # Install all dependencies (root + workspaces)
 RUN npm install
 
-# Install api dependencies explicitly to ensure they're in node_modules
-WORKDIR /app/apps/api
-RUN npm install --legacy-peer-deps
-
 # Build shared packages first
 WORKDIR /app/packages/mh-client
 RUN npm run build || echo "mh-client build skipped"
@@ -39,6 +35,9 @@ FROM node:20-alpine AS runner
 
 # Required for Prisma on Alpine Linux
 RUN apk add --no-cache openssl libc6-compat
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
 
 WORKDIR /app
 
@@ -62,5 +61,7 @@ ENV NODE_ENV=production
 # Health check endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
+
+USER nestjs
 
 CMD ["node", "dist/main.js"]

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, FileKey, ArrowRight, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api';
 
 export interface HaciendaConfigBannerProps {
   variant?: 'prominent' | 'subtle' | 'inline';
@@ -199,30 +200,14 @@ export function useHaciendaStatus() {
 
   const checkStatus = React.useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setStatus({ isConfigured: false, isLoading: false, demoMode: false });
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/onboarding-status`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: 'no-store',
-        }
+      const data = await apiFetch<{ hasCertificate?: boolean; demoMode?: boolean }>(
+        '/tenants/me/onboarding-status',
       );
-
-      if (response.ok) {
-        const data = await response.json();
-        setStatus({
-          isConfigured: data.hasCertificate === true,
-          isLoading: false,
-          demoMode: data.demoMode === true,
-        });
-      } else {
-        setStatus({ isConfigured: false, isLoading: false, demoMode: false });
-      }
+      setStatus({
+        isConfigured: data.hasCertificate === true,
+        isLoading: false,
+        demoMode: data.demoMode === true,
+      });
     } catch {
       setStatus({ isConfigured: false, isLoading: false, demoMode: false });
     }

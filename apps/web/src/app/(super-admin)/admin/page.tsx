@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -13,8 +14,7 @@ import {
   Clock,
   XCircle,
   ArrowUpRight,
-  ArrowDownRight,
-} from 'lucide-react';
+  ArrowDownRight } from 'lucide-react';
 
 interface DashboardStats {
   totalTenants: number;
@@ -42,12 +42,9 @@ export default function AdminDashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/super-admin/dashboard`, {
+      const res = await fetch(`${API_URL}/super-admin/dashboard`, { credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        } });
 
       if (!res.ok) {
         throw new Error(t('statsError'));

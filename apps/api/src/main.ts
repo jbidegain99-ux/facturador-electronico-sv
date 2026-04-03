@@ -3,12 +3,16 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Security headers
   app.use(helmet());
+
+  // Cookie parsing for HTTP-only auth tokens
+  app.use(cookieParser());
 
   // Habilitar CORS - support both CORS_ORIGIN (singular) and CORS_ORIGINS (plural)
   const corsEnv = process.env.CORS_ORIGINS || process.env.CORS_ORIGIN;

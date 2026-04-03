@@ -1,21 +1,19 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
-import { DteModule } from '../dte/dte.module';
 import { PlansModule } from '../plans/plans.module';
+import { EmailConfigModule } from '../email-config/email-config.module';
 import { WebhooksService } from './webhooks.service';
 import { WebhookDeliveryService } from './webhook-delivery.service';
 import { WebhookEndpointsController } from './controllers/webhook-endpoints.controller';
 import { WebhookDeliveriesController } from './controllers/webhook-deliveries.controller';
-import { InboundWebhooksController } from './controllers/inbound.controller';
 import { WebhookAdminController } from './controllers/webhook-admin.controller';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => DteModule), PlansModule],
+  imports: [PrismaModule, PlansModule, EmailConfigModule],
   providers: [WebhooksService, WebhookDeliveryService],
   controllers: [
     WebhookEndpointsController,
     WebhookDeliveriesController,
-    InboundWebhooksController,
     WebhookAdminController,
   ],
   exports: [WebhooksService],

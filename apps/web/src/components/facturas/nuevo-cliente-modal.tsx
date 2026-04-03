@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/alert';
 import type { Cliente } from '@/types';
 import { NrcValidator } from '@/lib/validators/nrc.validator';
+import { apiFetch } from '@/lib/api';
 
 interface NuevoClienteModalProps {
   open: boolean;
@@ -532,19 +533,12 @@ export function NuevoClienteModal({
     setErrors({});
 
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-
       // Si es Consumidor Final sin datos, usar "Clientes varios"
       const nombreFinal = formData.nombre.trim() || 'Clientes varios';
       const numDocFinal = formData.numDocumento.trim() || '00000000-0';
 
-      const response = await fetch(`${apiUrl}/clientes`, {
+      const cliente = await apiFetch<Cliente>('/clientes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           tipoDocumento: formData.tipoDocumento,
           numDocumento: numDocFinal,
@@ -563,12 +557,6 @@ export function NuevoClienteModal({
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al crear cliente');
-      }
-
-      const cliente = await response.json();
       onCreated(cliente);
       onClose();
     } catch (error) {

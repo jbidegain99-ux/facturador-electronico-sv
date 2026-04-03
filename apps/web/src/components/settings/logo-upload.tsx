@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { apiFetch, apiUpload } from '@/lib/api';
 
 interface LogoUploadProps {
   currentLogoUrl?: string | null;
@@ -89,30 +90,13 @@ export function LogoUpload({
     setSuccess(null);
 
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('logo', file);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/logo`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
+      const result = await apiUpload<{ logoUrl: string }>(
+        '/tenants/me/logo',
+        formData,
       );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (response.status === 403) {
-          throw new Error('Esta funcion requiere plan Professional o superior');
-        }
-        throw new Error(errorData.message || 'Error al subir logo');
-      }
-
-      const result = await response.json();
       setLogoUrl(result.logoUrl);
       setFile(null);
       setPreview(null);
@@ -133,20 +117,7 @@ export function LogoUpload({
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/tenants/me/logo`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar logo');
-      }
+      await apiFetch('/tenants/me/logo', { method: 'DELETE' });
 
       setLogoUrl(null);
       setPreview(null);

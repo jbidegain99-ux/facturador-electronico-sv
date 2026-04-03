@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, HelpCircle, Loader2 } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 interface HelpRequestModalProps {
   open: boolean;
@@ -65,34 +66,19 @@ export function HelpRequestModal({
     try {
       setSubmitting(true);
       setError('');
-      const token = localStorage.getItem('token');
 
       const metadata = contextData ? JSON.stringify(contextData) : null;
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/support-tickets`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            type,
-            subject,
-            description,
-            priority,
-            metadata,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Error al crear el ticket');
-      }
-
-      const ticket = await res.json();
+      const ticket = await apiFetch<{ ticketNumber: string }>('/support-tickets', {
+        method: 'POST',
+        body: JSON.stringify({
+          type,
+          subject,
+          description,
+          priority,
+          metadata,
+        }),
+      });
       setTicketNumber(ticket.ticketNumber);
       setSuccess(true);
     } catch (err) {

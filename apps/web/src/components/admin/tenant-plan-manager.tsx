@@ -15,6 +15,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 import {
   Select,
   SelectContent,
@@ -84,27 +85,15 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
     try {
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('token');
 
-      const [plansRes, usageRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/plans/active`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/plans/tenant/${tenantId}/usage`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+      const [plansData, usageData] = await Promise.all([
+        apiFetch<Plan[]>('/admin/plans/active'),
+        apiFetch<TenantUsage>(`/admin/plans/tenant/${tenantId}/usage`),
       ]);
 
-      if (plansRes.ok) {
-        const plansData = await plansRes.json();
-        setPlans(plansData);
-      }
-
-      if (usageRes.ok) {
-        const usageData: TenantUsage = await usageRes.json();
-        setUsage(usageData);
-        setSelectedPlanId(usageData.planId || '');
-      }
+      setPlans(plansData);
+      setUsage(usageData);
+      setSelectedPlanId(usageData.planId || '');
     } catch (err) {
       setError(t('planDataError'));
     } finally {
@@ -117,23 +106,10 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/tenant/${tenantId}/assign`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ planId: selectedPlanId }),
-        }
-      );
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || t('planAssignError'));
-      }
+      await apiFetch(`/admin/plans/tenant/${tenantId}/assign`, {
+        method: 'POST',
+        body: JSON.stringify({ planId: selectedPlanId }),
+      });
 
       await fetchData();
       alert(t('planAssigned'));
@@ -149,18 +125,7 @@ export function TenantPlanManager({ tenantId, tenantName }: TenantPlanManagerPro
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/tenant/${tenantId}/plan`,
-        {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error(t('planRemoveError'));
-      }
+      await apiFetch(`/admin/plans/tenant/${tenantId}/plan`, { method: 'DELETE' });
 
       await fetchData();
       setSelectedPlanId('');

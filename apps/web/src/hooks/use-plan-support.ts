@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { apiFetch } from '@/lib/api';
 
 export interface PlanSupportConfig {
   planCode: string;
@@ -48,25 +49,11 @@ export function usePlanSupport() {
 
     fetchedRef.current = true;
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/plans/tenant/support`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) return null;
-        return res.json().catch(() => null) as Promise<PlanSupportConfig | null>;
-      })
+    apiFetch<PlanSupportConfig>('/plans/tenant/support')
       .then((data) => {
-        if (data) {
-          cachedSupport = data;
-          supportCacheTimestamp = Date.now();
-          setConfig(data);
-        }
+        cachedSupport = data;
+        supportCacheTimestamp = Date.now();
+        setConfig(data);
       })
       .catch(() => {})
       .finally(() => {

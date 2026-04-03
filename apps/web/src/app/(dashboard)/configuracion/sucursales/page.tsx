@@ -36,6 +36,7 @@ import {
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 
 // ── Types ────────────────────────────────────────────────────────────
 interface PuntoVenta {
@@ -165,36 +166,11 @@ export default function SucursalesPage() {
   // Expanded sucursales (to show puntos de venta)
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
 
-  // ── API helpers ────────────────────────────────────────────────────
-  const getHeaders = () => {
-    const token = localStorage.getItem('token');
-    return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-  };
-
   // ── Fetch sucursales ───────────────────────────────────────────────
   const fetchSucursales = React.useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('No hay sesion activa');
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sucursales`, {
-        headers: getHeaders(),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error((errorData as { message?: string }).message || 'Error al cargar sucursales');
-      }
-
-      const data = await res.json();
+      const data = await apiFetch<Sucursal[]>('/sucursales');
       const items = Array.isArray(data) ? data : [];
       setSucursales(items);
       setError(null);
@@ -213,12 +189,7 @@ export default function SucursalesPage() {
   // ── Fetch puntos de venta for a sucursal ───────────────────────────
   const fetchPuntosVenta = async (sucursalId: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sucursales/${sucursalId}/puntos-venta`, {
-        headers: getHeaders(),
-      });
-
-      if (!res.ok) return;
-      const pvs = await res.json();
+      const pvs = await apiFetch<PuntoVenta[]>(`/sucursales/${sucursalId}/puntos-venta`);
       setSucursales(prev =>
         prev.map(s =>
           s.id === sucursalId ? { ...s, puntosVenta: Array.isArray(pvs) ? pvs : [] } : s
@@ -291,13 +262,12 @@ export default function SucursalesPage() {
     setSucursalFormError(null);
 
     try {
-      const url = editingSucursal
-        ? `${process.env.NEXT_PUBLIC_API_URL}/sucursales/${editingSucursal.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/sucursales`;
+      const endpoint = editingSucursal
+        ? `/sucursales/${editingSucursal.id}`
+        : `/sucursales`;
 
-      const res = await fetch(url, {
+      await apiFetch(endpoint, {
         method: editingSucursal ? 'PATCH' : 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({
           ...sucursalForm,
           codEstable: sucursalForm.codEstable || sucursalForm.codEstableMH,
@@ -305,11 +275,6 @@ export default function SucursalesPage() {
           correo: sucursalForm.correo || undefined,
         }),
       });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error((errorData as { message?: string }).message || 'Error al guardar');
-      }
 
       closeSucursalModal();
       fetchSucursales();
@@ -364,23 +329,17 @@ export default function SucursalesPage() {
     setPvFormError(null);
 
     try {
-      const url = editingPv
-        ? `${process.env.NEXT_PUBLIC_API_URL}/sucursales/puntos-venta/${editingPv.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/sucursales/${pvParentId}/puntos-venta`;
+      const endpoint = editingPv
+        ? `/sucursales/puntos-venta/${editingPv.id}`
+        : `/sucursales/${pvParentId}/puntos-venta`;
 
-      const res = await fetch(url, {
+      await apiFetch(endpoint, {
         method: editingPv ? 'PATCH' : 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({
           ...pvForm,
           codPuntoVenta: pvForm.codPuntoVenta || pvForm.codPuntoVentaMH,
         }),
       });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error((errorData as { message?: string }).message || 'Error al guardar');
-      }
 
       closePvModal();
       if (pvParentId) fetchPuntosVenta(pvParentId);
@@ -400,19 +359,11 @@ export default function SucursalesPage() {
 
     setDeleting(true);
     try {
-      const url = deleteTarget.type === 'sucursal'
-        ? `${process.env.NEXT_PUBLIC_API_URL}/sucursales/${deleteTarget.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/sucursales/puntos-venta/${deleteTarget.id}`;
+      const endpoint = deleteTarget.type === 'sucursal'
+        ? `/sucursales/${deleteTarget.id}`
+        : `/sucursales/puntos-venta/${deleteTarget.id}`;
 
-      const res = await fetch(url, {
-        method: 'DELETE',
-        headers: getHeaders(),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error((errorData as { message?: string }).message || 'Error al eliminar');
-      }
+      await apiFetch(endpoint, { method: 'DELETE' });
 
       setDeleteTarget(null);
       fetchSucursales();

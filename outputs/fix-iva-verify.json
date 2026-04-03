@@ -1,0 +1,1326 @@
+{
+  "timestamp": "2026-03-25T20:02:52.618Z",
+  "totalDtes": 96,
+  "withIva": 94,
+  "withoutIva": 2,
+  "totalCurrentIva": 540.95,
+  "totalCurrentPagar": 4701.48,
+  "fixes": [
+    {
+      "numero": "DTE-01-M001P001-000000000000073",
+      "cliente": "Matilde Delgado",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000074",
+      "cliente": "Yutsil De La Luz",
+      "before": {
+        "gravada": 61.94,
+        "iva": 8.05,
+        "pagar": 69.99
+      },
+      "after": {
+        "gravada": 69.99,
+        "iva": 0,
+        "pagar": 69.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000075",
+      "cliente": "Andrea Lopez",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000076",
+      "cliente": "Milagro erazo",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000077",
+      "cliente": "Beatriz Molina",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000078",
+      "cliente": "Abril Balibrera ",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000079",
+      "cliente": "Alana Gp",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000080",
+      "cliente": "Vanessa Nunez",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000081",
+      "cliente": "Vanessa Nunez",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000082",
+      "cliente": "Gabriela Braghieri",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000083",
+      "cliente": "Nicole Flores",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000084",
+      "cliente": "Nicole Flores",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000085",
+      "cliente": "Daniela Flores",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000086",
+      "cliente": "Ana Carolina Saade Interiano",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000087",
+      "cliente": "Catalina Arias",
+      "before": {
+        "gravada": 61.94,
+        "iva": 8.05,
+        "pagar": 69.99
+      },
+      "after": {
+        "gravada": 69.99,
+        "iva": 0,
+        "pagar": 69.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000088",
+      "cliente": "María José Ramirez",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000089",
+      "cliente": "Stephanie Fernández",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000090",
+      "cliente": "Gabriella Amaya",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000091",
+      "cliente": "Gabriela Alas",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000092",
+      "cliente": "Gabriela González Lucha",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000093",
+      "cliente": "Luz Chacón ",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000094",
+      "cliente": "Pamela Abarca",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000095",
+      "cliente": "Laura Perez Gavidia",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000096",
+      "cliente": "Claudia Perez",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000097",
+      "cliente": "Mario Palencia",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000098",
+      "cliente": "Pamela Abarca",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000099",
+      "cliente": "Amanda Obando",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000100",
+      "cliente": "Andrea Mariel Pérez Torres",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000101",
+      "cliente": "JANCY EYLLEN RODRÍGUEZ ",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000102",
+      "cliente": "Karla Beatriz Morales Alfaro",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000103",
+      "cliente": "Andrea",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000104",
+      "cliente": "Estefany Molina",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000105",
+      "cliente": "Wendy Portillo",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000106",
+      "cliente": "Nicolle Peña",
+      "before": {
+        "gravada": 81.42,
+        "iva": 10.58,
+        "pagar": 92
+      },
+      "after": {
+        "gravada": 92,
+        "iva": 0,
+        "pagar": 92
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000107",
+      "cliente": "Axa Torres",
+      "before": {
+        "gravada": 84.07,
+        "iva": 10.93,
+        "pagar": 95
+      },
+      "after": {
+        "gravada": 95,
+        "iva": 0,
+        "pagar": 95
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000108",
+      "cliente": "Lidia Ramirez",
+      "before": {
+        "gravada": 61.94,
+        "iva": 8.05,
+        "pagar": 69.99
+      },
+      "after": {
+        "gravada": 69.99,
+        "iva": 0,
+        "pagar": 69.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000110",
+      "cliente": "Ale Escamilla",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000111",
+      "cliente": "Génesis Romero ",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000112",
+      "cliente": "Luz Marina Avalos",
+      "before": {
+        "gravada": 61.94,
+        "iva": 8.05,
+        "pagar": 69.99
+      },
+      "after": {
+        "gravada": 69.99,
+        "iva": 0,
+        "pagar": 69.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000113",
+      "cliente": "Vanessa Herrera",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000114",
+      "cliente": "Sophia Valles",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000115",
+      "cliente": "Sophia Valles",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000116",
+      "cliente": "Victoria Sosa",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000117",
+      "cliente": "Francisco torres",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000119",
+      "cliente": "Esther Umanzor",
+      "before": {
+        "gravada": 314.16,
+        "iva": 40.84,
+        "pagar": 355
+      },
+      "after": {
+        "gravada": 355,
+        "iva": 0,
+        "pagar": 355
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000120",
+      "cliente": "Paola Nasser",
+      "before": {
+        "gravada": 314.16,
+        "iva": 40.84,
+        "pagar": 355
+      },
+      "after": {
+        "gravada": 355,
+        "iva": 0,
+        "pagar": 355
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000121",
+      "cliente": "Sophia Valles",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000122",
+      "cliente": "Gabriela González Lucha",
+      "before": {
+        "gravada": 61.94,
+        "iva": 8.05,
+        "pagar": 69.99
+      },
+      "after": {
+        "gravada": 69.99,
+        "iva": 0,
+        "pagar": 69.99
+      }
+    },
+    {
+      "numero": "DTE-01-M001P001-000000000000123",
+      "cliente": "María Fernanda Amaya",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000028",
+      "cliente": "Paola Nicole Alvarado Erazo",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000029",
+      "cliente": "Alessandra Esquivel",
+      "before": {
+        "gravada": 71.46,
+        "iva": 9.29,
+        "pagar": 80.75
+      },
+      "after": {
+        "gravada": 80.75,
+        "iva": 0,
+        "pagar": 80.75
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000030",
+      "cliente": "Sofía Merino",
+      "before": {
+        "gravada": 57.52,
+        "iva": 7.48,
+        "pagar": 65
+      },
+      "after": {
+        "gravada": 65,
+        "iva": 0,
+        "pagar": 65
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000031",
+      "cliente": "Karla Beatriz Morales Alfaro",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000032",
+      "cliente": "Katerine Dayana Rodríguez Portillo",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000033",
+      "cliente": "Nayheli Michelle Herrera Quevedo",
+      "before": {
+        "gravada": 71.46,
+        "iva": 9.29,
+        "pagar": 80.75
+      },
+      "after": {
+        "gravada": 80.75,
+        "iva": 0,
+        "pagar": 80.75
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000034",
+      "cliente": "Geisel",
+      "before": {
+        "gravada": 71.46,
+        "iva": 9.29,
+        "pagar": 80.75
+      },
+      "after": {
+        "gravada": 80.75,
+        "iva": 0,
+        "pagar": 80.75
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000035",
+      "cliente": "Allison ",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000036",
+      "cliente": "Dayana Posada",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000037",
+      "cliente": "Gabriel Aguiar ",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000038",
+      "cliente": "Diana Cecilia Rosales Portillo",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000039",
+      "cliente": "Adriana Abigail Ramírez Aguilar ",
+      "before": {
+        "gravada": 71.46,
+        "iva": 9.29,
+        "pagar": 80.75
+      },
+      "after": {
+        "gravada": 80.75,
+        "iva": 0,
+        "pagar": 80.75
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000040",
+      "cliente": "Roxana Portillo",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000041",
+      "cliente": "Mariana Zelaya",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000042",
+      "cliente": "Nicole urquilla",
+      "before": {
+        "gravada": 71.46,
+        "iva": 9.29,
+        "pagar": 80.75
+      },
+      "after": {
+        "gravada": 80.75,
+        "iva": 0,
+        "pagar": 80.75
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000043",
+      "cliente": "Carmen Araujo",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000044",
+      "cliente": "Claudia",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000045",
+      "cliente": "Auxy",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000046",
+      "cliente": "Erenia Sosa",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000047",
+      "cliente": "Emmety Pleitez ",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000048",
+      "cliente": "Rocio rivas ",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000049",
+      "cliente": "Denisse Menjívar",
+      "before": {
+        "gravada": 57.52,
+        "iva": 7.48,
+        "pagar": 65
+      },
+      "after": {
+        "gravada": 65,
+        "iva": 0,
+        "pagar": 65
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000050",
+      "cliente": "Karla Gallardo",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000051",
+      "cliente": "Katherine Nicole Recinos Morales",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000052",
+      "cliente": "Rocío Padilla",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000053",
+      "cliente": "Dianna Linne",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000054",
+      "cliente": "Carmen María Lara Sandoval",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000055",
+      "cliente": "Andrea Michelle Mónchez Interiano ",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000056",
+      "cliente": "Jorge Alejandro Mira Avelar ",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000057",
+      "cliente": "Stephanie Rosales de Monge",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000058",
+      "cliente": "paola monterrosa ",
+      "before": {
+        "gravada": 71.46,
+        "iva": 9.29,
+        "pagar": 80.75
+      },
+      "after": {
+        "gravada": 80.75,
+        "iva": 0,
+        "pagar": 80.75
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000059",
+      "cliente": "Nubia Carbajal",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000060",
+      "cliente": "Lourdes pacas ",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000061",
+      "cliente": "Barry Mahdi ",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000062",
+      "cliente": "Ivette Martinez",
+      "before": {
+        "gravada": 37.6,
+        "iva": 4.89,
+        "pagar": 42.49
+      },
+      "after": {
+        "gravada": 42.49,
+        "iva": 0,
+        "pagar": 42.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000063",
+      "cliente": "Hazel Aguilar ",
+      "before": {
+        "gravada": 52.65,
+        "iva": 6.84,
+        "pagar": 59.49
+      },
+      "after": {
+        "gravada": 59.49,
+        "iva": 0,
+        "pagar": 59.49
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000064",
+      "cliente": "Hadren Quijano",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000065",
+      "cliente": "Barry Sia",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000066",
+      "cliente": "Laura Rivas ",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000067",
+      "cliente": "Patricia Rivas",
+      "before": {
+        "gravada": 61.94,
+        "iva": 8.05,
+        "pagar": 69.99
+      },
+      "after": {
+        "gravada": 69.99,
+        "iva": 0,
+        "pagar": 69.99
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000068",
+      "cliente": "Camila Montoya",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000069",
+      "cliente": "Karla Amaya",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000070",
+      "cliente": "Ana Carolina Saade Interiano",
+      "before": {
+        "gravada": 13.27,
+        "iva": 1.73,
+        "pagar": 15
+      },
+      "after": {
+        "gravada": 15,
+        "iva": 0,
+        "pagar": 15
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000071",
+      "cliente": "Andrea Lemus ",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    },
+    {
+      "numero": "DTE-01-M638P001-000000000000072",
+      "cliente": "Katherine Figueroa ",
+      "before": {
+        "gravada": 44.24,
+        "iva": 5.75,
+        "pagar": 49.99
+      },
+      "after": {
+        "gravada": 49.99,
+        "iva": 0,
+        "pagar": 49.99
+      }
+    }
+  ]
+}

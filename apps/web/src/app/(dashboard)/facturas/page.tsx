@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { API_URL } from '@/lib/api';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,12 +69,6 @@ export default function FacturasPage() {
   const [error, setError] = React.useState<string | null>(null);
 
   const fetchDTEs = React.useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError(tCommon('noSession'));
-      setLoading(false);
-      return;
-    }
 
     try {
       setLoading(true);
@@ -87,12 +82,9 @@ export default function FacturasPage() {
       if (filterStatus !== 'all') params.set('estado', filterStatus);
       if (search) params.set('search', search);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte?${params}`, {
+      const res = await fetch(`${API_URL}/dte?${params}`, { credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+          'Content-Type': 'application/json' } });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -157,15 +149,9 @@ export default function FacturasPage() {
   };
 
   const handleDownload = async (dteId: string) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(`${API_URL}/dte/${dteId}`, { credentials: 'include' });
 
       if (!res.ok) throw new Error(t('downloadError'));
 
@@ -188,15 +174,9 @@ export default function FacturasPage() {
   };
 
   const handleDownloadPdf = async (dte: DTE) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dte.id}/pdf`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(`${API_URL}/dte/${dte.id}/pdf`, { credentials: 'include' });
 
       if (!res.ok) throw new Error(t('pdfError'));
 
@@ -222,22 +202,15 @@ export default function FacturasPage() {
       description: t('voidConfirm', { controlNumber: dte.numeroControl }),
       confirmText: t('yesVoid'),
       cancelText: tCommon('cancel'),
-      variant: 'destructive',
-    });
+      variant: 'destructive' });
 
     if (!confirmed) return;
 
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dte.id}/anular`, {
+      const res = await fetch(`${API_URL}/dte/${dte.id}/anular`, { credentials: 'include',
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+          'Content-Type': 'application/json' } });
 
       if (!res.ok) throw new Error(t('voidError'));
 

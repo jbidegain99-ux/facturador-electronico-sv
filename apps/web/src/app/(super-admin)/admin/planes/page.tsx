@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import {
   CreditCard,
@@ -15,8 +16,7 @@ import {
   Infinity,
   ToggleLeft,
   ToggleRight,
-  Star,
-} from 'lucide-react';
+  Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,8 +24,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+  DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
@@ -77,8 +76,7 @@ const initialForm: PlanForm = {
   precioAnual: null,
   orden: 0,
   isDefault: false,
-  isActive: true,
-};
+  isActive: true };
 
 export default function PlanesPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -103,12 +101,9 @@ export default function PlanesPage() {
   const fetchPlans = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/plans`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al cargar planes');
@@ -125,13 +120,10 @@ export default function PlanesPage() {
   const handleSeed = async () => {
     try {
       setSeeding(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/seed`,
-        {
+        `${API_URL}/admin/plans/seed`, { credentials: 'include',
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al crear planes');
@@ -165,8 +157,7 @@ export default function PlanesPage() {
       precioAnual: plan.precioAnual,
       orden: plan.orden,
       isDefault: plan.isDefault,
-      isActive: plan.isActive,
-    });
+      isActive: plan.isActive });
     setShowModal(true);
   };
 
@@ -174,19 +165,15 @@ export default function PlanesPage() {
     e.preventDefault();
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       const url = editingPlan
-        ? `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/${editingPlan.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/admin/plans`;
+        ? `${API_URL}/admin/plans/${editingPlan.id}`
+        : `${API_URL}/admin/plans`;
 
-      const res = await fetch(url, {
+      const res = await fetch(url, { credentials: 'include',
         method: editingPlan ? 'PUT' : 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form),
-      });
+          'Content-Type': 'application/json' },
+        body: JSON.stringify(form) });
 
       if (!res.ok) {
         const error = await res.json();
@@ -207,13 +194,10 @@ export default function PlanesPage() {
 
     try {
       setDeleting(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/plans/${deletingPlan.id}`,
-        {
+        `${API_URL}/admin/plans/${deletingPlan.id}`, { credentials: 'include',
           method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: { } }
       );
 
       if (!res.ok) {
@@ -531,8 +515,7 @@ export default function PlanesPage() {
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      precioMensual: e.target.value ? parseFloat(e.target.value) : null,
-                    })
+                      precioMensual: e.target.value ? parseFloat(e.target.value) : null })
                   }
                   className="input-rc mt-1"
                   min="0"
@@ -549,8 +532,7 @@ export default function PlanesPage() {
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      precioAnual: e.target.value ? parseFloat(e.target.value) : null,
-                    })
+                      precioAnual: e.target.value ? parseFloat(e.target.value) : null })
                   }
                   className="input-rc mt-1"
                   min="0"

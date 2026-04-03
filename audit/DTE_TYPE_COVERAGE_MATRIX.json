@@ -1,0 +1,108 @@
+{
+  "audit_date": "2026-03-12",
+  "last_updated": "2026-03-12T15:30:00Z",
+  "total_types_hacienda": 10,
+  "types_defined_in_system": 6,
+  "types_defined": ["01", "03", "05", "06", "07", "14"],
+  "types_missing_from_typedef": ["04", "09", "11", "34"],
+  "types": [
+    {
+      "tipo": "01",
+      "nombre": "Factura (Consumidor Final)",
+      "schema_ready": true,
+      "validation_ready": true,
+      "builder_ready": true,
+      "normalization_ready": true,
+      "accounting_ready": true,
+      "tests_ready": true,
+      "status": "READY"
+    },
+    {
+      "tipo": "03",
+      "nombre": "Comprobante de Crédito Fiscal (CCF)",
+      "schema_ready": true,
+      "validation_ready": true,
+      "builder_ready": true,
+      "normalization_ready": true,
+      "accounting_ready": true,
+      "tests_ready": true,
+      "status": "READY"
+    },
+    {
+      "tipo": "04",
+      "nombre": "Nota de Remisión",
+      "status": "NOT IMPLEMENTED"
+    },
+    {
+      "tipo": "05",
+      "nombre": "Nota de Crédito",
+      "schema_ready": true,
+      "validation_ready": true,
+      "builder_ready": true,
+      "normalization_ready": true,
+      "accounting_ready": true,
+      "tests_ready": true,
+      "status": "READY",
+      "notes": "NEW - Fase 1. Zod schema, builder, normalizer, accounting (NOTA_CREDITO), tests added."
+    },
+    {
+      "tipo": "06",
+      "nombre": "Nota de Débito",
+      "schema_ready": true,
+      "validation_ready": true,
+      "builder_ready": true,
+      "normalization_ready": true,
+      "accounting_ready": true,
+      "tests_ready": true,
+      "status": "READY",
+      "notes": "NEW - Fase 1. Zod schema, builder, normalizer, accounting (NOTA_DEBITO), tests added."
+    },
+    {
+      "tipo": "07",
+      "nombre": "Comprobante de Retención",
+      "schema_ready": true,
+      "validation_ready": true,
+      "builder_ready": true,
+      "normalization_ready": true,
+      "accounting_ready": true,
+      "tests_ready": true,
+      "status": "READY",
+      "notes": "NEW - Fase 1. Full implementation: types, Zod schema, builder, normalizer, accounting (RETENCION mapping), tests."
+    },
+    {
+      "tipo": "09",
+      "nombre": "Comprobante de Liquidación",
+      "status": "NOT IMPLEMENTED"
+    },
+    {
+      "tipo": "11",
+      "nombre": "Factura de Exportación",
+      "status": "NOT IMPLEMENTED",
+      "notes": "Referenced in PDF labels/analytics but not in TipoDte union. Fase 2."
+    },
+    {
+      "tipo": "14",
+      "nombre": "Factura de Sujeto Excluido",
+      "schema_ready": true,
+      "validation_ready": true,
+      "builder_ready": true,
+      "normalization_ready": true,
+      "accounting_ready": true,
+      "tests_ready": true,
+      "status": "READY",
+      "notes": "NEW - Fase 1. Full implementation: types, Zod schema, builder (no IVA), normalizer (sujetoExcluido field), accounting (SUJETO_EXCLUIDO), tests."
+    },
+    {
+      "tipo": "34",
+      "nombre": "Comprobante de Donación",
+      "status": "NOT IMPLEMENTED"
+    }
+  ],
+  "summary": {
+    "ready_count": 6,
+    "not_implemented_count": 4,
+    "implementation_percent": 60,
+    "previous_ready_count": 2,
+    "improvement": "+4 types (05, 06, 07, 14)"
+  }
+}

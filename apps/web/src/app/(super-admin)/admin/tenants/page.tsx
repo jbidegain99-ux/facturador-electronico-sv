@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -15,22 +16,19 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  AlertCircle,
-} from 'lucide-react';
+  AlertCircle } from 'lucide-react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
 interface Tenant {
@@ -77,22 +75,17 @@ export default function TenantsPage() {
   const fetchTenants = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
         ...(search && { search }),
         ...(planFilter && { plan: planFilter }),
-        ...(statusFilter && { status: statusFilter }),
-      });
+        ...(statusFilter && { status: statusFilter }) });
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants?${params}`,
-        {
+        `${API_URL}/super-admin/tenants?${params}`, { credentials: 'include',
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          } }
       );
 
       if (!res.ok) {
@@ -119,17 +112,12 @@ export default function TenantsPage() {
     if (!confirm(t('suspendConfirm'))) return;
 
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${id}/suspend`,
-        {
+        `${API_URL}/super-admin/tenants/${id}/suspend`, { credentials: 'include',
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ reason: t('suspendedByAdmin') }),
-        }
+            'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: t('suspendedByAdmin') }) }
       );
 
       if (!res.ok) throw new Error(t('suspendError'));
@@ -141,15 +129,11 @@ export default function TenantsPage() {
 
   const handleActivate = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${id}/activate`,
-        {
+        `${API_URL}/super-admin/tenants/${id}/activate`, { credentials: 'include',
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          } }
       );
 
       if (!res.ok) throw new Error(t('activateError'));
@@ -164,15 +148,11 @@ export default function TenantsPage() {
     if (!confirm(t('deleteCompanyFinal'))) return;
 
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants/${id}`,
-        {
+        `${API_URL}/super-admin/tenants/${id}`, { credentials: 'include',
           method: 'DELETE',
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          } }
       );
 
       if (!res.ok) throw new Error(t('deleteError'));
@@ -186,8 +166,7 @@ export default function TenantsPage() {
     const badges: Record<string, string> = {
       STARTER: 'badge-warning',
       PROFESSIONAL: 'badge-success',
-      ENTERPRISE: 'bg-purple-500/20 text-purple-400',
-    };
+      ENTERPRISE: 'bg-purple-500/20 text-purple-400' };
     return badges[plan] || 'badge-info';
   };
 
@@ -196,8 +175,7 @@ export default function TenantsPage() {
       ACTIVE: 'badge-success',
       SUSPENDED: 'badge-error',
       CANCELLED: 'badge-warning',
-      EXPIRED: 'badge-error',
-    };
+      EXPIRED: 'badge-error' };
     return badges[status] || 'badge-info';
   };
 

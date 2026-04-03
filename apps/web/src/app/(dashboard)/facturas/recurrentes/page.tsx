@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,8 +27,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Repeat,
-} from 'lucide-react';
+  Repeat } from 'lucide-react';
 
 interface RecurringTemplate {
   id: string;
@@ -63,8 +63,7 @@ const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'bg-green-100 text-green-800',
   PAUSED: 'bg-yellow-100 text-yellow-800',
   SUSPENDED_ERROR: 'bg-red-100 text-red-800',
-  CANCELLED: 'bg-gray-100 text-gray-800',
-};
+  CANCELLED: 'bg-gray-100 text-gray-800' };
 
 function RecurrentesUpsell() {
   const t = useTranslations('recurring');
@@ -107,15 +106,13 @@ export default function RecurrentesPage() {
     ACTIVE: t('statusActive'),
     PAUSED: t('statusPaused'),
     SUSPENDED_ERROR: t('statusSuspended'),
-    CANCELLED: t('statusCancelled'),
-  };
+    CANCELLED: t('statusCancelled') };
 
   const INTERVAL_LABELS: Record<string, string> = {
     DAILY: t('freqDaily'),
     WEEKLY: t('freqWeekly'),
     MONTHLY: t('freqMonthly'),
-    YEARLY: t('freqYearly'),
-  };
+    YEARLY: t('freqYearly') };
 
   const TABS = [
     { key: '', label: t('allTab') },
@@ -140,19 +137,16 @@ export default function RecurrentesPage() {
     setLoading(true);
     setFetchError(null);
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
         sortBy,
-        sortOrder,
-      });
+        sortOrder });
       if (search) params.set('search', search);
       if (statusFilter) params.set('status', statusFilter);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        `${API_URL}/recurring-invoices?${params}`, { credentials: 'include', headers: { } },
       );
 
       if (!res.ok) {
@@ -185,27 +179,22 @@ export default function RecurrentesPage() {
       pause: t('pauseSuccess'),
       resume: t('resumeSuccess'),
       cancel: t('cancelSuccess'),
-      trigger: t('executeSuccess'),
-    };
+      trigger: t('executeSuccess') };
 
     if (action === 'cancel') {
       const ok = await confirm({
         title: t('cancelTemplate'),
         description: t('cancelConfirm'),
         confirmText: t('cancelTemplate'),
-        variant: 'destructive',
-      });
+        variant: 'destructive' });
       if (!ok) return;
     }
 
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/recurring-invoices/${id}/${action}`,
-        {
+        `${API_URL}/recurring-invoices/${id}/${action}`, { credentials: 'include',
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        },
+          headers: { } },
       );
 
       if (!res.ok) {

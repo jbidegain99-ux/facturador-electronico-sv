@@ -6,10 +6,8 @@ import {
   Delete,
   Body,
   Param,
-  UseGuards,
   ForbiddenException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { RequirePermission } from './decorators/require-permission.decorator';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
@@ -19,7 +17,6 @@ import { CreateRoleDto, UpdateRoleDto, AssignRoleDto, InviteUserDto, AcceptInvit
 
 @ApiTags('rbac')
 @Controller('rbac')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class RbacController {
   constructor(private readonly rbacManagementService: RbacManagementService) {}

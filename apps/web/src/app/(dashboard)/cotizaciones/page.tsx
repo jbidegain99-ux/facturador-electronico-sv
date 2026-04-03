@@ -42,6 +42,7 @@ import { useToast } from '@/components/ui/toast';
 import { Pagination } from '@/components/ui/pagination';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
 import { useTranslations } from 'next-intl';
+import { apiFetch } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -162,18 +163,10 @@ export default function CotizacionesPage() {
   // ── Fetch ──────────────────────────────────────────────────────────
 
   const fetchQuotes = React.useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError(tCommon('noSession'));
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const params = new URLSearchParams({
         page: String(page),
         limit: String(limit),
@@ -183,21 +176,7 @@ export default function CotizacionesPage() {
       if (search) params.set('search', search);
       if (statusFilter) params.set('status', statusFilter);
 
-      const res = await fetch(`${apiUrl}/quotes?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) {
-        throw new Error(t('loadError'));
-      }
-
-      const data: QuotesResponse = await res.json().catch(() => ({
-        data: [],
-        total: 0,
-        page: 1,
-        limit: 20,
-        totalPages: 0,
-      }));
+      const data = await apiFetch<QuotesResponse>(`/quotes?${params}`);
 
       const items = Array.isArray(data?.data) ? data.data : [];
       const parsedTotal = Number(data?.total);
@@ -230,27 +209,12 @@ export default function CotizacionesPage() {
     action: string,
     body?: Record<string, unknown>,
   ) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     setActionLoading(quoteId);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/quotes/${quoteId}/${action}`, {
+      await apiFetch(`/quotes/${quoteId}/${action}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: body ? JSON.stringify(body) : undefined,
       });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(
-          (errData as { message?: string }).message || `Error al ${action}`,
-        );
-      }
 
       toastRef.current.success(t('actionSuccess'));
       fetchQuotes();
@@ -265,23 +229,10 @@ export default function CotizacionesPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     setActionLoading(deleteConfirm.id);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/quotes/${deleteConfirm.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(
-          (errData as { message?: string }).message || 'Error al eliminar',
-        );
-      }
+      await apiFetch(`/quotes/${deleteConfirm.id}`, { method: 'DELETE' });
 
       setDeleteConfirm(null);
       toastRef.current.success(t('deleteSuccess'));
@@ -296,32 +247,16 @@ export default function CotizacionesPage() {
   };
 
   const handleConvert = async (quoteId: string) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     setActionLoading(quoteId);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/quotes/${quoteId}/convert`, {
+      const result = await apiFetch<{ invoice?: { id?: string } }>(`/quotes/${quoteId}/convert`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(
-          (errData as { message?: string }).message ||
-            'Error al convertir',
-        );
-      }
-
-      const result = await res.json().catch(() => ({}));
       toastRef.current.success(t('convertSuccess'));
 
-      if ((result as { invoice?: { id?: string } }).invoice?.id) {
-        router.push(
-          `/facturas/${(result as { invoice: { id: string } }).invoice.id}`,
-        );
+      if (result.invoice?.id) {
+        router.push(`/facturas/${result.invoice.id}`);
       } else {
         fetchQuotes();
       }

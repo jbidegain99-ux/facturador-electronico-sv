@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { API_URL } from '@/lib/api';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,8 +23,7 @@ import {
   Loader2,
   AlertCircle,
   FileText,
-  Mail,
-} from 'lucide-react';
+  Mail } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
@@ -83,8 +83,7 @@ const timelineIcons: Record<string, any> = {
   CREATED: Clock,
   SIGNED: FileJson,
   TRANSMITTED: Send,
-  TRANSMISSION_ERROR: AlertCircle,
-};
+  TRANSMISSION_ERROR: AlertCircle };
 
 export default function FacturaDetallePage() {
   const t = useTranslations('invoices');
@@ -104,19 +103,9 @@ export default function FacturaDetallePage() {
 
   React.useEffect(() => {
     const fetchDTE = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError(tCommon('noSession'));
-        setLoading(false);
-        return;
-      }
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(`${API_URL}/dte/${dteId}`, { credentials: 'include' });
 
         if (!res.ok) {
           throw new Error('Error al cargar el documento');
@@ -166,14 +155,9 @@ export default function FacturaDetallePage() {
     if (!dte) return;
 
     setDownloadingPdf(true);
-    const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}/pdf`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(`${API_URL}/dte/${dteId}/pdf`, { credentials: 'include' });
 
       if (!res.ok) {
         throw new Error('Error al generar el PDF');
@@ -199,17 +183,13 @@ export default function FacturaDetallePage() {
     if (!dte) return;
 
     setAnulando(true);
-    const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}/anular`, {
+      const res = await fetch(`${API_URL}/dte/${dteId}/anular`, { credentials: 'include',
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ motivo }),
-      });
+          'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo }) });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -230,17 +210,13 @@ export default function FacturaDetallePage() {
 
     setSendingEmail(true);
     setEmailResult(null);
-    const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dte/${dteId}/send-email`, {
+      const res = await fetch(`${API_URL}/dte/${dteId}/send-email`, { credentials: 'include',
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      });
+          'Content-Type': 'application/json' },
+        body: JSON.stringify({}) });
 
       const data = await res.json().catch(() => ({ success: false, message: 'Error de conexion' }));
 
@@ -255,8 +231,7 @@ export default function FacturaDetallePage() {
     } catch (err) {
       setEmailResult({
         success: false,
-        message: err instanceof Error ? err.message : 'Error al enviar email',
-      });
+        message: err instanceof Error ? err.message : 'Error al enviar email' });
     } finally {
       setSendingEmail(false);
     }

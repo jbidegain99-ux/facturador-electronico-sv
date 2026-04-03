@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store';
+import { apiFetch, apiRawFetch } from '@/lib/api';
 
 export interface ChatMessage {
   id: string;
@@ -103,25 +104,16 @@ export function useChatWidget() {
   const sendMessageJson = useCallback(async (
     text: string,
     botMsgId: string,
-    authToken: string,
     signal: AbortSignal,
   ) => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/chat/message`,
+    const data = await apiFetch<{ answer: string; sessionId: string }>(
+      '/chat/message',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
         body: JSON.stringify({ message: text, sessionId: sessionId || undefined }),
         signal,
       },
     );
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => null);
-      throw new Error(errorData?.message || `Error ${res.status}`);
-    }
-
-    const data: { answer: string; sessionId: string } = await res.json();
     setSessionId(data.sessionId);
     updateMessageContent(botMsgId, data.answer);
   }, [sessionId, updateMessageContent]);
@@ -158,23 +150,17 @@ export function useChatWidget() {
     abortRef.current = controller;
 
     try {
-      const authToken = localStorage.getItem('token');
-      if (!authToken) throw new Error('No auth token');
-
       // Try streaming first
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat/message/stream`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
-          body: JSON.stringify({ message: trimmed, sessionId: sessionId || undefined }),
-          signal: controller.signal,
-        },
-      );
+      const res = await apiRawFetch('/chat/message/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: trimmed, sessionId: sessionId || undefined }),
+        signal: controller.signal,
+      });
 
       if (!res.ok || !res.body) {
         // Fallback to JSON
-        await sendMessageJson(trimmed, botMsgId, authToken, controller.signal);
+        await sendMessageJson(trimmed, botMsgId, controller.signal);
         return;
       }
 
@@ -228,7 +214,7 @@ export function useChatWidget() {
 
       // If no content arrived via stream, fallback
       if (!accumulated) {
-        await sendMessageJson(trimmed, botMsgId, authToken, controller.signal);
+        await sendMessageJson(trimmed, botMsgId, controller.signal);
       }
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
@@ -252,26 +238,16 @@ export function useChatWidget() {
     feedbackText?: string,
   ) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat/feedback`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            messageContent,
-            botResponse,
-            rating,
-            feedbackText,
-            pageRoute: window.location.pathname,
-          }),
-        },
-      );
+      await apiFetch('/chat/feedback', {
+        method: 'POST',
+        body: JSON.stringify({
+          messageContent,
+          botResponse,
+          rating,
+          feedbackText,
+          pageRoute: window.location.pathname,
+        }),
+      });
     } catch {
       // Fire-and-forget
     }
@@ -322,33 +298,21 @@ export function useChatWidget() {
       const description = `## Conversación con Asistente AI\n\nEste ticket fue creado automáticamente desde el chat de asistencia AI porque el usuario necesitó ayuda humana.\n\n### Transcript de la conversación:\n\n${transcript}\n\n---\n*Ticket generado automáticamente por el Asistente Facturo*`;
 
       try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('No auth token');
-
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/support-tickets`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              type: 'GENERAL',
-              subject: `Escalación desde chat AI — ${new Date().toLocaleDateString('es-SV')}`,
-              description,
-              priority: 'MEDIUM',
-              metadata: JSON.stringify({
-                source: 'chat-escalation',
-                sessionId,
-                pageRoute: typeof window !== 'undefined' ? window.location.pathname : '',
-                messageCount: messages.filter((m) => m.role !== 'system').length,
-              }),
+        await apiFetch('/support-tickets', {
+          method: 'POST',
+          body: JSON.stringify({
+            type: 'GENERAL',
+            subject: `Escalación desde chat AI — ${new Date().toLocaleDateString('es-SV')}`,
+            description,
+            priority: 'MEDIUM',
+            metadata: JSON.stringify({
+              source: 'chat-escalation',
+              sessionId,
+              pageRoute: typeof window !== 'undefined' ? window.location.pathname : '',
+              messageCount: messages.filter((m) => m.role !== 'system').length,
             }),
-          },
-        );
-
-        if (!res.ok) throw new Error(`Error ${res.status}`);
+          }),
+        });
 
         const successMsg: ChatMessage = {
           id: `system-success-${Date.now()}`,

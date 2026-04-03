@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import * as React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -10,8 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
@@ -19,8 +19,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  TableRow } from '@/components/ui/table';
 import {
   ArrowLeft,
   ArrowRight,
@@ -41,8 +40,7 @@ import {
   Clock,
   Shield,
   Link as LinkIcon,
-  RefreshCw,
-} from 'lucide-react';
+  RefreshCw } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
 import { formatCurrency } from '@/lib/utils';
@@ -138,14 +136,12 @@ const STATUS_STYLE_MAP: Record<string, { labelKey: string; variant: StatusConfig
   CONVERTED: { labelKey: 'statusConverted', variant: 'default', className: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
   CANCELLED: { labelKey: 'statusCancelled', variant: 'secondary', className: 'bg-muted text-muted-foreground border-border' },
   CHANGES_REQUESTED: { labelKey: 'statusChangesRequested', variant: 'default', className: 'bg-orange-600/20 text-orange-400 border-orange-600/30' },
-  REVISED: { labelKey: 'statusRevised', variant: 'default', className: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30' },
-};
+  REVISED: { labelKey: 'statusRevised', variant: 'default', className: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30' } };
 
 const APPROVAL_STYLE_MAP: Record<string, { labelKey: string; className: string }> = {
   APPROVED: { labelKey: 'approvalApproved', className: 'bg-green-600/20 text-green-400 border-green-600/30' },
   REJECTED: { labelKey: 'approvalRejected', className: 'bg-red-600/20 text-red-400 border-red-600/30' },
-  PENDING: { labelKey: 'approvalPending', className: 'bg-muted text-muted-foreground border-border' },
-};
+  PENDING: { labelKey: 'approvalPending', className: 'bg-muted text-muted-foreground border-border' } };
 
 function formatDate(dateStr: string): string {
   try {
@@ -167,8 +163,7 @@ function formatDateTime(dateStr: string): string {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
-    });
+      minute: '2-digit' });
   } catch {
     return dateStr;
   }
@@ -204,15 +199,12 @@ export default function CotizacionDetailPage() {
   // -- Fetch ----------------------------------------------------------------
 
   const fetchQuote = React.useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/quotes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const apiUrl = API_URL || '';
+      const res = await fetch(`${API_URL}/quotes/${id}`, { credentials: 'include',
+        headers: { } });
 
       if (!res.ok) {
         toastRef.current.error(t('cantLoadQuote'));
@@ -231,15 +223,12 @@ export default function CotizacionDetailPage() {
   }, [id, router]);
 
   const fetchStatusHistory = React.useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     setHistoryLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/quotes/${id}/status-history`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const apiUrl = API_URL || '';
+      const res = await fetch(`${API_URL}/quotes/${id}/status-history`, { credentials: 'include',
+        headers: { } });
 
       if (!res.ok) return;
 
@@ -265,20 +254,14 @@ export default function CotizacionDetailPage() {
     action: string,
     body?: Record<string, unknown>,
   ) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     setActionLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/quotes/${id}/${action}`, {
+      const apiUrl = API_URL || '';
+      const res = await fetch(`${API_URL}/quotes/${id}/${action}`, { credentials: 'include',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: body ? JSON.stringify(body) : undefined,
-      });
+        headers: { 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -303,16 +286,13 @@ export default function CotizacionDetailPage() {
   };
 
   const handleConvert = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     setActionLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/quotes/${id}/convert`, {
+      const apiUrl = API_URL || '';
+      const res = await fetch(`${API_URL}/quotes/${id}/convert`, { credentials: 'include',
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -343,16 +323,13 @@ export default function CotizacionDetailPage() {
   };
 
   const handleDelete = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     setActionLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/quotes/${id}`, {
+      const apiUrl = API_URL || '';
+      const res = await fetch(`${API_URL}/quotes/${id}`, { credentials: 'include',
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -375,16 +352,13 @@ export default function CotizacionDetailPage() {
   };
 
   const handleCreateNewVersion = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     setActionLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/quotes/${id}/create-version`, {
+      const apiUrl = API_URL || '';
+      const res = await fetch(`${API_URL}/quotes/${id}/create-version`, { credentials: 'include',
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));

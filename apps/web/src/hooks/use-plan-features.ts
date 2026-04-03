@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { apiFetch } from '@/lib/api';
 
 export interface PlanFeatures {
   planCode: string;
@@ -92,32 +93,18 @@ export function usePlanFeatures() {
 
     fetchedRef.current = true;
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     let wasAuthError = false;
-    const headers = { Authorization: `Bearer ${token}` };
 
     // Fetch both endpoints in parallel
     Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/plans/features`, { headers })
-        .then((res) => {
-          if (res.status === 401 || res.status === 403) {
+      apiFetch<PlanFeatures>('/plans/features')
+        .catch((err) => {
+          if ((err as { status?: number }).status === 401 || (err as { status?: number }).status === 403) {
             wasAuthError = true;
-            return null;
           }
-          if (!res.ok) return null;
-          return res.json().catch(() => null) as Promise<PlanFeatures | null>;
-        })
-        .catch(() => null),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/plans/tenant/features`, { headers })
-        .then((res) => {
-          if (!res.ok) return null;
-          return res.json().catch(() => null) as Promise<{ planCode: string; features: FeatureCode[] } | null>;
-        })
+          return null;
+        }),
+      apiFetch<{ planCode: string; features: FeatureCode[] }>('/plans/tenant/features')
         .catch(() => null),
     ]).then(([legacyData, tenantData]) => {
       if (legacyData) {

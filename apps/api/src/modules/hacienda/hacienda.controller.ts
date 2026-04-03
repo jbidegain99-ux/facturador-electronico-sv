@@ -5,13 +5,11 @@ import {
   Body,
   Query,
   Param,
-  UseGuards,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -42,7 +40,6 @@ import { RequirePermission } from '../rbac/decorators/require-permission.decorat
 import { HaciendaEnvironment } from './interfaces';
 
 @Controller('hacienda')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 @ApiTags('Hacienda Configuration')
 export class HaciendaController {

@@ -1,0 +1,96 @@
+{
+  "audit_timestamp": "2026-03-12T17:30:00Z",
+  "tenant_id": "cmkwth4ie0001b3hld086ommq",
+  "tenant_name": "Republicode S.A. de C.V.",
+  "tenant_nit": "0614-180723-106-0",
+  "tenant_plan": "ENTERPRISE",
+  "dte_numero_control": "DTE-03-M001P001-000000000000021",
+  "dte_id": "cmmnpub46000bsclb6zohj83l",
+
+  "diagnosis": {
+    "root_cause": "STUCK_EN_QUEUE_SIN_INTENTARSE",
+    "root_cause_code": 6,
+    "description": "La factura fue creada exitosamente (estado PENDIENTE) pero NUNCA se disparó el proceso de firma ni transmisión. El flujo de firma y transmisión en esta aplicación es MANUAL: requiere que el frontend llame explícitamente a POST /dte/:id/sign y luego POST /dte/:id/transmit. El único log registrado es 'CREATED' — no hay evidencia de que se haya intentado firmar. Esto indica que el frontend no completó la secuencia de llamadas API después de crear el DTE, o el usuario cerró/navegó fuera antes de que el proceso automático del frontend ejecutara los pasos siguientes.",
+    "severity": "P2",
+    "evidence": [
+      "DTE estado = 'PENDIENTE', jsonFirmado = NULL, selloRecepcion = NULL, intentosEnvio = 0",
+      "DTELog solo tiene 1 entrada: 'CREATED' a las 17:02:28 — sin intentos de firma ni transmisión",
+      "AuditLog del tenant solo muestra LOGINs — ninguna acción de firma/transmisión registrada",
+      "HaciendaConfig está correctamente configurada: activeEnvironment=PRODUCTION, isConfigured=1, isValidated=1, certificado válido hasta 2030-07-08",
+      "Token de Hacienda activo: tokenExpiresAt=2026-03-12T17:10:58 (renovado hoy), apiUser=06141807231060",
+      "El tenant tiene 20 DTEs previos PROCESADOS exitosamente (último: DTE-03-...020 del 2026-01-31) — las credenciales y configuración funcionan",
+      "Últimos 4 DTEs (001-004) fueron ANULADOS sin firma — patrón de pruebas/errores manuales",
+      "La firma y transmisión son endpoints MANUALES (POST /dte/:id/sign + POST /dte/:id/transmit), NO automáticos"
+    ]
+  },
+
+  "current_state": {
+    "dte_estado": "PENDIENTE",
+    "dte_tipo": "03 (Crédito Fiscal)",
+    "dte_codigo_generacion": "6FD8601B-BC4E-4DAE-9034-212797CCB9F0",
+    "createdAt": "2026-03-12T17:02:28.031Z",
+    "signedAt": null,
+    "transmittedAt": null,
+    "selloRecepcion": null,
+    "codigoMh": null,
+    "descripcionMh": null,
+    "intentosEnvio": 0,
+    "totalGravada": 3100.00,
+    "totalIva": 403.00,
+    "totalPagar": 3503.00,
+    "ambiente": "PRODUCTION",
+    "clienteId": "cmml4svkb0003jvf1gqc7giyw",
+    "certificado_valido": true,
+    "certificado_expires": "2030-07-08T14:47:15.883Z",
+    "certificado_nit": "0614-180723-106-0",
+    "hacienda_configured": true,
+    "hacienda_validated": true,
+    "hacienda_active_environment": "PRODUCTION",
+    "hacienda_api_user": "06141807231060",
+    "hacienda_token_expires": "2026-03-12T17:10:58.908Z",
+    "hacienda_last_validation": "2026-03-11T17:10:38.858Z"
+  },
+
+  "multi_tenant_isolation": {
+    "status": "OK",
+    "other_tenants_with_same_numero_control": 0
+  },
+
+  "historical_context": {
+    "total_procesados_republicode": "20+ DTEs procesados exitosamente",
+    "ultimo_procesado": "DTE-03-M001P001-000000000000020 (2026-01-31)",
+    "gap_sin_procesados": "~40 días (2026-01-31 → 2026-03-12)",
+    "dtes_anulados_recientes": "4 DTEs (001-004) anulados sin firma entre 2026-03-10 y 2026-03-11"
+  },
+
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "TRIGGER_FIRMA_Y_TRANSMISION",
+      "description": "Firmar y transmitir el DTE manualmente llamando los endpoints en secuencia",
+      "details": "1) POST /dte/cmmnpub46000bsclb6zohj83l/sign (firma el DTE con certificado digital)\n2) POST /dte/cmmnpub46000bsclb6zohj83l/transmit (transmite a Hacienda MH)\nAlternativa: usar POST /transmitter/send/cmmnpub46000bsclb6zohj83l que hace ambos pasos",
+      "estimated_time": "< 1 minuto",
+      "risk": "Bajo — las credenciales y certificado están validados y activos"
+    },
+    {
+      "priority": 2,
+      "action": "INVESTIGAR_FRONTEND",
+      "description": "Verificar por qué el frontend no completó la secuencia create → sign → transmit automáticamente",
+      "details": "Posibles causas: (a) El usuario cerró el navegador/pestaña antes de que el frontend completara, (b) Error silencioso en frontend al llamar /sign después de /create, (c) El frontend no tiene implementado el flujo automático para Crédito Fiscal (tipo 03) — solo para Factura (tipo 01)",
+      "estimated_time": "30 minutos de investigación",
+      "files_to_check": [
+        "apps/web/src/ — buscar flujo de creación de DTE tipo 03",
+        "Verificar si el frontend hace create+sign+transmit en secuencia o solo create"
+      ]
+    },
+    {
+      "priority": 3,
+      "action": "CONSIDERAR_AUTOMATIZACION",
+      "description": "Implementar firma+transmisión automática server-side después de crear el DTE",
+      "details": "Actualmente el flujo depende 100% del frontend para ejecutar 3 llamadas API secuenciales. Si el usuario pierde conexión entre el paso 1 y 2, el DTE queda huérfano en PENDIENTE. Considerar: (a) Endpoint create-and-send del TransmitterController que ya existe, (b) Un job/cron que detecte DTEs en PENDIENTE por más de X minutos y los firme/transmita automáticamente, (c) Un webhook o event post-create que dispare la firma",
+      "estimated_time": "2-4 horas de desarrollo"
+    }
+  ],
+
+  "next_steps_for_claude": "Esperar confirmación de Jose. Acción inmediata recomendada: ejecutar firma+transmisión del DTE via API. Si Jose confirma, puedo ejecutar las llamadas directamente o generar un script. También investigar el frontend para entender por qué no completó el flujo."
+}

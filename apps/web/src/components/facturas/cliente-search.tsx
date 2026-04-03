@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api';
+import { useAppStore } from '@/store';
 import type { Cliente } from '@/types';
 
 // Constante para Consumidor Final
@@ -31,40 +33,31 @@ const RECENT_CLIENTS_PREFIX = 'factura-recent-clients';
 const MAX_RECENT_CLIENTS = 5;
 
 /** Build a tenant-scoped localStorage key to prevent cross-tenant leakage */
-function getRecentClientsKey(): string {
+function getRecentClientsKey(tenantId?: string): string {
   if (typeof window === 'undefined') return RECENT_CLIENTS_PREFIX;
-  try {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Extract payload from JWT to get tenantId
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.tenantId) {
-        return `${RECENT_CLIENTS_PREFIX}-${payload.tenantId}`;
-      }
-    }
-  } catch {
-    // Fall through to default
+  if (tenantId) {
+    return `${RECENT_CLIENTS_PREFIX}-${tenantId}`;
   }
   return RECENT_CLIENTS_PREFIX;
 }
 
-function getRecentClients(): Cliente[] {
+function getRecentClients(tenantId?: string): Cliente[] {
   if (typeof window === 'undefined') return [];
   try {
-    const stored = localStorage.getItem(getRecentClientsKey());
+    const stored = localStorage.getItem(getRecentClientsKey(tenantId));
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
   }
 }
 
-function addRecentClient(cliente: Cliente): void {
+function addRecentClient(cliente: Cliente, tenantId?: string): void {
   if (typeof window === 'undefined') return;
   if (cliente.id === 'consumidor-final') return;
 
   try {
-    const key = getRecentClientsKey();
-    const recents = getRecentClients().filter((c) => c.id !== cliente.id);
+    const key = getRecentClientsKey(tenantId);
+    const recents = getRecentClients(tenantId).filter((c) => c.id !== cliente.id);
     recents.unshift(cliente);
     localStorage.setItem(
       key,
@@ -92,6 +85,8 @@ export function ClienteSearch({
   const [recentClients, setRecentClients] = React.useState<Cliente[]>([]);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const tenant = useAppStore((s) => s.tenant);
+  const tenantId = tenant?.id;
 
   // Load recent clients on mount and clean up old un-scoped key
   React.useEffect(() => {
@@ -99,8 +94,8 @@ export function ClienteSearch({
     try {
       localStorage.removeItem(RECENT_CLIENTS_PREFIX);
     } catch { /* ignore */ }
-    setRecentClients(getRecentClients());
-  }, []);
+    setRecentClients(getRecentClients(tenantId));
+  }, [tenantId]);
 
   // Debounced search
   React.useEffect(() => {
@@ -117,23 +112,11 @@ export function ClienteSearch({
     setIsLoading(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const token = localStorage.getItem('token');
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        const response = await fetch(
-          `${apiUrl}/clientes?search=${encodeURIComponent(search)}&limit=10`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        const data = await apiFetch<{ data?: Cliente[] } | Cliente[]>(
+          `/clientes?search=${encodeURIComponent(search)}&limit=10`
         );
-
-        if (!response.ok) {
-          throw new Error('Error al buscar clientes');
-        }
-
-        const data = await response.json();
-        setResults(data.data || data || []);
+        const list = Array.isArray(data) ? data : (data.data || []);
+        setResults(list);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error de búsqueda');
@@ -225,8 +208,8 @@ export function ClienteSearch({
 
   const handleSelect = (cliente: Cliente) => {
     onChange(cliente);
-    addRecentClient(cliente);
-    setRecentClients(getRecentClients());
+    addRecentClient(cliente, tenantId);
+    setRecentClients(getRecentClients(tenantId));
     setSearch('');
     setOpen(false);
     setHighlightedIndex(0);

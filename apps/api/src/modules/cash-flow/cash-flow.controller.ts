@@ -2,10 +2,8 @@ import {
   Controller,
   Get,
   Query,
-  UseGuards,
   ForbiddenException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { CashFlowService } from './cash-flow.service';
@@ -13,7 +11,6 @@ import { RequirePermission } from '../rbac/decorators/require-permission.decorat
 
 @ApiTags('Cash Flow')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller('cash-flow')
 export class CashFlowController {
   constructor(private readonly cashFlowService: CashFlowService) {}

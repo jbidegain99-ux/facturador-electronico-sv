@@ -1,0 +1,63 @@
+{
+  "audit_date": "2026-03-12",
+  "module_exists": true,
+  "module_path": "apps/api/src/modules/accounting/",
+  "auto_triggered": true,
+  "trigger_mechanism": "Fire-and-forget from DteService via AccountingAutomationService (Optional + forwardRef injection)",
+  "trigger_events": {
+    "ON_CREATED": "Called at DTE creation (line 306 of dte.service.ts)",
+    "ON_APPROVED": "Called after successful Hacienda transmission (lines 386, 460, 602, 666)",
+    "ON_ANULADO": "Reversal triggered on DTE annulment (line 1052)"
+  },
+  "tenant_config": {
+    "autoJournalEnabled": "Boolean, default false - must be explicitly enabled per tenant",
+    "autoJournalTrigger": "String, default 'ON_APPROVED' - configurable per tenant"
+  },
+  "journal_entry_table_exists": true,
+  "journal_entry_model": "JournalEntry with JournalEntryLine (double-entry)",
+  "dte_link_mechanism": "Generic sourceType='DTE' + sourceDocumentId pattern (not FK)",
+  "chart_of_accounts": {
+    "exists": true,
+    "model": "AccountingAccount (hierarchical, 4 levels)",
+    "standard": "NIIF/PYMES El Salvador",
+    "predefined_accounts": 262,
+    "seedable": true
+  },
+  "supports_reversal": true,
+  "reversal_mechanism": "Void POSTED entry, reverse account balances, record voidReason='Anulación de DTE'",
+  "supports_all_dte_types": false,
+  "accounting_operations_defined": 6,
+  "accounting_operations": {
+    "VENTA_CONTADO": {"tipoDte": "01", "condition": "condicionOperacion=1", "debit": "110101 Caja General", "credit": "4101 Ventas + 210201 IVA Débito Fiscal"},
+    "VENTA_CREDITO": {"tipoDte": "01", "condition": "condicionOperacion=2", "debit": "110301 Clientes Locales", "credit": "4101 Ventas + 210201 IVA Débito Fiscal"},
+    "CREDITO_FISCAL": {"tipoDte": "03", "debit": "110301 Clientes Locales", "credit": "4101 Ventas + 210201 IVA Débito Fiscal"},
+    "NOTA_CREDITO": {"tipoDte": "05", "debit": "4101 Ventas + 210201 IVA", "credit": "110301 Clientes Locales"},
+    "NOTA_DEBITO": {"tipoDte": "06", "debit": "110301 Clientes Locales", "credit": "4101 Ventas + 210201 IVA"},
+    "SUJETO_EXCLUIDO": {"tipoDte": "14", "debit": "110101 Caja General", "credit": "4101 Ventas (no IVA)"}
+  },
+  "accounting_types_ready": ["01", "03", "05", "06", "14"],
+  "accounting_types_not_ready": ["04", "07", "09", "11", "34"],
+  "libro_diario_queryable": true,
+  "reports_available": [
+    "GET /accounting/journal-entries (libro diario with filters: status, entryType, dateFrom/dateTo, search)",
+    "GET /accounting/reports/general-ledger (libro mayor per account with running balance)",
+    "GET /accounting/reports/trial-balance (balanza de comprobación)",
+    "GET /accounting/reports/balance-sheet (balance general)",
+    "GET /accounting/reports/income-statement (estado de resultados)",
+    "GET /accounting/dashboard (summary: assets, liabilities, equity, income, expenses)"
+  ],
+  "feature_gating": "Requires 'accounting' feature in tenant plan. Advanced reports require 'advanced_reports'.",
+  "test_coverage": {
+    "automation_tests": 12,
+    "service_tests": 43,
+    "e2e_tests": 0
+  },
+  "issues": [
+    "Type 07 (Comprobante de Retención) has no accounting mapping - operation not defined",
+    "Types 04, 09, 11, 34 completely absent from accounting automation",
+    "CREDITO_FISCAL mapping mirrors VENTA_CREDITO (debit Clientes/credit Ventas) - may need review for purchase-side accounting",
+    "Hardcoded IVA rate (13%) in normalizeJsonForHacienda - not applicable to all DTE types (e.g., exportaciones=0%, sujeto excluido=no IVA)",
+    "No accounting for tipo 11 (Exportación) which has 0% IVA",
+    "mappingConfig JSON rules are flexible but require manual setup per tenant - no auto-provisioning for new operations"
+  ]
+}

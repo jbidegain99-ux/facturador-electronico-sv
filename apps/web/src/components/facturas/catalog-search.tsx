@@ -5,6 +5,7 @@ import { Search, Star, Package, Loader2, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn, formatCurrency } from '@/lib/utils';
+import { apiFetch } from '@/lib/api';
 
 interface CatalogItem {
   id: string;
@@ -42,17 +43,7 @@ export function CatalogSearch({ onSelect, disabled = false }: CatalogSearchProps
   React.useEffect(() => {
     const loadRecent = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        const response = await fetch(`${apiUrl}/catalog-items/recent`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) return;
-
-        const data = await response.json();
+        const data = await apiFetch<CatalogItem[]>('/catalog-items/recent');
         if (Array.isArray(data)) {
           setRecentItems(data);
         }
@@ -78,21 +69,9 @@ export function CatalogSearch({ onSelect, disabled = false }: CatalogSearchProps
     setIsLoading(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        const response = await fetch(
-          `${apiUrl}/catalog-items/search?q=${encodeURIComponent(search)}&limit=10`,
-          { headers: { Authorization: `Bearer ${token}` } }
+        const data = await apiFetch<CatalogItem[]>(
+          `/catalog-items/search?q=${encodeURIComponent(search)}&limit=10`
         );
-
-        if (!response.ok) {
-          setResults([]);
-          return;
-        }
-
-        const data = await response.json();
         setResults(Array.isArray(data) ? data : []);
       } catch {
         setResults([]);

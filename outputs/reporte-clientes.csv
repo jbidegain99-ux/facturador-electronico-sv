@@ -1,0 +1,186 @@
+﻿Empresa,Cliente,Tipo DTE,Tipo,Numero Control,Concepto,Gravada,IVA,Total,Estado,Fecha
+"ALFACOM, SA DE CV ","ADITIVOS DE EL SALVADOR, SA DE CV ",01,Factura,DTE-01-M001P001-000000000000001,Office 365 Standard mensual,15.00,0.00,15.00,PENDIENTE,2026-03-11
+Demo Empresa,Servicios Digitales SV S.A.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000013,Licencia Facturo Plan Profesional (+2 más),109.98,14.30,124.28,PENDIENTE,2026-03-11
+Demo Empresa,Restaurante El Buen Sabor,01,Factura,DTE-01-M001P001-000000000000017,Pack PYME (Básico + Contabilidad),44.99,5.85,50.84,PENDIENTE,2026-03-10
+Demo Empresa,Importadora XYZ Ltda.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000012,Licencia Facturo Plan Enterprise,499.95,64.99,564.94,PENDIENTE,2026-03-10
+Demo Empresa,Farmacia Central,01,Factura,DTE-01-M001P001-000000000000016,Licencia Facturo Plan Básico (+1 más),64.99,8.45,73.44,PROCESADO,2026-03-09
+Demo Empresa,Panadería Don Juan,01,Factura,DTE-01-M001P001-000000000000015,Capacitación virtual (por hora),45.00,5.85,50.85,PROCESADO,2026-03-08
+Demo Empresa,Constructora Moderna S.A.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000011,Auditoría de cumplimiento DTE,250.00,32.50,282.50,PROCESADO,2026-03-07
+Demo Empresa,María Elena García,01,Factura,DTE-01-M001P001-000000000000014,Certificado de firma electrónica,50.00,6.50,56.50,PROCESADO,2026-03-06
+Demo Empresa,Tech Solutions S.A.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000010,Integración API personalizada,300.00,39.00,339.00,PROCESADO,2026-03-05
+Demo Empresa,Roberto Martínez Flores,01,Factura,DTE-01-M001P001-000000000000013,Capacitación presencial (por hora),150.00,19.50,169.50,PROCESADO,2026-03-03
+Demo Empresa,Distribuidora ABC S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000009,Licencia Facturo Plan Profesional (+1 más),84.99,11.05,96.04,PROCESADO,2026-03-01
+Demo Empresa,Farmacia Central,01,Factura,DTE-01-M001P001-000000000000012,Licencia Facturo Plan Básico,29.99,3.90,33.89,PROCESADO,2026-02-26
+Demo Empresa,Hotel Vista Real,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000008,Hosting dedicado (+1 más),120.00,15.60,135.60,PROCESADO,2026-02-23
+Demo Empresa,Taller Mecánico Express,01,Factura,DTE-01-M001P001-000000000000011,Consultoría tributaria (por hora),120.00,15.60,135.60,PROCESADO,2026-02-20
+Demo Empresa,Restaurante El Buen Sabor,01,Factura,DTE-01-M001P001-000000000000010,Pack PYME (Básico + Contabilidad),44.99,5.85,50.84,PROCESADO,2026-02-18
+Demo Empresa,Servicios Digitales SV S.A.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000007,Licencia Facturo Plan Enterprise (+1 más),224.97,29.25,254.22,PROCESADO,2026-02-16
+Demo Empresa,María Elena García,01,Factura,DTE-01-M001P001-000000000000009,Consultoría tributaria (por hora),240.00,31.20,271.20,PROCESADO,2026-02-13
+Demo Empresa,Clínica San Rafael,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000006,Implementación inicial,150.00,19.50,169.50,PROCESADO,2026-02-10
+Demo Empresa,Librería El Conocimiento,01,Factura,DTE-01-M001P001-000000000000008,Licencia Facturo Plan Básico (+1 más),49.98,6.50,56.48,PROCESADO,2026-02-08
+Demo Empresa,Distribuidora ABC S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000005,Licencia Facturo Plan Profesional (+1 más),84.99,11.05,96.04,PROCESADO,2026-02-05
+Demo Empresa,Roberto Martínez Flores,01,Factura,DTE-01-M001P001-000000000000007,Capacitación virtual (por hora),45.00,5.85,50.85,PROCESADO,2026-02-02
+Demo Empresa,Constructora Moderna S.A.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000004,Integración API personalizada (+1 más),500.00,65.00,565.00,PROCESADO,2026-01-28
+Demo Empresa,Panadería Don Juan,01,Factura,DTE-01-M001P001-000000000000006,Capacitación presencial (por hora),225.00,29.25,254.25,PROCESADO,2026-01-25
+Demo Empresa,Farmacia Central,01,Factura,DTE-01-M001P001-000000000000005,Licencia Facturo Plan Básico,29.99,3.90,33.89,PROCESADO,2026-01-22
+Demo Empresa,Importadora XYZ Ltda.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000003,Licencia Facturo Plan Enterprise (+1 más),339.95,44.19,384.14,PROCESADO,2026-01-20
+Demo Empresa,Restaurante El Buen Sabor,01,Factura,DTE-01-M001P001-000000000000004,Pack PYME (Básico + Contabilidad),44.99,5.85,50.84,PROCESADO,2026-01-18
+Demo Empresa,Tech Solutions S.A.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000002,Implementación inicial (+1 más),350.00,45.50,395.50,PROCESADO,2026-01-15
+Demo Empresa,María Elena García,01,Factura,DTE-01-M001P001-000000000000003,Certificado de firma electrónica,100.00,13.00,113.00,PROCESADO,2026-01-12
+Demo Empresa,Distribuidora ABC S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000001,Licencia Facturo Plan Profesional (+1 más),84.99,11.05,96.04,PROCESADO,2026-01-10
+Demo Empresa,Roberto Martínez Flores,01,Factura,DTE-01-M001P001-000000000000002,Capacitación virtual (por hora),90.00,11.70,101.70,PROCESADO,2026-01-08
+Demo Empresa,María Elena García,01,Factura,DTE-01-M001P001-000000000000001,Licencia Facturo Plan Básico,29.99,3.90,33.89,PROCESADO,2026-01-05
+E2E Test e2e_1773364306020,Cooperativa Test e2e_1773364306020,14,Factura de Sujeto Excluido,DTE-14-M001P001-000000000000001,Compra sujeto excluido E2E,2000.00,0.00,2000.00,PROCESADO,2026-03-13
+E2E Test e2e_1773364306020,Export Co USA e2e_1773364306020,11,Factura de Exportación,DTE-11-M001P001-000000000000001,Export Service E2E,5000.00,0.00,5000.00,PROCESADO,2026-03-13
+E2E Test e2e_1773364306020,Test Liquidacion e2e_1773364306020,09,Tipo 09,DTE-09-M001P001-000000000000001,N/A,1200.00,156.00,1332.00,PROCESADO,2026-03-13
+E2E Test e2e_1773364306020,Test Retencion e2e_1773364306020,07,Tipo 07,DTE-07-M001P001-000000000000001,Retencion IVA E2E,1500.00,15.00,15.00,PROCESADO,2026-03-13
+E2E Test e2e_1773364306020,Cliente ND e2e_1773364306020,06,Nota de Débito,DTE-06-M001P001-000000000000001,Cargo adicional E2E,300.00,39.00,339.00,PROCESADO,2026-03-13
+E2E Test e2e_1773364306020,Cliente NC Ref e2e_1773364306020,05,Nota de Crédito,DTE-05-M001P001-000000000000001,Devolucion parcial E2E,500.00,65.00,565.00,PROCESADO,2026-03-13
+E2E Test e2e_1773364306020,Cliente NC Ref e2e_1773364306020,01,Factura,DTE-01-M001P001-000000000000002,Item para NC,2000.00,260.00,2260.00,PROCESADO,2026-03-13
+E2E Test e2e_1773364306020,Test NR e2e_1773364306020,04,Tipo 04,DTE-04-M001P001-000000000000001,Item remitido E2E,800.00,104.00,904.00,PROCESADO,2026-03-13
+E2E Test e2e_1773364306020,Test CCF e2e_1773364306020,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000001,Servicio CCF E2E,1000.00,130.00,1130.00,PROCESADO,2026-03-13
+E2E Test e2e_1773364306020,Cooperativa Test e2e_1773364306020,01,Factura,DTE-01-M001P001-000000000000001,Servicio de prueba E2E,1000.00,130.00,1130.00,PROCESADO,2026-03-13
+Aurora SA de CV,JOSSELINE JANETT GÓMEZ MEJÍA,01,Factura,DTE-01-M001P001-000000000000005,Pili Cracker (+1 más),-5.00,-0.65,-5.65,PENDIENTE,2026-03-25
+Aurora SA de CV,JOSSELINE JANETT GÓMEZ MEJÍA,01,Factura,DTE-01-M001P001-000000000000004,Pili Cracker,100.00,13.00,113.00,PENDIENTE,2026-03-25
+Aurora SA de CV,Preueba cliente DUI,01,Factura,DTE-01-M001P001-000000000000003,producto 1,97.36,12.66,110.02,PENDIENTE,2026-03-25
+Aurora SA de CV,JOSSELINE JANETT GÓMEZ MEJÍA,01,Factura,DTE-01-M001P001-000000000000002,Pili Cracker (+1 más),0.00,0.00,220.00,PENDIENTE,2026-03-24
+Aurora SA de CV,JOSSELINE JANETT GÓMEZ MEJÍA,01,Factura,DTE-01-M001P001-000000000000001,Morteros #5 (+2 más),400.80,52.10,452.90,PENDIENTE,2026-03-18
+Aurora SA de CV,Anna Perez,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000001,item prueba,150.00,19.50,169.50,PENDIENTE,2026-03-11
+Republicode,"IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000029,Servicio de Outsourcing de Programador Febrero 2026,3100.00,403.00,3503.00,PROCESADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000028,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,PROCESADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000027,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000026,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000025,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000024,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000023,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,01,Factura,DTE-01-M001P001-000000000000011,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000022,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,01,Factura,DTE-01-M001P001-000000000000010,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,01,Factura,DTE-01-M001P001-000000000000009,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,01,Factura,DTE-01-M001P001-000000000000008,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,01,Factura,DTE-01-M001P001-000000000000007,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-17
+Republicode,The Wellnest S.A. de C.V.,01,Factura,DTE-01-M001P001-000000000000006,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-16
+Republicode,The Wellnest S.A. de C.V.,01,Factura,DTE-01-M001P001-000000000000005,Servicios de Desarrollo de Plataforma Web/Registro y administración de Usuarios/Administración del Sitio/Configuración y Mantenimiento,2654.87,345.13,3000.00,RECHAZADO,2026-03-16
+Republicode,Aquapura,05,Nota de Crédito,DTE-05-M001P001-000000000000001,Berlines,0.75,0.10,0.85,RECHAZADO,2026-03-13
+Republicode,"IBEX MERCADO SV, SOCIEDAD ANONIMA DE CAPITAL VARIABLE",03,Comprobante de Crédito Fiscal,DTE-03-M001P001-000000000000021,Servicio de Outsourcing de Programador Marzo 2026,3100.00,403.00,3503.00,PROCESADO,2026-03-12
+Wellnest,María Fernanda Amaya,01,Factura,DTE-01-M001P001-000000000000123,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-25
+Wellnest,Gabriela González Lucha,01,Factura,DTE-01-M001P001-000000000000122,Paquete de 8 clases - Wellnest Studio,61.94,8.05,69.99,PROCESADO,2026-03-24
+Wellnest,Sophia Valles,01,Factura,DTE-01-M001P001-000000000000121,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-23
+Wellnest,Paola Nasser,01,Factura,DTE-01-M001P001-000000000000120,Paquete de 80 clases - Wellnest Studio,314.16,40.84,355.00,PROCESADO,2026-03-23
+Wellnest,Esther Umanzor,01,Factura,DTE-01-M001P001-000000000000119,Paquete de 80 clases - Wellnest Studio,314.16,40.84,355.00,PROCESADO,2026-03-23
+Wellnest,Francisco torres,01,Factura,DTE-01-M001P001-000000000000117,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-23
+Wellnest,Victoria Sosa,01,Factura,DTE-01-M001P001-000000000000116,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-23
+Wellnest,Sophia Valles,01,Factura,DTE-01-M001P001-000000000000115,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-23
+Wellnest,Sophia Valles,01,Factura,DTE-01-M001P001-000000000000114,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-23
+Wellnest,Vanessa Herrera,01,Factura,DTE-01-M001P001-000000000000113,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-23
+Wellnest,Luz Marina Avalos,01,Factura,DTE-01-M001P001-000000000000112,Paquete de 8 clases - Wellnest Studio,61.94,8.05,69.99,PROCESADO,2026-03-23
+Wellnest,Génesis Romero ,01,Factura,DTE-01-M001P001-000000000000111,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-23
+Wellnest,Ale Escamilla,01,Factura,DTE-01-M001P001-000000000000110,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-23
+Wellnest,Lidia Ramirez,01,Factura,DTE-01-M001P001-000000000000108,Paquete de 8 clases - Wellnest Studio,61.94,8.05,69.99,PROCESADO,2026-03-23
+Wellnest,Axa Torres,01,Factura,DTE-01-M001P001-000000000000107,Paquete de 12 clases - Wellnest Studio,84.07,10.93,95.00,PROCESADO,2026-03-23
+Wellnest,Nicolle Peña,01,Factura,DTE-01-M001P001-000000000000106,Paquete de 16 clases - Wellnest Studio,81.42,10.58,92.00,PROCESADO,2026-03-23
+Wellnest,Wendy Portillo,01,Factura,DTE-01-M001P001-000000000000105,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PROCESADO,2026-03-23
+Wellnest,Estefany Molina,01,Factura,DTE-01-M001P001-000000000000104,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-23
+Wellnest,Andrea,01,Factura,DTE-01-M001P001-000000000000103,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-22
+Wellnest,Karla Beatriz Morales Alfaro,01,Factura,DTE-01-M001P001-000000000000102,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-21
+Wellnest,JANCY EYLLEN RODRÍGUEZ ,01,Factura,DTE-01-M001P001-000000000000101,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-21
+Wellnest,Andrea Mariel Pérez Torres,01,Factura,DTE-01-M001P001-000000000000100,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-21
+Wellnest,Amanda Obando,01,Factura,DTE-01-M001P001-000000000000099,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-20
+Wellnest,Pamela Abarca,01,Factura,DTE-01-M001P001-000000000000098,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-20
+Wellnest,Mario Palencia,01,Factura,DTE-01-M001P001-000000000000097,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-20
+Wellnest,Claudia Perez,01,Factura,DTE-01-M001P001-000000000000096,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-19
+Wellnest,Laura Perez Gavidia,01,Factura,DTE-01-M001P001-000000000000095,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-19
+Wellnest,Pamela Abarca,01,Factura,DTE-01-M001P001-000000000000094,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-18
+Wellnest,Luz Chacón ,01,Factura,DTE-01-M001P001-000000000000093,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-18
+Wellnest,Gabriela González Lucha,01,Factura,DTE-01-M001P001-000000000000092,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-18
+Wellnest,Gabriela Alas,01,Factura,DTE-01-M001P001-000000000000091,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-17
+Wellnest,Gabriella Amaya,01,Factura,DTE-01-M001P001-000000000000090,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-17
+Wellnest,Stephanie Fernández,01,Factura,DTE-01-M001P001-000000000000089,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-17
+Wellnest,María José Ramirez,01,Factura,DTE-01-M001P001-000000000000088,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-16
+Wellnest,Catalina Arias,01,Factura,DTE-01-M001P001-000000000000087,Paquete de 8 clases - Wellnest Studio,61.94,8.05,69.99,PROCESADO,2026-03-14
+Wellnest,Ana Carolina Saade Interiano,01,Factura,DTE-01-M001P001-000000000000086,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-13
+Wellnest,Daniela Flores,01,Factura,DTE-01-M001P001-000000000000085,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-13
+Wellnest,Nicole Flores,01,Factura,DTE-01-M001P001-000000000000084,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-13
+Wellnest,Nicole Flores,01,Factura,DTE-01-M001P001-000000000000083,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-13
+Wellnest,Gabriela Braghieri,01,Factura,DTE-01-M001P001-000000000000082,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PROCESADO,2026-03-13
+Wellnest,Vanessa Nunez,01,Factura,DTE-01-M001P001-000000000000081,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-13
+Wellnest,Vanessa Nunez,01,Factura,DTE-01-M001P001-000000000000080,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PROCESADO,2026-03-13
+Wellnest,Alana Gp,01,Factura,DTE-01-M001P001-000000000000079,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PENDIENTE,2026-03-12
+Wellnest,Abril Balibrera ,01,Factura,DTE-01-M001P001-000000000000078,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PENDIENTE,2026-03-12
+Wellnest,Beatriz Molina,01,Factura,DTE-01-M001P001-000000000000077,Paquete de 2 clases - Wellnest Studio,13.27,1.73,15.00,PENDIENTE,2026-03-12
+Wellnest,Milagro erazo,01,Factura,DTE-01-M001P001-000000000000076,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PENDIENTE,2026-03-11
+Wellnest,Andrea Lopez,01,Factura,DTE-01-M001P001-000000000000075,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PENDIENTE,2026-03-11
+Wellnest,Yutsil De La Luz,01,Factura,DTE-01-M001P001-000000000000074,Paquete de 8 clases - Wellnest Studio,61.94,8.05,69.99,PENDIENTE,2026-03-11
+Wellnest,Matilde Delgado,01,Factura,DTE-01-M001P001-000000000000073,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PENDIENTE,2026-03-10
+Wellnest,Katherine Figueroa ,01,Factura,DTE-01-M638P001-000000000000072,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PENDIENTE,2026-03-10
+Wellnest,Andrea Lemus ,01,Factura,DTE-01-M638P001-000000000000071,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PENDIENTE,2026-03-08
+Wellnest,Ana Carolina Saade Interiano,01,Factura,DTE-01-M638P001-000000000000070,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PENDIENTE,2026-03-07
+Wellnest,Karla Amaya,01,Factura,DTE-01-M638P001-000000000000069,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PENDIENTE,2026-03-06
+Wellnest,Camila Montoya,01,Factura,DTE-01-M638P001-000000000000068,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PENDIENTE,2026-03-06
+Wellnest,Patricia Rivas,01,Factura,DTE-01-M638P001-000000000000067,Paquete de 8 clases - Wellnest Studio,61.94,8.05,69.99,PENDIENTE,2026-03-06
+Wellnest,Laura Rivas ,01,Factura,DTE-01-M638P001-000000000000066,Paquete de 1 clases - Wellnest Studio,13.27,1.73,15.00,PENDIENTE,2026-03-05
+Wellnest,Barry Sia,01,Factura,DTE-01-M638P001-000000000000065,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PENDIENTE,2026-03-05
+Wellnest,Hadren Quijano,01,Factura,DTE-01-M638P001-000000000000064,Paquete de 4 clases - Wellnest Studio,44.24,5.75,49.99,PENDIENTE,2026-03-04
+Wellnest,Hazel Aguilar ,01,Factura,DTE-01-M638P001-000000000000063,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-04
+Wellnest,Ivette Martinez,01,Factura,DTE-01-M638P001-000000000000062,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-04
+Wellnest,Barry Mahdi ,01,Factura,DTE-01-M638P001-000000000000061,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-04
+Wellnest,Lourdes pacas ,01,Factura,DTE-01-M638P001-000000000000060,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-04
+Wellnest,Nubia Carbajal,01,Factura,DTE-01-M638P001-000000000000059,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,paola monterrosa ,01,Factura,DTE-01-M638P001-000000000000058,Paquete de 12 clases - Wellnest Studio,71.46,9.29,80.75,PENDIENTE,2026-03-03
+Wellnest,Stephanie Rosales de Monge,01,Factura,DTE-01-M638P001-000000000000057,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Jorge Alejandro Mira Avelar ,01,Factura,DTE-01-M638P001-000000000000056,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Andrea Michelle Mónchez Interiano ,01,Factura,DTE-01-M638P001-000000000000055,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Carmen María Lara Sandoval,01,Factura,DTE-01-M638P001-000000000000054,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Dianna Linne,01,Factura,DTE-01-M638P001-000000000000053,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Rocío Padilla,01,Factura,DTE-01-M638P001-000000000000052,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Katherine Nicole Recinos Morales,01,Factura,DTE-01-M638P001-000000000000051,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Karla Gallardo,01,Factura,DTE-01-M638P001-000000000000050,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Denisse Menjívar,01,Factura,DTE-01-M638P001-000000000000049,Paquete de 5 clases - Wellnest Studio,57.52,7.48,65.00,PENDIENTE,2026-03-03
+Wellnest,Rocio rivas ,01,Factura,DTE-01-M638P001-000000000000048,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Emmety Pleitez ,01,Factura,DTE-01-M638P001-000000000000047,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Erenia Sosa,01,Factura,DTE-01-M638P001-000000000000046,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Auxy,01,Factura,DTE-01-M638P001-000000000000045,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Claudia,01,Factura,DTE-01-M638P001-000000000000044,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Carmen Araujo,01,Factura,DTE-01-M638P001-000000000000043,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Nicole urquilla,01,Factura,DTE-01-M638P001-000000000000042,Paquete de 12 clases - Wellnest Studio,71.46,9.29,80.75,PENDIENTE,2026-03-03
+Wellnest,Mariana Zelaya,01,Factura,DTE-01-M638P001-000000000000041,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Roxana Portillo,01,Factura,DTE-01-M638P001-000000000000040,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Adriana Abigail Ramírez Aguilar ,01,Factura,DTE-01-M638P001-000000000000039,Paquete de 12 clases - Wellnest Studio,71.46,9.29,80.75,PENDIENTE,2026-03-03
+Wellnest,Diana Cecilia Rosales Portillo,01,Factura,DTE-01-M638P001-000000000000038,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Gabriel Aguiar ,01,Factura,DTE-01-M638P001-000000000000037,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Dayana Posada,01,Factura,DTE-01-M638P001-000000000000036,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Allison ,01,Factura,DTE-01-M638P001-000000000000035,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Geisel,01,Factura,DTE-01-M638P001-000000000000034,Paquete de 12 clases - Wellnest Studio,71.46,9.29,80.75,PENDIENTE,2026-03-03
+Wellnest,Nayheli Michelle Herrera Quevedo,01,Factura,DTE-01-M638P001-000000000000033,Paquete de 12 clases - Wellnest Studio,71.46,9.29,80.75,PENDIENTE,2026-03-03
+Wellnest,Katerine Dayana Rodríguez Portillo,01,Factura,DTE-01-M638P001-000000000000032,Paquete de 8 clases - Wellnest Studio,52.65,6.84,59.49,PENDIENTE,2026-03-03
+Wellnest,Karla Beatriz Morales Alfaro,01,Factura,DTE-01-M638P001-000000000000031,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Sofía Merino,01,Factura,DTE-01-M638P001-000000000000030,Paquete de 5 clases - Wellnest Studio,57.52,7.48,65.00,PENDIENTE,2026-03-03
+Wellnest,Alessandra Esquivel,01,Factura,DTE-01-M638P001-000000000000029,Paquete de 12 clases - Wellnest Studio,71.46,9.29,80.75,PENDIENTE,2026-03-03
+Wellnest,Paola Nicole Alvarado Erazo,01,Factura,DTE-01-M638P001-000000000000028,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-03
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000027,Paquete de 80 clases - Wellnest Studio,314.16,40.84,355.00,PENDIENTE,2026-03-01
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000026,Paquete de 80 clases - Wellnest Studio,314.16,40.84,355.00,PENDIENTE,2026-03-01
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000025,Paquete de 4 clases - Wellnest Studio,37.60,4.89,42.49,PENDIENTE,2026-03-01
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000024,Paquete de 80 clases - Wellnest Studio,355.00,46.15,401.15,PENDIENTE,2026-02-24
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000023,Paquete de 80 clases - Wellnest Studio,355.00,46.15,401.15,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000022,prueba,7755.00,1008.15,8763.15,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000021,Paquete de 24 clases - Wellnest Studio,145.00,18.85,163.85,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000020,Paquete de 16 clases - Wellnest Studio,115.00,14.95,129.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000019,Paquete de 8 clases - Wellnest Studio,69.99,9.10,79.09,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000018,Paquete de 80 clases - Wellnest Studio,355.00,46.15,401.15,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000017,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000016,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000015,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000014,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,test,01,Factura,DTE-01-M638P001-000000000000013,Paquete de 1 clases - Wellnest Studio,1.00,0.13,1.13,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000012,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000011,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000010,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000009,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000008,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000007,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000006,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000005,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000004,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Jose Bidegain,01,Factura,DTE-01-M638P001-000000000000003,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,Test Timeout Check,01,Factura,DTE-01-M638P001-000000000000002,Paquete de 1 clases - Wellnest Studio,15.00,1.95,16.95,PENDIENTE,2026-02-18
+Wellnest,María García Test,01,Factura,DTE-01-M638P001-000000000000001,Paquete de 10 clases - Wellnest Studio,70.00,9.10,79.10,PENDIENTE,2026-02-18

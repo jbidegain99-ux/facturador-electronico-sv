@@ -7,8 +7,7 @@ import {
   Loader2,
   FileText,
   Send,
-  Ban,
-} from 'lucide-react';
+  Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,21 +15,20 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  DialogTitle } from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/toast';
 import { DTE_TYPES, type DteTypeCode, type HaciendaTestType, type ExecuteTestResult, type TestRecord } from '../../types';
+import { API_URL } from '@/lib/api';
 
 interface TestExecutorProps {
   dteType: DteTypeCode;
@@ -49,8 +47,7 @@ export function TestExecutor({
   dteType,
   testType,
   onClose,
-  onComplete,
-}: TestExecutorProps) {
+  onComplete }: TestExecutorProps) {
   const toast = useToast();
 
   const [executing, setExecuting] = React.useState(false);
@@ -83,17 +80,12 @@ export function TestExecutor({
   const loadTestData = async () => {
     setLoadingData(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/generate-data`,
-        {
+        `${API_URL}/hacienda/tests/generate-data`, { credentials: 'include',
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ dteType }),
-        }
+            'Content-Type': 'application/json' },
+          body: JSON.stringify({ dteType }) }
       );
 
       if (res.ok) {
@@ -110,15 +102,10 @@ export function TestExecutor({
   const loadSuccessfulEmissions = async () => {
     setLoadingEmissions(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/successful-emissions?dteType=${dteType}`,
-        {
+        `${API_URL}/hacienda/tests/successful-emissions?dteType=${dteType}`, { credentials: 'include',
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+            'Content-Type': 'application/json' } }
       );
 
       if (res.ok) {
@@ -140,26 +127,20 @@ export function TestExecutor({
     setResult(null);
 
     try {
-      const token = localStorage.getItem('token');
       const body: Record<string, unknown> = {
         dteType,
-        testType,
-      };
+        testType };
 
       if (testType === 'CANCELLATION' && selectedEmission) {
         body.codigoGeneracionToCancel = selectedEmission;
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hacienda/tests/execute`,
-        {
+        `${API_URL}/hacienda/tests/execute`, { credentials: 'include',
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(body),
-        }
+            'Content-Type': 'application/json' },
+          body: JSON.stringify(body) }
       );
 
       const data: ExecuteTestResult = await res.json();

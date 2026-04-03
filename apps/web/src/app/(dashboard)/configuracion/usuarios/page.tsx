@@ -38,7 +38,7 @@ import {
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
 import { useRouter } from 'next/navigation';
-import { createApiFetcher } from '@/hooks/use-api';
+import { apiFetch } from '@/lib/api';
 
 // ── Types (matching actual API response shapes) ─────────────────────
 interface Permission {
@@ -99,7 +99,7 @@ interface Template {
 export default function UsuariosPage() {
   const toast = useToast();
   const router = useRouter();
-  const api = createApiFetcher();
+  
 
   // Data state
   const [users, setUsers] = React.useState<User[]>([]);
@@ -143,11 +143,11 @@ export default function UsuariosPage() {
     try {
       setLoading(true);
       const [usersRes, rolesRes, permsRes, templatesRes, sucursalesRes] = await Promise.all([
-        api<User[]>('/rbac/users').catch(() => [] as User[]),
-        api<Role[]>('/rbac/roles').catch(() => [] as Role[]),
-        api<PermissionGroup[]>('/rbac/permissions').catch(() => [] as PermissionGroup[]),
-        api<Template[]>('/rbac/templates').catch(() => [] as Template[]),
-        api<Sucursal[]>('/sucursales').catch(() => [] as Sucursal[]),
+        apiFetch<User[]>('/rbac/users').catch(() => [] as User[]),
+        apiFetch<Role[]>('/rbac/roles').catch(() => [] as Role[]),
+        apiFetch<PermissionGroup[]>('/rbac/permissions').catch(() => [] as PermissionGroup[]),
+        apiFetch<Template[]>('/rbac/templates').catch(() => [] as Template[]),
+        apiFetch<Sucursal[]>('/sucursales').catch(() => [] as Sucursal[]),
       ]);
       setUsers(Array.isArray(usersRes) ? usersRes : []);
       setRoles(Array.isArray(rolesRes) ? rolesRes : []);
@@ -224,7 +224,7 @@ export default function UsuariosPage() {
     if (!assignUserId || !assignRoleId) return;
     setAssigning(true);
     try {
-      await api(`/rbac/users/${assignUserId}/assign`, {
+      await apiFetch(`/rbac/users/${assignUserId}/assign`, {
         method: 'POST',
         body: JSON.stringify({
           roleId: assignRoleId,
@@ -246,7 +246,7 @@ export default function UsuariosPage() {
     if (!inviteEmail || !inviteName || !inviteRoleId) return;
     setInviting(true);
     try {
-      await api('/rbac/invite', {
+      await apiFetch('/rbac/invite', {
         method: 'POST',
         body: JSON.stringify({
           email: inviteEmail,
@@ -269,7 +269,7 @@ export default function UsuariosPage() {
 
   const handleRemoveAssignment = async (userId: string, assignmentId: string) => {
     try {
-      await api(`/rbac/users/${userId}/assignments/${assignmentId}`, {
+      await apiFetch(`/rbac/users/${userId}/assignments/${assignmentId}`, {
         method: 'DELETE',
       });
       toast.success('Asignacion eliminada');
@@ -295,7 +295,7 @@ export default function UsuariosPage() {
     setRoleTemplateId('');
     // Fetch full role with permissions
     try {
-      const fullRole = await api<{ permissions: Array<{ id: string; code: string }> }>(`/rbac/roles/${role.id}`);
+      const fullRole = await apiFetch<{ permissions: Array<{ id: string; code: string }> }>(`/rbac/roles/${role.id}`);
       const permIds = new Set((fullRole.permissions || []).map((p) => p.id));
       setSelectedPermissions(permIds);
     } catch {
@@ -319,7 +319,7 @@ export default function UsuariosPage() {
     setSavingRole(true);
     try {
       if (editingRole) {
-        await api(`/rbac/roles/${editingRole.id}`, {
+        await apiFetch(`/rbac/roles/${editingRole.id}`, {
           method: 'PATCH',
           body: JSON.stringify({
             name: roleName,
@@ -328,7 +328,7 @@ export default function UsuariosPage() {
         });
         toast.success('Rol actualizado');
       } else {
-        await api('/rbac/roles', {
+        await apiFetch('/rbac/roles', {
           method: 'POST',
           body: JSON.stringify({
             name: roleName,
@@ -351,7 +351,7 @@ export default function UsuariosPage() {
     if (!deleteRoleTarget) return;
     setDeleting(true);
     try {
-      await api(`/rbac/roles/${deleteRoleTarget.id}`, { method: 'DELETE' });
+      await apiFetch(`/rbac/roles/${deleteRoleTarget.id}`, { method: 'DELETE' });
       setDeleteRoleTarget(null);
       toast.success('Rol eliminado');
       fetchData();

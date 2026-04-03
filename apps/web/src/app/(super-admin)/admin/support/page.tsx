@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -14,15 +15,13 @@ import {
   CheckCircle,
   User,
   Building2,
-  MessageSquare,
-} from 'lucide-react';
+  MessageSquare } from 'lucide-react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SupportTicket {
@@ -99,12 +98,9 @@ export default function SupportTicketsPage() {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets/stats`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/support-tickets/stats`, { credentials: 'include',
+          headers: { } }
       );
       if (res.ok) {
         const data = await res.json();
@@ -118,7 +114,6 @@ export default function SupportTicketsPage() {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
 
       let status = statusFilter;
       if (activeTab === 'pending') status = 'PENDING';
@@ -131,14 +126,11 @@ export default function SupportTicketsPage() {
         ...(search && { search }),
         ...(status && { status }),
         ...(priorityFilter && { priority: priorityFilter }),
-        ...(typeFilter && { type: typeFilter }),
-      });
+        ...(typeFilter && { type: typeFilter }) });
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/support-tickets?${params}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/support-tickets?${params}`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) {
@@ -168,8 +160,7 @@ export default function SupportTicketsPage() {
       IN_PROGRESS: 'bg-purple-500/20 text-purple-400',
       WAITING_CUSTOMER: 'bg-orange-500/20 text-orange-400',
       RESOLVED: 'bg-green-500/20 text-green-400',
-      CLOSED: 'bg-gray-500/20 text-gray-400',
-    };
+      CLOSED: 'bg-gray-500/20 text-gray-400' };
     return badges[status] || 'bg-gray-500/20 text-gray-400';
   };
 
@@ -178,8 +169,7 @@ export default function SupportTicketsPage() {
       LOW: 'bg-gray-500/20 text-gray-400',
       MEDIUM: 'bg-blue-500/20 text-blue-400',
       HIGH: 'bg-orange-500/20 text-orange-400',
-      URGENT: 'bg-red-500/20 text-red-400',
-    };
+      URGENT: 'bg-red-500/20 text-red-400' };
     return badges[priority] || 'bg-gray-500/20 text-gray-400';
   };
 
@@ -189,8 +179,7 @@ export default function SupportTicketsPage() {
       TECHNICAL: 'bg-violet-500/20 text-violet-400',
       BILLING: 'bg-emerald-500/20 text-emerald-400',
       GENERAL: 'bg-slate-500/20 text-slate-400',
-      ONBOARDING: 'bg-amber-500/20 text-amber-400',
-    };
+      ONBOARDING: 'bg-amber-500/20 text-amber-400' };
     return badges[type] || 'bg-gray-500/20 text-gray-400';
   };
 
@@ -199,8 +188,7 @@ export default function SupportTicketsPage() {
     TECHNICAL: tSupport('typeTechnical'),
     BILLING: tSupport('typeBilling'),
     GENERAL: tSupport('typeGeneral'),
-    ONBOARDING: tSupport('typeOnboarding'),
-  };
+    ONBOARDING: tSupport('typeOnboarding') };
 
   const statusLabels: Record<string, string> = {
     PENDING: tSupport('statusPending'),
@@ -208,15 +196,13 @@ export default function SupportTicketsPage() {
     IN_PROGRESS: tSupport('statusInProgress'),
     WAITING_CUSTOMER: t('statusWaitingClient'),
     RESOLVED: tSupport('statusResolved'),
-    CLOSED: tSupport('statusClosed'),
-  };
+    CLOSED: tSupport('statusClosed') };
 
   const priorityLabels: Record<string, string> = {
     LOW: tSupport('priorityLow'),
     MEDIUM: tSupport('priorityMedium'),
     HIGH: tSupport('priorityHigh'),
-    URGENT: tSupport('priorityUrgent'),
-  };
+    URGENT: tSupport('priorityUrgent') };
 
   return (
     <div className="space-y-6">
@@ -430,8 +416,7 @@ export default function SupportTicketsPage() {
                       <td className="text-sm text-muted-foreground">
                         {new Date(ticket.createdAt).toLocaleDateString('es', {
                           day: '2-digit',
-                          month: 'short',
-                        })}
+                          month: 'short' })}
                       </td>
                       <td>
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />

@@ -1,130 +1,71 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+/**
+ * Centralized API client — single source of truth for all API calls.
+ * Uses HTTP-only cookie auth (set by API on login).
+ * Falls back to localStorage token for backwards compatibility during migration.
+ */
 
-async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-  const response = await fetch(url, {
+export async function apiFetch<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...options?.headers,
+      ...options.headers,
     },
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Error de red' }));
-    throw new Error(error.message || error.error || `HTTP error ${response.status}`);
+    const errorData = await response.json().catch(() => ({}));
+    const error = new Error(errorData.message || `HTTP error ${response.status}`);
+    (error as ApiError).status = response.status;
+    (error as ApiError).data = errorData;
+    throw error;
   }
 
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : ({} as T);
 }
 
-// Auth
-export async function authenticateMH(nit: string, password: string) {
-  return fetchAPI('/mh-auth/token', {
+export interface ApiError extends Error {
+  status: number;
+  data: Record<string, unknown>;
+}
+
+/** Upload files with multipart/form-data */
+export async function apiUpload<T>(
+  endpoint: string,
+  formData: FormData,
+): Promise<T> {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     method: 'POST',
-    body: JSON.stringify({ nit, password }),
+    credentials: 'include',
+    body: formData,
   });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error ${response.status}`);
+  }
+
+  const text = await response.text();
+  return text ? JSON.parse(text) : ({} as T);
 }
 
-// DTEs
-export async function getDTEs(filters?: Record<string, string>) {
-  const params = new URLSearchParams(filters);
-  return fetchAPI(`/dte?${params}`);
-}
-
-export async function getDTE(id: string) {
-  return fetchAPI(`/dte/${id}`);
-}
-
-export async function getDTEJson(id: string) {
-  return fetchAPI(`/dte/${id}/json`);
-}
-
-export async function getDTELogs(id: string) {
-  return fetchAPI(`/dte/${id}/logs`);
-}
-
-export async function createAndSendDTE(data: Record<string, unknown>) {
-  return fetchAPI('/transmitter/create-and-send', {
-    method: 'POST',
-    body: JSON.stringify(data),
+/** Fetch that returns the raw Response (for blobs, streams, etc.) */
+export async function apiRawFetch(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<Response> {
+  return fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    credentials: 'include',
+    headers: {
+      ...options.headers,
+    },
   });
-}
-
-export async function anularDTE(id: string, data: { nit: string; password: string; motivo: string }) {
-  return fetchAPI(`/transmitter/anular/${id}`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function getDTEStatus(codigoGeneracion: string) {
-  return fetchAPI(`/transmitter/status/${codigoGeneracion}`);
-}
-
-// Dashboard
-export async function getDashboardMetrics() {
-  return fetchAPI('/dashboard/metrics');
-}
-
-// Catalogos
-export async function getDepartamentos() {
-  return fetchAPI('/catalogs/departamentos');
-}
-
-export async function getMunicipios(departamento?: string) {
-  const params = departamento ? `?departamento=${departamento}` : '';
-  return fetchAPI(`/catalogs/municipios${params}`);
-}
-
-export async function getActividadesEconomicas(query?: string) {
-  const params = query ? `?q=${query}` : '';
-  return fetchAPI(`/catalogs/actividades-economicas${params}`);
-}
-
-// Clientes (mock - reemplazar con API real)
-export async function getClientes() {
-  return fetchAPI('/clientes');
-}
-
-export async function getCliente(id: string) {
-  return fetchAPI(`/clientes/${id}`);
-}
-
-export async function createCliente(data: Record<string, unknown>) {
-  return fetchAPI('/clientes', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function updateCliente(id: string, data: Record<string, unknown>) {
-  return fetchAPI(`/clientes/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function deleteCliente(id: string) {
-  return fetchAPI(`/clientes/${id}`, {
-    method: 'DELETE',
-  });
-}
-
-// DTE Operation Logs (Super Admin)
-export async function getTenantErrors(tenantId: string, limit?: number) {
-  const params = new URLSearchParams({ tenantId });
-  if (limit) params.set('limit', String(limit));
-  return fetchAPI(`/super-admin/logs/tenant-errors?${params}`);
-}
-
-export async function getTenantErrorSummary(tenantId: string) {
-  return fetchAPI(`/super-admin/logs/error-summary?tenantId=${tenantId}`);
-}
-
-export async function getTenantOperationLogs(tenantId: string, limit?: number) {
-  const params = new URLSearchParams({ tenantId });
-  if (limit) params.set('limit', String(limit));
-  return fetchAPI(`/super-admin/logs/operations?${params}`);
 }

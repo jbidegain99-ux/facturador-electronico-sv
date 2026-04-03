@@ -173,36 +173,8 @@ export function useMutation<TData, TVariables = void>(
   };
 }
 
-// Helper to create API fetcher with auth
-export function createApiFetcher(baseUrl: string = '') {
-  const apiUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || '';
-
-  return async function apiFetch<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-    const response = await fetch(`${apiUrl}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error ${response.status}`);
-    }
-
-    return response.json();
-  };
-}
-
-// Pre-configured API fetcher
-export const api = createApiFetcher();
+// Re-export centralized API client for convenience
+export { apiFetch as api, apiFetch } from '@/lib/api';
 
 // Cache invalidation helper
 export function invalidateCache(keyOrPattern?: string | RegExp) {

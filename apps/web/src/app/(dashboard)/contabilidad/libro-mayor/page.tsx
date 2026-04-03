@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/toast';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { ArrowLeft, Loader2, BookOpen, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { apiFetch, API_URL } from '@/lib/api';
 
 interface PostableAccount {
   id: string;
@@ -36,16 +37,14 @@ function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('es-SV', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(amount);
+    minimumFractionDigits: 2 }).format(amount);
 }
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('es-SV', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric',
-  });
+    day: 'numeric' });
 }
 
 export default function LibroMayorPage() {
@@ -74,12 +73,9 @@ export default function LibroMayorPage() {
 
   const fetchAccounts = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/accounts/postable`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`${API_URL}/accounting/accounts/postable`, { credentials: 'include',
+        headers: { } });
       if (res.ok) {
         const json = await res.json().catch(() => []);
         if (Array.isArray(json)) setAccounts(json);
@@ -101,14 +97,12 @@ export default function LibroMayorPage() {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({ accountId: selectedAccountId });
       if (dateFrom) params.set('dateFrom', dateFrom);
       if (dateTo) params.set('dateTo', dateTo);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/accounting/reports/general-ledger?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        `${API_URL}/accounting/reports/general-ledger?${params}`, { credentials: 'include', headers: { } },
       );
 
       if (res.ok) {

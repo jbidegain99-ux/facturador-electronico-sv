@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -30,8 +31,9 @@ export default function LoginPage() {
     setResendDone(false);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
@@ -50,6 +52,7 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
+      // TODO: remove after full cookie migration
       localStorage.setItem('token', data.access_token);
 
       // Redirect based on user role
@@ -70,8 +73,9 @@ export default function LoginPage() {
     setResending(true);
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/resend-verification`, {
+      await fetch(`${API_URL}/auth/resend-verification`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: unverifiedEmail }),
       });

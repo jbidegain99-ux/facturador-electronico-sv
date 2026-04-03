@@ -15,6 +15,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -96,21 +97,13 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const data = await apiFetch<{ configured: boolean; config?: EmailConfig }>(
+        `/admin/email-configs/${tenantId}`,
       );
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.configured) {
-          setConfig(data.config);
-        } else {
-          setConfig(null);
-        }
+      if (data.configured) {
+        setConfig(data.config ?? null);
+      } else {
+        setConfig(null);
       }
     } catch (err) {
       console.error('Error fetching email config:', err);
@@ -123,16 +116,10 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
     try {
       setTesting(true);
       setTestResult(null);
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}/test-connection`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const data = await apiFetch<{ success: boolean; error?: string }>(
+        `/admin/email-configs/${tenantId}/test-connection`,
+        { method: 'POST' },
       );
-
-      const data = await res.json();
       setTestResult({
         success: data.success,
         message: data.success ? t('connectionSuccess') : data.error || t('connectionError'),
@@ -154,20 +141,13 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
     try {
       setSendingTest(true);
       setTestResult(null);
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}/send-test`,
+      const data = await apiFetch<{ success: boolean; error?: string }>(
+        `/admin/email-configs/${tenantId}/send-test`,
         {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({ recipientEmail: testEmail }),
-        }
+        },
       );
-
-      const data = await res.json();
       setTestResult({
         success: data.success,
         message: data.success ? t('testEmailSent') : data.error || t('testEmailError'),
@@ -183,22 +163,10 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
   const handleDelete = async () => {
     try {
       setDeleting(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}`,
-        {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (res.ok) {
-        setConfig(null);
-        setShowDeleteConfirm(false);
-        alert(t('configDeleted'));
-      } else {
-        alert(t('configDeleteError'));
-      }
+      await apiFetch(`/admin/email-configs/${tenantId}`, { method: 'DELETE' });
+      setConfig(null);
+      setShowDeleteConfirm(false);
+      alert(t('configDeleted'));
     } catch (err) {
       alert(t('configDeleteError'));
     } finally {
@@ -214,39 +182,26 @@ export function TenantEmailConfig({ tenantId, tenantName }: TenantEmailConfigPro
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/email-configs/${tenantId}/configure`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            provider,
-            authMethod,
-            apiKey,
-            fromEmail,
-            fromName: fromName || tenantName,
-          }),
-        }
-      );
+      await apiFetch(`/admin/email-configs/${tenantId}/configure`, {
+        method: 'POST',
+        body: JSON.stringify({
+          provider,
+          authMethod,
+          apiKey,
+          fromEmail,
+          fromName: fromName || tenantName,
+        }),
+      });
 
-      if (res.ok) {
-        setShowConfigModal(false);
-        fetchConfig();
-        alert(t('configSaved'));
-        // Reset form
-        setApiKey('');
-        setFromEmail('');
-        setFromName('');
-      } else {
-        const data = await res.json();
-        alert(data.message || t('configSaveError'));
-      }
+      setShowConfigModal(false);
+      fetchConfig();
+      alert(t('configSaved'));
+      // Reset form
+      setApiKey('');
+      setFromEmail('');
+      setFromName('');
     } catch (err) {
-      alert(t('configSaveError'));
+      alert(err instanceof Error ? err.message : t('configSaveError'));
     } finally {
       setSaving(false);
     }

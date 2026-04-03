@@ -1,5 +1,6 @@
 'use client';
 
+import { API_URL } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import {
   Bell,
@@ -20,8 +21,7 @@ import {
   Users,
   Building,
   User,
-  CreditCard,
-} from 'lucide-react';
+  CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,8 +29,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+  DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -38,8 +37,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  SelectValue } from '@/components/ui/select';
 
 interface Notification {
   id: string;
@@ -101,8 +99,7 @@ const initialForm: NotificationForm = {
   showOnce: false,
   actionUrl: '',
   actionLabel: '',
-  isActive: true,
-};
+  isActive: true };
 
 const typeOptions = [
   { value: 'SYSTEM_ANNOUNCEMENT', label: 'Anuncio del Sistema', icon: Megaphone },
@@ -170,12 +167,9 @@ export default function NotificacionesPage() {
   const fetchTenants = async () => {
     try {
       setLoadingTenants(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/super-admin/tenants?limit=100`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/super-admin/tenants?limit=100`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al cargar empresas');
@@ -192,12 +186,9 @@ export default function NotificacionesPage() {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications?includeInactive=${showInactive}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_URL}/admin/notifications?includeInactive=${showInactive}`, { credentials: 'include',
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al cargar notificaciones');
@@ -216,8 +207,7 @@ export default function NotificacionesPage() {
     setFormError('');
     setForm({
       ...initialForm,
-      startsAt: getCurrentDateTime(),
-    });
+      startsAt: getCurrentDateTime() });
     setShowModal(true);
   };
 
@@ -247,8 +237,7 @@ export default function NotificacionesPage() {
       showOnce: notification.showOnce,
       actionUrl: notification.actionUrl || '',
       actionLabel: notification.actionLabel || '',
-      isActive: notification.isActive,
-    });
+      isActive: notification.isActive });
     setShowModal(true);
   };
 
@@ -268,10 +257,9 @@ export default function NotificacionesPage() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       const url = editingNotification
-        ? `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications/${editingNotification.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications`;
+        ? `${API_URL}/admin/notifications/${editingNotification.id}`
+        : `${API_URL}/admin/notifications`;
 
       const body: any = {
         title: form.title,
@@ -280,8 +268,7 @@ export default function NotificacionesPage() {
         priority: form.priority,
         target: form.target,
         isDismissable: form.isDismissable,
-        showOnce: form.showOnce,
-      };
+        showOnce: form.showOnce };
 
       if (form.targetTenantId) body.targetTenantId = form.targetTenantId;
       if (form.targetUserId) body.targetUserId = form.targetUserId;
@@ -292,14 +279,11 @@ export default function NotificacionesPage() {
       if (form.actionLabel) body.actionLabel = form.actionLabel;
       if (editingNotification) body.isActive = form.isActive;
 
-      const res = await fetch(url, {
+      const res = await fetch(url, { credentials: 'include',
         method: editingNotification ? 'PUT' : 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+          'Content-Type': 'application/json' },
+        body: JSON.stringify(body) });
 
       if (!res.ok) {
         const error = await res.json();
@@ -320,13 +304,10 @@ export default function NotificacionesPage() {
 
     try {
       setDeleting(true);
-      const token = localStorage.getItem('token');
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications/${deletingNotification.id}`,
-        {
+        `${API_URL}/admin/notifications/${deletingNotification.id}`, { credentials: 'include',
           method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al eliminar');
@@ -342,14 +323,11 @@ export default function NotificacionesPage() {
 
   const toggleActive = async (notification: Notification) => {
     try {
-      const token = localStorage.getItem('token');
       const endpoint = notification.isActive ? 'deactivate' : 'activate';
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/notifications/${notification.id}/${endpoint}`,
-        {
+        `${API_URL}/admin/notifications/${notification.id}/${endpoint}`, { credentials: 'include',
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: { } }
       );
 
       if (!res.ok) throw new Error('Error al cambiar estado');
@@ -370,14 +348,12 @@ export default function NotificacionesPage() {
       LOW: 'bg-gray-500/20 text-gray-400',
       MEDIUM: 'bg-blue-500/20 text-blue-400',
       HIGH: 'bg-orange-500/20 text-orange-400',
-      URGENT: 'bg-red-500/20 text-red-400',
-    };
+      URGENT: 'bg-red-500/20 text-red-400' };
     const labels: Record<string, string> = {
       LOW: 'Baja',
       MEDIUM: 'Media',
       HIGH: 'Alta',
-      URGENT: 'Urgente',
-    };
+      URGENT: 'Urgente' };
     return (
       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${badges[priority] || badges.MEDIUM}`}>
         {labels[priority] || priority}

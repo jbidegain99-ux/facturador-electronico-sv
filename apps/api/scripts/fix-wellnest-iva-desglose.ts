@@ -19,7 +19,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const DRY_RUN = process.env.DRY_RUN === 'true';
-const WELLNEST_TENANT_ID = 'cmlr9oa4a000a7kxp86k3kbsg';
+const WELLNEST_TENANT_ID = 'cmlrggeh6000c5uj5byzwyhyh';
 const IVA_RATE = 0.13;
 const SINCE_DATE = new Date('2026-03-01T00:00:00Z');
 

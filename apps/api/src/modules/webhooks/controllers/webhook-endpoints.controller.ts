@@ -18,6 +18,7 @@ import { PlanFeatureGuard } from '../../plans/guards/plan-feature.guard';
 import { RequireFeature } from '../../plans/decorators/require-feature.decorator';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { WebhooksService } from '../webhooks.service';
+import { EncryptionService } from '../../email-config/services/encryption.service';
 import { RequirePermission } from '../../rbac/decorators/require-permission.decorator';
 import * as crypto from 'crypto';
 
@@ -49,6 +50,7 @@ export class WebhookEndpointsController {
   constructor(
     private prisma: PrismaService,
     private webhooksService: WebhooksService,
+    private encryptionService: EncryptionService,
   ) {}
 
   @Get()
@@ -119,14 +121,15 @@ export class WebhookEndpointsController {
       throw new BadRequestException(`Eventos no válidos: ${missing.join(', ')}`);
     }
 
-    const secretKey = crypto.randomBytes(32).toString('hex');
+    const secretKeyPlain = crypto.randomBytes(32).toString('hex');
+    const secretKeyEncrypted = this.encryptionService.encrypt(secretKeyPlain);
 
     const endpoint = await this.prisma.webhookEndpoint.create({
       data: {
         tenantId,
         name: dto.name,
         url: dto.url,
-        secretKey,
+        secretKey: secretKeyEncrypted,
         timeoutMs: dto.timeoutMs ?? 30000,
         maxRetries: dto.maxRetries ?? 5,
         retryDelayMs: dto.retryDelayMs ?? 1000,
@@ -150,7 +153,7 @@ export class WebhookEndpointsController {
         name: endpoint.name,
         url: endpoint.url,
         isActive: endpoint.isActive,
-        secretKey, // Only returned on creation
+        secretKey: secretKeyPlain, // Only returned on creation (plaintext)
         events: endpoint.subscribedEvents.map((se) => ({
           eventType: se.event.eventType,
           description: se.event.description,
@@ -327,16 +330,17 @@ export class WebhookEndpointsController {
 
     if (!endpoint) throw new NotFoundException('Endpoint no encontrado');
 
-    const newSecretKey = crypto.randomBytes(32).toString('hex');
+    const newSecretKeyPlain = crypto.randomBytes(32).toString('hex');
+    const newSecretKeyEncrypted = this.encryptionService.encrypt(newSecretKeyPlain);
 
     await this.prisma.webhookEndpoint.update({
       where: { id: endpointId },
-      data: { secretKey: newSecretKey },
+      data: { secretKey: newSecretKeyEncrypted },
     });
 
     return {
       status: HttpStatus.OK,
-      data: { secretKey: newSecretKey },
+      data: { secretKey: newSecretKeyPlain },
     };
   }
 

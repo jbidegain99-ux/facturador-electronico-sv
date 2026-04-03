@@ -28,9 +28,15 @@ export class DteController {
   @RequirePermission('dte:create')
   create(
     @Request() req: AuthRequest,
-    @Body() createDteDto: { tipoDte: string; data: Record<string, unknown> },
+    @Body() createDteDto: { tipoDte: string; data: Record<string, unknown>; sucursalId?: string; puntoVentaId?: string },
   ) {
-    return this.dteService.createDte(req.user.tenantId, createDteDto.tipoDte, createDteDto.data);
+    return this.dteService.createDte(
+      req.user.tenantId,
+      createDteDto.tipoDte,
+      createDteDto.data,
+      createDteDto.sucursalId,
+      createDteDto.puntoVentaId,
+    );
   }
 
   @Post(':id/sign')

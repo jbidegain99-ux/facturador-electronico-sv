@@ -17,11 +17,19 @@ async function bootstrap() {
   // Habilitar CORS - support both CORS_ORIGIN (singular) and CORS_ORIGINS (plural)
   const corsEnv = process.env.CORS_ORIGINS || process.env.CORS_ORIGIN;
   const isProduction = process.env.NODE_ENV === 'production';
+  const productionOrigins = [
+    'https://facturosv.com',
+    'https://www.facturosv.com',
+    'https://app.facturosv.com',
+    'https://admin.facturosv.com',
+    'https://facturador-web-sv.azurewebsites.net',
+  ];
+  const devOrigins = ['http://localhost:3000', 'http://localhost:3001'];
   const allowedOrigins = corsEnv
     ? corsEnv.split(',').map((o) => o.trim()).filter((o) => isProduction ? !o.includes('localhost') : true)
     : isProduction
-      ? ['https://facturador-web-sv.azurewebsites.net']
-      : ['https://facturador-web-sv.azurewebsites.net', 'http://localhost:3000'];
+      ? productionOrigins
+      : [...productionOrigins, ...devOrigins];
 
   app.enableCors({
     origin: allowedOrigins,

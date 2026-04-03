@@ -148,7 +148,7 @@ export default function CashFlowPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-primary" />
@@ -160,7 +160,7 @@ export default function CashFlowPage() {
         </div>
 
         {/* Period Selector */}
-        <div className="flex gap-1 bg-muted rounded-lg p-1">
+        <div className="flex gap-1 bg-muted rounded-lg p-1 self-start sm:self-auto">
           {PERIOD_OPTIONS.map((p) => (
             <Button
               key={p}

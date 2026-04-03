@@ -16,6 +16,10 @@ COPY packages ./packages
 # Install all dependencies (root + workspaces)
 RUN npm install
 
+# Ensure API workspace deps are fully resolved in local node_modules
+WORKDIR /app/apps/api
+RUN npm install --install-strategy=nested
+
 # Build shared packages first
 WORKDIR /app/packages/mh-client
 RUN npm run build || echo "mh-client build skipped"
@@ -36,9 +40,6 @@ FROM node:20-alpine AS runner
 # Required for Prisma on Alpine Linux
 RUN apk add --no-cache openssl libc6-compat
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nestjs
-
 WORKDIR /app
 
 # Copy built application
@@ -49,7 +50,7 @@ COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api/package.json ./
 
 # Merge api node_modules into main (for deps not hoisted)
-RUN cp -rn ./api_node_modules/* ./node_modules/ 2>/dev/null || true && rm -rf ./api_node_modules
+RUN cp -a ./api_node_modules/. ./node_modules/ && rm -rf ./api_node_modules
 
 # Copy Prisma schema (needed for migrations in production)
 COPY --from=builder /app/apps/api/prisma ./prisma
@@ -62,6 +63,7 @@ ENV NODE_ENV=production
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
 
-USER nestjs
+
+
 
 CMD ["node", "dist/main.js"]

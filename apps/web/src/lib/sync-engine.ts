@@ -1,5 +1,6 @@
 import { useSyncQueueStore } from '@/store/sync-queue';
 import type { SyncOpType } from './db-types';
+import { trackSyncFailure } from './sentry';
 
 const SYNC_ENDPOINTS: Record<SyncOpType, { path: string; method: string }> = {
   CREATE_INVOICE: { path: '/dte', method: 'POST' },
@@ -40,7 +41,9 @@ export async function processSyncQueue(apiBaseUrl: string): Promise<void> {
     for (const item of pendingItems) {
       const endpoint = SYNC_ENDPOINTS[item.type];
       if (!endpoint) {
-        await store.markFailed(item.id!, `Unknown operation type: ${item.type}`);
+        const errorMsg = `Unknown operation type: ${item.type}`;
+        await store.markFailed(item.id!, errorMsg);
+        trackSyncFailure(item.type, errorMsg);
         continue;
       }
 
@@ -61,6 +64,7 @@ export async function processSyncQueue(apiBaseUrl: string): Promise<void> {
           const errorData = await response.json().catch(() => ({}));
           const errorMsg = errorData.message || `HTTP ${response.status}`;
           await store.markFailed(item.id!, errorMsg);
+          trackSyncFailure(item.type, errorMsg);
           continue;
         }
 
@@ -68,6 +72,7 @@ export async function processSyncQueue(apiBaseUrl: string): Promise<void> {
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         await store.markFailed(item.id!, message);
+        trackSyncFailure(item.type, message);
       }
     }
   } finally {

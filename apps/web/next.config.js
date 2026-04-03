@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
@@ -23,4 +25,7 @@ const nextConfig = {
   },
 };
 
-module.exports = withBundleAnalyzer(withSerwist(withNextIntl(nextConfig)));
+const finalConfig = withBundleAnalyzer(withSerwist(withNextIntl(nextConfig)));
+module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(finalConfig, { silent: true }, { widenClientFileUpload: true, hideSourceMaps: true, disableLogger: true })
+  : finalConfig;

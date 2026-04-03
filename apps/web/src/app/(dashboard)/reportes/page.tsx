@@ -283,17 +283,17 @@ export default function ReportesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <BarChart3 className="w-8 h-8 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <BarChart3 className="w-7 h-7 md:w-8 md:h-8 text-primary" />
             {t('title')}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm md:text-base">
             {t('subtitle')}
           </p>
         </div>
-        <Button onClick={handleExportCSV} disabled={chartData.length === 0}>
+        <Button onClick={handleExportCSV} disabled={chartData.length === 0} size="sm" className="self-start sm:self-auto">
           <Download className="mr-2 h-4 w-4" />
           {t('exportCsv')}
         </Button>
@@ -690,7 +690,7 @@ export default function ReportesPage() {
 
           {/* ── Advanced Reports ──────────────────────────────── */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-4 h-4" />
@@ -698,7 +698,7 @@ export default function ReportesPage() {
                 </CardTitle>
                 <CardDescription>Análisis detallado por período, retenciones y exportaciones</CardDescription>
               </div>
-              <Button size="sm" variant="outline" onClick={handleAdvancedExportCSV}>
+              <Button size="sm" variant="outline" onClick={handleAdvancedExportCSV} className="self-start sm:self-auto">
                 <Download className="w-3 h-3 mr-1" />
                 CSV
               </Button>

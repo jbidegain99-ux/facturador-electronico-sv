@@ -107,9 +107,6 @@ model Tenant {
 
   // Chat feedback
   chatFeedback ChatFeedback[]
-
-  // Invoice templates
-  invoiceTemplates InvoiceTemplate[]
 }
 
 model User {
@@ -1813,37 +1810,4 @@ model UserRoleAssignment {
   @@index([userId, tenantId])
   @@index([tenantId])
   @@index([scopeType, scopeId])
-}
-
-model InvoiceTemplate {
-  id           String   @id @default(uuid())
-  tenantId     String?  @db.NVarChar(1000)
-  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  name         String   @db.NVarChar(100)
-  slug         String   @db.NVarChar(50)
-  description  String?  @db.NVarChar(500)
-
-  isSystem     Boolean  @default(false)
-  isDefault    Boolean  @default(false)
-  isActive     Boolean  @default(true)
-
-  config       String   @db.NVarChar(Max)
-  htmlTemplate String   @db.NVarChar(Max)
-  cssStyles    String   @db.NVarChar(Max)
-
-  parentId     String?
-  parent       InvoiceTemplate?  @relation("TemplateInheritance", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  children     InvoiceTemplate[] @relation("TemplateInheritance")
-
-  dteType      String?  @db.NVarChar(2)
-
-  version      Int      @default(1)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@unique([tenantId, slug])
-  @@index([tenantId, isDefault])
-  @@index([tenantId, dteType])
-  @@index([isSystem])
 }

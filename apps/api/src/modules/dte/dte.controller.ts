@@ -196,7 +196,6 @@ export class DteController {
 
     const pdfBuffer = await this.pdfService.generateInvoicePdf({
       ...dte,
-      tenantId: req.user.tenantId,
       data: parsedData,
     });
 

@@ -31,8 +31,7 @@ export type FeatureCode =
   | 'phone_support'
   | 'logo_branding'
   | 'external_email'
-  | 'hacienda_setup_support'
-  | 'custom_templates';
+  | 'hacienda_setup_support';
 
 const DEFAULT_FEATURES: PlanFeatures = {
   planCode: 'FREE',

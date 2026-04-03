@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
-import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle, FileUp, Image, Users, Palette } from 'lucide-react';
+import { Building2, Key, Upload, CheckCircle, AlertCircle, Loader2, Mail, ChevronRight, Rocket, Sparkles, XCircle, FileUp, Image, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { LogoUpload } from '@/components/settings/logo-upload';
@@ -537,38 +537,6 @@ export default function ConfiguracionPage() {
               onUploadSuccess={(url) => setLogoUrl(url)}
               onDeleteSuccess={() => setLogoUrl(null)}
             />
-          </CardContent>
-        </Card>
-
-        {/* Plantillas de Factura Link */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5 text-primary" />
-              Plantillas de Factura
-              <Badge className="ml-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">PRO</Badge>
-            </CardTitle>
-            <CardDescription>
-              Personaliza el diseño de tus facturas PDF
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/configuracion/plantillas">
-              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-primary/5 transition-colors cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <Palette className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Elegir y personalizar plantillas</p>
-                    <p className="text-sm text-muted-foreground">
-                      3 diseños disponibles: Clásica, Moderna y Compacta
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </Link>
           </CardContent>
         </Card>
 

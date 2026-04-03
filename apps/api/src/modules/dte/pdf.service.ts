@@ -1,8 +1,7 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { TDocumentDefinitions, Content, StyleDictionary } from 'pdfmake/interfaces';
 import * as QRCode from 'qrcode';
 import { DEPARTAMENTOS } from '@facturador/shared';
-import { TemplateRenderService } from '../invoice-templates/template-render.service';
 
 interface Identificacion {
   ambiente?: string;
@@ -12,7 +11,6 @@ interface Identificacion {
 
 export interface DteData {
   id: string;
-  tenantId?: string;
   codigoGeneracion: string;
   numeroControl: string;
   tipoDte: string;
@@ -71,10 +69,6 @@ interface Resumen {
 @Injectable()
 export class PdfService {
   private readonly logger = new Logger(PdfService.name);
-
-  constructor(
-    @Optional() private readonly templateRenderService?: TemplateRenderService,
-  ) {}
 
   private getTipoDteLabel(tipoDte: string): string {
     const tipos: Record<string, string> = {
@@ -256,31 +250,6 @@ export class PdfService {
 
   async generateInvoicePdf(dte: DteData): Promise<Buffer> {
     this.logger.log(`Generating PDF for DTE ${dte.codigoGeneracion}`);
-
-    // Try template-based generation if available
-    if (this.templateRenderService && dte.tenantId) {
-      try {
-        const resolved = await this.templateRenderService.resolveTemplate(dte.tenantId, dte.tipoDte);
-        if (resolved) {
-          this.logger.log(`Using template "${resolved.id}" for DTE ${dte.codigoGeneracion}`);
-          const html = await this.templateRenderService.compileHtmlFromTemplate(
-            resolved.htmlTemplate,
-            resolved.config,
-            dte,
-          );
-          return await this.templateRenderService.generatePdf(html, resolved.config.pageSettings);
-        }
-      } catch (error) {
-        this.logger.error(
-          `Template PDF generation failed for DTE ${dte.codigoGeneracion}, falling back to legacy: ${error}`,
-        );
-      }
-    }
-
-    return this.generateLegacyPdf(dte);
-  }
-
-  private async generateLegacyPdf(dte: DteData): Promise<Buffer> {
 
     const data = dte.data as {
       identificacion?: Identificacion;

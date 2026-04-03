@@ -14,10 +14,9 @@ import { WebhooksModule } from '../webhooks/webhooks.module';
 import { AccountingModule } from '../accounting/accounting.module';
 import { SucursalesModule } from '../sucursales/sucursales.module';
 import { HaciendaModule } from '../hacienda/hacienda.module';
-import { InvoiceTemplatesModule } from '../invoice-templates/invoice-templates.module';
 
 @Module({
-  imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, forwardRef(() => WebhooksModule), forwardRef(() => AccountingModule), SucursalesModule, HaciendaModule, InvoiceTemplatesModule],
+  imports: [PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, forwardRef(() => WebhooksModule), forwardRef(() => AccountingModule), SucursalesModule, HaciendaModule],
   controllers: [DteController],
   providers: [DteBuilderService, DteValidatorService, DteService, PdfService, DteErrorMapperService, DteOperationLoggerService],
   exports: [DteBuilderService, DteValidatorService, DteService, PdfService, DteErrorMapperService, DteOperationLoggerService],

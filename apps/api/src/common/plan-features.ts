@@ -27,8 +27,7 @@ export type FeatureCode =
   | 'phone_support'
   | 'logo_branding'
   | 'external_email'
-  | 'hacienda_setup_support'
-  | 'custom_templates';
+  | 'hacienda_setup_support';
 
 export const ALL_FEATURE_CODES: FeatureCode[] = [
   'invoicing',
@@ -44,7 +43,6 @@ export const ALL_FEATURE_CODES: FeatureCode[] = [
   'logo_branding',
   'external_email',
   'hacienda_setup_support',
-  'custom_templates',
 ];
 
 /** Legacy PlanFeatures interface used by services that still read the old shape */
@@ -103,7 +101,6 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
       logo_branding: false,
       external_email: false,
       hacienda_setup_support: false,
-      custom_templates: false,
     },
   },
   [PlanCode.STARTER]: {
@@ -126,7 +123,6 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
       logo_branding: true,
       external_email: false,
       hacienda_setup_support: false,
-      custom_templates: false,
     },
   },
   [PlanCode.PROFESSIONAL]: {
@@ -149,7 +145,6 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
       logo_branding: true,
       external_email: true,
       hacienda_setup_support: true,
-      custom_templates: true,
     },
   },
   [PlanCode.ENTERPRISE]: {
@@ -172,7 +167,6 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
       logo_branding: true,
       external_email: true,
       hacienda_setup_support: true,
-      custom_templates: true,
     },
   },
 };

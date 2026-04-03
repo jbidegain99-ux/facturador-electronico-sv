@@ -9,6 +9,7 @@ import { RoutePermissionGate } from '@/components/permission-gate';
 import { ChatWidget } from '@/components/chat/ChatWidget';
 import { BottomNav } from '@/components/mobile/bottom-nav';
 import { OnlineIndicator } from '@/components/pwa/online-indicator';
+import { MhStatusBanner } from '@/components/pwa/mh-status-banner';
 import { InstallBanner } from '@/components/pwa/install-banner';
 import { useSyncQueueStore } from '@/store/sync-queue';
 import { cn } from '@/lib/utils';
@@ -176,6 +177,7 @@ export default function DashboardLayout({
       >
         <Header />
         <OnlineIndicator pendingCount={pendingCount} />
+        <MhStatusBanner />
         <main className="p-6 pb-20 md:pb-6">
           <RoutePermissionGate>{children}</RoutePermissionGate>
         </main>

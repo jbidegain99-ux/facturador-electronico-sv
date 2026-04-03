@@ -39,6 +39,13 @@ export async function apiFetch<T>(
   });
 
   if (!response.ok) {
+    // Detect MH-related 503 outage
+    if (response.status === 503 && endpoint.includes('/dte')) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('mh-outage'));
+      }
+    }
+
     // On 401, attempt a single token refresh and retry
     if (response.status === 401 && !_isRetry) {
       const refreshed = await tryRefreshAuth();

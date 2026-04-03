@@ -456,14 +456,14 @@ export default function ClientesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
             {t('subtitle')}
           </p>
         </div>
-        <Button onClick={openCreateModal}>
+        <Button onClick={openCreateModal} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           {t('newClient')}
         </Button>
@@ -482,8 +482,8 @@ export default function ClientesPage() {
       {/* Search + Page Size */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="relative flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t('searchPlaceholder')}
@@ -497,138 +497,183 @@ export default function ClientesPage() {
         </CardContent>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="p-4">
-              <SkeletonTable rows={8} />
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <button
-                        className="flex items-center hover:text-foreground transition-colors"
-                        onClick={() => handleSort('nombre')}
-                      >
-                        {tCommon('name')}
-                        {getSortIcon('nombre')}
-                      </button>
-                    </TableHead>
-                    <TableHead>
-                      <button
-                        className="flex items-center hover:text-foreground transition-colors"
-                        onClick={() => handleSort('numDocumento')}
-                      >
-                        {t('document')}
-                        {getSortIcon('numDocumento')}
-                      </button>
-                    </TableHead>
-                    <TableHead>NRC</TableHead>
-                    <TableHead>{t('contact')}</TableHead>
-                    <TableHead className="text-right">{tCommon('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(!clientes || clientes.length === 0) ? (
+      {/* Mobile client list */}
+      <div className="space-y-2 md:hidden">
+        {loading ? (
+          <Card><CardContent className="p-4"><SkeletonTable rows={5} /></CardContent></Card>
+        ) : (!clientes || clientes.length === 0) ? (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              {search ? t('noClientsSearch') : t('noClients')}
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {clientes.map((cliente) => (
+              <div
+                key={cliente.id}
+                className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+                onClick={() => openEditModal(cliente)}
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <span className="text-sm font-bold text-primary">
+                    {cliente.nombre.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{cliente.nombre}</p>
+                  <p className="text-xs text-muted-foreground">{cliente.numDocumento}</p>
+                </div>
+                {cliente.correo && (
+                  <p className="text-xs text-muted-foreground hidden sm:block truncate max-w-[150px]">{cliente.correo}</p>
+                )}
+              </div>
+            ))}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              total={total}
+              showing={clientes?.length ?? 0}
+              onPageChange={setPage}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block">
+        <Card>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="p-4">
+                <SkeletonTable rows={8} />
+              </div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        {search ? t('noClientsSearch') : t('noClients')}
-                      </TableCell>
+                      <TableHead>
+                        <button
+                          className="flex items-center hover:text-foreground transition-colors"
+                          onClick={() => handleSort('nombre')}
+                        >
+                          {tCommon('name')}
+                          {getSortIcon('nombre')}
+                        </button>
+                      </TableHead>
+                      <TableHead>
+                        <button
+                          className="flex items-center hover:text-foreground transition-colors"
+                          onClick={() => handleSort('numDocumento')}
+                        >
+                          {t('document')}
+                          {getSortIcon('numDocumento')}
+                        </button>
+                      </TableHead>
+                      <TableHead>NRC</TableHead>
+                      <TableHead>{t('contact')}</TableHead>
+                      <TableHead className="text-right">{tCommon('actions')}</TableHead>
                     </TableRow>
-                  ) : (
-                    clientes.map((cliente) => (
-                      <TableRow key={cliente.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                              <User className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <div className="font-medium">{cliente.nombre}</div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <Badge variant="outline" className="mb-1">
-                              {tipoDocumentoLabels[cliente.tipoDocumento] || cliente.tipoDocumento}
-                            </Badge>
-                            <div className="font-mono text-sm">{cliente.numDocumento}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {(cliente.nrcDisplay || cliente.nrc) ? (
-                            <span className="font-mono text-sm">{cliente.nrcDisplay || cliente.nrc}</span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {cliente.telefono && <div>{cliente.telefono}</div>}
-                            {cliente.correo && (
-                              <div className="text-muted-foreground">{cliente.correo}</div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <TooltipProvider>
-                            <div className="flex justify-end gap-1">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => openEditModal(cliente)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{t('editClient')}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-destructive hover:text-destructive"
-                                    onClick={() => setDeleteConfirm(cliente.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{t('deleteClient')}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </TooltipProvider>
+                  </TableHeader>
+                  <TableBody>
+                    {(!clientes || clientes.length === 0) ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          {search ? t('noClientsSearch') : t('noClients')}
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      clientes.map((cliente) => (
+                        <TableRow key={cliente.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                                <User className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <div className="font-medium">{cliente.nombre}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <Badge variant="outline" className="mb-1">
+                                {tipoDocumentoLabels[cliente.tipoDocumento] || cliente.tipoDocumento}
+                              </Badge>
+                              <div className="font-mono text-sm">{cliente.numDocumento}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {(cliente.nrcDisplay || cliente.nrc) ? (
+                              <span className="font-mono text-sm">{cliente.nrcDisplay || cliente.nrc}</span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {cliente.telefono && <div>{cliente.telefono}</div>}
+                              {cliente.correo && (
+                                <div className="text-muted-foreground">{cliente.correo}</div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <TooltipProvider>
+                              <div className="flex justify-end gap-1">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => openEditModal(cliente)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{t('editClient')}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive hover:text-destructive"
+                                      onClick={() => setDeleteConfirm(cliente.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{t('deleteClient')}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </TooltipProvider>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
 
-              {/* Pagination */}
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                total={total}
-                showing={clientes?.length ?? 0}
-                onPageChange={setPage}
-              />
-            </>
-          )}
-        </CardContent>
-      </Card>
+                {/* Pagination */}
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  showing={clientes?.length ?? 0}
+                  onPageChange={setPage}
+                />
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

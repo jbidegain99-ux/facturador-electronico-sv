@@ -331,7 +331,7 @@ export default function FacturaDetallePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <Link href="/facturas">
             <Button variant="ghost" size="icon">
@@ -340,39 +340,42 @@ export default function FacturaDetallePage() {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight">
                 {getTipoDteName(dte.tipoDte)}
               </h1>
               <DTEStatusBadge status={dte.estado as DTEStatus} />
             </div>
-            <p className="text-muted-foreground font-mono text-sm">
+            <p className="text-muted-foreground font-mono text-xs md:text-sm">
               {dte.numeroControl}
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleDownloadPDF} disabled={downloadingPdf}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={downloadingPdf}>
             {downloadingPdf ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <FileText className="mr-2 h-4 w-4" />
             )}
-            {t('downloadPdf')}
+            <span className="hidden sm:inline">{t('downloadPdf')}</span>
+            <span className="sm:hidden">PDF</span>
           </Button>
-          <Button variant="outline" onClick={handleDownloadJSON}>
+          <Button variant="outline" size="sm" onClick={handleDownloadJSON}>
             <Download className="mr-2 h-4 w-4" />
-            {t('downloadJson')}
+            <span className="hidden sm:inline">{t('downloadJson')}</span>
+            <span className="sm:hidden">JSON</span>
           </Button>
-          <Button variant="outline" onClick={handleSendEmail} disabled={sendingEmail}>
+          <Button variant="outline" size="sm" onClick={handleSendEmail} disabled={sendingEmail}>
             {sendingEmail ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Mail className="mr-2 h-4 w-4" />
             )}
-            {t('sendEmail')}
+            <span className="hidden sm:inline">{t('sendEmail')}</span>
+            <span className="sm:hidden">Email</span>
           </Button>
           {(dte.estado === 'PROCESADO' || dte.estado === 'PENDIENTE' || dte.estado === 'FIRMADO') && (
-            <Button variant="destructive" onClick={() => setShowAnularDialog(true)} disabled={anulando}>
+            <Button variant="destructive" size="sm" onClick={() => setShowAnularDialog(true)} disabled={anulando}>
               <Ban className="mr-2 h-4 w-4" />
               {t('void')}
             </Button>

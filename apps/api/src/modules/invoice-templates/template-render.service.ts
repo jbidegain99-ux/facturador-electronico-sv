@@ -60,12 +60,7 @@ export class TemplateRenderService implements OnModuleDestroy {
     if (!this.browser) {
       const { chromium } = await import('playwright');
       this.browser = await chromium.launch({
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-        ],
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
       this.logger.log('Playwright browser launched');
     }

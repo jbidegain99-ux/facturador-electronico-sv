@@ -35,11 +35,10 @@ RUN npx prisma generate
 RUN npm run build
 
 # Production stage
-FROM node:20-slim AS runner
+FROM node:20-alpine AS runner
 
-# Required for Prisma on Debian
-RUN apt-get update && apt-get install -y openssl curl --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+# Required for Prisma on Alpine Linux
+RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
@@ -56,17 +55,12 @@ RUN cp -rn ./api_node_modules/* ./node_modules/ 2>/dev/null || true && rm -rf ./
 # Copy Prisma schema (needed for migrations in production)
 COPY --from=builder /app/apps/api/prisma ./prisma
 
-# Install Playwright Chromium for PDF rendering with invoice templates
-RUN npx playwright install --with-deps chromium \
-    && rm -rf /root/.cache/ms-playwright/firefox* \
-    && rm -rf /root/.cache/ms-playwright/webkit*
-
 EXPOSE 3001
 ENV PORT=3001
 ENV NODE_ENV=production
 
 # Health check endpoint
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -sf http://localhost:3001/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
 
 CMD ["node", "dist/main.js"]

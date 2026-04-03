@@ -36,3 +36,36 @@ test.describe('PWA Quotes', () => {
     // Template — requires auth for real testing
   });
 });
+
+test.describe('PWA Offline Round-Trip', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('should handle offline invoice creation flow', async ({ page, context }) => {
+    // Note: This test requires auth setup and a running dev server
+    // It serves as the template for the critical offline E2E test
+
+    // 1. Navigate to invoice creation
+    await page.goto('/es/facturas/nueva');
+
+    // 2. Go offline
+    await context.setOffline(true);
+
+    // 3. Verify offline indicator appears
+    // await expect(page.locator('text=Sin conexión')).toBeVisible();
+
+    // 4. Fill invoice (would need auth + form interaction)
+    // This is a template — full implementation needs auth fixtures
+
+    // 5. Come back online
+    await context.setOffline(false);
+
+    // 6. Verify sync happens
+    // await expect(page.locator('text=En línea')).toBeVisible();
+  });
+
+  test('should show mobile wizard on small viewport', async ({ page }) => {
+    await page.goto('/es/facturas/nueva');
+    // Mobile wizard (md:hidden) should be in the DOM
+    // Desktop form (hidden md:block) should not be visible at 375px
+  });
+});

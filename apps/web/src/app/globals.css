@@ -544,3 +544,9 @@
     font-size: 16px !important;
   }
 }
+
+/* Touch optimization for mobile PWA */
+a, button, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}

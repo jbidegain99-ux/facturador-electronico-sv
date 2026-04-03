@@ -186,7 +186,7 @@ export default function DashboardLayout({
         <Header />
         <OnlineIndicator pendingCount={pendingCount} />
         <MhStatusBanner />
-        <main className="p-6 pb-20 md:pb-6">
+        <main className="p-4 md:p-6 pb-20 md:pb-6">
           <RoutePermissionGate>{children}</RoutePermissionGate>
         </main>
       </div>

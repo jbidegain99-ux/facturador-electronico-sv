@@ -18,3 +18,21 @@ test.describe('PWA Mobile Invoice Flow', () => {
     // Desktop form should be hidden
   });
 });
+
+test.describe('PWA Dashboard', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('stat cards should be visible on mobile dashboard', async ({ page }) => {
+    await page.goto('/es/dashboard');
+    // Template — requires auth for real testing
+  });
+});
+
+test.describe('PWA Quotes', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('quote list should show on mobile', async ({ page }) => {
+    await page.goto('/es/cotizaciones');
+    // Template — requires auth for real testing
+  });
+});

@@ -274,8 +274,9 @@ export default function FacturasPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
-          {error}
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
+          <p className="font-medium">{error}</p>
+          <p className="text-xs mt-1 opacity-70 font-mono break-all">API: {API_URL || '(VACIO)'} | Token: {typeof window !== 'undefined' && localStorage.getItem('token') ? 'SI (' + localStorage.getItem('token')!.substring(0, 20) + '...)' : 'NO'}</p>
           <Button variant="link" className="ml-2 text-red-700" onClick={fetchDTEs}>
             {tCommon('retry')}
           </Button>

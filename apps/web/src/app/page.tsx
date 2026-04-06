@@ -13,19 +13,19 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-0 border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
-              <FileText className="w-6 h-6 text-white" />
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg gradient-primary flex items-center justify-center">
+              <FileText className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-foreground">Facturador SV</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="btn-secondary text-sm px-4 py-2">
+            <span className="text-base sm:text-xl font-bold text-foreground hidden sm:inline">Facturador SV</span>
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link href="/login" className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2">
               Iniciar Sesión
             </Link>
             <ThemeToggle />
-            <Link href="/register" className="btn-primary text-sm px-4 py-2">
+            <Link href="/register" className="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2">
               Registrarse
             </Link>
           </div>
@@ -277,17 +277,17 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 relative">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="glass-card p-12 glow-primary">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+      <section className="py-12 sm:py-24 relative">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <div className="glass-card p-6 sm:p-12 glow-primary">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
               Comienza a facturar hoy
             </h2>
-            <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
+            <p className="text-muted-foreground text-sm sm:text-base md:text-lg mb-6 sm:mb-8 max-w-xl mx-auto">
               Regístrate gratis y emite tu primera factura electrónica en minutos.
               Sin tarjeta de crédito requerida.
             </p>
-            <Link href="/register" className="btn-primary text-lg px-8 py-4 inline-flex items-center gap-2">
+            <Link href="/register" className="btn-primary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 inline-flex items-center gap-2 w-full sm:w-auto justify-center">
               Crear Cuenta Gratis
               <ArrowRight className="w-5 h-5" />
             </Link>
@@ -296,8 +296,8 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-border">
-        <div className="max-w-7xl mx-auto px-6">
+      <footer className="py-8 sm:py-12 border-t border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">

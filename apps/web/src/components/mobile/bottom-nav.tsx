@@ -6,10 +6,10 @@ import { Home, FileText, Plus, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
-  { href: '/es/dashboard', label: 'Inicio', icon: Home },
-  { href: '/es/facturas', label: 'Facturas', icon: FileText },
-  { href: '/es/facturas/nueva', label: 'Nueva', icon: Plus, isAction: true },
-  { href: '/es/cotizaciones', label: 'Cotizaciones', icon: ClipboardList },
+  { href: '/dashboard', label: 'Inicio', icon: Home },
+  { href: '/facturas', label: 'Facturas', icon: FileText },
+  { href: '/facturas/nueva', label: 'Nueva', icon: Plus, isAction: true },
+  { href: '/cotizaciones', label: 'Cotizaciones', icon: ClipboardList },
 ] as const;
 
 export function BottomNav() {

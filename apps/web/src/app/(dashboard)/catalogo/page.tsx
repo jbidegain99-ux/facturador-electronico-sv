@@ -165,10 +165,10 @@ export default function CatalogoPage() {
       {isNearLimit && <div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/30 px-4 py-3 text-sm text-yellow-700 dark:text-yellow-400"><AlertTriangle className="h-4 w-4 shrink-0" />{tc('planLimitNear', { current: data.planLimit?.current ?? 0, max: data.planLimit?.max ?? 0, plan: data.planLimit?.planCode ?? '' })}</div>}
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b pb-2">
+      <div className="flex gap-1 sm:gap-2 border-b pb-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         {TABS.map(tabItem => {
           const labels: Record<string, string> = { '': tc('allTab'), PRODUCT: tc('productsTab'), SERVICE: tc('servicesTab'), FAVORITES: tc('favoritesTab') };
-          return <button key={tabItem.key} onClick={() => { setTab(tabItem.key); setPage(1); }} className={`px-4 py-2 text-sm font-medium rounded-t-md transition-colors ${tab === tabItem.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>{labels[tabItem.key] || tabItem.label}</button>;
+          return <button key={tabItem.key} onClick={() => { setTab(tabItem.key); setPage(1); }} className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-t-md transition-colors whitespace-nowrap shrink-0 ${tab === tabItem.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>{labels[tabItem.key] || tabItem.label}</button>;
         })}
       </div>
 

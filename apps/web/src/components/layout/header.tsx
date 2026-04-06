@@ -150,8 +150,8 @@ export function Header() {
         )}
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 md:gap-2">
+      {/* Actions — pushed to right on mobile */}
+      <div className="flex items-center gap-1 md:gap-2 ml-auto">
         {/* Notifications Dropdown */}
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
@@ -230,12 +230,13 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Chat Widget Toggle */}
+        {/* Chat Widget Toggle - hidden on small mobile */}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => window.dispatchEvent(new CustomEvent('facturo-chat-toggle'))}
           title={t('chat')}
+          className="hidden sm:inline-flex"
         >
           <MessageCircle className="h-5 w-5" />
         </Button>
@@ -243,10 +244,10 @@ export function Header() {
         {/* Theme Toggle */}
         <ThemeToggle />
 
-        {/* Language Switcher */}
+        {/* Language Switcher - hidden on small mobile */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" title={t('language')}>
+            <Button variant="ghost" size="icon" title={t('language')} className="hidden sm:inline-flex">
               <Globe className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>

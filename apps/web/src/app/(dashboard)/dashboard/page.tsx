@@ -174,23 +174,23 @@ export default function DashboardPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground hidden sm:block">
             {t('subtitle')}
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href="/reportes">
-            <Button variant="outline">
-              <BarChart3 className="mr-2 h-4 w-4" />
+          <Link href="/reportes" className="flex-1 sm:flex-none">
+            <Button variant="outline" className="w-full sm:w-auto text-xs sm:text-sm">
+              <BarChart3 className="mr-1.5 sm:mr-2 h-4 w-4" />
               {t('reports')}
             </Button>
           </Link>
-          <Link href="/facturas/nueva">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
+          <Link href="/facturas/nueva" className="flex-1 sm:flex-none">
+            <Button className="w-full sm:w-auto text-xs sm:text-sm">
+              <Plus className="mr-1.5 sm:mr-2 h-4 w-4" />
               {t('newInvoice')}
             </Button>
           </Link>

@@ -187,8 +187,10 @@ export default function CotizacionesPage() {
       setTotal(!isNaN(parsedTotal) ? parsedTotal : items.length);
       setTotalPages(!isNaN(parsedPages) && parsedPages >= 1 ? parsedPages : 1);
     } catch (err) {
-      console.error('Error fetching quotes:', err);
-      setError(err instanceof Error ? err.message : tCommon('error'));
+      const apiErr = err as { status?: number; message?: string };
+      console.error('Error fetching quotes:', apiErr.status, apiErr.message, err);
+      const msg = err instanceof Error ? err.message : tCommon('error');
+      setError(apiErr.status ? `[${apiErr.status}] ${msg}` : msg);
     } finally {
       setLoading(false);
     }

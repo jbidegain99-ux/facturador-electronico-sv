@@ -93,8 +93,10 @@ export default function FacturasPage() {
       setTotalPages(!isNaN(parsedTotalPages) && parsedTotalPages >= 1 ? parsedTotalPages : 1);
       setError(null);
     } catch (err) {
-      console.error('Error fetching DTEs:', err);
-      setError(err instanceof Error ? err.message : t('loadError'));
+      const apiErr = err as { status?: number; message?: string };
+      console.error('Error fetching DTEs:', apiErr.status, apiErr.message, err);
+      const msg = err instanceof Error ? err.message : t('loadError');
+      setError(apiErr.status ? `[${apiErr.status}] ${msg}` : msg);
     } finally {
       setLoading(false);
     }

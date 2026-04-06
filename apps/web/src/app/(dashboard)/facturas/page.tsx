@@ -254,7 +254,7 @@ export default function FacturasPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
             {t('subtitle')}
           </p>
@@ -295,8 +295,8 @@ export default function FacturasPage() {
           <CardTitle className="text-base">{tCommon('filter')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
+            <div className="w-full sm:flex-1 sm:min-w-[200px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -307,36 +307,38 @@ export default function FacturasPage() {
                 />
               </div>
             </div>
-            <Select value={filterTipo} onValueChange={setFilterTipo}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Tipo DTE" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('allTypes')}</SelectItem>
-                <SelectItem value="01">{t('invoice')}</SelectItem>
-                <SelectItem value="03">Crédito Fiscal</SelectItem>
-                <SelectItem value="04">Nota de Remisión</SelectItem>
-                <SelectItem value="05">Nota de Crédito</SelectItem>
-                <SelectItem value="06">Nota de Débito</SelectItem>
-                <SelectItem value="07">Comp. Retención</SelectItem>
-                <SelectItem value="09">Liquidación</SelectItem>
-                <SelectItem value="11">Exportación</SelectItem>
-                <SelectItem value="14">Sujeto Excluido</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('allStatuses')}</SelectItem>
-                <SelectItem value="PENDIENTE">{tStatuses('pending')}</SelectItem>
-                <SelectItem value="FIRMADO">{tStatuses('signed')}</SelectItem>
-                <SelectItem value="PROCESADO">{tStatuses('processed')}</SelectItem>
-                <SelectItem value="RECHAZADO">{tStatuses('rejected')}</SelectItem>
-                <SelectItem value="ANULADO">{tStatuses('voided')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 gap-3 sm:flex sm:gap-4">
+              <Select value={filterTipo} onValueChange={setFilterTipo}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Tipo DTE" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('allTypes')}</SelectItem>
+                  <SelectItem value="01">{t('invoice')}</SelectItem>
+                  <SelectItem value="03">Crédito Fiscal</SelectItem>
+                  <SelectItem value="04">Nota de Remisión</SelectItem>
+                  <SelectItem value="05">Nota de Crédito</SelectItem>
+                  <SelectItem value="06">Nota de Débito</SelectItem>
+                  <SelectItem value="07">Comp. Retención</SelectItem>
+                  <SelectItem value="09">Liquidación</SelectItem>
+                  <SelectItem value="11">Exportación</SelectItem>
+                  <SelectItem value="14">Sujeto Excluido</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                  <SelectItem value="PENDIENTE">{tStatuses('pending')}</SelectItem>
+                  <SelectItem value="FIRMADO">{tStatuses('signed')}</SelectItem>
+                  <SelectItem value="PROCESADO">{tStatuses('processed')}</SelectItem>
+                  <SelectItem value="RECHAZADO">{tStatuses('rejected')}</SelectItem>
+                  <SelectItem value="ANULADO">{tStatuses('voided')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <PageSizeSelector value={limit} onChange={handleLimitChange} />
           </div>
         </CardContent>

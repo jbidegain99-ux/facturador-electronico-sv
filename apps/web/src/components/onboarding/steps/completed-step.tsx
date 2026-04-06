@@ -46,7 +46,7 @@ export function CompletedStep({ type, onFinish, onBack, loading }: CompletedStep
     <div className="space-y-8 text-center">
       <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-500/10 mx-auto"><PartyPopper className="h-12 w-12 text-green-500" /></div>
       <div className="space-y-4">
-        <h1 className="text-3xl font-bold text-green-600 dark:text-green-400">Felicitaciones!</h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400">Felicitaciones!</h1>
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">Ha completado exitosamente el proceso de habilitacion como emisor de documentos tributarios electronicos.</p>
       </div>
       <Card className="max-w-md mx-auto">

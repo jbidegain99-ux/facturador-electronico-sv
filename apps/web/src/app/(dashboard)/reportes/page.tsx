@@ -667,7 +667,7 @@ export default function ReportesPage() {
                           {i + 1}
                         </div>
                         <div>
-                          <p className="font-medium">{client.nombre}</p>
+                          <p className="font-medium truncate">{client.nombre}</p>
                           <p className="text-xs text-muted-foreground">{client.numDocumento}</p>
                         </div>
                       </div>

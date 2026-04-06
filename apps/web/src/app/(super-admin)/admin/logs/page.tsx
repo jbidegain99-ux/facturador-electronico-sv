@@ -288,7 +288,7 @@ export default function LogsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Logs de Auditoría</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Logs de Auditoría</h1>
           <p className="text-muted-foreground mt-1">
             Monitorea la actividad del sistema
           </p>

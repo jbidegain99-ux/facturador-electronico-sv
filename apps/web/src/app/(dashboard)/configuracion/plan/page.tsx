@@ -144,7 +144,7 @@ export default function PlanConfigPage() {
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold">Mi Plan</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Mi Plan</h1>
           <p className="text-muted-foreground mt-1">Informacion de tu plan y consumo actual</p>
         </div>
       </div>

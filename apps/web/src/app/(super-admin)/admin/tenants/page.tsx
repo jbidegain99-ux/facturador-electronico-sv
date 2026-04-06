@@ -184,7 +184,7 @@ export default function TenantsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{t('companies')}</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">{t('companies')}</h1>
           <p className="text-muted-foreground mt-1">{t('companiesSubtitle')}</p>
         </div>
       </div>
@@ -246,18 +246,97 @@ export default function TenantsPage() {
         </form>
       </div>
 
-      {/* Table */}
-      <div className="glass-card overflow-visible">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center h-64">
-            <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-            <p className="text-red-400">{error}</p>
+      {/* Loading / Error */}
+      {loading ? (
+        <div className="glass-card flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="glass-card flex flex-col items-center justify-center h-64">
+          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+          <p className="text-red-400">{error}</p>
+        </div>
+      ) : (
+        <>
+      {/* Mobile Cards (< md) */}
+      <div className="md:hidden space-y-2">
+        {tenants.length === 0 ? (
+          <div className="glass-card text-center py-12 text-muted-foreground">
+            {t('noCompanies')}
           </div>
         ) : (
+          tenants.map((tenant) => (
+            <div
+              key={tenant.id}
+              className="glass-card p-3 space-y-2 cursor-pointer active:bg-muted/50"
+              onClick={() => router.push(`/admin/tenants/${tenant.id}`)}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium truncate">{tenant.nombre}</div>
+                  <div className="text-xs text-muted-foreground truncate">{tenant.correo}</div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <MoreVertical className="w-3.5 h-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" sideOffset={5}>
+                    <DropdownMenuItem
+                      onClick={() => router.push(`/admin/tenants/${tenant.id}`)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4" />
+                      {tCommon('viewDetails')}
+                    </DropdownMenuItem>
+                    {tenant.planStatus === 'ACTIVE' ? (
+                      <DropdownMenuItem
+                        onClick={() => handleSuspend(tenant.id)}
+                        className="text-yellow-600 dark:text-yellow-400"
+                      >
+                        <Pause className="w-4 h-4 mr-2" />
+                        {t('suspend')}
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        onClick={() => handleActivate(tenant.id)}
+                        className="text-green-600 dark:text-green-400"
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        {t('activate')}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => handleDelete(tenant.id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {tCommon('delete')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-muted-foreground font-mono">{tenant.nit}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getPlanBadge(tenant.plan)}`}>
+                  {tenant.plan}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusBadge(tenant.planStatus)}`}>
+                  {tenant.planStatus}
+                </span>
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  {tenant._count.usuarios} usr &middot; {tenant._count.dtes} DTEs
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table (>= md) */}
+      <div className="glass-card overflow-visible hidden md:block">
           <>
             <div className="overflow-x-auto overflow-y-visible">
               <table className="table-rc w-full">
@@ -276,10 +355,10 @@ export default function TenantsPage() {
                 <tbody>
                   {tenants.map((tenant) => (
                     <tr key={tenant.id}>
-                      <td>
+                      <td className="max-w-[200px]">
                         <div>
-                          <div className="font-medium">{tenant.nombre}</div>
-                          <div className="text-xs text-muted-foreground">{tenant.correo}</div>
+                          <div className="font-medium truncate">{tenant.nombre}</div>
+                          <div className="text-xs text-muted-foreground truncate">{tenant.correo}</div>
                         </div>
                       </td>
                       <td className="font-mono text-sm">{tenant.nit}</td>
@@ -379,8 +458,34 @@ export default function TenantsPage() {
               </div>
             )}
           </>
-        )}
       </div>
+
+      {/* Pagination for mobile */}
+      {totalPages > 1 && (
+        <div className="md:hidden flex items-center justify-between px-4 py-3">
+          <div className="text-sm text-muted-foreground">
+            {tCommon('page', { page, totalPages })}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="p-2 rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="p-2 rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+        </>
+      )}
     </div>
   );
 }

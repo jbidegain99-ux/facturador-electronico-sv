@@ -109,7 +109,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">{t('dashboard')}</h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{t('dashboard')}</h1>
         <p className="text-muted-foreground mt-1">{t('dashboardSubtitle')}</p>
       </div>
 
@@ -119,7 +119,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">{t('totalCompanies')}</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats?.totalTenants || 0}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white mt-1">{stats?.totalTenants || 0}</p>
             </div>
             <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
               <Building2 className="w-6 h-6 text-white" />
@@ -136,7 +136,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">{t('totalUsers')}</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats?.totalUsers || 0}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white mt-1">{stats?.totalUsers || 0}</p>
             </div>
             <div className="w-12 h-12 rounded-xl gradient-secondary flex items-center justify-center">
               <Users className="w-6 h-6 text-white" />
@@ -151,7 +151,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">{t('totalDtes')}</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats?.totalDtes || 0}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white mt-1">{stats?.totalDtes || 0}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
               <FileText className="w-6 h-6 text-white" />
@@ -168,7 +168,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">{t('inTrial')}</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats?.trialTenants || 0}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white mt-1">{stats?.trialTenants || 0}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-white" />

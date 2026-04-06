@@ -391,8 +391,8 @@ export default function SucursalesPage() {
             Configuracion
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Building2 className="w-7 h-7 text-primary" />
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+              <Building2 className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
               Sucursales y Puntos de Venta
             </h1>
             <p className="text-muted-foreground">
@@ -416,8 +416,122 @@ export default function SucursalesPage() {
         </div>
       )}
 
-      {/* Table */}
-      <Card>
+      {/* Mobile Cards (< md) */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="p-4">
+            <SkeletonTable rows={4} />
+          </div>
+        ) : sucursales.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-12 text-muted-foreground">
+              <Building2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="font-medium">No hay sucursales registradas</p>
+              <p className="text-sm mt-1">Crea tu primera sucursal para comenzar</p>
+            </CardContent>
+          </Card>
+        ) : (
+          sucursales.map((suc) => (
+            <Card key={suc.id}>
+              <CardContent className="p-3 space-y-3">
+                {/* Header row */}
+                <div className="flex items-start justify-between gap-2">
+                  <div
+                    className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
+                    onClick={() => toggleExpand(suc.id)}
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <Building2 className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm truncate">{suc.nombre}</div>
+                      <div className="text-xs text-muted-foreground font-mono">{suc.codEstableMH}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Badge variant={suc.activa ? 'success' : 'secondary'} className="text-[10px]">
+                      {suc.activa ? 'Activa' : 'Inactiva'}
+                    </Badge>
+                    {suc.esPrincipal && (
+                      <Badge variant="info" className="text-[10px]">Principal</Badge>
+                    )}
+                  </div>
+                </div>
+                {/* Details row */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-3">
+                    <span>{TIPO_ESTABLECIMIENTO[suc.tipoEstablecimiento] || suc.tipoEstablecimiento}</span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {DEPARTAMENTOS[suc.departamento] || suc.departamento}
+                    </span>
+                  </div>
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openCreatePv(suc.id)} title="Agregar PV">
+                      <Plus className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditSucursal(suc)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    {!suc.esPrincipal && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteTarget({ type: 'sucursal', id: suc.id, name: suc.nombre })}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {/* Expandable: Puntos de venta */}
+                <button
+                  className="flex items-center gap-1 text-xs text-primary"
+                  onClick={() => toggleExpand(suc.id)}
+                >
+                  {expanded.has(suc.id) ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                  Puntos de venta
+                </button>
+                {expanded.has(suc.id) && (
+                  <div className="pl-4 space-y-2 border-l-2 border-border">
+                    {!suc.puntosVenta ? (
+                      <div className="text-sm text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin inline mr-1" />
+                        Cargando...
+                      </div>
+                    ) : suc.puntosVenta.length === 0 ? (
+                      <div className="text-sm text-muted-foreground">
+                        Sin puntos de venta.{' '}
+                        <button className="text-primary hover:underline" onClick={() => openCreatePv(suc.id)}>Crear uno</button>
+                      </div>
+                    ) : (
+                      suc.puntosVenta.map((pv) => (
+                        <div key={pv.id} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Store className="h-3 w-3 text-muted-foreground shrink-0" />
+                            <span className="text-sm truncate">{pv.nombre}</span>
+                            <span className="text-xs text-muted-foreground font-mono shrink-0">{pv.codPuntoVentaMH}</span>
+                            <Badge variant={pv.activo ? 'success' : 'secondary'} className="text-[10px] shrink-0">
+                              {pv.activo ? 'Activo' : 'Inactivo'}
+                            </Badge>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditPv(pv)}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => setDeleteTarget({ type: 'pv', id: pv.id, name: pv.nombre })}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table (>= md) */}
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           {loading ? (
             <div className="p-4">

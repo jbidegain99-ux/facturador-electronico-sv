@@ -64,7 +64,7 @@ export default function AdminsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Super Administradores</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Super Administradores</h1>
           <p className="text-muted-foreground mt-1">Gestiona los administradores del sistema</p>
         </div>
         <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">

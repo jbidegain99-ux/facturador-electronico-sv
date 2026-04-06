@@ -2,7 +2,7 @@ export default function PrivacidadPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Política de Privacidad</h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-8">Política de Privacidad</h1>
         <div className="prose prose-gray max-w-none space-y-6 text-gray-700">
           <p className="text-sm text-gray-500">Última actualización: Febrero 2026</p>
 

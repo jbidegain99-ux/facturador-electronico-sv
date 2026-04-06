@@ -147,8 +147,58 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
 
   return (
     <div className="space-y-4">
-      {/* Add item input */}
-      <div className="flex gap-2">
+      {/* Add item input — mobile stacked */}
+      <div className="flex flex-col gap-2 md:hidden">
+        <Input
+          ref={inputRef}
+          value={newItem.descripcion}
+          onChange={(e) => setNewItem({ ...newItem, descripcion: e.target.value })}
+          onKeyDown={handleKeyDown}
+          placeholder="Descripción del producto o servicio..."
+          className="input-rc"
+          disabled={disabled}
+        />
+        <div className="grid grid-cols-3 gap-2">
+          <Input
+            type="number"
+            min="1"
+            value={newItem.cantidad}
+            onChange={(e) => setNewItem({ ...newItem, cantidad: parseInt(e.target.value) || 1 })}
+            onKeyDown={handleKeyDown}
+            className="input-rc text-center"
+            placeholder="Cant"
+            disabled={disabled}
+          />
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+              $
+            </span>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={newItem.precioUnitario || ''}
+              onChange={(e) =>
+                setNewItem({ ...newItem, precioUnitario: parseFloat(e.target.value) || 0 })
+              }
+              onKeyDown={handleKeyDown}
+              className="pl-7 input-rc text-right"
+              placeholder="0.00"
+              disabled={disabled}
+            />
+          </div>
+          <Button
+            onClick={handleAddItem}
+            disabled={disabled || !newItem.descripcion.trim() || newItem.precioUnitario <= 0}
+            className="btn-primary"
+          >
+            <Plus className="w-4 h-4 mr-1" /> Agregar
+          </Button>
+        </div>
+      </div>
+
+      {/* Add item input — desktop row */}
+      <div className="hidden md:flex gap-2">
         <div className="flex-1">
           <Input
             ref={inputRef}
@@ -212,9 +262,49 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
         </div>
       )}
 
-      {/* Items table */}
+      {/* Mobile items list (< md) */}
+      {items.length > 0 && (
+        <div className="md:hidden space-y-2">
+          {items.map((item, index) => (
+            <div
+              key={item.id}
+              className="rounded-lg border p-3 space-y-2 animate-in fade-in-50 duration-200"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium truncate">{item.descripcion}</div>
+                  {item.codigo && <div className="text-xs text-muted-foreground font-mono">[{item.codigo}]</div>}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveItem(item.id)}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0 shrink-0 hover:bg-destructive/20 hover:text-destructive"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex gap-3">
+                  <span>Cant: <button onClick={() => !disabled && setEditingField({ id: item.id, field: 'cantidad' })} className="text-foreground font-medium hover:text-primary">{item.cantidad}</button></span>
+                  <span>P.U: <button onClick={() => !disabled && setEditingField({ id: item.id, field: 'precioUnitario' })} className="text-foreground font-medium hover:text-primary">{formatCurrency(item.precioUnitario)}</button></span>
+                  {item.descuento > 0 && <span className="text-warning">Desc: -{formatCurrency(item.descuento)}</span>}
+                </div>
+                <span className="font-semibold text-sm text-foreground">{formatCurrency(item.subtotal)}</span>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 text-sm">
+            <span className="text-muted-foreground">Total items: <span className="font-medium text-foreground">{totalItems}</span></span>
+            <span className="font-bold text-primary">{formatCurrency(subtotalGeneral)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop items table (>= md) */}
       {items.length > 0 ? (
-        <div className="glass-card overflow-hidden">
+        <div className="glass-card overflow-hidden hidden md:block">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
@@ -372,8 +462,8 @@ export function ItemsTable({ items, onChange, disabled = false }: ItemsTableProp
           </table>
         </div>
       ) : (
-        /* Empty state */
-        <div className="glass-card py-12 text-center">
+        /* Empty state — visible on desktop only; mobile shows nothing since cards section handles it */
+        <div className="hidden md:block glass-card py-12 text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
             <Package className="w-8 h-8 text-muted-foreground" />
           </div>

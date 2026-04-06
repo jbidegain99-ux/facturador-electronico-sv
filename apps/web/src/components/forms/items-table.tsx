@@ -82,108 +82,176 @@ export function ItemsTable({
 
   return (
     <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-24">Código</TableHead>
-            <TableHead>Descripción</TableHead>
-            <TableHead className="w-24 text-right">Cantidad</TableHead>
-            <TableHead className="w-32 text-right">Precio Unit.</TableHead>
-            <TableHead className="w-32 text-right">Subtotal</TableHead>
-            <TableHead className="w-28 text-right">IVA (13%)</TableHead>
-            <TableHead className="w-32 text-right">Total</TableHead>
-            <TableHead className="w-12"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-mono text-sm">{item.codigo || '-'}</TableCell>
-              <TableCell>{item.descripcion}</TableCell>
+      {/* Mobile add-item form (< md) */}
+      <div className="md:hidden space-y-3 rounded-lg border p-3">
+        <Input
+          placeholder="Descripción del producto o servicio"
+          value={newItem.descripcion}
+          onChange={(e) => setNewItem({ ...newItem, descripcion: e.target.value })}
+        />
+        <div className="grid grid-cols-3 gap-2">
+          <Input
+            placeholder="Código"
+            value={newItem.codigo}
+            onChange={(e) => setNewItem({ ...newItem, codigo: e.target.value })}
+          />
+          <Input
+            type="number"
+            min="1"
+            placeholder="Cant."
+            value={newItem.cantidad}
+            onChange={(e) => setNewItem({ ...newItem, cantidad: parseInt(e.target.value) || 1 })}
+            className="text-right"
+          />
+          <MoneyInput
+            value={newItem.precioUnitario}
+            onChange={(val) => setNewItem({ ...newItem, precioUnitario: val })}
+          />
+        </div>
+        <Button
+          onClick={handleAddItem}
+          disabled={!newItem.descripcion || newItem.precioUnitario <= 0}
+          className="w-full"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Agregar Item
+        </Button>
+      </div>
+
+      {/* Mobile items list (< md) */}
+      <div className="md:hidden space-y-2">
+        {items.map((item, index) => (
+          <div key={item.id} className="rounded-lg border p-3 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium truncate">{item.descripcion}</div>
+                {item.codigo && <div className="text-xs text-muted-foreground font-mono">[{item.codigo}]</div>}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onRemoveItem(item.id)}
+                className="h-7 w-7 shrink-0 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex gap-3">
+                <span>Cant: <span className="text-foreground font-medium">{item.cantidad}</span></span>
+                <span>P.U: <span className="text-foreground font-medium">{formatCurrency(item.precioUnitario)}</span></span>
+              </div>
+              <span className="font-semibold text-sm text-foreground">{formatCurrency(item.total)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table (>= md) */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-24">Código</TableHead>
+              <TableHead>Descripción</TableHead>
+              <TableHead className="w-24 text-right">Cantidad</TableHead>
+              <TableHead className="w-32 text-right">Precio Unit.</TableHead>
+              <TableHead className="w-32 text-right">Subtotal</TableHead>
+              <TableHead className="w-28 text-right">IVA (13%)</TableHead>
+              <TableHead className="w-32 text-right">Total</TableHead>
+              <TableHead className="w-12"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-mono text-sm">{item.codigo || '-'}</TableCell>
+                <TableCell>{item.descripcion}</TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={item.cantidad}
+                    onChange={(e) => handleUpdateQuantity(item.id, parseInt(e.target.value) || 1)}
+                    className="w-20 text-right"
+                  />
+                </TableCell>
+                <TableCell>
+                  <MoneyInput
+                    value={item.precioUnitario}
+                    onChange={(val) => handleUpdatePrice(item.id, val)}
+                    className="w-28"
+                  />
+                </TableCell>
+                <TableCell className="text-right font-medium">{formatCurrency(item.subtotal)}</TableCell>
+                <TableCell className="text-right text-muted-foreground">{formatCurrency(item.iva)}</TableCell>
+                <TableCell className="text-right font-semibold">{formatCurrency(item.total)}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onRemoveItem(item.id)}
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+
+            {/* Add new item row */}
+            <TableRow className="bg-muted/50">
+              <TableCell>
+                <Input
+                  placeholder="Codigo"
+                  value={newItem.codigo}
+                  onChange={(e) => setNewItem({ ...newItem, codigo: e.target.value })}
+                  className="w-20"
+                />
+              </TableCell>
+              <TableCell>
+                <Input
+                  placeholder="Descripción del producto o servicio"
+                  value={newItem.descripcion}
+                  onChange={(e) => setNewItem({ ...newItem, descripcion: e.target.value })}
+                />
+              </TableCell>
               <TableCell>
                 <Input
                   type="number"
                   min="1"
-                  value={item.cantidad}
-                  onChange={(e) => handleUpdateQuantity(item.id, parseInt(e.target.value) || 1)}
+                  value={newItem.cantidad}
+                  onChange={(e) => setNewItem({ ...newItem, cantidad: parseInt(e.target.value) || 1 })}
                   className="w-20 text-right"
                 />
               </TableCell>
               <TableCell>
                 <MoneyInput
-                  value={item.precioUnitario}
-                  onChange={(val) => handleUpdatePrice(item.id, val)}
+                  value={newItem.precioUnitario}
+                  onChange={(val) => setNewItem({ ...newItem, precioUnitario: val })}
                   className="w-28"
                 />
               </TableCell>
-              <TableCell className="text-right font-medium">{formatCurrency(item.subtotal)}</TableCell>
-              <TableCell className="text-right text-muted-foreground">{formatCurrency(item.iva)}</TableCell>
-              <TableCell className="text-right font-semibold">{formatCurrency(item.total)}</TableCell>
+              <TableCell colSpan={3}></TableCell>
               <TableCell>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => onRemoveItem(item.id)}
-                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={handleAddItem}
+                  disabled={!newItem.descripcion || newItem.precioUnitario <= 0}
+                  className="h-8 w-8"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                 </Button>
               </TableCell>
             </TableRow>
-          ))}
-
-          {/* Add new item row */}
-          <TableRow className="bg-muted/50">
-            <TableCell>
-              <Input
-                placeholder="Codigo"
-                value={newItem.codigo}
-                onChange={(e) => setNewItem({ ...newItem, codigo: e.target.value })}
-                className="w-20"
-              />
-            </TableCell>
-            <TableCell>
-              <Input
-                placeholder="Descripción del producto o servicio"
-                value={newItem.descripcion}
-                onChange={(e) => setNewItem({ ...newItem, descripcion: e.target.value })}
-              />
-            </TableCell>
-            <TableCell>
-              <Input
-                type="number"
-                min="1"
-                value={newItem.cantidad}
-                onChange={(e) => setNewItem({ ...newItem, cantidad: parseInt(e.target.value) || 1 })}
-                className="w-20 text-right"
-              />
-            </TableCell>
-            <TableCell>
-              <MoneyInput
-                value={newItem.precioUnitario}
-                onChange={(val) => setNewItem({ ...newItem, precioUnitario: val })}
-                className="w-28"
-              />
-            </TableCell>
-            <TableCell colSpan={3}></TableCell>
-            <TableCell>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleAddItem}
-                disabled={!newItem.descripcion || newItem.precioUnitario <= 0}
-                className="h-8 w-8"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Totals */}
       <div className="flex justify-end">
-        <div className="w-64 space-y-2">
+        <div className="w-full sm:w-64 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Subtotal:</span>
             <span>{formatCurrency(subtotal)}</span>

@@ -165,13 +165,13 @@ export function FacturaPreview({
             </div>
             {cliente ? (
               <div className="space-y-1">
-                <p className="font-semibold text-white">{cliente.nombre}</p>
+                <p className="font-semibold text-white truncate">{cliente.nombre}</p>
                 <p className="text-sm text-muted-foreground">
                   {cliente.tipoDocumento === '36' ? 'NIT' : 'DUI'}: {cliente.numDocumento}
                   {cliente.nrc && ` | NRC: ${cliente.nrc}`}
                 </p>
                 {cliente.correo && (
-                  <p className="text-sm text-muted-foreground">{cliente.correo}</p>
+                  <p className="text-sm text-muted-foreground truncate">{cliente.correo}</p>
                 )}
               </div>
             ) : (

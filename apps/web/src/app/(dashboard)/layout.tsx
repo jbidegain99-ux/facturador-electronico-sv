@@ -172,7 +172,7 @@ export default function DashboardLayout({
         className={cn(
           'transition-all duration-300',
           sidebarOpen ? 'ml-0 md:ml-64' : 'ml-0 md:ml-16',
-          chatSidebarOpen && 'mr-[380px]'
+          chatSidebarOpen && 'md:mr-[380px]'
         )}
       >
         <div className="flex items-center">

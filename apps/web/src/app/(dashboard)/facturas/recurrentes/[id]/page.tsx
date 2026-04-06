@@ -482,7 +482,7 @@ export default function RecurrenteDetallePage() {
             <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
               <div>
                 <span className="text-muted-foreground">{t('client')}:</span>
-                <p className="font-medium">{template.cliente.nombre}</p>
+                <p className="font-medium truncate">{template.cliente.nombre}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">{t('dteType')}:</span>

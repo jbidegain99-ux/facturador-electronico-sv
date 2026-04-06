@@ -255,7 +255,7 @@ export default function MigracionPage() {
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
         <div>
-          <h1 className="text-3xl font-bold">Migracion de Datos</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Migracion de Datos</h1>
           <p className="text-muted-foreground mt-1">Importa clientes desde archivos CSV</p>
         </div>
       </div>
@@ -451,19 +451,19 @@ export default function MigracionPage() {
               </h2>
               <div className="flex justify-center gap-6 mt-4 flex-wrap">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-500">{result.created}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-green-500">{result.created}</div>
                   <div className="text-sm text-muted-foreground">Creados</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-500">{result.updated}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-500">{result.updated}</div>
                   <div className="text-sm text-muted-foreground">Actualizados</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-red-500">{result.failed}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-red-500">{result.failed}</div>
                   <div className="text-sm text-muted-foreground">Fallidos</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold">{result.totalRows}</div>
+                  <div className="text-2xl sm:text-3xl font-bold">{result.totalRows}</div>
                   <div className="text-sm text-muted-foreground">Total</div>
                 </div>
               </div>

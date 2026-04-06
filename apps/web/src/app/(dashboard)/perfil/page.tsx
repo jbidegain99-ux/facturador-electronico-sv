@@ -190,7 +190,7 @@ export default function PerfilPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Mi Perfil</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">Mi Perfil</h1>
           <p className="text-muted-foreground">Informacion de tu cuenta y seguridad</p>
         </div>
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
@@ -204,7 +204,7 @@ export default function PerfilPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Mi Perfil</h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">Mi Perfil</h1>
         <p className="text-muted-foreground">
           Informacion de tu cuenta y seguridad
         </p>

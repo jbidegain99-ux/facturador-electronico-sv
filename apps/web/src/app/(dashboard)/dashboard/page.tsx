@@ -176,7 +176,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
             {t('subtitle')}
           </p>
@@ -210,7 +210,7 @@ export default function DashboardPage() {
           </div>
           {/* Skeleton Charts */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4">
+            <Card className="md:col-span-1 lg:col-span-4">
               <CardHeader>
                 <Skeleton className="h-5 w-40" />
                 <Skeleton className="h-4 w-60" />
@@ -219,7 +219,7 @@ export default function DashboardPage() {
                 <SkeletonChart />
               </CardContent>
             </Card>
-            <Card className="col-span-3">
+            <Card className="md:col-span-1 lg:col-span-3">
               <CardHeader>
                 <Skeleton className="h-5 w-32" />
                 <Skeleton className="h-4 w-48" />
@@ -355,7 +355,7 @@ export default function DashboardPage() {
           {/* ── Revenue Chart + Top Clients ── */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             {/* Revenue Chart */}
-            <Card className="col-span-4">
+            <Card className="md:col-span-1 lg:col-span-4">
               <CardHeader>
                 <CardTitle>{t('monthlyRevenue')}</CardTitle>
                 <CardDescription>
@@ -408,7 +408,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Top Clients */}
-            <Card className="col-span-3">
+            <Card className="md:col-span-1 lg:col-span-3">
               <CardHeader>
                 <CardTitle>{t('topClients')}</CardTitle>
                 <CardDescription>

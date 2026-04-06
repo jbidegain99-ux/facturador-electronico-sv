@@ -334,12 +334,21 @@
   }
 
   .table-rc th {
-    @apply px-4 py-3 text-left text-sm font-medium text-muted-foreground;
+    @apply px-2 py-2 text-left text-xs font-medium text-muted-foreground;
     background: rgba(255, 255, 255, 0.02);
   }
 
   .table-rc td {
-    @apply px-4 py-3 text-sm border-t border-border;
+    @apply px-2 py-2 text-xs border-t border-border;
+  }
+
+  @media (min-width: 768px) {
+    .table-rc th {
+      @apply px-4 py-3 text-sm;
+    }
+    .table-rc td {
+      @apply px-4 py-3 text-sm;
+    }
   }
 
   .table-rc tr:hover td {
@@ -543,6 +552,11 @@
   select {
     font-size: 16px !important;
   }
+}
+
+/* Prevent horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
 }
 
 /* Touch optimization for mobile PWA */

@@ -209,7 +209,7 @@ export default function SupportTicketsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{t('supportTitle')}</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">{t('supportTitle')}</h1>
           <p className="text-muted-foreground mt-1">{t('supportSubtitle')}</p>
         </div>
       </div>
@@ -335,18 +335,67 @@ export default function SupportTicketsPage() {
         </form>
       </div>
 
-      {/* Table */}
-      <div className="glass-card overflow-visible">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center h-64">
-            <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-            <p className="text-red-400">{error}</p>
+      {/* Loading / Error */}
+      {loading ? (
+        <div className="glass-card flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="glass-card flex flex-col items-center justify-center h-64">
+          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+          <p className="text-red-400">{error}</p>
+        </div>
+      ) : (
+        <>
+      {/* Mobile Cards (< md) */}
+      <div className="md:hidden space-y-2">
+        {tickets.length === 0 ? (
+          <div className="glass-card text-center py-12 text-muted-foreground">
+            {t('noTickets')}
           </div>
         ) : (
+          tickets.map((ticket) => (
+            <div
+              key={ticket.id}
+              className="glass-card p-3 space-y-2 cursor-pointer active:bg-muted/50"
+              onClick={() => router.push(`/admin/support/${ticket.id}`)}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium truncate">{ticket.subject}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                    <span className="font-mono">{ticket.ticketNumber}</span> &middot; {ticket.tenant.nombre}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusBadge(ticket.status)}`}>
+                  {statusLabels[ticket.status] || ticket.status}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getPriorityBadge(ticket.priority)}`}>
+                  {priorityLabels[ticket.priority] || ticket.priority}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getTypeBadge(ticket.type)}`}>
+                  {typeLabels[ticket.type] || ticket.type}
+                </span>
+                {ticket._count.comments > 0 && (
+                  <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                    <MessageSquare className="w-2.5 h-2.5" />
+                    {ticket._count.comments}
+                  </span>
+                )}
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  {new Date(ticket.createdAt).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table (>= md) */}
+      <div className="glass-card overflow-visible hidden md:block">
           <>
             <div className="overflow-x-auto">
               <table className="table-rc w-full">
@@ -375,8 +424,8 @@ export default function SupportTicketsPage() {
                         <div className="flex items-center gap-2">
                           <Building2 className="w-4 h-4 text-muted-foreground" />
                           <div>
-                            <div className="font-medium text-white">{ticket.tenant.nombre}</div>
-                            <div className="text-xs text-muted-foreground">{ticket.requester.nombre}</div>
+                            <div className="font-medium text-white truncate max-w-[150px]">{ticket.tenant.nombre}</div>
+                            <div className="text-xs text-muted-foreground truncate max-w-[150px]">{ticket.requester.nombre}</div>
                           </div>
                         </div>
                       </td>
@@ -459,8 +508,34 @@ export default function SupportTicketsPage() {
               </div>
             )}
           </>
-        )}
       </div>
+
+      {/* Pagination for mobile */}
+      {totalPages > 1 && (
+        <div className="md:hidden flex items-center justify-between px-4 py-3">
+          <div className="text-sm text-muted-foreground">
+            {tCommon('page', { page, totalPages })}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="p-2 rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="p-2 rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+        </>
+      )}
     </div>
   );
 }

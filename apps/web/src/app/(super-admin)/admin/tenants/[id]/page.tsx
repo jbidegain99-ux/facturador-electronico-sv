@@ -222,7 +222,7 @@ export default function TenantDetailPage() {
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-white">{tenant.nombre}</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white truncate">{tenant.nombre}</h1>
           <p className="text-muted-foreground mt-1">NIT: {tenant.nit}</p>
         </div>
         <button

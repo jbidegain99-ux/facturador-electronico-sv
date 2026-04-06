@@ -72,7 +72,7 @@ export function WelcomeStep({ onStart, loading }: WelcomeStepProps) {
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
           <Rocket className="h-10 w-10 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold">¡Bienvenido al proceso de habilitación!</h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">¡Bienvenido al proceso de habilitación!</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Este asistente lo guiará a través de los pasos necesarios para
           convertirse en emisor autorizado de documentos tributarios

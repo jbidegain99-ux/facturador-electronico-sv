@@ -164,7 +164,7 @@ export function Header() {
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] md:w-96">
+          <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] md:w-96 max-h-[70vh] overflow-y-auto">
             <DropdownMenuLabel className="flex items-center justify-between">
               <span>{t('notifications')}</span>
               {notifications.length > 0 && (

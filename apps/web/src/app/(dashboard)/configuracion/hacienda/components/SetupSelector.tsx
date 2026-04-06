@@ -21,7 +21,7 @@ export function SetupSelector({ onSelectQuickSetup, onSelectFullWizard }: SetupS
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/10 border border-purple-500/20">
             <Building2 className="h-8 w-8 text-purple-400" />
           </div>
-          <h1 className="text-3xl font-bold">Configuración con Ministerio de Hacienda</h1>
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-bold">Configuración con Ministerio de Hacienda</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             ¿Cuál es tu situación actual con la facturación electrónica?
           </p>

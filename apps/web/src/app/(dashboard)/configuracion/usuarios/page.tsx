@@ -377,8 +377,8 @@ export default function UsuariosPage() {
           Configuracion
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Users className="w-7 h-7 text-primary" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Users className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
             Usuarios y Roles
           </h1>
           <p className="text-muted-foreground">
@@ -416,7 +416,63 @@ export default function UsuariosPage() {
               Invitar Usuario
             </Button>
           </div>
-          <Card>
+          {/* Mobile Cards (< md) */}
+          <div className="md:hidden space-y-2">
+            {loading ? (
+              <div className="p-4"><SkeletonTable rows={4} /></div>
+            ) : users.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12 text-muted-foreground">
+                  <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p className="font-medium">No hay usuarios registrados</p>
+                </CardContent>
+              </Card>
+            ) : (
+              users.map((user) => (
+                <Card key={user.id}>
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-sm truncate">{user.nombre}</div>
+                        <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          <Badge variant="secondary" className="text-[10px]">{user.legacyRole}</Badge>
+                          {(user.assignments || []).map((a) => (
+                            <Badge key={a.id} variant="outline" className="gap-1 text-[10px]">
+                              {a.roleName}
+                              {a.scopeType !== 'tenant' && (
+                                <span className="opacity-70">({a.scopeType})</span>
+                              )}
+                              <button
+                                onClick={() => handleRemoveAssignment(user.id, a.id)}
+                                className="ml-0.5 hover:text-destructive"
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            </Badge>
+                          ))}
+                          {(!user.assignments || user.assignments.length === 0) && (
+                            <span className="text-[10px] text-muted-foreground">Sin roles RBAC</span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 text-xs h-7"
+                        onClick={() => openAssignDialog(user.id)}
+                      >
+                        Asignar
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table (>= md) */}
+          <Card className="hidden md:block">
             <CardContent className="p-0">
               {loading ? (
                 <div className="p-4"><SkeletonTable rows={4} /></div>
@@ -442,8 +498,8 @@ export default function UsuariosPage() {
                     ) : (
                       users.map((user) => (
                         <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.nombre}</TableCell>
-                          <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                          <TableCell className="font-medium max-w-[150px] truncate">{user.nombre}</TableCell>
+                          <TableCell className="text-muted-foreground max-w-[200px] truncate">{user.email}</TableCell>
                           <TableCell>
                             <Badge variant="secondary">{user.legacyRole}</Badge>
                           </TableCell>

@@ -231,8 +231,8 @@ export default function WebhooksPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Webhook className="h-8 w-8" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <Webhook className="h-6 w-6 sm:h-8 sm:w-8" />
             {t('title')}
           </h1>
           <p className="text-muted-foreground">{t('subtitle')}</p>

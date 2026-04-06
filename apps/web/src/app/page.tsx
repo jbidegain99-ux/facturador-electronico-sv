@@ -88,7 +88,7 @@ export default function Home() {
       <section className="py-24 relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
               Todo lo que necesitas para facturar
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -178,7 +178,7 @@ export default function Home() {
       <section className="py-24 relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
               Planes para cada necesidad
             </h2>
             <p className="text-muted-foreground text-lg">
@@ -190,7 +190,7 @@ export default function Home() {
             {/* Trial Plan */}
             <div className="glass-card p-8">
               <div className="text-lg font-medium text-muted-foreground mb-2">Prueba</div>
-              <div className="text-4xl font-bold text-foreground mb-1">Gratis</div>
+              <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">Gratis</div>
               <div className="text-sm text-muted-foreground mb-6">Para siempre</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -217,7 +217,7 @@ export default function Home() {
                 Popular
               </div>
               <div className="text-lg font-medium text-muted-foreground mb-2">Profesional</div>
-              <div className="text-4xl font-bold text-foreground mb-1">$29<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
+              <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">$29<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
               <div className="text-sm text-muted-foreground mb-6">Facturado mensualmente</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -245,7 +245,7 @@ export default function Home() {
             {/* Enterprise Plan */}
             <div className="glass-card p-8">
               <div className="text-lg font-medium text-muted-foreground mb-2">Empresa</div>
-              <div className="text-4xl font-bold text-foreground mb-1">$99<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
+              <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">$99<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
               <div className="text-sm text-muted-foreground mb-6">Facturado mensualmente</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">

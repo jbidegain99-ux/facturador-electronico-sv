@@ -29,11 +29,22 @@ export async function apiFetch<T>(
   options: RequestInit = {},
   _isRetry = false,
 ): Promise<T> {
+  // Build headers — include localStorage token as fallback for cookie auth
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers['Authorization'] = token;
+    }
+  }
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
+      ...headers,
       ...options.headers,
     },
   });
@@ -75,9 +86,16 @@ export async function apiUpload<T>(
   endpoint: string,
   formData: FormData,
 ): Promise<T> {
+  const uploadHeaders: Record<string, string> = {};
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token) uploadHeaders['Authorization'] = token;
+  }
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     method: 'POST',
     credentials: 'include',
+    headers: uploadHeaders,
     body: formData,
   });
 
@@ -95,10 +113,17 @@ export async function apiRawFetch(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<Response> {
+  const rawHeaders: Record<string, string> = {};
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token) rawHeaders['Authorization'] = token;
+  }
+
   return fetch(`${API_URL}${endpoint}`, {
     ...options,
     credentials: 'include',
     headers: {
+      ...rawHeaders,
       ...options.headers,
     },
   });

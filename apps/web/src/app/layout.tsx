@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { ToastProvider } from '@/components/ui/toast';
 import { ThemeProvider } from '@/components/theme-provider';
 import { I18nProvider } from '@/components/i18n-provider';
+import { Providers } from './providers';
 import { ServiceWorkerRegister } from '@/components/pwa/sw-register';
 import { SwUpdatePrompt } from '@/components/pwa/sw-update-prompt';
 import './globals.css';
@@ -70,9 +71,11 @@ export default function RootLayout({
         <SwUpdatePrompt />
         <ThemeProvider>
           <I18nProvider>
-            <ToastProvider>
-              {children}
-            </ToastProvider>
+            <Providers>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </Providers>
           </I18nProvider>
         </ThemeProvider>
       </body>

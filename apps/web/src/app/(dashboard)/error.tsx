@@ -50,6 +50,10 @@ export default function DashboardError({
         <p className="text-sm text-muted-foreground">
           Ha ocurrido un error. Puedes intentar recargar esta seccion.
         </p>
+        <pre className="mt-2 text-left text-xs bg-muted p-3 rounded-lg overflow-auto max-h-40 text-red-400">
+          {error.message}
+          {error.digest && `\nDigest: ${error.digest}`}
+        </pre>
         <button
           onClick={reset}
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"

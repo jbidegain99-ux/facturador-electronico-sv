@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { API_URL } from '@/lib/api';
+import { API_URL, apiFetch } from '@/lib/api';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,16 +83,7 @@ export default function FacturasPage() {
       if (filterStatus !== 'all') params.set('estado', filterStatus);
       if (search) params.set('search', search);
 
-      const res = await fetch(`${API_URL}/dte?${params}`, { credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json' } });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || t('loadError'));
-      }
-
-      const data = await res.json();
+      const data = await apiFetch<{ data: DTE[]; total: number; totalPages: number }>(`/dte?${params}`);
       // Defensive: handle both {data: [...], total, ...} and plain array responses
       const items = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
       const parsedTotal = Number(data?.total);

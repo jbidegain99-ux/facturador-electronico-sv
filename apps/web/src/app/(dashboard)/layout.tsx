@@ -10,7 +10,6 @@ import { ChatWidget } from '@/components/chat/ChatWidget';
 import { BottomNav } from '@/components/mobile/bottom-nav';
 import { OnlineIndicator } from '@/components/pwa/online-indicator';
 import { MhStatusBanner } from '@/components/pwa/mh-status-banner';
-import { InstallBanner } from '@/components/pwa/install-banner';
 import { useSyncQueueStore } from '@/store/sync-queue';
 import { cn } from '@/lib/utils';
 import type { Tenant } from '@/types';
@@ -192,7 +191,6 @@ export default function DashboardLayout({
       </div>
       <ChatWidget />
       <BottomNav />
-      <InstallBanner />
     </div>
   );
 }

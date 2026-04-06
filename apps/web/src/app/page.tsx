@@ -38,67 +38,67 @@ export default function Home() {
         <div className="hero-glow top-0 left-1/4 -translate-x-1/2" />
         <div className="hero-glow bottom-0 right-1/4 translate-x-1/2 opacity-50" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full glass-card mb-6 sm:mb-8">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm text-muted-foreground">100% Compatible con Ministerio de Hacienda</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">100% Compatible con Ministerio de Hacienda</span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6">
             <span className="text-foreground">Facturación Electrónica</span>
             <br />
             <span className="gradient-text">para El Salvador</span>
           </h1>
 
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 sm:mb-10">
             Sistema completo de facturación electrónica DTE.
             Emite facturas, créditos fiscales, notas de crédito y más.
             Todo en cumplimiento con la normativa del MH.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <Link href="/register" className="btn-primary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 flex items-center justify-center gap-2 w-full sm:w-auto">
               Comenzar Gratis
               <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link href="/login" className="btn-secondary text-lg px-8 py-4">
+            <Link href="/login" className="btn-secondary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto text-center">
               Ya tengo cuenta
             </Link>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 mt-20 max-w-3xl mx-auto">
-            <div className="glass-card p-6 card-hover">
-              <div className="text-3xl font-bold gradient-text">50+</div>
-              <div className="text-sm text-muted-foreground mt-1">DTEs Gratis/Mes</div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-8 mt-12 sm:mt-20 max-w-3xl mx-auto">
+            <div className="glass-card p-4 sm:p-6 card-hover">
+              <div className="text-2xl sm:text-3xl font-bold gradient-text">50+</div>
+              <div className="text-xs sm:text-sm text-muted-foreground mt-1">DTEs Gratis/Mes</div>
             </div>
-            <div className="glass-card p-6 card-hover">
-              <div className="text-3xl font-bold gradient-text">99.9%</div>
-              <div className="text-sm text-muted-foreground mt-1">Uptime</div>
+            <div className="glass-card p-4 sm:p-6 card-hover">
+              <div className="text-2xl sm:text-3xl font-bold gradient-text">99.9%</div>
+              <div className="text-xs sm:text-sm text-muted-foreground mt-1">Uptime</div>
             </div>
-            <div className="glass-card p-6 card-hover">
-              <div className="text-3xl font-bold gradient-text">24/7</div>
-              <div className="text-sm text-muted-foreground mt-1">Soporte</div>
+            <div className="glass-card p-4 sm:p-6 card-hover">
+              <div className="text-2xl sm:text-3xl font-bold gradient-text">24/7</div>
+              <div className="text-xs sm:text-sm text-muted-foreground mt-1">Soporte</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-12 sm:py-24 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
               Todo lo que necesitas para facturar
             </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
               Cumple con todos los requisitos del Ministerio de Hacienda de El Salvador
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid gap-4 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
             {/* Feature 1 */}
-            <div className="glass-card p-8 card-hover">
+            <div className="glass-card p-5 sm:p-8 card-hover">
               <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center mb-6">
                 <FileText className="w-7 h-7 text-white" />
               </div>
@@ -110,7 +110,7 @@ export default function Home() {
             </div>
 
             {/* Feature 2 */}
-            <div className="glass-card p-8 card-hover">
+            <div className="glass-card p-5 sm:p-8 card-hover">
               <div className="w-14 h-14 rounded-xl gradient-secondary flex items-center justify-center mb-6">
                 <Shield className="w-7 h-7 text-white" />
               </div>
@@ -122,7 +122,7 @@ export default function Home() {
             </div>
 
             {/* Feature 3 */}
-            <div className="glass-card p-8 card-hover">
+            <div className="glass-card p-5 sm:p-8 card-hover">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-6">
                 <Zap className="w-7 h-7 text-white" />
               </div>
@@ -134,7 +134,7 @@ export default function Home() {
             </div>
 
             {/* Feature 4 */}
-            <div className="glass-card p-8 card-hover">
+            <div className="glass-card p-5 sm:p-8 card-hover">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center mb-6">
                 <Building2 className="w-7 h-7 text-white" />
               </div>
@@ -146,7 +146,7 @@ export default function Home() {
             </div>
 
             {/* Feature 5 */}
-            <div className="glass-card p-8 card-hover">
+            <div className="glass-card p-5 sm:p-8 card-hover">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mb-6">
                 <CheckCircle className="w-7 h-7 text-white" />
               </div>
@@ -158,7 +158,7 @@ export default function Home() {
             </div>
 
             {/* Feature 6 */}
-            <div className="glass-card p-8 card-hover">
+            <div className="glass-card p-5 sm:p-8 card-hover">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mb-6">
                 <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -175,8 +175,8 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-12 sm:py-24 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
               Planes para cada necesidad
@@ -186,7 +186,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid gap-4 sm:gap-8 md:grid-cols-3 max-w-5xl mx-auto">
             {/* Trial Plan */}
             <div className="glass-card p-8">
               <div className="text-lg font-medium text-muted-foreground mb-2">Prueba</div>

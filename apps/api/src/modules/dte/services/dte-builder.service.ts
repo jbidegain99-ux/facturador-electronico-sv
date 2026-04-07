@@ -173,11 +173,19 @@ export class DteBuilderService {
   }
 
   private getCurrentDate(): string {
-    return new Date().toISOString().split('T')[0];
+    // Force America/El_Salvador (UTC-6). Azure App Service runs in UTC,
+    // so `toISOString()` would bleed 18:00-23:59 SV sales into the next day.
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/El_Salvador',
+    }).format(new Date());
   }
 
   private getCurrentTime(): string {
-    return new Date().toTimeString().split(' ')[0];
+    // en-GB returns HH:mm:ss in 24h format, honoring the timeZone option.
+    return new Date().toLocaleTimeString('en-GB', {
+      timeZone: 'America/El_Salvador',
+      hour12: false,
+    });
   }
 
   private roundTo2Decimals(num: number): number {

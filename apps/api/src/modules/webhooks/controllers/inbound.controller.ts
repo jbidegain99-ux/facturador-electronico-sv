@@ -151,9 +151,16 @@ export class InboundWebhooksController {
       const totalIva = Math.round((precioConIva - ventaGravada) * 100) / 100;
       const totalPagar = Math.round((ventaGravada + totalIva) * 100) / 100;
 
+      // Force America/El_Salvador (UTC-6). Azure App Service runs in UTC,
+      // so `toISOString()` would bleed 18:00-23:59 SV sales into the next day.
       const now = new Date(payload.purchaseDate || Date.now());
-      const fecha = now.toISOString().split('T')[0];
-      const hora = now.toTimeString().split(' ')[0];
+      const fecha = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/El_Salvador',
+      }).format(now);
+      const hora = now.toLocaleTimeString('en-GB', {
+        timeZone: 'America/El_Salvador',
+        hour12: false,
+      });
 
       const dteData: Record<string, unknown> = {
         identificacion: {

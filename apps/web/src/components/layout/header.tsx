@@ -117,7 +117,13 @@ export function Header() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await apiFetch('/auth/logout', { method: 'POST' });
+    } catch {
+      // Ignorar errores: igual queremos limpiar el estado local
+    }
+    localStorage.removeItem('token');
     localStorage.removeItem('facturo-chat-welcome-seen');
     setUser(null);
     setTenant(null);

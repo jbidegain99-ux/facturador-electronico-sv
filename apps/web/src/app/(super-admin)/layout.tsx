@@ -79,7 +79,11 @@ export default function SuperAdminLayout({
   }, [router]);
 
   const handleLogout = async () => {
-    // TODO: call /auth/logout endpoint when available
+    try {
+      await apiFetch('/auth/logout', { method: 'POST' });
+    } catch {
+      // Ignorar errores: igual queremos limpiar el estado local
+    }
     localStorage.removeItem('token');
     router.push('/admin/login');
   };

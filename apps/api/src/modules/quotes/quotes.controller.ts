@@ -30,6 +30,7 @@ import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QueryQuoteDto } from './dto/query-quote.dto';
 import { ClientApprovalDto, ClientRejectionDto, RequestChangesDto } from './dto/approval.dto';
+import { ConvertQuoteDto } from './dto/convert-quote.dto';
 
 // ── Public endpoints (no auth) ────────────────────────────────────────
 @Public()
@@ -234,17 +235,31 @@ export class QuotesController {
     return this.quotesService.cancel(tenantId, id, user.id);
   }
 
-  // ── Conversion ────────────────────────────────────────────────────
+  // ── DTE Type Selection ──────────────────────────────────────────────
 
-  @Post(':id/convert')
-  @ApiOperation({ summary: 'Convertir cotizacion a factura' })
-  @RequirePermission('quote:update', 'dte:create')
-  convertToInvoice(
+  @Get(':id/available-dte-types')
+  @ApiOperation({ summary: 'Obtener tipos de DTE disponibles para convertir cotización' })
+  @RequirePermission('quote:read')
+  getAvailableDteTypes(
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
   ) {
     const tenantId = this.ensureTenant(user);
-    return this.quotesService.convertToInvoice(tenantId, id, user.id);
+    return this.quotesService.getAvailableDteTypes(tenantId);
+  }
+
+  // ── Conversion ────────────────────────────────────────────────────
+
+  @Post(':id/convert')
+  @ApiOperation({ summary: 'Convertir cotizacion a DTE del tipo seleccionado' })
+  @RequirePermission('quote:update', 'dte:create')
+  convertToInvoice(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+    @Body() dto: ConvertQuoteDto,
+  ) {
+    const tenantId = this.ensureTenant(user);
+    return this.quotesService.convertToInvoice(tenantId, id, user.id, dto.dteType);
   }
 
   // ── Versioning ────────────────────────────────────────────────────

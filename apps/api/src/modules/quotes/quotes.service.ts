@@ -32,6 +32,36 @@ const QUOTE_STATUSES = {
   REVISED: 'REVISED',
 } as const;
 
+/** Maps DteTypeSelection enum names to MH numeric codes */
+const DTE_TYPE_ENUM_TO_CODE: Record<string, string> = {
+  FACTURA: '01',
+  CREDITO_FISCAL: '03',
+  NOTA_REMISION: '04',
+  NOTA_CREDITO: '05',
+  NOTA_DEBITO: '06',
+  COMPROBANTE_RETENCION: '07',
+  COMPROBANTE_LIQUIDACION: '08',
+  DOCUMENTO_CONTABLE_LIQUIDACION: '09',
+  FACTURA_EXPORTACION: '11',
+  FACTURA_SUJETO_EXCLUIDO: '14',
+  COMPROBANTE_DONACION: '15',
+};
+
+/** Maps MH codes back to human-readable names */
+const DTE_CODE_TO_NAME: Record<string, string> = {
+  '01': 'Factura',
+  '03': 'Comprobante de Crédito Fiscal',
+  '04': 'Nota de Remisión',
+  '05': 'Nota de Crédito',
+  '06': 'Nota de Débito',
+  '07': 'Comprobante de Retención',
+  '08': 'Comprobante de Liquidación',
+  '09': 'Documento Contable de Liquidación',
+  '11': 'Factura de Exportación',
+  '14': 'Factura de Sujeto Excluido',
+  '15': 'Comprobante de Donación',
+};
+
 const ALLOWED_SORT_FIELDS: Record<string, string> = {
   quoteNumber: 'quoteNumber',
   issueDate: 'issueDate',
@@ -1015,12 +1045,51 @@ export class QuotesService {
     });
   }
 
+  // ── DTE Type Selection ──────────────────────────────────────────────
+
+  /**
+   * Returns the list of DTE types the tenant has enabled (via onboarding),
+   * mapped to MH codes and human-readable names.
+   */
+  async getAvailableDteTypes(tenantId: string): Promise<{
+    availableDteTypes: { code: string; name: string }[];
+  }> {
+    const onboarding = await this.prisma.tenantOnboarding.findFirst({
+      where: { tenantId },
+      include: { dteTypes: true },
+    });
+
+    if (!onboarding || onboarding.dteTypes.length === 0) {
+      return {
+        availableDteTypes: [{ code: '01', name: 'Factura' }],
+      };
+    }
+
+    const availableDteTypes = onboarding.dteTypes
+      .map((dt) => {
+        const code = DTE_TYPE_ENUM_TO_CODE[dt.dteType];
+        if (!code) return null;
+        return { code, name: DTE_CODE_TO_NAME[code] || dt.dteType };
+      })
+      .filter((dt): dt is { code: string; name: string } => dt !== null)
+      .sort((a, b) => a.code.localeCompare(b.code));
+
+    if (availableDteTypes.length === 0) {
+      return {
+        availableDteTypes: [{ code: '01', name: 'Factura' }],
+      };
+    }
+
+    return { availableDteTypes };
+  }
+
   // ── Convert to Invoice ──────────────────────────────────────────────
 
   async convertToInvoice(
     tenantId: string,
     id: string,
     userId?: string,
+    dteType?: string,
   ): Promise<ConvertResult> {
     const quote = await this.prisma.quote.findFirst({
       where: { id, tenantId },
@@ -1043,6 +1112,25 @@ export class QuotesService {
     if (quote.convertedToInvoiceId) {
       throw new BadRequestException(
         'Esta cotizacion ya fue convertida a factura',
+      );
+    }
+
+    // Resolve DTE type: use provided, fall back to '01'
+    const selectedDteType = dteType || '01';
+
+    // Validate against tenant's enabled DTE types
+    const validCodes = Object.values(DTE_TYPE_ENUM_TO_CODE);
+    if (!validCodes.includes(selectedDteType)) {
+      throw new BadRequestException(
+        `Tipo de DTE '${selectedDteType}' no es válido`,
+      );
+    }
+
+    const { availableDteTypes } = await this.getAvailableDteTypes(tenantId);
+    const isEnabled = availableDteTypes.some((dt) => dt.code === selectedDteType);
+    if (!isEnabled) {
+      throw new BadRequestException(
+        `Tipo de DTE '${selectedDteType}' no está habilitado para este tenant`,
       );
     }
 
@@ -1153,7 +1241,7 @@ export class QuotesService {
       identificacion: {
         version: 1,
         ambiente: '00',
-        tipoDte: '01',
+        tipoDte: selectedDteType,
         numeroControl: null,
         codigoGeneracion: null,
         tipoModelo: 1,
@@ -1207,7 +1295,7 @@ export class QuotesService {
 
     const invoice = await this.dteService.createDte(
       tenantId,
-      '01',
+      selectedDteType,
       dteData,
     );
 
@@ -1217,6 +1305,7 @@ export class QuotesService {
         status: QUOTE_STATUSES.CONVERTED,
         convertedToInvoiceId: invoice.id,
         convertedAt: new Date(),
+        dteType: selectedDteType,
         updatedBy: userId,
       },
     });

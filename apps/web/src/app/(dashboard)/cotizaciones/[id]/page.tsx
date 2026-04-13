@@ -102,10 +102,10 @@ export default function CotizacionDetailPage() {
     finally { setActionLoading(false); setShowRejectDialog(false); setShowCancelDialog(false); }
   };
 
-  const handleConvert = async () => {
+  const handleConvert = async (dteType: string) => {
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_URL}/quotes/${id}/convert`, { credentials: 'include', method: 'POST', headers: {} });
+      const res = await fetch(`${API_URL}/quotes/${id}/convert`, { credentials: 'include', method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dteType }) });
       if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error((errData as { message?: string }).message || 'Error al convertir'); }
       const result = await res.json();
       toastRef.current.success(t('convertSuccess'));
@@ -463,6 +463,7 @@ export default function CotizacionDetailPage() {
 
       {/* Dialogs (code-split) */}
       <QuoteDialogs
+        quoteId={id}
         quoteNumber={quote.quoteNumber} actionLoading={actionLoading}
         showRejectDialog={showRejectDialog} setShowRejectDialog={setShowRejectDialog}
         rejectReason={rejectReason} setRejectReason={setRejectReason}

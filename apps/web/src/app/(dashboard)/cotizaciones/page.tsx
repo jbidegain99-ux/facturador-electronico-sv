@@ -547,8 +547,7 @@ export default function CotizacionesPage() {
                             variant="ghost"
                             size="sm"
                             className="text-purple-400 hover:text-purple-300"
-                            onClick={() => handleConvert(quote.id)}
-                            disabled={actionLoading === quote.id}
+                            onClick={() => router.push(`/cotizaciones/${quote.id}`)}
                             title={t('convertToInvoice')}
                           >
                             {actionLoading === quote.id ? (

@@ -1336,6 +1336,7 @@ model Quote {
   // Conversion tracking
   convertedToInvoiceId String?
   convertedAt          DateTime?
+  dteType              String?   @db.NVarChar(5) // MH DTE type code: 01, 03, 11, 14, etc.
 
   // Email tracking
   emailSentAt    DateTime?

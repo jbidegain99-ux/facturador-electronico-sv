@@ -15,6 +15,7 @@ import { QueryQuoteDto } from './dto/query-quote.dto';
 import { ClientApprovalDto, ClientRejectionDto, RequestChangesDto } from './dto/approval.dto';
 import { PaginatedResponse } from '../../common/dto/paginated-response';
 import { Quote, QuoteLineItem } from '@prisma/client';
+import { DTE_VERSIONS, TipoDte } from '@facturador/shared';
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -1237,9 +1238,18 @@ export class QuotesService {
       direccionObj = { complemento: client.direccion };
     }
 
+    const now = new Date();
+    const fecEmi = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/El_Salvador',
+    }).format(now);
+    const horEmi = now.toLocaleTimeString('en-GB', {
+      timeZone: 'America/El_Salvador',
+      hour12: false,
+    });
+
     const dteData: Record<string, unknown> = {
       identificacion: {
-        version: 1,
+        version: DTE_VERSIONS[selectedDteType as TipoDte],
         ambiente: '00',
         tipoDte: selectedDteType,
         numeroControl: null,
@@ -1247,8 +1257,8 @@ export class QuotesService {
         tipoModelo: 1,
         tipoOperacion: 1,
         tipoContingencia: null,
-        fecEmi: new Date().toISOString().split('T')[0],
-        horEmi: new Date().toTimeString().split(' ')[0],
+        fecEmi,
+        horEmi,
         tipoMoneda: 'USD',
       },
       receptor: {

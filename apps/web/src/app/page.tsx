@@ -186,7 +186,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4 max-w-7xl mx-auto">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 max-w-5xl mx-auto">
             {/* FREE Plan */}
             <div className="glass-card p-6 sm:p-8">
               <div className="text-lg font-medium text-muted-foreground mb-2">Free</div>

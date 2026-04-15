@@ -69,7 +69,7 @@ export default function Home() {
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-8 mt-12 sm:mt-20 max-w-3xl mx-auto">
             <div className="glass-card p-4 sm:p-6 card-hover">
-              <div className="text-2xl sm:text-3xl font-bold gradient-text">50+</div>
+              <div className="text-2xl sm:text-3xl font-bold gradient-text">10</div>
               <div className="text-xs sm:text-sm text-muted-foreground mt-1">DTEs Gratis/Mes</div>
             </div>
             <div className="glass-card p-4 sm:p-6 card-hover">
@@ -186,24 +186,28 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:gap-8 md:grid-cols-3 max-w-5xl mx-auto">
-            {/* Trial Plan */}
-            <div className="glass-card p-8">
-              <div className="text-lg font-medium text-muted-foreground mb-2">Prueba</div>
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4 max-w-7xl mx-auto">
+            {/* FREE Plan */}
+            <div className="glass-card p-6 sm:p-8">
+              <div className="text-lg font-medium text-muted-foreground mb-2">Free</div>
               <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">Gratis</div>
-              <div className="text-sm text-muted-foreground mb-6">Para siempre</div>
+              <div className="text-sm text-muted-foreground mb-6">Para probar la plataforma</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  50 DTEs por mes
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  10 DTEs por mes
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  1 Usuario
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  1 usuario, 10 clientes
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Soporte por email
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Catálogo (50 items)
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Soporte por ticket
                 </li>
               </ul>
               <Link href="/register" className="btn-secondary w-full text-center block">
@@ -211,58 +215,118 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Professional Plan */}
-            <div className="glass-card p-8 border-2 border-primary relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary rounded-full text-xs font-medium text-white">
-                Popular
-              </div>
-              <div className="text-lg font-medium text-muted-foreground mb-2">Profesional</div>
-              <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">$29<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
-              <div className="text-sm text-muted-foreground mb-6">Facturado mensualmente</div>
+            {/* STARTER Plan */}
+            <div className="glass-card p-6 sm:p-8">
+              <div className="text-lg font-medium text-muted-foreground mb-2">Starter</div>
+              <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">$19<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
+              <div className="text-sm text-muted-foreground mb-6">Pymes empezando con DTE</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  500 DTEs por mes
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  300 DTEs por mes
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  5 Usuarios
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  3 usuarios, 100 clientes
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Soporte prioritario
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Contabilidad integrada
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  API Access
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Facturas recurrentes
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Logo en tus facturas
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Soporte 24h
                 </li>
               </ul>
-              <Link href="/register" className="btn-primary w-full text-center block">
-                Comenzar Ahora
+              <Link href="/register" className="btn-secondary w-full text-center block">
+                Empezar Starter
               </Link>
             </div>
 
-            {/* Enterprise Plan */}
-            <div className="glass-card p-8">
-              <div className="text-lg font-medium text-muted-foreground mb-2">Empresa</div>
-              <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">$99<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
-              <div className="text-sm text-muted-foreground mb-6">Facturado mensualmente</div>
+            {/* PROFESSIONAL Plan */}
+            <div className="glass-card p-6 sm:p-8 border-2 border-primary relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary rounded-full text-xs font-medium text-white">
+                Popular
+              </div>
+              <div className="text-lg font-medium text-muted-foreground mb-2">Professional</div>
+              <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">$65<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
+              <div className="text-sm text-muted-foreground mb-6">Empresas en crecimiento</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  DTEs Ilimitados
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  2,000 DTEs por mes
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Usuarios Ilimitados
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  10 usuarios, 500 clientes
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Soporte 24/7
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Cotizaciones B2B + portal
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Multi-empresa
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Reportes avanzados
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Email con tu dominio
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Ayuda setup Hacienda
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Soporte 12h, prioridad alta
+                </li>
+              </ul>
+              <Link href="/register" className="btn-primary w-full text-center block">
+                Empezar Professional
+              </Link>
+            </div>
+
+            {/* ENTERPRISE Plan */}
+            <div className="glass-card p-6 sm:p-8">
+              <div className="text-lg font-medium text-muted-foreground mb-2">Enterprise</div>
+              <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">$199<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
+              <div className="text-sm text-muted-foreground mb-6">Sin límites + soporte crítico</div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  DTEs ilimitados
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Usuarios y sucursales ∞
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  API REST completa
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Webhooks (ERP/CRM)
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Teléfono + Account Manager
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Chat en vivo
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Soporte 2h, prioridad crítica
                 </li>
               </ul>
               <button

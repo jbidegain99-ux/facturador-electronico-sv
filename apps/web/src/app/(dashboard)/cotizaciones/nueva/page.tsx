@@ -102,26 +102,32 @@ export default function NuevaCotizacionPage() {
           : null;
 
         if (rawLineItems) {
-          // Map from API lineItem format to frontend ItemFactura format
+          // Map from API lineItem format to frontend ItemFactura format.
+          // taxRate is the source of truth — esGravado/esExento are derived from it.
           const parsedItems: ItemFactura[] = rawLineItems.map(
             (item: Record<string, unknown>, index: number) => {
               const cantidad = Number(item.quantity) || 1;
               const precioUnitario = Number(item.unitPrice) || 0;
               const descuento = Number(item.discount) || 0;
               const sub = cantidad * precioUnitario - descuento;
-              const iva = sub * 0.13;
+              const taxRate = Number(item.taxRate ?? 13);
+              const esGravado = taxRate > 0;
+              const iva = esGravado ? sub * (taxRate / 100) : 0;
               return {
                 id: `item-${Date.now()}-${index}`,
                 codigo: (item.itemCode as string) || '',
                 descripcion: (item.description as string) || '',
                 cantidad,
                 precioUnitario,
-                esGravado: (item.tipoItem as number) !== 2,
-                esExento: (item.tipoItem as number) === 2,
+                esGravado,
+                esExento: !esGravado,
                 descuento,
                 subtotal: sub,
                 iva,
                 total: sub + iva,
+                taxRate,
+                tipoItem: (item.tipoItem as number) ?? undefined,
+                catalogItemId: (item.catalogItemId as string) || undefined,
               };
             },
           );
@@ -196,8 +202,11 @@ export default function NuevaCotizacionPage() {
     const cantidad = 1;
     const precioUnitario = Number(catalogItem.basePrice);
     const sub = cantidad * precioUnitario;
-    const esGravado = catalogItem.tipoItem !== 2;
-    const iva = esGravado ? sub * 0.13 : 0;
+    // CAT-015 tributo decides IVA regime — NOT tipoItem (which is Bien/Servicio).
+    // "20"=IVA13%, "10"=Exento, "30"=NoSujeto. Default to gravado when missing.
+    const esGravado = !catalogItem.tributo || catalogItem.tributo === '20';
+    const taxRate = esGravado ? (catalogItem.taxRate ?? 13) : 0;
+    const iva = esGravado ? sub * (taxRate / 100) : 0;
 
     const newItem: ItemFactura = {
       id: `item-${Date.now()}`,
@@ -211,6 +220,9 @@ export default function NuevaCotizacionPage() {
       subtotal: sub,
       iva,
       total: sub + iva,
+      taxRate,
+      tipoItem: catalogItem.tipoItem,
+      catalogItemId: catalogItem.id,
     };
 
     setItems((prev) => [...prev, newItem]);
@@ -252,8 +264,14 @@ export default function NuevaCotizacionPage() {
           quantity: i.cantidad,
           unitPrice: i.precioUnitario,
           discount: i.descuento,
-          tipoItem: i.esGravado ? 1 : 2,
+          // Preserve catalog tipoItem (Bien/Servicio); fall back to derived value
+          // for items typed manually without a catalog reference.
+          tipoItem: i.tipoItem ?? (i.esGravado ? 1 : 2),
+          // Send the actual tax rate so backend persists exento (0) vs gravado (13)
+          // instead of always defaulting to 13%.
+          taxRate: i.taxRate ?? (i.esGravado ? 13 : 0),
           itemCode: i.codigo || undefined,
+          catalogItemId: i.catalogItemId || undefined,
         })),
         terms: terms || undefined,
         notes: notes || undefined,

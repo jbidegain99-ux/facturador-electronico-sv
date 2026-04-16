@@ -1154,77 +1154,113 @@ export class QuotesService {
           )
         : [];
 
-    // Fall back to legacy JSON if no line items
+    // Build cuerpoDocumento honoring each item's actual taxRate so exento (rate=0)
+    // items land in ventaExenta and gravado items in ventaGravada with the right IVA.
+    // Pre-fix this branch hardcoded 0.13 and dumped everything into ventaGravada,
+    // so any exento line in a quote silently became gravado in the emitted DTE.
+    const buildItemRow = (
+      args: {
+        index: number;
+        tipoItem: number | null | undefined;
+        itemCode: string | null | undefined;
+        description: string;
+        cantidad: number;
+        precioUni: number;
+        montoDescu: number;
+        taxRate: number;
+      },
+    ): Record<string, unknown> => {
+      const baseAmount = args.cantidad * args.precioUni - args.montoDescu;
+      const esGravado = args.taxRate > 0;
+      const ventaGravada = esGravado ? baseAmount : 0;
+      const ventaExenta = esGravado ? 0 : baseAmount;
+      const ivaItem = parseFloat(
+        (ventaGravada * (args.taxRate / 100)).toFixed(2),
+      );
+      return {
+        numItem: args.index + 1,
+        tipoItem: args.tipoItem || 1,
+        codigo: args.itemCode || null,
+        descripcion: args.description,
+        cantidad: args.cantidad,
+        uniMedida: 59,
+        precioUni: args.precioUni,
+        montoDescu: args.montoDescu,
+        ventaNoSuj: 0,
+        ventaExenta,
+        ventaGravada,
+        tributos: esGravado ? ['20'] : null,
+        psv: 0,
+        noGravado: 0,
+        ivaItem,
+      };
+    };
+
     let cuerpoDocumento: Record<string, unknown>[];
     if (itemsToConvert.length > 0) {
-      cuerpoDocumento = itemsToConvert.map((item, index) => {
-        const qty = item.approvedQuantity
-          ? Number(item.approvedQuantity)
-          : Number(item.quantity);
-        const price = Number(item.unitPrice);
-        const disc = Number(item.discount);
-        const ventaGravada = qty * price - disc;
-        const ivaItem = ventaGravada * 0.13;
-        return {
-          numItem: index + 1,
-          tipoItem: item.tipoItem || 1,
-          codigo: item.itemCode || null,
-          descripcion: item.description,
-          cantidad: qty,
-          uniMedida: 59,
-          precioUni: price,
-          montoDescu: disc,
-          ventaNoSuj: 0,
-          ventaExenta: 0,
-          ventaGravada,
-          tributos: null,
-          psv: 0,
-          noGravado: 0,
-          ivaItem,
-        };
-      });
+      cuerpoDocumento = itemsToConvert.map((item, index) =>
+        buildItemRow({
+          index,
+          tipoItem: item.tipoItem,
+          itemCode: item.itemCode,
+          description: item.description,
+          cantidad: item.approvedQuantity
+            ? Number(item.approvedQuantity)
+            : Number(item.quantity),
+          precioUni: Number(item.unitPrice),
+          montoDescu: Number(item.discount),
+          taxRate: Number(item.taxRate ?? 13),
+        }),
+      );
     } else {
       // Legacy path for old quotes with only JSON items
       const legacyItems: QuoteLineItemDto[] = quote.items
         ? JSON.parse(quote.items as string)
         : [];
-      cuerpoDocumento = legacyItems.map((item, index) => {
-        const ventaGravada =
-          item.quantity * item.unitPrice - item.discount;
-        const ivaItem = ventaGravada * 0.13;
-        return {
-          numItem: index + 1,
-          tipoItem: item.tipoItem || 1,
-          codigo: item.itemCode || null,
-          descripcion: item.description,
+      cuerpoDocumento = legacyItems.map((item, index) =>
+        buildItemRow({
+          index,
+          tipoItem: item.tipoItem,
+          itemCode: item.itemCode,
+          description: item.description,
           cantidad: item.quantity,
-          uniMedida: 59,
           precioUni: item.unitPrice,
           montoDescu: item.discount,
-          ventaNoSuj: 0,
-          ventaExenta: 0,
-          ventaGravada,
-          tributos: null,
-          psv: 0,
-          noGravado: 0,
-          ivaItem,
-        };
-      });
+          taxRate: item.taxRate ?? 13,
+        }),
+      );
     }
 
-    // Use approved totals if available, otherwise quote totals
-    const subtotalVal = quote.approvedSubtotal
-      ? Number(quote.approvedSubtotal)
-      : Number(quote.subtotal);
-    const totalIvaVal = quote.approvedTaxAmount
-      ? Number(quote.approvedTaxAmount)
-      : Number(quote.taxAmount);
-    const totalPagarVal = quote.approvedTotal
-      ? Number(quote.approvedTotal)
-      : Number(quote.total);
-    const totalDescuentos = cuerpoDocumento.reduce(
-      (sum, i) => sum + (Number(i.montoDescu) || 0),
-      0,
+    // Recalculate totals from the items we just built. Persisted quote totals
+    // can be wrong for legacy data created under the IVA bug, so items are the
+    // authoritative source here.
+    const round2 = (n: number): number => parseFloat(n.toFixed(2));
+    const totalGravadaCalc = round2(
+      cuerpoDocumento.reduce(
+        (sum, i) => sum + (Number(i.ventaGravada) || 0),
+        0,
+      ),
+    );
+    const totalExentaCalc = round2(
+      cuerpoDocumento.reduce(
+        (sum, i) => sum + (Number(i.ventaExenta) || 0),
+        0,
+      ),
+    );
+    const totalIvaCalc = round2(
+      cuerpoDocumento.reduce(
+        (sum, i) => sum + (Number(i.ivaItem) || 0),
+        0,
+      ),
+    );
+    const subtotalVal = round2(totalGravadaCalc + totalExentaCalc);
+    const totalIvaVal = totalIvaCalc;
+    const totalPagarVal = round2(subtotalVal + totalIvaVal);
+    const totalDescuentos = round2(
+      cuerpoDocumento.reduce(
+        (sum, i) => sum + (Number(i.montoDescu) || 0),
+        0,
+      ),
     );
 
     // Parse client address
@@ -1275,8 +1311,8 @@ export class QuotesService {
       cuerpoDocumento,
       resumen: {
         totalNoSuj: 0,
-        totalExenta: 0,
-        totalGravada: subtotalVal,
+        totalExenta: totalExentaCalc,
+        totalGravada: totalGravadaCalc,
         subTotalVentas: subtotalVal,
         descuNoSuj: 0,
         descuExenta: 0,

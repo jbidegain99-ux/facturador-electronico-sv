@@ -51,6 +51,9 @@ export interface ItemFactura {
   subtotal: number;
   iva: number;
   total: number;
+  taxRate?: number;
+  tipoItem?: number;
+  catalogItemId?: string;
 }
 
 export interface DashboardMetrics {

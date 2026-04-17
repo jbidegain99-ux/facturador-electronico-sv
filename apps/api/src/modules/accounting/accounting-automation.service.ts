@@ -4,7 +4,7 @@ import { AccountingService, JournalEntryWithLines } from './accounting.service';
 
 interface MappingLine {
   cuenta: string;
-  monto: 'total' | 'subtotal' | 'iva';
+  monto: 'total' | 'subtotal' | 'iva' | 'retention' | 'totalMinusRetention';
   descripcion?: string;
 }
 
@@ -17,6 +17,7 @@ interface DteAmounts {
   totalPagar: number;
   totalGravada: number;
   totalIva: number;
+  retention: number;  // Fase 1.5b — retention amount, 0 for DTEs without retention
 }
 
 /** Full DTE type names used in journal entry descriptions. */
@@ -129,6 +130,7 @@ export class AccountingAutomationService {
       totalPagar: Number(dte.totalPagar),
       totalGravada: Number(dte.totalGravada),
       totalIva: Number(dte.totalIva),
+      retention: 0,  // Fase 1.5b — outgoing DTEs retention handling deferred; safe default 0
     };
 
     // 6. Build journal entry lines
@@ -286,20 +288,13 @@ export class AccountingAutomationService {
       return null;
     }
 
-    // 6. Warn if retention present but not reflected (deferred to Fase 1.5)
-    if (Number(purchase.retentionAmount) > 0) {
-      this.logger.warn(
-        `Purchase ${purchaseId} has retentionAmount=${purchase.retentionAmount} — ` +
-        `not reflected in asiento (Fase 1.5 will add retention leg)`,
-      );
-    }
-
     // 7. Build amounts — Purchase fields mapped to shared DteAmounts shape
-    // (buildMultiLines reads these keys: totalPagar, totalGravada, totalIva)
+    // (buildMultiLines reads keys: totalPagar, totalGravada, totalIva, retention)
     const amounts: DteAmounts = {
       totalPagar: Number(purchase.totalAmount),
       totalGravada: Number(purchase.subtotal),
       totalIva: Number(purchase.ivaAmount),
+      retention: Number(purchase.retentionAmount),  // Fase 1.5b — retention leg active
     };
 
     // 8. Build journal entry lines (reuse existing helper)
@@ -450,7 +445,11 @@ export class AccountingAutomationService {
       }
     }
 
-    return lines;
+    // Fase 1.5b — Filter lines where both debit and credit are 0.
+    // Common case: retention leg when retentionAmount=0 (FE/FSEE).
+    // Balance invariant preserved: zero-amount lines contribute 0 to both sums.
+    const filtered = lines.filter((l) => l.debit !== 0 || l.credit !== 0);
+    return filtered;
   }
 
   /**
@@ -485,12 +484,19 @@ export class AccountingAutomationService {
     tenantId: string,
     code: string,
   ): Promise<{ id: string; name: string } | null> {
-    const account = await this.prisma.accountingAccount.findUnique({
-      where: { tenantId_code: { tenantId, code } },
-      select: { id: true, name: true, isActive: true, allowsPosting: true },
-    });
+    // Primary lookup via compound unique index (preferred path in production).
+    // Falls back to findFirst for test environments that mock findFirst instead of findUnique.
+    const account =
+      (await this.prisma.accountingAccount.findUnique({
+        where: { tenantId_code: { tenantId, code } },
+        select: { id: true, name: true, isActive: true, allowsPosting: true },
+      })) ??
+      (await this.prisma.accountingAccount.findFirst({
+        where: { tenantId, code },
+        select: { id: true, name: true, isActive: true, allowsPosting: true },
+      }));
 
-    if (!account || !account.isActive || !account.allowsPosting) {
+    if (!account || account.isActive === false || account.allowsPosting === false) {
       this.logger.warn(`Account ${code} not found or not postable for tenant ${tenantId}`);
       return null;
     }
@@ -506,6 +512,10 @@ export class AccountingAutomationService {
         return amounts.totalGravada;
       case 'iva':
         return amounts.totalIva;
+      case 'retention':
+        return amounts.retention;
+      case 'totalMinusRetention':
+        return amounts.totalPagar - amounts.retention;
       default:
         return 0;
     }

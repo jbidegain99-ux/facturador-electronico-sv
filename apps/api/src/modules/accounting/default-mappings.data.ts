@@ -1,6 +1,6 @@
 export interface DefaultMappingLine {
   cuenta: string;
-  monto: 'total' | 'subtotal' | 'iva';
+  monto: 'total' | 'subtotal' | 'iva' | 'retention' | 'totalMinusRetention';
   descripcion: string;
 }
 

@@ -14,6 +14,7 @@ import { DteImportParserService } from './services/dte-import-parser.service';
 import { MhDteConsultaService } from './services/mh-dte-consulta.service';
 import { DteImportService } from './services/dte-import.service';
 import { ReceivedDteRetryCronService } from './services/received-dte-retry-cron.service';
+import { DteCogsService } from './services/dte-cogs.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { SignerModule } from '../signer/signer.module';
 import { MhAuthModule } from '../mh-auth/mh-auth.module';
@@ -27,7 +28,7 @@ import { InboundWebhooksController } from '../webhooks/controllers/inbound.contr
 @Module({
   imports: [HttpModule, PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, WebhooksModule, forwardRef(() => AccountingModule), SucursalesModule, HaciendaModule],
   controllers: [DteController, InboundWebhooksController],
-  providers: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService, ReceivedDteRetryCronService],
-  exports: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService],
+  providers: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService, ReceivedDteRetryCronService, DteCogsService],
+  exports: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService, DteCogsService],
 })
 export class DteModule {}

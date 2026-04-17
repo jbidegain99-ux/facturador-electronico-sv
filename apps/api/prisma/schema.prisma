@@ -1681,7 +1681,7 @@ model WebhookDelivery {
 
 model DteOperationLog {
   id       String @id @default(cuid())
-  tenantId String @db.NVarChar(50)
+  tenantId String @db.NVarChar(1000)
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   dteId     String  @db.NVarChar(36)
@@ -1708,7 +1708,7 @@ model DteErrorLog {
   operationLogId String
   operationLog   DteOperationLog @relation(fields: [operationLogId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  tenantId String @db.NVarChar(50)
+  tenantId String @db.NVarChar(1000)
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   dteId     String?  @db.NVarChar(36)

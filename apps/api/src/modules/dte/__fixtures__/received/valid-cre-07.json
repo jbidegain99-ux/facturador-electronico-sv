@@ -1,0 +1,47 @@
+{
+  "identificacion": {
+    "version": 1,
+    "ambiente": "00",
+    "tipoDte": "07",
+    "numeroControl": "DTE-07-AB12CD34-000000000000001",
+    "codigoGeneracion": "7A1B2C3D-E4F5-6789-ABCD-EF1234567890",
+    "tipoModelo": 1,
+    "tipoOperacion": 1,
+    "fecEmi": "2026-04-15",
+    "horEmi": "11:00:00",
+    "tipoMoneda": "USD"
+  },
+  "emisor": {
+    "nit": "06141507251041",
+    "nrc": "1234567",
+    "nombre": "Retenedor SA de CV",
+    "codActividad": "47301",
+    "descActividad": "Retenedor",
+    "direccion": {"departamento": "06", "municipio": "14", "complemento": "Col Retenedor"},
+    "telefono": "22001234",
+    "correo": "retenedor@test.sv"
+  },
+  "receptor": {
+    "nit": "06231507251041",
+    "nrc": "7654321",
+    "nombre": "Retenido SA de CV",
+    "codActividad": "47301",
+    "direccion": {"departamento": "06", "municipio": "14", "complemento": "Col Retenido"}
+  },
+  "cuerpoDocumento": [
+    {
+      "numItem": 1,
+      "tipoDoc": "03",
+      "numDocumento": "DTE-03-AB12CD34-000000000000099",
+      "fechaEmision": "2026-04-01",
+      "montoSujetoGrav": 1000.00,
+      "ivaRetenido": 13.00,
+      "codigoRetencionMH": "22"
+    }
+  ],
+  "resumen": {
+    "totalSujetoRetencion": 1000.00,
+    "totalIVAretenido": 13.00,
+    "totalIVAretenidoLetras": "TRECE 00/100 DOLARES"
+  }
+}

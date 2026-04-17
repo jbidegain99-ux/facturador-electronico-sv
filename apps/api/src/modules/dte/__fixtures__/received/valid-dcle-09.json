@@ -1,0 +1,40 @@
+{
+  "identificacion": {
+    "version": 1,
+    "ambiente": "00",
+    "tipoDte": "09",
+    "numeroControl": "DTE-09-AB12CD34-000000000000001",
+    "codigoGeneracion": "9A1B2C3D-E4F5-6789-ABCD-EF1234567890",
+    "tipoModelo": 1,
+    "tipoOperacion": 1,
+    "fecEmi": "2026-04-15",
+    "horEmi": "12:00:00",
+    "tipoMoneda": "USD"
+  },
+  "emisor": {
+    "nit": "06141507251041",
+    "nombre": "Liquidador SA",
+    "nombreComercial": "Liquidador",
+    "tipoEstablecimiento": "01",
+    "direccion": {"departamento": "06", "municipio": "14", "complemento": "Col Liq"}
+  },
+  "receptor": {
+    "nombre": "Liquidado SA",
+    "tipoDocumento": "36",
+    "numDocumento": "06231507251041"
+  },
+  "cuerpoDocumento": [
+    {
+      "numItem": 1,
+      "tipoItem": 1,
+      "cantidad": 1,
+      "descripcion": "Liquidación periodo abril",
+      "precioUni": 500.00,
+      "ventaGravada": 500.00
+    }
+  ],
+  "resumen": {
+    "totalPagar": 565.00,
+    "totalLetras": "QUINIENTOS SESENTA Y CINCO 00/100 DOLARES"
+  }
+}

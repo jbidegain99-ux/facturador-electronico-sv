@@ -115,4 +115,111 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
       ],
     },
   },
+
+  // ============================================================
+  // COMPRAS — módulo Compras + Inventario (Fase 1.2)
+  // ============================================================
+  {
+    operation: 'COMPRA_CCFE',
+    description: 'Compra con Crédito Fiscal (CCFE) — IVA separado a crédito',
+    debitCode: '110401',
+    creditCode: '210101',
+    mappingConfig: {
+      debe: [
+        { cuenta: '110401', monto: 'subtotal', descripcion: 'Inventario Mercadería' },
+        { cuenta: '110303', monto: 'iva', descripcion: 'IVA Crédito Fiscal' },
+      ],
+      haber: [
+        { cuenta: '210101', monto: 'total', descripcion: 'Proveedores Locales' },
+      ],
+    },
+  },
+  {
+    operation: 'COMPRA_FCFE',
+    description: 'Compra con Factura Consumidor Final (FCFE) — IVA capitalizado',
+    debitCode: '110401',
+    creditCode: '210101',
+    mappingConfig: {
+      debe: [
+        { cuenta: '110401', monto: 'total', descripcion: 'Inventario (IVA capitalizado)' },
+      ],
+      haber: [
+        { cuenta: '210101', monto: 'total', descripcion: 'Proveedores Locales' },
+      ],
+    },
+  },
+  {
+    operation: 'COMPRA_FSEE',
+    description: 'Compra a Sujeto Excluido (FSEE) — sin IVA',
+    debitCode: '110401',
+    creditCode: '210101',
+    mappingConfig: {
+      debe: [
+        { cuenta: '110401', monto: 'total', descripcion: 'Inventario (sin IVA)' },
+      ],
+      haber: [
+        { cuenta: '210101', monto: 'total', descripcion: 'Proveedores Locales' },
+      ],
+    },
+  },
+  {
+    operation: 'SALIDA_VENTA_COGS',
+    description: 'Salida de inventario por venta — carga a Costo de Venta',
+    debitCode: '5101',
+    creditCode: '110401',
+    mappingConfig: {
+      debe: [
+        { cuenta: '5101', monto: 'total', descripcion: 'Costo de Mercadería Vendida' },
+      ],
+      haber: [
+        { cuenta: '110401', monto: 'total', descripcion: 'Inventario Mercadería' },
+      ],
+    },
+  },
+  {
+    operation: 'AJUSTE_FISICO_FALTANTE',
+    description: 'Ajuste por faltante en toma física',
+    debitCode: '5103',
+    creditCode: '110401',
+    mappingConfig: {
+      debe: [
+        { cuenta: '5103', monto: 'total', descripcion: 'Costo por Ajustes Físicos' },
+      ],
+      haber: [
+        { cuenta: '110401', monto: 'total', descripcion: 'Inventario Mercadería' },
+      ],
+    },
+  },
+  {
+    operation: 'AJUSTE_FISICO_SOBRANTE',
+    description: 'Ajuste por sobrante en toma física',
+    debitCode: '110401',
+    creditCode: '4105',
+    mappingConfig: {
+      debe: [
+        { cuenta: '110401', monto: 'total', descripcion: 'Inventario Mercadería' },
+      ],
+      haber: [
+        { cuenta: '4105', monto: 'total', descripcion: 'Sobrantes de Inventario' },
+      ],
+    },
+  },
+  // NOTE: This reversal does NOT reverse the IVA Crédito Fiscal (110303) portion
+  // for CCFE returns. Adding the IVA leg requires extending `DefaultMappingLine.monto`
+  // enum with `'retention'` or a new `'iva_reverse'` value — deferred to Fase 1.6
+  // (Spec §8 O5). For now this handles the principal amount only.
+  {
+    operation: 'DEVOLUCION_COMPRA',
+    description: 'Devolución de compra a proveedor',
+    debitCode: '210101',
+    creditCode: '110401',
+    mappingConfig: {
+      debe: [
+        { cuenta: '210101', monto: 'total', descripcion: 'Proveedores Locales (reversa)' },
+      ],
+      haber: [
+        { cuenta: '110401', monto: 'total', descripcion: 'Inventario Mercadería (reversa)' },
+      ],
+    },
+  },
 ];

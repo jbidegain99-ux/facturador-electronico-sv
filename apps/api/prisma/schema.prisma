@@ -65,8 +65,13 @@ model Tenant {
   recurringTemplates RecurringInvoiceTemplate[]
 
   // Product/service catalog
-  catalogItems      CatalogItem[]
-  catalogCategories CatalogCategory[]
+  catalogItems       CatalogItem[]
+  catalogCategories  CatalogCategory[]
+  inventoryStates    InventoryState[]
+  inventoryMovements InventoryMovement[]
+  receivedDtes       ReceivedDTE[]
+  purchases          Purchase[]
+  physicalCounts     PhysicalCount[]
 
   // Quotes / Cotizaciones
   quotes Quote[]
@@ -91,8 +96,8 @@ model Tenant {
   codPuntoVentaMH String? @db.NVarChar(4)
 
   // Sucursales & Puntos de Venta
-  sucursales   Sucursal[]
-  puntosVenta  PuntoVenta[]
+  sucursales  Sucursal[]
+  puntosVenta PuntoVenta[]
 
   // Payment methods
   paymentMethods PaymentMethod[]
@@ -177,10 +182,16 @@ model Cliente {
   updatedAt          DateTime                   @updatedAt
   dtes               DTE[]
   recurringTemplates RecurringInvoiceTemplate[]
+  supplierMovements  InventoryMovement[]        @relation("SupplierMovements")
+  purchases          Purchase[]                 @relation("SupplierPurchases")
+  isCustomer         Boolean                    @default(true)
+  isSupplier         Boolean                    @default(false)
 
   @@unique([tenantId, numDocumento])
   @@index([tenantId])
   @@index([tenantId, createdAt])
+  @@index([tenantId, isSupplier])
+  @@index([tenantId, isCustomer])
 }
 
 model DTE {
@@ -444,20 +455,20 @@ model EmailSendLog {
 }
 
 model PendingNotification {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   tenantId       String
   type           String // TICKET_CREATED, TICKET_ADMIN_NOTIFY, TICKET_STATUS_CHANGED, TICKET_REPLY
   referenceId    String? // ticketId
   recipientEmail String
-  emailSubject   String   @db.NVarChar(500)
-  emailHtml      String   @db.NVarChar(Max)
-  emailText      String?  @db.NVarChar(Max)
-  status         String   @default("PENDING") // PENDING, SENT, FAILED, DEAD_LETTER
-  attemptCount   Int      @default(0)
-  maxAttempts    Int      @default(3)
-  nextRetryAt    DateTime @default(now())
-  errorMessage   String?  @db.NVarChar(Max)
-  createdAt      DateTime @default(now())
+  emailSubject   String    @db.NVarChar(500)
+  emailHtml      String    @db.NVarChar(Max)
+  emailText      String?   @db.NVarChar(Max)
+  status         String    @default("PENDING") // PENDING, SENT, FAILED, DEAD_LETTER
+  attemptCount   Int       @default(0)
+  maxAttempts    Int       @default(3)
+  nextRetryAt    DateTime  @default(now())
+  errorMessage   String?   @db.NVarChar(Max)
+  createdAt      DateTime  @default(now())
   sentAt         DateTime?
 
   @@index([status, nextRetryAt])
@@ -1251,13 +1262,20 @@ model CatalogItem {
   taxRate   Decimal @default(13.00) @db.Decimal(5, 2)
 
   // UX optimizations
-  isActive   Boolean   @default(true)
-  isFavorite Boolean   @default(false)
-  usageCount Int       @default(0)
-  lastUsedAt DateTime?
+  isActive       Boolean   @default(true)
+  isFavorite     Boolean   @default(false)
+  trackInventory Boolean   @default(false)
+  usageCount     Int       @default(0)
+  lastUsedAt     DateTime?
 
   // Quote line item references
   quoteLineItems QuoteLineItem[]
+
+  // Inventory state
+  inventoryState       InventoryState?
+  inventoryMovements   InventoryMovement[]
+  purchaseLineItems    PurchaseLineItem[]
+  physicalCountDetails PhysicalCountDetail[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1486,7 +1504,9 @@ model JournalEntry {
   voidedBy   String?
   voidReason String?   @db.NVarChar(500)
 
-  lines JournalEntryLine[]
+  lines              JournalEntryLine[]
+  inventoryMovements InventoryMovement[]
+  purchases          Purchase[]          @relation("PurchaseJournalEntry")
 
   totalDebit  Decimal @default(0) @db.Decimal(15, 2)
   totalCredit Decimal @default(0) @db.Decimal(15, 2)
@@ -1661,7 +1681,7 @@ model WebhookDelivery {
 
 model DteOperationLog {
   id       String @id @default(cuid())
-  tenantId String @db.NVarChar(50)
+  tenantId String @db.NVarChar(1000)
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   dteId     String  @db.NVarChar(36)
@@ -1688,7 +1708,7 @@ model DteErrorLog {
   operationLogId String
   operationLog   DteOperationLog @relation(fields: [operationLogId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  tenantId String @db.NVarChar(50)
+  tenantId String @db.NVarChar(1000)
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   dteId     String?  @db.NVarChar(36)
@@ -1721,10 +1741,10 @@ model DteErrorLog {
 /// System-wide role templates (immutable). Tenants create Role instances from these.
 model RoleTemplate {
   id          String   @id @default(cuid())
-  code        String   @unique                  // tenant_admin, branch_manager, cashier, accountant, viewer
-  name        String   @db.NVarChar(100)        // Display name
+  code        String   @unique // tenant_admin, branch_manager, cashier, accountant, viewer
+  name        String   @db.NVarChar(100) // Display name
   description String?  @db.NVarChar(500)
-  isSystem    Boolean  @default(true)           // System templates cannot be deleted
+  isSystem    Boolean  @default(true) // System templates cannot be deleted
   createdAt   DateTime @default(now())
 
   permissions RoleTemplatePermission[]
@@ -1734,11 +1754,11 @@ model RoleTemplate {
 /// System-wide permission definitions (enumerated actions on resources).
 model Permission {
   id       String @id @default(cuid())
-  code     String @unique                       // e.g. "dte:create", "client:read"
-  resource String @db.NVarChar(50)              // e.g. "dte", "client", "branch"
-  action   String @db.NVarChar(50)              // e.g. "create", "read", "update", "delete", "void"
-  name     String @db.NVarChar(100)             // Display: "Crear DTE"
-  category String @db.NVarChar(100)             // UI grouping: "Facturación", "Clientes"
+  code     String @unique // e.g. "dte:create", "client:read"
+  resource String @db.NVarChar(50) // e.g. "dte", "client", "branch"
+  action   String @db.NVarChar(50) // e.g. "create", "read", "update", "delete", "void"
+  name     String @db.NVarChar(100) // Display: "Crear DTE"
+  category String @db.NVarChar(100) // UI grouping: "Facturación", "Clientes"
 
   templatePermissions RoleTemplatePermission[]
   rolePermissions     RolePermission[]
@@ -1760,15 +1780,15 @@ model RoleTemplatePermission {
 
 /// Tenant-scoped roles. Can derive from a template or be fully custom.
 model Role {
-  id         String   @id @default(cuid())
+  id         String        @id @default(cuid())
   tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  name       String   @db.NVarChar(100)         // Can be customized: "Cajero Senior"
-  templateId String?                            // null = fully custom role
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  name       String        @db.NVarChar(100) // Can be customized: "Cajero Senior"
+  templateId String? // null = fully custom role
   template   RoleTemplate? @relation(fields: [templateId], references: [id])
-  isCustom   Boolean  @default(false)           // true = tenant created custom role
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  isCustom   Boolean       @default(false) // true = tenant created custom role
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   permissions RolePermission[]
   assignments UserRoleAssignment[]
@@ -1790,19 +1810,19 @@ model RolePermission {
 
 /// Assigns a role to a user within a specific scope (tenant, branch, or POS).
 model UserRoleAssignment {
-  id        String   @id @default(cuid())
-  userId    String
-  roleId    String
-  tenantId  String
+  id       String @id @default(cuid())
+  userId   String
+  roleId   String
+  tenantId String
 
   /// Hierarchical scope: "tenant" | "branch" | "pos"
-  scopeType String   @db.NVarChar(20)
+  scopeType String @db.NVarChar(20)
   /// The ID of the scoped entity (tenantId, sucursalId, or puntoVentaId)
   scopeId   String
 
-  assignedBy String                             // userId of who assigned this role
-  assignedAt DateTime @default(now())
-  expiresAt  DateTime?                          // Optional expiration
+  assignedBy String // userId of who assigned this role
+  assignedAt DateTime  @default(now())
+  expiresAt  DateTime? // Optional expiration
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
@@ -1812,4 +1832,221 @@ model UserRoleAssignment {
   @@index([userId, tenantId])
   @@index([tenantId])
   @@index([scopeType, scopeId])
+}
+
+// ============================================================================
+// INVENTORY MODULE (Compras + Inventario MVP — Fase 1.2)
+// ============================================================================
+
+model InventoryState {
+  id             String    @id @default(cuid())
+  tenantId       String
+  catalogItemId  String    @unique
+  currentQty     Decimal   @default(0) @db.Decimal(15, 4)
+  currentAvgCost Decimal   @default(0) @db.Decimal(15, 4)
+  totalValue     Decimal   @default(0) @db.Decimal(15, 2)
+  reorderLevel   Decimal?  @db.Decimal(15, 4)
+  lastMovementAt DateTime?
+  lastCountedAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  catalogItem CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tenantId])
+  @@index([tenantId, currentQty])
+  @@map("inventory_states")
+}
+
+model InventoryMovement {
+  id             String   @id @default(cuid())
+  tenantId       String
+  catalogItemId  String
+  movementDate   DateTime
+  correlativo    Int
+  movementType   String   @db.NVarChar(40)
+  qtyIn          Decimal  @default(0) @db.Decimal(15, 4)
+  qtyOut         Decimal  @default(0) @db.Decimal(15, 4)
+  unitCost       Decimal  @db.Decimal(15, 4)
+  totalCost      Decimal  @db.Decimal(15, 2)
+  balanceQty     Decimal  @db.Decimal(15, 4)
+  balanceAvgCost Decimal  @db.Decimal(15, 4)
+  balanceValue   Decimal  @db.Decimal(15, 2)
+
+  documentType        String? @db.NVarChar(10)
+  documentNumber      String? @db.NVarChar(50)
+  supplierId          String?
+  supplierNationality String? @db.NVarChar(100)
+
+  sourceType         String  @db.NVarChar(30)
+  sourceId           String
+  purchaseLineItemId String?
+  notes              String? @db.NVarChar(500)
+
+  createdAt      DateTime @default(now())
+  createdBy      String
+  journalEntryId String?
+
+  tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  catalogItem         CatalogItem          @relation(fields: [catalogItemId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier            Cliente?             @relation("SupplierMovements", fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  journalEntry        JournalEntry?        @relation(fields: [journalEntryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  physicalCountDetail PhysicalCountDetail? @relation("PhysicalCountAdjustment")
+
+  @@unique([tenantId, catalogItemId, correlativo])
+  @@index([tenantId, catalogItemId, movementDate])
+  @@index([tenantId, movementDate])
+  @@index([tenantId, sourceType, sourceId])
+  @@index([tenantId, journalEntryId])
+  @@map("inventory_movements")
+}
+
+model ReceivedDTE {
+  id               String    @id @default(cuid())
+  tenantId         String
+  tipoDte          String    @db.NVarChar(10)
+  numeroControl    String    @db.NVarChar(50)
+  codigoGeneracion String    @db.NVarChar(40)
+  selloRecepcion   String?   @db.NVarChar(100)
+  fhProcesamiento  DateTime?
+  fhEmision        DateTime
+  emisorNIT        String    @db.NVarChar(20)
+  emisorNombre     String    @db.NVarChar(250)
+  rawPayload       String    @db.NVarChar(Max)
+  parsedPayload    String?   @db.NVarChar(Max)
+
+  ingestStatus String  @default("PENDING") @db.NVarChar(20)
+  ingestErrors String? @db.NVarChar(Max)
+  ingestSource String  @db.NVarChar(30)
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  purchase Purchase?
+
+  @@unique([tenantId, codigoGeneracion])
+  @@index([tenantId, ingestStatus])
+  @@index([tenantId, emisorNIT])
+  @@map("received_dtes")
+}
+
+model Purchase {
+  id             String  @id @default(cuid())
+  tenantId       String
+  purchaseNumber String  @db.NVarChar(30)
+  supplierId     String
+  receivedDteId  String? @unique
+  documentType   String? @db.NVarChar(10)
+  documentNumber String? @db.NVarChar(50)
+
+  purchaseDate DateTime
+  receiptDate  DateTime?
+  currency     String    @default("USD") @db.NVarChar(3)
+
+  subtotal        Decimal @db.Decimal(12, 2)
+  ivaAmount       Decimal @default(0) @db.Decimal(12, 2)
+  otherTaxes      Decimal @default(0) @db.Decimal(12, 2)
+  discountAmount  Decimal @default(0) @db.Decimal(12, 2)
+  retentionAmount Decimal @default(0) @db.Decimal(12, 2)
+  totalAmount     Decimal @db.Decimal(12, 2)
+
+  status        String  @db.NVarChar(30)
+  paymentMethod String? @db.NVarChar(10)
+
+  notes          String?   @db.NVarChar(1000)
+  journalEntryId String?
+  cancelledAt    DateTime?
+  cancelledBy    String?
+  cancelReason   String?   @db.NVarChar(500)
+
+  createdAt  DateTime @default(now())
+  createdBy  String
+  updatedAt  DateTime @updatedAt
+  receivedBy String?
+
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier     Cliente            @relation("SupplierPurchases", fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  receivedDte  ReceivedDTE?       @relation(fields: [receivedDteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  journalEntry JournalEntry?      @relation("PurchaseJournalEntry", fields: [journalEntryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lineItems    PurchaseLineItem[]
+
+  @@unique([tenantId, purchaseNumber])
+  @@index([tenantId, supplierId])
+  @@index([tenantId, status, purchaseDate])
+  @@index([tenantId, documentNumber])
+  @@map("purchases")
+}
+
+model PurchaseLineItem {
+  id             String   @id @default(cuid())
+  purchaseId     String
+  tenantId       String
+  lineNumber     Int
+  catalogItemId  String?
+  description    String   @db.NVarChar(500)
+  quantity       Decimal  @db.Decimal(15, 4)
+  unitPrice      Decimal  @db.Decimal(15, 4)
+  discountAmount Decimal  @default(0) @db.Decimal(12, 2)
+  taxCode        String   @db.NVarChar(5)
+  taxAmount      Decimal  @default(0) @db.Decimal(12, 2)
+  lineTotal      Decimal  @db.Decimal(12, 2)
+  unitCostPosted Decimal? @db.Decimal(15, 4)
+
+  qtyExpected   Decimal @db.Decimal(15, 4)
+  qtyReceived   Decimal @default(0) @db.Decimal(15, 4)
+  receiptStatus String  @default("PENDING") @db.NVarChar(20)
+
+  purchase    Purchase     @relation(fields: [purchaseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  catalogItem CatalogItem? @relation(fields: [catalogItemId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([purchaseId, lineNumber])
+  @@index([tenantId, catalogItemId])
+  @@map("purchase_line_items")
+}
+
+model PhysicalCount {
+  id         String   @id @default(cuid())
+  tenantId   String
+  countDate  DateTime
+  fiscalYear Int
+  status     String   @db.NVarChar(20)
+  notes      String?  @db.NVarChar(1000)
+
+  finalizedAt DateTime?
+  finalizedBy String?
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  tenant  Tenant                @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  details PhysicalCountDetail[]
+
+  @@unique([tenantId, fiscalYear])
+  @@index([tenantId, status])
+  @@map("physical_counts")
+}
+
+model PhysicalCountDetail {
+  id              String  @id @default(cuid())
+  physicalCountId String
+  tenantId        String
+  catalogItemId   String
+  systemQty       Decimal @db.Decimal(15, 4)
+  countedQty      Decimal @db.Decimal(15, 4)
+  variance        Decimal @db.Decimal(15, 4)
+  unitCost        Decimal @db.Decimal(15, 4)
+  totalValue      Decimal @db.Decimal(15, 2)
+
+  adjustmentMovementId String? @unique
+  notes                String? @db.NVarChar(500)
+
+  physicalCount PhysicalCount      @relation(fields: [physicalCountId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  catalogItem   CatalogItem        @relation(fields: [catalogItemId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  adjustment    InventoryMovement? @relation("PhysicalCountAdjustment", fields: [adjustmentMovementId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([physicalCountId, catalogItemId])
+  @@index([tenantId, physicalCountId])
+  @@map("physical_count_details")
 }

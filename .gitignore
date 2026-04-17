@@ -37,3 +37,6 @@ web-logs.zip
 
 # Production env
 .env.production
+
+# Prisma schema backups
+apps/api/prisma/schema.prisma.backup-*

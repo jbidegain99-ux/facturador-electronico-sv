@@ -1923,12 +1923,20 @@ model ReceivedDTE {
   createdAt DateTime @default(now())
   createdBy String
 
+  // Fase 1.4a additions
+  rawPayloadHash   String    @db.NVarChar(64)
+  mhVerifyAttempts Int       @default(0)
+  lastMhVerifyAt   DateTime?
+  mhVerifyError    String?   @db.NVarChar(500)
+
   tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   purchase Purchase?
 
   @@unique([tenantId, codigoGeneracion])
   @@index([tenantId, ingestStatus])
   @@index([tenantId, emisorNIT])
+  @@index([tenantId, rawPayloadHash])
+  @@index([tenantId, ingestStatus, lastMhVerifyAt])
   @@map("received_dtes")
 }
 

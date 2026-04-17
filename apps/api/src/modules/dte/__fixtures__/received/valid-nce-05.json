@@ -1,0 +1,72 @@
+{
+  "identificacion": {
+    "version": 3,
+    "ambiente": "00",
+    "tipoDte": "05",
+    "numeroControl": "DTE-05-AB12CD34-000000000000001",
+    "codigoGeneracion": "D1E2F3A4-B5C6-7890-ABCD-EF1234567890",
+    "tipoModelo": 1,
+    "tipoOperacion": 1,
+    "fecEmi": "2026-04-16",
+    "horEmi": "09:00:00",
+    "tipoMoneda": "USD"
+  },
+  "docsAsociados": [
+    {
+      "tipoGeneracion": 2,
+      "tipoDoc": "03",
+      "numeroDocumento": "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
+      "fechaEmision": "2026-03-15"
+    }
+  ],
+  "emisor": {
+    "nit": "06141507251041",
+    "nrc": "1234567",
+    "nombre": "Proveedor Test SA de CV",
+    "codActividad": "47301",
+    "descActividad": "Venta al por menor",
+    "direccion": { "departamento": "06", "municipio": "14", "complemento": "Col Calle 1" },
+    "telefono": "22001234",
+    "correo": "ventas@proveedor-test.sv"
+  },
+  "receptor": {
+    "nit": "06231507251041",
+    "nrc": "7654321",
+    "nombre": "Comprador Receptor SA de CV",
+    "codActividad": "47301",
+    "direccion": { "departamento": "06", "municipio": "14", "complemento": "Col Calle 2" }
+  },
+  "cuerpoDocumento": [
+    {
+      "numItem": 1,
+      "tipoItem": 1,
+      "numeroDocumento": "DTE-03-AB12CD34-000000000000001",
+      "cantidad": 10,
+      "codigo": "ITEM-001",
+      "uniMedida": 99,
+      "descripcion": "Devolución producto",
+      "precioUni": 10.0,
+      "montoDescu": 0,
+      "ventaNoSuj": 0,
+      "ventaExenta": 0,
+      "ventaGravada": 100.0,
+      "tributos": ["20"],
+      "ivaItem": 13.0
+    }
+  ],
+  "resumen": {
+    "totalNoSuj": 0,
+    "totalExenta": 0,
+    "totalGravada": 100.0,
+    "subTotalVentas": 100.0,
+    "totalDescu": 0,
+    "tributos": [{ "codigo": "20", "descripcion": "IVA 13%", "valor": 13.0 }],
+    "subTotal": 100.0,
+    "ivaRete1": 0,
+    "reteRenta": 0,
+    "montoTotalOperacion": 113.0,
+    "totalLetras": "CIENTO TRECE 00/100 DOLARES",
+    "totalIva": 13.0,
+    "condicionOperacion": 1
+  }
+}

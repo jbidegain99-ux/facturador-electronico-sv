@@ -10,6 +10,7 @@ import { CertificateService } from '../../hacienda/services/certificate.service'
 import { EncryptionService } from '../../email-config/services/encryption.service';
 import { DteErrorMapperService } from './error-mapper.service';
 import { DteOperationLoggerService } from './dte-operation-logger.service';
+import { DteCogsService } from './dte-cogs.service';
 import { PdfService } from '../pdf.service';
 import { invoiceSentTemplate } from '../../email-config/templates';
 import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
@@ -42,6 +43,7 @@ export class DteLifecycleService {
     private encryptionService: EncryptionService,
     private errorMapper: DteErrorMapperService,
     @Optional() private operationLogger: DteOperationLoggerService | null,
+    @Optional() private readonly dteCogsService?: DteCogsService,
   ) {}
 
   /**
@@ -142,6 +144,7 @@ export class DteLifecycleService {
         selloRecibido: demoResponse.selloRecibido, estado: 'PROCESADO', demoMode: true,
       }, dte.id);
       this.triggerAccountingEntry(dte.id, tenantId, 'ON_APPROVED');
+      this.triggerCogsEntry(dte.id, tenantId, 'ON_APPROVED');
       return;
     }
 
@@ -219,6 +222,7 @@ export class DteLifecycleService {
         fechaAprobacion: response.fhProcesamiento,
       }, dte.id);
       this.triggerAccountingEntry(dte.id, tenantId, 'ON_APPROVED');
+      this.triggerCogsEntry(dte.id, tenantId, 'ON_APPROVED');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       const observaciones = error instanceof MHReceptionError ? error.observaciones : undefined;
@@ -410,6 +414,7 @@ export class DteLifecycleService {
       }, dte.id);
 
       this.triggerAccountingEntry(dte.id, dte.tenantId, 'ON_APPROVED');
+      this.triggerCogsEntry(dte.id, dte.tenantId, 'ON_APPROVED');
 
       return updated;
     }
@@ -475,6 +480,7 @@ export class DteLifecycleService {
       }, dte.id);
 
       this.triggerAccountingEntry(dte.id, dte.tenantId, 'ON_APPROVED');
+      this.triggerCogsEntry(dte.id, dte.tenantId, 'ON_APPROVED');
 
       return updated;
     } catch (error) {
@@ -628,6 +634,7 @@ export class DteLifecycleService {
     });
 
     this.triggerAccountingReversal(dteId, dte.tenantId);
+    this.triggerCogsReversal(dteId, dte.tenantId);
 
     this.triggerWebhook(dte.tenantId, 'dte.anulado', {
       dteId,
@@ -853,5 +860,34 @@ export class DteLifecycleService {
     this.accountingAutomation.reverseFromDTE(dteId, tenantId).catch((err) =>
       this.logger.error(`Accounting reversal failed for DTE ${dteId}: ${err instanceof Error ? err.message : err}`),
     );
+  }
+
+  private triggerCogsEntry(dteId: string, tenantId: string, trigger: string): void {
+    if (!this.dteCogsService) return;
+    this.dteCogsService
+      .generateCogsFromDte(dteId, tenantId, trigger)
+      .then((result) => {
+        if (result.warnings.length > 0) {
+          this.logger.warn(
+            `COGS warnings for DTE ${dteId}: ${result.warnings.join('; ')}`,
+          );
+        }
+      })
+      .catch((err) =>
+        this.logger.error(
+          `COGS generation failed for DTE ${dteId}: ${err instanceof Error ? err.message : err}`,
+        ),
+      );
+  }
+
+  private triggerCogsReversal(dteId: string, tenantId: string): void {
+    if (!this.dteCogsService) return;
+    this.dteCogsService
+      .reverseCogsFromDte(dteId, tenantId)
+      .catch((err) =>
+        this.logger.error(
+          `COGS reversal failed for DTE ${dteId}: ${err instanceof Error ? err.message : err}`,
+        ),
+      );
   }
 }

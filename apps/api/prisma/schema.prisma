@@ -183,7 +183,7 @@ model Cliente {
   dtes               DTE[]
   recurringTemplates RecurringInvoiceTemplate[]
   supplierMovements  InventoryMovement[]        @relation("SupplierMovements")
-  purchases          Purchase[]                 @relation("CustomerPurchases")
+  purchases          Purchase[]                 @relation("SupplierPurchases")
   isCustomer         Boolean                    @default(true)
   isSupplier         Boolean                    @default(false)
 
@@ -1898,6 +1898,7 @@ model InventoryMovement {
   @@index([tenantId, catalogItemId, movementDate])
   @@index([tenantId, movementDate])
   @@index([tenantId, sourceType, sourceId])
+  @@index([tenantId, journalEntryId])
   @@map("inventory_movements")
 }
 
@@ -1966,7 +1967,7 @@ model Purchase {
   receivedBy String?
 
   tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  supplier     Cliente            @relation("CustomerPurchases", fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier     Cliente            @relation("SupplierPurchases", fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   receivedDte  ReceivedDTE?       @relation(fields: [receivedDteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   journalEntry JournalEntry?      @relation("PurchaseJournalEntry", fields: [journalEntryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   lineItems    PurchaseLineItem[]

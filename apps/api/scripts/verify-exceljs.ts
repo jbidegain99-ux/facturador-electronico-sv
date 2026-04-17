@@ -12,4 +12,7 @@ async function verify() {
   console.log('[OK] exceljs import + basic API works');
 }
 
-verify();
+verify().catch((e) => {
+  console.error('[FAIL]', e);
+  process.exit(1);
+});

@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
  * Adjusted from task template to match actual schema:
  *  - Cliente uses tipoDocumento + numDocumento (not nit), unique on [tenantId, numDocumento]
  *  - CatalogItem.tipoItem and uniMedida are Int (not String)
- *  - Purchase.supplier relation name is "CustomerPurchases"
+ *  - Purchase.supplier relation name is "SupplierPurchases"
  */
 async function smoke() {
   const tenant = await prisma.tenant.findFirst();

@@ -204,6 +204,10 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
       ],
     },
   },
+  // NOTE: This reversal does NOT reverse the IVA Crédito Fiscal (110303) portion
+  // for CCFE returns. Adding the IVA leg requires extending `DefaultMappingLine.monto`
+  // enum with `'retention'` or a new `'iva_reverse'` value — deferred to Fase 1.6
+  // (Spec §8 O5). For now this handles the principal amount only.
   {
     operation: 'DEVOLUCION_COMPRA',
     description: 'Devolución de compra a proveedor',

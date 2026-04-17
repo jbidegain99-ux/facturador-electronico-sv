@@ -1,0 +1,65 @@
+{
+  "identificacion": {
+    "version": 1,
+    "ambiente": "00",
+    "tipoDte": "01",
+    "numeroControl": "DTE-01-AB12CD34-000000000000001",
+    "codigoGeneracion": "B1C2D3E4-F5A6-7890-ABCD-EF1234567890",
+    "tipoModelo": 1,
+    "tipoOperacion": 1,
+    "fecEmi": "2026-04-15",
+    "horEmi": "10:00:00",
+    "tipoMoneda": "USD"
+  },
+  "emisor": {
+    "nit": "06141507251041",
+    "nrc": "1234567",
+    "nombre": "Proveedor Test SA de CV",
+    "codActividad": "47301",
+    "descActividad": "Venta al por menor",
+    "direccion": {"departamento": "06", "municipio": "14", "complemento": "Col Calle 1"},
+    "telefono": "22001234",
+    "correo": "ventas@proveedor-test.sv"
+  },
+  "receptor": null,
+  "cuerpoDocumento": [
+    {
+      "numItem": 1,
+      "tipoItem": 1,
+      "cantidad": 2,
+      "codigo": "PROD-A",
+      "uniMedida": 99,
+      "descripcion": "Producto consumidor final",
+      "precioUni": 11.30,
+      "montoDescu": 0,
+      "ventaNoSuj": 0,
+      "ventaExenta": 0,
+      "ventaGravada": 22.60,
+      "tributos": null,
+      "psv": 0,
+      "noGravado": 0
+    }
+  ],
+  "resumen": {
+    "totalNoSuj": 0,
+    "totalExenta": 0,
+    "totalGravada": 22.60,
+    "subTotalVentas": 22.60,
+    "descuNoSuj": 0,
+    "descuExenta": 0,
+    "descuGravada": 0,
+    "totalDescu": 0,
+    "subTotal": 22.60,
+    "ivaRete1": 0,
+    "reteRenta": 0,
+    "montoTotalOperacion": 22.60,
+    "totalNoGravado": 0,
+    "totalPagar": 22.60,
+    "totalLetras": "VEINTIDOS 60/100 DOLARES",
+    "saldoFavor": 0,
+    "condicionOperacion": 1,
+    "pagos": [{"codigo": "01", "montoPago": 22.60}]
+  },
+  "extension": null,
+  "apendice": null
+}

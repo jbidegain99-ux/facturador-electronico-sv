@@ -14,6 +14,7 @@ import { PdfService } from '../pdf.service';
 import { invoiceSentTemplate } from '../../email-config/templates';
 import { sendDTE, SendDTERequest, MHReceptionError } from '@facturador/mh-client';
 import { DTE_VERSIONS, TipoDte } from '@facturador/shared';
+import { parseMhDate } from '../../../common/utils/parse-mh-date';
 
 // Enum values as strings for SQL Server compatibility
 const DTEStatus = {
@@ -81,22 +82,6 @@ export class DteLifecycleService {
       this.logger.warn(`Failed to resolve ambiente for tenant ${tenantId}: ${err instanceof Error ? err.message : err}`);
     }
     return '00';
-  }
-
-  /**
-   * Parse MH date format "DD/MM/YYYY HH:mm:ss" to Date object.
-   */
-  parseMhDate(fhProcesamiento: string | null | undefined): Date | null {
-    if (!fhProcesamiento) return null;
-    const isoDate = new Date(fhProcesamiento);
-    if (!isNaN(isoDate.getTime())) return isoDate;
-    const match = fhProcesamiento.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
-    if (match) {
-      const [, day, month, year, hours, minutes, seconds] = match;
-      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds));
-    }
-    this.logger.warn(`Could not parse MH date: ${fhProcesamiento}, using current time`);
-    return new Date();
   }
 
   /**
@@ -213,7 +198,7 @@ export class DteLifecycleService {
         data: {
           estado: DTEStatus.PROCESADO,
           selloRecepcion: response.selloRecibido || undefined,
-          fechaRecepcion: this.parseMhDate(response.fhProcesamiento),
+          fechaRecepcion: parseMhDate(response.fhProcesamiento),
           descripcionMh: response.observaciones?.join(', '),
           intentosEnvio: { increment: 1 },
           lastError: null,
@@ -462,7 +447,7 @@ export class DteLifecycleService {
         data: {
           estado: DTEStatus.PROCESADO,
           selloRecepcion: response.selloRecibido || undefined,
-          fechaRecepcion: this.parseMhDate(response.fhProcesamiento),
+          fechaRecepcion: parseMhDate(response.fhProcesamiento),
           descripcionMh: response.observaciones?.join(', '),
           intentosEnvio: { increment: 1 },
           lastError: null,

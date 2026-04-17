@@ -1,0 +1,53 @@
+{
+  "identificacion": {
+    "version": 3,
+    "ambiente": "00",
+    "tipoDte": "15",
+    "numeroControl": "DTE-15-AB12CD34-000000000000001",
+    "codigoGeneracion": "15A2B3C4-D5E6-7890-ABCD-EF1234567890",
+    "tipoModelo": 1,
+    "tipoOperacion": 1,
+    "fecEmi": "2026-04-15",
+    "horEmi": "10:00:00",
+    "tipoMoneda": "USD"
+  },
+  "emisor": {
+    "nit": "06141507251041",
+    "nrc": "1234567",
+    "nombre": "Donante Corporativo SA de CV",
+    "codActividad": "91940",
+    "descActividad": "Actividades de asociaciones empresariales",
+    "direccion": {"departamento": "06", "municipio": "14", "complemento": "Blvd Los Heroes 200"},
+    "telefono": "22001234",
+    "correo": "donaciones@donante.sv"
+  },
+  "receptor": {
+    "nombre": "Fundacion Benefica Nacional",
+    "nit": "06141507251099",
+    "nrc": "9999999",
+    "codActividad": "88991",
+    "descActividad": "Otras actividades de asistencia social",
+    "direccion": {"departamento": "06", "municipio": "01", "complemento": "Calle La Mascota 100"},
+    "telefono": "22009999",
+    "correo": "contacto@fundacion.sv"
+  },
+  "cuerpoDocumento": [
+    {
+      "numItem": 1,
+      "tipoItem": 4,
+      "cantidad": 10,
+      "codigo": "DON-001",
+      "uniMedida": 99,
+      "descripcion": "Cajas de alimentos donadas",
+      "valorUni": 25.00,
+      "ventaNoSuj": 250.00
+    }
+  ],
+  "resumen": {
+    "totalNoSuj": 250.00,
+    "subTotal": 250.00,
+    "totalLetras": "DOSCIENTOS CINCUENTA 00/100 DOLARES"
+  },
+  "extension": null,
+  "apendice": null
+}

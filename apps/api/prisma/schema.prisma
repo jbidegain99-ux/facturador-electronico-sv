@@ -67,6 +67,7 @@ model Tenant {
   // Product/service catalog
   catalogItems      CatalogItem[]
   catalogCategories CatalogCategory[]
+  inventoryStates   InventoryState[]
 
   // Quotes / Cotizaciones
   quotes Quote[]
@@ -1264,6 +1265,9 @@ model CatalogItem {
   // Quote line item references
   quoteLineItems QuoteLineItem[]
 
+  // Inventory state
+  inventoryState InventoryState?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1817,4 +1821,29 @@ model UserRoleAssignment {
   @@index([userId, tenantId])
   @@index([tenantId])
   @@index([scopeType, scopeId])
+}
+
+// ============================================================================
+// INVENTORY MODULE (Compras + Inventario MVP — Fase 1.2)
+// ============================================================================
+
+model InventoryState {
+  id             String    @id @default(cuid())
+  tenantId       String
+  catalogItemId  String    @unique
+  currentQty     Decimal   @default(0) @db.Decimal(15, 4)
+  currentAvgCost Decimal   @default(0) @db.Decimal(15, 4)
+  totalValue     Decimal   @default(0) @db.Decimal(15, 2)
+  reorderLevel   Decimal?  @db.Decimal(15, 4)
+  lastMovementAt DateTime?
+  lastCountedAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  catalogItem CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tenantId])
+  @@index([tenantId, currentQty])
+  @@map("inventory_states")
 }

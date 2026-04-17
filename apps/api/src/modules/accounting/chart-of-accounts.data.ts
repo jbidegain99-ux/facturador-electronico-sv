@@ -35,6 +35,7 @@ export const EL_SALVADOR_CHART_OF_ACCOUNTS: ChartOfAccountEntry[] = [
   { code: '110303', name: 'IVA Crédito Fiscal', accountType: 'ASSET', level: 4, parentCode: '1103', normalBalance: 'DEBIT', allowsPosting: true },
   { code: '110304', name: 'Anticipos a Proveedores', accountType: 'ASSET', level: 4, parentCode: '1103', normalBalance: 'DEBIT', allowsPosting: true },
   { code: '110305', name: 'Deudores Diversos', accountType: 'ASSET', level: 4, parentCode: '1103', normalBalance: 'DEBIT', allowsPosting: true },
+  { code: '110306', name: 'IVA Anticipo a Cuenta 2%', accountType: 'ASSET', level: 4, parentCode: '1103', normalBalance: 'DEBIT', allowsPosting: true },
 
   { code: '1104', name: 'INVENTARIOS', accountType: 'ASSET', level: 3, parentCode: '11', normalBalance: 'DEBIT', allowsPosting: false },
   { code: '110401', name: 'Mercadería', accountType: 'ASSET', level: 4, parentCode: '1104', normalBalance: 'DEBIT', allowsPosting: true },
@@ -122,6 +123,7 @@ export const EL_SALVADOR_CHART_OF_ACCOUNTS: ChartOfAccountEntry[] = [
   { code: '4102', name: 'Servicios', accountType: 'INCOME', level: 3, parentCode: '41', normalBalance: 'CREDIT', allowsPosting: true },
   { code: '4103', name: 'Descuentos sobre Ventas', accountType: 'INCOME', level: 3, parentCode: '41', normalBalance: 'DEBIT', allowsPosting: true },
   { code: '4104', name: 'Devoluciones sobre Ventas', accountType: 'INCOME', level: 3, parentCode: '41', normalBalance: 'DEBIT', allowsPosting: true },
+  { code: '4105', name: 'Sobrantes de Inventario', accountType: 'INCOME', level: 3, parentCode: '41', normalBalance: 'CREDIT', allowsPosting: true },
 
   { code: '42', name: 'INGRESOS NO OPERACIONALES', accountType: 'INCOME', level: 2, parentCode: '4', normalBalance: 'CREDIT', allowsPosting: false },
   { code: '4201', name: 'Ingresos Financieros', accountType: 'INCOME', level: 3, parentCode: '42', normalBalance: 'CREDIT', allowsPosting: true },
@@ -136,6 +138,7 @@ export const EL_SALVADOR_CHART_OF_ACCOUNTS: ChartOfAccountEntry[] = [
   { code: '51', name: 'COSTO DE VENTAS', accountType: 'EXPENSE', level: 2, parentCode: '5', normalBalance: 'DEBIT', allowsPosting: false },
   { code: '5101', name: 'Costo de Mercadería Vendida', accountType: 'EXPENSE', level: 3, parentCode: '51', normalBalance: 'DEBIT', allowsPosting: true },
   { code: '5102', name: 'Costo de Servicios', accountType: 'EXPENSE', level: 3, parentCode: '51', normalBalance: 'DEBIT', allowsPosting: true },
+  { code: '5103', name: 'Costo por Ajustes Físicos', accountType: 'EXPENSE', level: 3, parentCode: '51', normalBalance: 'DEBIT', allowsPosting: true },
 
   { code: '52', name: 'GASTOS OPERACIONALES', accountType: 'EXPENSE', level: 2, parentCode: '5', normalBalance: 'DEBIT', allowsPosting: false },
   { code: '5201', name: 'Sueldos y Salarios', accountType: 'EXPENSE', level: 3, parentCode: '52', normalBalance: 'DEBIT', allowsPosting: true },

@@ -121,7 +121,7 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
   // ============================================================
   {
     operation: 'COMPRA_CCFE',
-    description: 'Compra con Crédito Fiscal (CCFE) — IVA separado a crédito',
+    description: 'Compra con Crédito Fiscal (CCFE) — IVA separado, opcional retención 1%',
     debitCode: '110401',
     creditCode: '210101',
     mappingConfig: {
@@ -130,13 +130,14 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
         { cuenta: '110303', monto: 'iva', descripcion: 'IVA Crédito Fiscal' },
       ],
       haber: [
-        { cuenta: '210101', monto: 'total', descripcion: 'Proveedores Locales' },
+        { cuenta: '210101', monto: 'totalMinusRetention', descripcion: 'Proveedores Locales' },
+        { cuenta: '210205', monto: 'retention', descripcion: 'IVA Retenido por Pagar' },
       ],
     },
   },
   {
     operation: 'COMPRA_FCFE',
-    description: 'Compra con Factura Consumidor Final (FCFE) — IVA capitalizado',
+    description: 'Compra con Factura Consumidor Final (FCFE) — IVA capitalizado, opcional retención',
     debitCode: '110401',
     creditCode: '210101',
     mappingConfig: {
@@ -144,13 +145,14 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
         { cuenta: '110401', monto: 'total', descripcion: 'Inventario (IVA capitalizado)' },
       ],
       haber: [
-        { cuenta: '210101', monto: 'total', descripcion: 'Proveedores Locales' },
+        { cuenta: '210101', monto: 'totalMinusRetention', descripcion: 'Proveedores Locales' },
+        { cuenta: '210205', monto: 'retention', descripcion: 'IVA Retenido por Pagar' },
       ],
     },
   },
   {
     operation: 'COMPRA_FSEE',
-    description: 'Compra a Sujeto Excluido (FSEE) — sin IVA',
+    description: 'Compra a Sujeto Excluido (FSEE) — sin IVA, opcional retención',
     debitCode: '110401',
     creditCode: '210101',
     mappingConfig: {
@@ -158,7 +160,8 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
         { cuenta: '110401', monto: 'total', descripcion: 'Inventario (sin IVA)' },
       ],
       haber: [
-        { cuenta: '210101', monto: 'total', descripcion: 'Proveedores Locales' },
+        { cuenta: '210101', monto: 'totalMinusRetention', descripcion: 'Proveedores Locales' },
+        { cuenta: '210205', monto: 'retention', descripcion: 'IVA Retenido por Pagar' },
       ],
     },
   },

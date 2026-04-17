@@ -177,10 +177,14 @@ model Cliente {
   updatedAt          DateTime                   @updatedAt
   dtes               DTE[]
   recurringTemplates RecurringInvoiceTemplate[]
+  isCustomer         Boolean                    @default(true)
+  isSupplier         Boolean                    @default(false)
 
   @@unique([tenantId, numDocumento])
   @@index([tenantId])
   @@index([tenantId, createdAt])
+  @@index([tenantId, isSupplier])
+  @@index([tenantId, isCustomer])
 }
 
 model DTE {

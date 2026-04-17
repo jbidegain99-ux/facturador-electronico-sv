@@ -381,4 +381,148 @@ describe('AccountingAutomationService', () => {
       expect(accountingService.voidJournalEntry).not.toHaveBeenCalled();
     });
   });
+
+  // =========================================================================
+  // Fase 1.5b — Retention leg extension
+  // =========================================================================
+
+  describe('resolveAmount — retention extensions (Fase 1.5b)', () => {
+    // Access private method via bracket notation
+    const svcAny = () => service as unknown as { resolveAmount: (key: string, a: { totalPagar: number; totalGravada: number; totalIva: number; retention: number }) => number };
+
+    const amounts = {
+      totalPagar: 113,
+      totalGravada: 100,
+      totalIva: 13,
+      retention: 1.3,
+    };
+
+    it('1. resolveAmount("retention") returns amounts.retention', () => {
+      expect(svcAny().resolveAmount('retention', amounts)).toBe(1.3);
+    });
+
+    it('2. resolveAmount("totalMinusRetention") returns totalPagar - retention', () => {
+      expect(svcAny().resolveAmount('totalMinusRetention', amounts)).toBeCloseTo(111.7, 4);
+    });
+
+    it('3. resolveAmount existing keys unchanged (regression)', () => {
+      expect(svcAny().resolveAmount('total', amounts)).toBe(113);
+      expect(svcAny().resolveAmount('subtotal', amounts)).toBe(100);
+      expect(svcAny().resolveAmount('iva', amounts)).toBe(13);
+    });
+
+    it('4. resolveAmount with unknown key returns 0', () => {
+      expect(svcAny().resolveAmount('unknown_key', amounts)).toBe(0);
+    });
+  });
+
+  describe('buildMultiLines — zero-amount filter (Fase 1.5b)', () => {
+    it('5. drops lines where debit=0 AND credit=0', async () => {
+      // Access private buildMultiLines via bracket notation
+      const svcAny = service as unknown as {
+        buildMultiLines: (tenantId: string, json: string, amounts: { totalPagar: number; totalGravada: number; totalIva: number; retention: number }, tipoDte: string) => Promise<Array<{ accountId: string; description: string; debit: number; credit: number }>>;
+      };
+
+      // Mock accountingAccount lookup to return valid accounts so buildMultiLines completes
+      (prisma.accountingAccount.findFirst as jest.Mock).mockImplementation(({ where }: { where: { code: string; tenantId: string } }) => {
+        return Promise.resolve({ id: `acc-${where.code}`, code: where.code, name: `Cuenta ${where.code}` });
+      });
+
+      // mappingConfig with one line that resolves to retention=0 and should be filtered
+      const mappingConfig = JSON.stringify({
+        debe: [{ cuenta: '100', monto: 'subtotal', descripcion: 'Inv' }],
+        haber: [
+          { cuenta: '200', monto: 'totalMinusRetention', descripcion: 'Prov' },
+          { cuenta: '300', monto: 'retention', descripcion: 'Ret' },  // resolves to 0
+        ],
+      });
+
+      const amounts = { totalPagar: 113, totalGravada: 100, totalIva: 13, retention: 0 };
+      const lines = await svcAny.buildMultiLines(tenantId, mappingConfig, amounts, '03');
+
+      // Should have 2 lines: Inv (debit 100) + Prov (credit 113). Retention line dropped.
+      expect(lines).toHaveLength(2);
+      const codes = lines.map((l) => l.accountId);
+      expect(codes).toContain('acc-100');
+      expect(codes).toContain('acc-200');
+      expect(codes).not.toContain('acc-300');
+    });
+  });
+
+  describe('generateFromPurchase — retention integration (Fase 1.5b)', () => {
+    const purchaseId = 'purchase-ret-1';
+
+    const mockPurchaseWithRetention = {
+      id: purchaseId,
+      tenantId,
+      documentType: 'CCFE',
+      documentNumber: 'DTE-03-AB12CD34-000000000000001',
+      purchaseNumber: 'PUR-tenant-002',
+      purchaseDate: new Date('2026-04-15'),
+      subtotal: '100.00',
+      ivaAmount: '13.00',
+      totalAmount: '113.00',
+      retentionAmount: '5.00',  // <-- retention > 0
+      status: 'DRAFT',
+    };
+
+    const mockMappingRuleWithRetention = {
+      id: 'rule-ccfe-v2',
+      operation: 'COMPRA_CCFE',
+      isActive: true,
+      debitAccountId: 'acc-inv',
+      creditAccountId: 'acc-cxp',
+      mappingConfig: JSON.stringify({
+        debe: [
+          { cuenta: '110401', monto: 'subtotal', descripcion: 'Inventario Mercadería' },
+          { cuenta: '110303', monto: 'iva', descripcion: 'IVA Crédito Fiscal' },
+        ],
+        haber: [
+          { cuenta: '210101', monto: 'totalMinusRetention', descripcion: 'Proveedores Locales' },
+          { cuenta: '210205', monto: 'retention', descripcion: 'IVA Retenido por Pagar' },
+        ],
+      }),
+      debitAccount: { id: 'acc-inv', code: '110401', name: 'Inventario Mercadería' },
+      creditAccount: { id: 'acc-cxp', code: '210101', name: 'Proveedores Locales' },
+    };
+
+    it('6. CCFE with retentionAmount=5 — asiento has 4 lines, balance OK', async () => {
+      (prisma.tenant.findUnique as jest.Mock).mockResolvedValue({
+        autoJournalEnabled: true,
+        autoJournalTrigger: 'ON_PURCHASE_CREATED',
+      });
+      (prisma.purchase as unknown as { findFirst: jest.Mock }).findFirst = jest.fn().mockResolvedValue(mockPurchaseWithRetention);
+      (prisma.journalEntry.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.accountMappingRule.findFirst as jest.Mock).mockResolvedValue(mockMappingRuleWithRetention);
+      (prisma.accountingAccount.findFirst as jest.Mock).mockImplementation(({ where }: { where: { code: string } }) => {
+        return Promise.resolve({ id: `acc-${where.code}`, code: where.code, name: `Cuenta ${where.code}` });
+      });
+      (prisma.purchase as unknown as { update: jest.Mock }).update = jest.fn().mockResolvedValue(mockPurchaseWithRetention);
+
+      const result = await service.generateFromPurchase(purchaseId, tenantId, 'ON_PURCHASE_CREATED');
+
+      // createJournalEntry should be called with 4 lines
+      const createCall = (accountingService.createJournalEntry as jest.Mock).mock.calls[0];
+      const lines = createCall[1].lines;
+      expect(lines).toHaveLength(4);
+
+      // Verify balance
+      const totalDebit = lines.reduce((s: number, l: { debit: number }) => s + l.debit, 0);
+      const totalCredit = lines.reduce((s: number, l: { credit: number }) => s + l.credit, 0);
+      expect(totalDebit).toBeCloseTo(113, 2);
+      expect(totalCredit).toBeCloseTo(113, 2);
+
+      // Verify retention leg specifically: credit 210205 = 5
+      const retentionLine = lines.find((l: { accountId: string }) => l.accountId === 'acc-210205');
+      expect(retentionLine).toBeDefined();
+      expect(retentionLine.credit).toBeCloseTo(5, 2);
+      expect(retentionLine.debit).toBe(0);
+
+      // Verify Proveedores reduced: 113 - 5 = 108
+      const proveedoresLine = lines.find((l: { accountId: string }) => l.accountId === 'acc-210101');
+      expect(proveedoresLine.credit).toBeCloseTo(108, 2);
+
+      expect(result).toBeDefined();
+    });
+  });
 });

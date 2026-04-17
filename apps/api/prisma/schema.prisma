@@ -65,9 +65,10 @@ model Tenant {
   recurringTemplates RecurringInvoiceTemplate[]
 
   // Product/service catalog
-  catalogItems      CatalogItem[]
-  catalogCategories CatalogCategory[]
-  inventoryStates   InventoryState[]
+  catalogItems       CatalogItem[]
+  catalogCategories  CatalogCategory[]
+  inventoryStates    InventoryState[]
+  inventoryMovements InventoryMovement[]
 
   // Quotes / Cotizaciones
   quotes Quote[]
@@ -178,6 +179,7 @@ model Cliente {
   updatedAt          DateTime                   @updatedAt
   dtes               DTE[]
   recurringTemplates RecurringInvoiceTemplate[]
+  supplierMovements  InventoryMovement[]        @relation("SupplierMovements")
   isCustomer         Boolean                    @default(true)
   isSupplier         Boolean                    @default(false)
 
@@ -1266,7 +1268,8 @@ model CatalogItem {
   quoteLineItems QuoteLineItem[]
 
   // Inventory state
-  inventoryState InventoryState?
+  inventoryState     InventoryState?
+  inventoryMovements InventoryMovement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1495,7 +1498,8 @@ model JournalEntry {
   voidedBy   String?
   voidReason String?   @db.NVarChar(500)
 
-  lines JournalEntryLine[]
+  lines              JournalEntryLine[]
+  inventoryMovements InventoryMovement[]
 
   totalDebit  Decimal @default(0) @db.Decimal(15, 2)
   totalCredit Decimal @default(0) @db.Decimal(15, 2)
@@ -1846,4 +1850,45 @@ model InventoryState {
   @@index([tenantId])
   @@index([tenantId, currentQty])
   @@map("inventory_states")
+}
+
+model InventoryMovement {
+  id             String   @id @default(cuid())
+  tenantId       String
+  catalogItemId  String
+  movementDate   DateTime
+  correlativo    Int
+  movementType   String   @db.NVarChar(40)
+  qtyIn          Decimal  @default(0) @db.Decimal(15, 4)
+  qtyOut         Decimal  @default(0) @db.Decimal(15, 4)
+  unitCost       Decimal  @db.Decimal(15, 4)
+  totalCost      Decimal  @db.Decimal(15, 2)
+  balanceQty     Decimal  @db.Decimal(15, 4)
+  balanceAvgCost Decimal  @db.Decimal(15, 4)
+  balanceValue   Decimal  @db.Decimal(15, 2)
+
+  documentType        String? @db.NVarChar(10)
+  documentNumber      String? @db.NVarChar(50)
+  supplierId          String?
+  supplierNationality String? @db.NVarChar(100)
+
+  sourceType         String  @db.NVarChar(30)
+  sourceId           String
+  purchaseLineItemId String?
+  notes              String? @db.NVarChar(500)
+
+  createdAt      DateTime @default(now())
+  createdBy      String
+  journalEntryId String?
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  catalogItem  CatalogItem   @relation(fields: [catalogItemId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier     Cliente?      @relation("SupplierMovements", fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  journalEntry JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenantId, catalogItemId, correlativo])
+  @@index([tenantId, catalogItemId, movementDate])
+  @@index([tenantId, movementDate])
+  @@index([tenantId, sourceType, sourceId])
+  @@map("inventory_movements")
 }

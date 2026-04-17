@@ -91,8 +91,8 @@ model Tenant {
   codPuntoVentaMH String? @db.NVarChar(4)
 
   // Sucursales & Puntos de Venta
-  sucursales   Sucursal[]
-  puntosVenta  PuntoVenta[]
+  sucursales  Sucursal[]
+  puntosVenta PuntoVenta[]
 
   // Payment methods
   paymentMethods PaymentMethod[]
@@ -444,20 +444,20 @@ model EmailSendLog {
 }
 
 model PendingNotification {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   tenantId       String
   type           String // TICKET_CREATED, TICKET_ADMIN_NOTIFY, TICKET_STATUS_CHANGED, TICKET_REPLY
   referenceId    String? // ticketId
   recipientEmail String
-  emailSubject   String   @db.NVarChar(500)
-  emailHtml      String   @db.NVarChar(Max)
-  emailText      String?  @db.NVarChar(Max)
-  status         String   @default("PENDING") // PENDING, SENT, FAILED, DEAD_LETTER
-  attemptCount   Int      @default(0)
-  maxAttempts    Int      @default(3)
-  nextRetryAt    DateTime @default(now())
-  errorMessage   String?  @db.NVarChar(Max)
-  createdAt      DateTime @default(now())
+  emailSubject   String    @db.NVarChar(500)
+  emailHtml      String    @db.NVarChar(Max)
+  emailText      String?   @db.NVarChar(Max)
+  status         String    @default("PENDING") // PENDING, SENT, FAILED, DEAD_LETTER
+  attemptCount   Int       @default(0)
+  maxAttempts    Int       @default(3)
+  nextRetryAt    DateTime  @default(now())
+  errorMessage   String?   @db.NVarChar(Max)
+  createdAt      DateTime  @default(now())
   sentAt         DateTime?
 
   @@index([status, nextRetryAt])
@@ -1251,10 +1251,11 @@ model CatalogItem {
   taxRate   Decimal @default(13.00) @db.Decimal(5, 2)
 
   // UX optimizations
-  isActive   Boolean   @default(true)
-  isFavorite Boolean   @default(false)
-  usageCount Int       @default(0)
-  lastUsedAt DateTime?
+  isActive       Boolean   @default(true)
+  isFavorite     Boolean   @default(false)
+  trackInventory Boolean   @default(false)
+  usageCount     Int       @default(0)
+  lastUsedAt     DateTime?
 
   // Quote line item references
   quoteLineItems QuoteLineItem[]
@@ -1721,10 +1722,10 @@ model DteErrorLog {
 /// System-wide role templates (immutable). Tenants create Role instances from these.
 model RoleTemplate {
   id          String   @id @default(cuid())
-  code        String   @unique                  // tenant_admin, branch_manager, cashier, accountant, viewer
-  name        String   @db.NVarChar(100)        // Display name
+  code        String   @unique // tenant_admin, branch_manager, cashier, accountant, viewer
+  name        String   @db.NVarChar(100) // Display name
   description String?  @db.NVarChar(500)
-  isSystem    Boolean  @default(true)           // System templates cannot be deleted
+  isSystem    Boolean  @default(true) // System templates cannot be deleted
   createdAt   DateTime @default(now())
 
   permissions RoleTemplatePermission[]
@@ -1734,11 +1735,11 @@ model RoleTemplate {
 /// System-wide permission definitions (enumerated actions on resources).
 model Permission {
   id       String @id @default(cuid())
-  code     String @unique                       // e.g. "dte:create", "client:read"
-  resource String @db.NVarChar(50)              // e.g. "dte", "client", "branch"
-  action   String @db.NVarChar(50)              // e.g. "create", "read", "update", "delete", "void"
-  name     String @db.NVarChar(100)             // Display: "Crear DTE"
-  category String @db.NVarChar(100)             // UI grouping: "Facturación", "Clientes"
+  code     String @unique // e.g. "dte:create", "client:read"
+  resource String @db.NVarChar(50) // e.g. "dte", "client", "branch"
+  action   String @db.NVarChar(50) // e.g. "create", "read", "update", "delete", "void"
+  name     String @db.NVarChar(100) // Display: "Crear DTE"
+  category String @db.NVarChar(100) // UI grouping: "Facturación", "Clientes"
 
   templatePermissions RoleTemplatePermission[]
   rolePermissions     RolePermission[]
@@ -1760,15 +1761,15 @@ model RoleTemplatePermission {
 
 /// Tenant-scoped roles. Can derive from a template or be fully custom.
 model Role {
-  id         String   @id @default(cuid())
+  id         String        @id @default(cuid())
   tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  name       String   @db.NVarChar(100)         // Can be customized: "Cajero Senior"
-  templateId String?                            // null = fully custom role
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  name       String        @db.NVarChar(100) // Can be customized: "Cajero Senior"
+  templateId String? // null = fully custom role
   template   RoleTemplate? @relation(fields: [templateId], references: [id])
-  isCustom   Boolean  @default(false)           // true = tenant created custom role
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  isCustom   Boolean       @default(false) // true = tenant created custom role
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   permissions RolePermission[]
   assignments UserRoleAssignment[]
@@ -1790,19 +1791,19 @@ model RolePermission {
 
 /// Assigns a role to a user within a specific scope (tenant, branch, or POS).
 model UserRoleAssignment {
-  id        String   @id @default(cuid())
-  userId    String
-  roleId    String
-  tenantId  String
+  id       String @id @default(cuid())
+  userId   String
+  roleId   String
+  tenantId String
 
   /// Hierarchical scope: "tenant" | "branch" | "pos"
-  scopeType String   @db.NVarChar(20)
+  scopeType String @db.NVarChar(20)
   /// The ID of the scoped entity (tenantId, sucursalId, or puntoVentaId)
   scopeId   String
 
-  assignedBy String                             // userId of who assigned this role
-  assignedAt DateTime @default(now())
-  expiresAt  DateTime?                          // Optional expiration
+  assignedBy String // userId of who assigned this role
+  assignedAt DateTime  @default(now())
+  expiresAt  DateTime? // Optional expiration
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)

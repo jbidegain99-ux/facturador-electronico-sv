@@ -21,7 +21,8 @@ export type IngestStatus =
   | 'FAILED_MH_NOT_FOUND'
   | 'VERIFY_TIMEOUT_RETRY'
   | 'VERIFY_5XX_RETRY'
-  | 'VERIFY_AUTH_RETRY';
+  | 'VERIFY_AUTH_RETRY'
+  | 'UNVERIFIED';
 
 export type IngestSource = 'JSON_UPLOAD' | 'OCR_PDF' | 'MANUAL_ENTRY' | 'API_WEBHOOK';
 
@@ -42,7 +43,7 @@ export interface IngestResult {
   mhVerifyResult?: MhVerifyResult;
 }
 
-const MH_TO_INGEST: Record<MhVerifyStatus, IngestStatus> = {
+export const MH_TO_INGEST: Record<MhVerifyStatus, IngestStatus> = {
   VERIFIED: 'VERIFIED',
   HARD_FAIL_NOT_FOUND: 'FAILED_MH_NOT_FOUND',
   HARD_FAIL_MISMATCH: 'STRUCTURAL_OK',

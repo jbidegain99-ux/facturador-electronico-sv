@@ -1,0 +1,59 @@
+{
+  "identificacion": {
+    "version": 1,
+    "ambiente": "00",
+    "tipoDte": "11",
+    "numeroControl": "DTE-11-AB12CD34-000000000000001",
+    "codigoGeneracion": "11A2B3C4-D5E6-7890-ABCD-EF1234567890",
+    "tipoModelo": 1,
+    "tipoOperacion": 1,
+    "fecEmi": "2026-04-15",
+    "horEmi": "10:00:00",
+    "tipoMoneda": "USD"
+  },
+  "emisor": {
+    "nit": "06141507251041",
+    "nrc": "1234567",
+    "nombre": "Exportador Test SA de CV",
+    "codActividad": "46202",
+    "descActividad": "Exportacion de productos",
+    "direccion": {"departamento": "06", "municipio": "14", "complemento": "Zona Franca Bloque A"},
+    "telefono": "22001234",
+    "correo": "exportaciones@exportador-test.sv"
+  },
+  "receptor": {
+    "nombre": "Foreign Buyer LLC",
+    "nombreComercial": "Foreign Buyer",
+    "complemento": "123 Commerce St, Miami FL 33101",
+    "pais": "US",
+    "tipoDocumento": "37",
+    "numDocumento": "FL123456789",
+    "telefono": "+13055551234",
+    "correo": "purchasing@foreignbuyer.com"
+  },
+  "otrosDocumentos": [],
+  "cuerpoDocumento": [
+    {
+      "numItem": 1,
+      "tipoItem": 2,
+      "cantidad": 100,
+      "codigo": "EXP-001",
+      "uniMedida": 59,
+      "descripcion": "Cafe tostado molido exportacion",
+      "precioUni": 5.50,
+      "ventaGravada": 550.00,
+      "noGravado": 0,
+      "descuento": 0
+    }
+  ],
+  "resumen": {
+    "totalGravada": 550.00,
+    "subTotal": 550.00,
+    "descuento": 0,
+    "totalLetras": "QUINIENTOS CINCUENTA 00/100 DOLARES",
+    "condicionOperacion": 1,
+    "pagos": [{"codigo": "01", "montoPago": 550.00}]
+  },
+  "extension": null,
+  "apendice": null
+}

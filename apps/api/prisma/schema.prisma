@@ -71,6 +71,7 @@ model Tenant {
   inventoryMovements InventoryMovement[]
   receivedDtes       ReceivedDTE[]
   purchases          Purchase[]
+  physicalCounts     PhysicalCount[]
 
   // Quotes / Cotizaciones
   quotes Quote[]
@@ -1271,9 +1272,10 @@ model CatalogItem {
   quoteLineItems QuoteLineItem[]
 
   // Inventory state
-  inventoryState     InventoryState?
-  inventoryMovements InventoryMovement[]
-  purchaseLineItems  PurchaseLineItem[]
+  inventoryState       InventoryState?
+  inventoryMovements   InventoryMovement[]
+  purchaseLineItems    PurchaseLineItem[]
+  physicalCountDetails PhysicalCountDetail[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1886,10 +1888,11 @@ model InventoryMovement {
   createdBy      String
   journalEntryId String?
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  catalogItem  CatalogItem   @relation(fields: [catalogItemId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  supplier     Cliente?      @relation("SupplierMovements", fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  journalEntry JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  catalogItem         CatalogItem          @relation(fields: [catalogItemId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier            Cliente?             @relation("SupplierMovements", fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  journalEntry        JournalEntry?        @relation(fields: [journalEntryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  physicalCountDetail PhysicalCountDetail? @relation("PhysicalCountAdjustment")
 
   @@unique([tenantId, catalogItemId, correlativo])
   @@index([tenantId, catalogItemId, movementDate])
@@ -2000,4 +2003,49 @@ model PurchaseLineItem {
   @@unique([purchaseId, lineNumber])
   @@index([tenantId, catalogItemId])
   @@map("purchase_line_items")
+}
+
+model PhysicalCount {
+  id         String   @id @default(cuid())
+  tenantId   String
+  countDate  DateTime
+  fiscalYear Int
+  status     String   @db.NVarChar(20)
+  notes      String?  @db.NVarChar(1000)
+
+  finalizedAt DateTime?
+  finalizedBy String?
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  tenant  Tenant                @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  details PhysicalCountDetail[]
+
+  @@unique([tenantId, fiscalYear])
+  @@index([tenantId, status])
+  @@map("physical_counts")
+}
+
+model PhysicalCountDetail {
+  id              String  @id @default(cuid())
+  physicalCountId String
+  tenantId        String
+  catalogItemId   String
+  systemQty       Decimal @db.Decimal(15, 4)
+  countedQty      Decimal @db.Decimal(15, 4)
+  variance        Decimal @db.Decimal(15, 4)
+  unitCost        Decimal @db.Decimal(15, 4)
+  totalValue      Decimal @db.Decimal(15, 2)
+
+  adjustmentMovementId String? @unique
+  notes                String? @db.NVarChar(500)
+
+  physicalCount PhysicalCount      @relation(fields: [physicalCountId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  catalogItem   CatalogItem        @relation(fields: [catalogItemId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  adjustment    InventoryMovement? @relation("PhysicalCountAdjustment", fields: [adjustmentMovementId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([physicalCountId, catalogItemId])
+  @@index([tenantId, physicalCountId])
+  @@map("physical_count_details")
 }

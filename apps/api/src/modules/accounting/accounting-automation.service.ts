@@ -209,6 +209,162 @@ export class AccountingAutomationService {
   }
 
   /**
+   * Generate a journal entry from a Purchase.
+   * Mirrors generateFromDTE() pattern for source='PURCHASE'.
+   * Non-blocking: errors are logged, never thrown to caller.
+   */
+  async generateFromPurchase(
+    purchaseId: string,
+    tenantId: string,
+    trigger: string,
+  ): Promise<JournalEntryWithLines | null> {
+    // 1. Check tenant config — only autoJournalEnabled gates. Trigger matching
+    // is skipped for purchases (tenant's autoJournalTrigger is for DTE lifecycle
+    // and doesn't apply here). The trigger param is used for audit/logging only.
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { autoJournalEnabled: true, autoJournalTrigger: true },
+    });
+
+    if (!tenant?.autoJournalEnabled) {
+      this.logger.debug(`Auto journal disabled for tenant ${tenantId} — skipping Purchase ${purchaseId}`);
+      return null;
+    }
+
+    // 2. Load Purchase with relations
+    const purchase = await this.prisma.purchase.findFirst({
+      where: { id: purchaseId, tenantId },
+    });
+
+    if (!purchase) {
+      this.logger.warn(`Purchase ${purchaseId} not found for tenant ${tenantId}`);
+      return null;
+    }
+
+    // 3. Check for duplicate (sourceType='PURCHASE' + sourceDocumentId=purchaseId)
+    const existing = await this.prisma.journalEntry.findFirst({
+      where: {
+        tenantId,
+        sourceType: 'PURCHASE',
+        sourceDocumentId: purchaseId,
+        status: { not: 'VOIDED' },
+      },
+    });
+
+    if (existing) {
+      this.logger.warn(
+        `Journal entry already exists for Purchase ${purchaseId}: ${existing.entryNumber}`,
+      );
+      return null;
+    }
+
+    // 4. Map documentType → operation code (must match seeded AccountMappingRules)
+    const operationMap: Record<string, string> = {
+      CCFE: 'COMPRA_CCFE',
+      FCFE: 'COMPRA_FCFE', // corresponds to MH tipoDte 01 (FE Consumidor Final)
+      FSEE: 'COMPRA_FSEE',
+    };
+    const operation = operationMap[purchase.documentType ?? ''];
+    if (!operation) {
+      this.logger.warn(
+        `No operation mapping for Purchase ${purchaseId} documentType=${purchase.documentType}`,
+      );
+      return null;
+    }
+
+    // 5. Find active mapping rule
+    const rule = await this.prisma.accountMappingRule.findFirst({
+      where: { tenantId, operation, isActive: true },
+      include: {
+        debitAccount: { select: { id: true, code: true, name: true } },
+        creditAccount: { select: { id: true, code: true, name: true } },
+      },
+    });
+
+    if (!rule) {
+      this.logger.warn(`No mapping rule found for operation ${operation} in tenant ${tenantId}`);
+      return null;
+    }
+
+    // 6. Warn if retention present but not reflected (deferred to Fase 1.5)
+    if (Number(purchase.retentionAmount) > 0) {
+      this.logger.warn(
+        `Purchase ${purchaseId} has retentionAmount=${purchase.retentionAmount} — ` +
+        `not reflected in asiento (Fase 1.5 will add retention leg)`,
+      );
+    }
+
+    // 7. Build amounts — Purchase fields mapped to shared DteAmounts shape
+    // (buildMultiLines reads these keys: totalPagar, totalGravada, totalIva)
+    const amounts: DteAmounts = {
+      totalPagar: Number(purchase.totalAmount),
+      totalGravada: Number(purchase.subtotal),
+      totalIva: Number(purchase.ivaAmount),
+    };
+
+    // 8. Build journal entry lines (reuse existing helper)
+    const lines = rule.mappingConfig
+      ? await this.buildMultiLines(
+          tenantId,
+          rule.mappingConfig,
+          amounts,
+          purchase.documentType ?? 'UNKNOWN',
+        )
+      : this.buildSimpleLines(
+          rule.debitAccountId,
+          rule.creditAccountId,
+          amounts.totalPagar,
+          purchase.documentType ?? 'UNKNOWN',
+        );
+
+    if (!lines || lines.length === 0) {
+      this.logger.warn(`No lines generated for Purchase ${purchaseId}`);
+      return null;
+    }
+
+    // 9. Validate Debe = Haber
+    const totalDebit = lines.reduce((sum, l) => sum + l.debit, 0);
+    const totalCredit = lines.reduce((sum, l) => sum + l.credit, 0);
+
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      this.logger.error(
+        `Unbalanced entry for Purchase ${purchaseId}: debit=${totalDebit.toFixed(2)}, credit=${totalCredit.toFixed(2)}`,
+      );
+      return null;
+    }
+
+    // 10. Create journal entry + post
+    const docLabel = operation.replace('COMPRA_', ''); // CCFE / FCFE / FSEE
+    const description = `Compra ${docLabel} ${purchase.documentNumber ?? purchase.purchaseNumber} - Auto (${trigger})`;
+
+    const entry = await this.accountingService.createJournalEntry(tenantId, {
+      entryDate: purchase.purchaseDate.toISOString(),
+      description,
+      entryType: 'AUTOMATIC',
+      sourceType: 'PURCHASE',
+      sourceDocumentId: purchaseId,
+      lines,
+    });
+
+    const posted = await this.accountingService.postJournalEntry(
+      tenantId,
+      entry.id,
+      'system',
+    );
+
+    // 11. Link back to Purchase
+    await this.prisma.purchase.update({
+      where: { id: purchaseId },
+      data: { journalEntryId: posted.id },
+    });
+
+    this.logger.log(
+      `Auto journal entry ${posted.entryNumber} created and posted for Purchase ${purchaseId}`,
+    );
+    return posted;
+  }
+
+  /**
    * Determine the accounting operation based on tipoDte and condicionOperacion.
    */
   private determineOperation(tipoDte: string, jsonOriginal: string): string | null {

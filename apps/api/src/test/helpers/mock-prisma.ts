@@ -71,6 +71,14 @@ export interface MockPrismaClient {
     update: jest.Mock;
     delete: jest.Mock;
   };
+  purchase: {
+    findFirst: jest.Mock;
+    findUnique: jest.Mock;
+    findMany: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    count: jest.Mock;
+  };
   planFeature: {
     findUnique: jest.Mock;
     findMany: jest.Mock;
@@ -163,6 +171,14 @@ export function createMockPrismaService(): MockPrismaClient {
       create: jest.fn().mockResolvedValue({}),
       update: jest.fn().mockResolvedValue({}),
       delete: jest.fn().mockResolvedValue({}),
+    },
+    purchase: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      findUnique: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([]),
+      create: jest.fn().mockResolvedValue({}),
+      update: jest.fn().mockResolvedValue({}),
+      count: jest.fn().mockResolvedValue(0),
     },
     planFeature: {
       findUnique: jest.fn().mockResolvedValue(null),

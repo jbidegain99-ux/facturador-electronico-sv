@@ -69,6 +69,7 @@ model Tenant {
   catalogCategories  CatalogCategory[]
   inventoryStates    InventoryState[]
   inventoryMovements InventoryMovement[]
+  receivedDtes       ReceivedDTE[]
 
   // Quotes / Cotizaciones
   quotes Quote[]
@@ -1891,4 +1892,34 @@ model InventoryMovement {
   @@index([tenantId, movementDate])
   @@index([tenantId, sourceType, sourceId])
   @@map("inventory_movements")
+}
+
+model ReceivedDTE {
+  id               String    @id @default(cuid())
+  tenantId         String
+  tipoDte          String    @db.NVarChar(10)
+  numeroControl    String    @db.NVarChar(50)
+  codigoGeneracion String    @db.NVarChar(40)
+  selloRecepcion   String?   @db.NVarChar(100)
+  fhProcesamiento  DateTime?
+  fhEmision        DateTime
+  emisorNIT        String    @db.NVarChar(20)
+  emisorNombre     String    @db.NVarChar(250)
+  rawPayload       String    @db.NVarChar(Max)
+  parsedPayload    String?   @db.NVarChar(Max)
+
+  ingestStatus String  @default("PENDING") @db.NVarChar(20)
+  ingestErrors String? @db.NVarChar(Max)
+  ingestSource String  @db.NVarChar(30)
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  // purchase Purchase? — will be uncommented in Task 8 once Purchase model exists
+
+  @@unique([tenantId, codigoGeneracion])
+  @@index([tenantId, ingestStatus])
+  @@index([tenantId, emisorNIT])
+  @@map("received_dtes")
 }

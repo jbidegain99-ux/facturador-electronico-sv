@@ -272,6 +272,88 @@ describe('AccountingAutomationService', () => {
     );
   });
 
+  describe('generateFromPurchase', () => {
+    const purchaseId = 'purchase-1';
+    const mockPurchase = {
+      id: purchaseId,
+      tenantId,
+      documentType: 'CCFE',
+      documentNumber: 'DTE-03-AB12CD34-000000000000001',
+      purchaseNumber: 'PUR-tenant-001',
+      purchaseDate: new Date('2026-04-15'),
+      subtotal: '100.00',
+      ivaAmount: '13.00',
+      totalAmount: '113.00',
+      retentionAmount: '0',
+      status: 'DRAFT',
+    };
+
+    const mockMappingRule = {
+      id: 'rule-ccfe',
+      operation: 'COMPRA_CCFE',
+      isActive: true,
+      debitAccountId: 'acc-inv',
+      creditAccountId: 'acc-cxp',
+      mappingConfig: JSON.stringify({
+        debe: [
+          { cuenta: '110401', monto: 'subtotal', descripcion: 'Inventario Mercadería' },
+          { cuenta: '110303', monto: 'iva', descripcion: 'IVA Crédito Fiscal' },
+        ],
+        haber: [
+          { cuenta: '210101', monto: 'total', descripcion: 'Proveedores' },
+        ],
+      }),
+      debitAccount: { id: 'acc-inv', code: '110401', name: 'Inventario Mercadería' },
+      creditAccount: { id: 'acc-cxp', code: '210101', name: 'Proveedores' },
+    };
+
+    beforeEach(() => {
+      (prisma.tenant.findUnique as jest.Mock).mockResolvedValue({
+        autoJournalEnabled: true,
+        autoJournalTrigger: 'ON_PURCHASE_CREATED',
+      });
+      (prisma.purchase as unknown as { findFirst: jest.Mock }).findFirst = jest.fn().mockResolvedValue(mockPurchase);
+      (prisma.journalEntry.findFirst as jest.Mock).mockResolvedValue(null); // no existing
+      (prisma.accountMappingRule.findFirst as jest.Mock).mockResolvedValue(mockMappingRule);
+      (prisma.purchase as unknown as { update: jest.Mock }).update = jest.fn().mockResolvedValue(mockPurchase);
+    });
+
+    it('creates and posts asiento for CCFE purchase', async () => {
+      const result = await service.generateFromPurchase(purchaseId, tenantId, 'ON_PURCHASE_CREATED');
+
+      expect(result).toBeDefined();
+      expect(prisma.accountMappingRule.findFirst).toHaveBeenCalledWith({
+        where: { tenantId, operation: 'COMPRA_CCFE', isActive: true },
+        include: {
+          debitAccount: { select: { id: true, code: true, name: true } },
+          creditAccount: { select: { id: true, code: true, name: true } },
+        },
+      });
+    });
+
+    it('returns null when no mapping rule exists for operation', async () => {
+      (prisma.accountMappingRule.findFirst as jest.Mock).mockResolvedValue(null);
+      const result = await service.generateFromPurchase(purchaseId, tenantId, 'ON_PURCHASE_CREATED');
+      expect(result).toBeNull();
+    });
+
+    it('returns null when Purchase not found', async () => {
+      (prisma.purchase as unknown as { findFirst: jest.Mock }).findFirst = jest.fn().mockResolvedValue(null);
+      const result = await service.generateFromPurchase('missing-id', tenantId, 'ON_PURCHASE_CREATED');
+      expect(result).toBeNull();
+    });
+
+    it('returns null when duplicate journal entry already exists for this Purchase', async () => {
+      (prisma.journalEntry.findFirst as jest.Mock).mockResolvedValue({
+        id: 'existing-entry',
+        entryNumber: 'JE-001',
+        status: 'POSTED',
+      });
+      const result = await service.generateFromPurchase(purchaseId, tenantId, 'ON_PURCHASE_CREATED');
+      expect(result).toBeNull();
+    });
+  });
+
   describe('reverseFromDTE', () => {
     it('should void existing posted journal entry on DTE annulment', async () => {
       prisma.journalEntry.findFirst.mockResolvedValue({

@@ -1,0 +1,57 @@
+{
+  "identificacion": {
+    "version": 1,
+    "ambiente": "00",
+    "tipoDte": "14",
+    "numeroControl": "DTE-14-AB12CD34-000000000000001",
+    "codigoGeneracion": "C1D2E3F4-A5B6-7890-ABCD-EF1234567890",
+    "tipoModelo": 1,
+    "tipoOperacion": 1,
+    "fecEmi": "2026-04-15",
+    "horEmi": "12:30:00",
+    "tipoMoneda": "USD"
+  },
+  "sujetoExcluido": {
+    "tipoDocumento": "13",
+    "numDocumento": "012345678",
+    "nombre": "Juan Perez (sujeto excluido)",
+    "codActividad": "47301",
+    "descActividad": "Vendedor informal",
+    "direccion": {"departamento": "06", "municipio": "14", "complemento": "Mercado Central"},
+    "telefono": "77001234",
+    "correo": "juanperez@example.sv"
+  },
+  "receptor": {
+    "nit": "06231507251041",
+    "nrc": "7654321",
+    "nombre": "Comprador Receptor SA de CV",
+    "codActividad": "47301",
+    "direccion": {"departamento": "06", "municipio": "14", "complemento": "Col Calle 2"}
+  },
+  "cuerpoDocumento": [
+    {
+      "numItem": 1,
+      "tipoItem": 1,
+      "cantidad": 5,
+      "codigo": null,
+      "uniMedida": 99,
+      "descripcion": "Servicio sujeto excluido",
+      "precioUni": 10.00,
+      "montoDescu": 0,
+      "compra": 50.00
+    }
+  ],
+  "resumen": {
+    "totalCompra": 50.00,
+    "descu": 0,
+    "totalDescu": 0,
+    "subTotal": 50.00,
+    "ivaRete1": 0,
+    "reteRenta": 0,
+    "totalPagar": 50.00,
+    "totalLetras": "CINCUENTA 00/100 DOLARES",
+    "condicionOperacion": 1,
+    "pagos": [{"codigo": "01", "montoPago": 50.00}]
+  },
+  "apendice": null
+}

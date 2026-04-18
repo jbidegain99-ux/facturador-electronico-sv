@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlanFeaturesService } from '../services/plan-features.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { PLAN_CONFIGS } from '../../../common/plan-features';
 
 interface MockPrisma {
   tenant: { findUnique: jest.Mock };
@@ -129,12 +130,12 @@ describe('PlanFeaturesService', () => {
       expect(await service.checkFeatureAccess('ENTERPRISE', 'invoicing')).toBe(true);
     });
 
-    it('should grant accounting to STARTER, PROFESSIONAL, ENTERPRISE but not FREE', async () => {
+    it('should grant accounting to ENTERPRISE only (not FREE/STARTER/PROFESSIONAL)', async () => {
       prisma.planFeature.findUnique.mockResolvedValue(null);
 
       expect(await service.checkFeatureAccess('FREE', 'accounting')).toBe(false);
-      expect(await service.checkFeatureAccess('STARTER', 'accounting')).toBe(true);
-      expect(await service.checkFeatureAccess('PROFESSIONAL', 'accounting')).toBe(true);
+      expect(await service.checkFeatureAccess('STARTER', 'accounting')).toBe(false);
+      expect(await service.checkFeatureAccess('PROFESSIONAL', 'accounting')).toBe(false);
       expect(await service.checkFeatureAccess('ENTERPRISE', 'accounting')).toBe(true);
     });
 
@@ -186,40 +187,43 @@ describe('PlanFeaturesService', () => {
       expect(result).toContain('phone_support');
       expect(result).toContain('external_email');
       expect(result).toContain('hacienda_setup_support');
-      expect(result).toHaveLength(13); // all 13 features enabled
+      expect(result).toHaveLength(14); // all 14 features enabled
     });
 
-    it('should return STARTER features (6 enabled)', async () => {
+    it('should return STARTER features (5 enabled)', async () => {
       prisma.planFeature.findMany.mockResolvedValue([]);
 
       const result = await service.getPlanFeatures('STARTER');
       expect(result).toContain('invoicing');
-      expect(result).toContain('accounting');
       expect(result).toContain('catalog');
       expect(result).toContain('recurring_invoices');
       expect(result).toContain('ticket_support');
       expect(result).toContain('logo_branding');
+      expect(result).not.toContain('accounting');
       expect(result).not.toContain('quotes_b2b');
       expect(result).not.toContain('webhooks');
       expect(result).not.toContain('phone_support');
       expect(result).not.toContain('external_email');
-      expect(result).toHaveLength(6);
+      expect(result).toHaveLength(5);
     });
 
-    it('should return PROFESSIONAL features (8 enabled, no webhooks/api)', async () => {
+    it('should return PROFESSIONAL features (9 enabled, no accounting/advanced_reports/webhooks/api)', async () => {
       prisma.planFeature.findMany.mockResolvedValue([]);
 
       const result = await service.getPlanFeatures('PROFESSIONAL');
       expect(result).toContain('invoicing');
-      expect(result).toContain('accounting');
+      expect(result).toContain('catalog');
+      expect(result).toContain('recurring_invoices');
       expect(result).toContain('quotes_b2b');
-      expect(result).toContain('advanced_reports');
+      expect(result).toContain('inventory_reports');
       expect(result).toContain('external_email');
       expect(result).toContain('hacienda_setup_support');
+      expect(result).not.toContain('accounting');
+      expect(result).not.toContain('advanced_reports');
       expect(result).not.toContain('webhooks');
       expect(result).not.toContain('api_full');
       expect(result).not.toContain('phone_support');
-      expect(result).toHaveLength(10);
+      expect(result).toHaveLength(9);
     });
 
     it('should return FREE features (3 enabled)', async () => {
@@ -366,6 +370,24 @@ describe('PlanFeaturesService', () => {
       const result = await service.getTenantUsageInfo('tenant-1');
       expect(result.canAddBranch).toBe(false); // STARTER limit is 1
       expect(result.limits.maxBranches).toBe(1);
+    });
+  });
+
+  describe('inventory_reports feature gating', () => {
+    it('FREE plan does not have inventory_reports', () => {
+      expect(PLAN_CONFIGS.FREE.features.inventory_reports).toBe(false);
+    });
+
+    it('STARTER plan does not have inventory_reports', () => {
+      expect(PLAN_CONFIGS.STARTER.features.inventory_reports).toBe(false);
+    });
+
+    it('PROFESSIONAL plan has inventory_reports', () => {
+      expect(PLAN_CONFIGS.PROFESSIONAL.features.inventory_reports).toBe(true);
+    });
+
+    it('ENTERPRISE plan has inventory_reports', () => {
+      expect(PLAN_CONFIGS.ENTERPRISE.features.inventory_reports).toBe(true);
     });
   });
 });

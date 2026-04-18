@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlanFeaturesService } from './plan-features.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { PLAN_CONFIGS } from '../../../common/plan-features';
 
 interface MockPrisma {
   tenant: { findUnique: jest.Mock };
@@ -124,8 +125,8 @@ describe('PlanFeaturesService', () => {
       expect(await service.checkFeatureAccess('FREE', 'accounting')).toBe(false);
     });
 
-    it('checkFeatureAccess(STARTER, accounting) should be true', async () => {
-      expect(await service.checkFeatureAccess('STARTER', 'accounting')).toBe(true);
+    it('checkFeatureAccess(STARTER, accounting) should be false', async () => {
+      expect(await service.checkFeatureAccess('STARTER', 'accounting')).toBe(false);
     });
 
     it('checkFeatureAccess(STARTER, quotes_b2b) should be false', async () => {
@@ -155,10 +156,10 @@ describe('PlanFeaturesService', () => {
       expect(await service.checkFeatureAccess('ENTERPRISE', 'invoicing')).toBe(true);
     });
 
-    it('should grant accounting to STARTER+ but not FREE', async () => {
+    it('should grant accounting to ENTERPRISE only (not FREE/STARTER/PROFESSIONAL)', async () => {
       expect(await service.checkFeatureAccess('FREE', 'accounting')).toBe(false);
-      expect(await service.checkFeatureAccess('STARTER', 'accounting')).toBe(true);
-      expect(await service.checkFeatureAccess('PROFESSIONAL', 'accounting')).toBe(true);
+      expect(await service.checkFeatureAccess('STARTER', 'accounting')).toBe(false);
+      expect(await service.checkFeatureAccess('PROFESSIONAL', 'accounting')).toBe(false);
       expect(await service.checkFeatureAccess('ENTERPRISE', 'accounting')).toBe(true);
     });
 
@@ -184,7 +185,7 @@ describe('PlanFeaturesService', () => {
     // --- Legacy alias normalization ---
 
     it('should normalize BASIC to STARTER features', async () => {
-      expect(await service.checkFeatureAccess('BASIC', 'accounting')).toBe(true);
+      expect(await service.checkFeatureAccess('BASIC', 'accounting')).toBe(false);
       expect(await service.checkFeatureAccess('BASIC', 'quotes_b2b')).toBe(false);
     });
 
@@ -227,7 +228,7 @@ describe('PlanFeaturesService', () => {
       expect(result).toContain('phone_support');
       expect(result).toContain('external_email');
       expect(result).toContain('hacienda_setup_support');
-      expect(result).toHaveLength(13); // all 13 features enabled
+      expect(result).toHaveLength(14); // all 14 features enabled
     });
 
     it('should return FREE features (3 enabled)', async () => {
@@ -242,35 +243,38 @@ describe('PlanFeaturesService', () => {
       expect(result).toHaveLength(3);
     });
 
-    it('should return STARTER features (6 enabled)', async () => {
+    it('should return STARTER features (5 enabled)', async () => {
       prisma.planFeature.findMany.mockResolvedValue([]);
 
       const result = await service.getPlanFeatures('STARTER');
       expect(result).toContain('invoicing');
-      expect(result).toContain('accounting');
       expect(result).toContain('catalog');
       expect(result).toContain('recurring_invoices');
       expect(result).toContain('ticket_support');
       expect(result).toContain('logo_branding');
+      expect(result).not.toContain('accounting');
       expect(result).not.toContain('quotes_b2b');
       expect(result).not.toContain('webhooks');
-      expect(result).toHaveLength(6);
+      expect(result).toHaveLength(5);
     });
 
-    it('should return PROFESSIONAL features (10 enabled)', async () => {
+    it('should return PROFESSIONAL features (9 enabled)', async () => {
       prisma.planFeature.findMany.mockResolvedValue([]);
 
       const result = await service.getPlanFeatures('PROFESSIONAL');
       expect(result).toContain('invoicing');
-      expect(result).toContain('accounting');
+      expect(result).toContain('catalog');
+      expect(result).toContain('recurring_invoices');
       expect(result).toContain('quotes_b2b');
-      expect(result).toContain('advanced_reports');
+      expect(result).toContain('inventory_reports');
       expect(result).toContain('external_email');
       expect(result).toContain('hacienda_setup_support');
+      expect(result).not.toContain('accounting');
+      expect(result).not.toContain('advanced_reports');
       expect(result).not.toContain('webhooks');
       expect(result).not.toContain('api_full');
       expect(result).not.toContain('phone_support');
-      expect(result).toHaveLength(10);
+      expect(result).toHaveLength(9);
     });
   });
 
@@ -496,6 +500,24 @@ describe('PlanFeaturesService', () => {
       expect(result.canCreateDte).toBe(true);
       expect(result.canAddClient).toBe(true);
       expect(result.canAddBranch).toBe(true);
+    });
+  });
+
+  describe('inventory_reports feature gating', () => {
+    it('FREE plan does not have inventory_reports', () => {
+      expect(PLAN_CONFIGS.FREE.features.inventory_reports).toBe(false);
+    });
+
+    it('STARTER plan does not have inventory_reports', () => {
+      expect(PLAN_CONFIGS.STARTER.features.inventory_reports).toBe(false);
+    });
+
+    it('PROFESSIONAL plan has inventory_reports', () => {
+      expect(PLAN_CONFIGS.PROFESSIONAL.features.inventory_reports).toBe(true);
+    });
+
+    it('ENTERPRISE plan has inventory_reports', () => {
+      expect(PLAN_CONFIGS.ENTERPRISE.features.inventory_reports).toBe(true);
     });
   });
 });

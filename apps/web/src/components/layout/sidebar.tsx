@@ -20,6 +20,8 @@ import {
   Webhook,
   Building2,
   TrendingUp,
+  ShoppingCart,
+  Truck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacturoLogo, FacturoIcon } from '@/components/brand';
@@ -27,7 +29,7 @@ import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useTranslations } from 'next-intl';
 
-type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'cashFlow' | 'accounting' | 'catalog' | 'webhooks' | 'branches' | 'support' | 'settings';
+type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'purchases' | 'suppliers' | 'cashFlow' | 'accounting' | 'catalog' | 'webhooks' | 'branches' | 'support' | 'settings';
 
 type BadgeType = 'PRO' | 'ENT' | null;
 
@@ -38,6 +40,8 @@ const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; bad
   { key: 'recurring', href: '/facturas/recurrentes', icon: Repeat, badgeKey: 'pro', iconColor: 'text-cyan-500' },
   { key: 'reports', href: '/reportes', icon: BarChart3, iconColor: 'text-orange-500' },
   { key: 'clients', href: '/clientes', icon: Users, iconColor: 'text-blue-500' },
+  { key: 'purchases', href: '/compras', icon: ShoppingCart, iconColor: 'text-violet-500' },
+  { key: 'suppliers', href: '/proveedores', icon: Truck, iconColor: 'text-fuchsia-500' },
   { key: 'cashFlow', href: '/cash-flow', icon: TrendingUp, iconColor: 'text-green-500' },
   { key: 'accounting', href: '/contabilidad', icon: BookOpen, badgeKey: 'pro', iconColor: 'text-emerald-500' },
   { key: 'catalog', href: '/catalogo', icon: Package, iconColor: 'text-amber-500' },

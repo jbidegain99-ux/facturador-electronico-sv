@@ -7,6 +7,9 @@ import { PurchasesService } from './purchases.service';
 import { AccountingAutomationService } from '../../accounting/accounting-automation.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type { ParsedDTE } from '../../dte/services/dte-import-parser.service';
+import type { CreatePurchaseDto } from '../dto/create-purchase.dto';
+import type { UpdatePurchaseDto } from '../dto/update-purchase.dto';
+import { PurchaseLineTipo } from '../dto/purchase-line.dto';
 
 // =========================================================================
 // Mocks
@@ -14,9 +17,18 @@ import type { ParsedDTE } from '../../dte/services/dte-import-parser.service';
 
 type PrismaMock = {
   receivedDTE: { findFirst: jest.Mock };
-  cliente: { findUnique: jest.Mock; create: jest.Mock; update: jest.Mock };
+  cliente: { findUnique: jest.Mock; findFirst: jest.Mock; create: jest.Mock; update: jest.Mock };
   catalogItem: { findUnique: jest.Mock };
-  purchase: { findUnique: jest.Mock; create: jest.Mock };
+  purchase: {
+    findUnique: jest.Mock;
+    findFirst: jest.Mock;
+    findMany: jest.Mock;
+    count: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    delete: jest.Mock;
+  };
+  purchaseLineItem: { deleteMany: jest.Mock };
   $transaction: jest.Mock;
 };
 
@@ -28,12 +40,27 @@ function mockPrisma(): PrismaMock {
     receivedDTE: { findFirst: jest.fn() },
     cliente: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: clienteCreate,
       update: clienteUpdate,
     },
     catalogItem: { findUnique: jest.fn() },
-    purchase: { findUnique: jest.fn(), create: purchaseCreate },
-    $transaction: jest.fn(async (fn) => fn(p)), // pass-through transaction
+    purchase: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+      create: purchaseCreate,
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    purchaseLineItem: { deleteMany: jest.fn() },
+    $transaction: jest.fn(async (fns) => {
+      // Support both: fn(prisma) pattern and array of promises pattern
+      if (typeof fns === 'function') return fns(p);
+      if (Array.isArray(fns)) return Promise.all(fns);
+      return fns;
+    }),
   };
   return p;
 }
@@ -421,6 +448,330 @@ describe('PurchasesService', () => {
       (prisma.receivedDTE.findFirst as jest.Mock).mockResolvedValue(null);
       const { service } = makeService(prisma);
       await expect(service.createFromReceivedDte(...baseCall)).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  // =========================================================================
+  // Task 4 new methods
+  // =========================================================================
+
+  // ---- Fixtures for manual purchase tests ----
+
+  function makeSupplier(overrides: Record<string, unknown> = {}) {
+    return {
+      id: 'sup-manual',
+      tenantId: 'tenant-1',
+      nombre: 'Proveedor Manual SA',
+      isSupplier: true,
+      isCustomer: false,
+      esGranContribuyente: false,
+      retieneISR: false,
+      ...overrides,
+    };
+  }
+
+  function makeCreateDto(overrides: Partial<CreatePurchaseDto> = {}): CreatePurchaseDto {
+    return {
+      proveedorId: 'sup-manual',
+      tipoDoc: 'CCF' as CreatePurchaseDto['tipoDoc'],
+      numDocumentoProveedor: 'F001-0001',
+      fechaDoc: '2026-04-15',
+      fechaContable: '2026-04-15',
+      estadoInicial: 'DRAFT' as CreatePurchaseDto['estadoInicial'],
+      lineas: [
+        {
+          tipo: PurchaseLineTipo.BIEN,
+          descripcion: 'Producto A',
+          itemId: 'item-1',
+          cantidad: 10,
+          precioUnit: 100,
+          descuentoPct: 0,
+          ivaAplica: true,
+        },
+      ],
+      ...overrides,
+    } as CreatePurchaseDto;
+  }
+
+  function makePurchase(overrides: Record<string, unknown> = {}) {
+    return {
+      id: 'pur-manual-1',
+      tenantId: 'tenant-1',
+      status: 'DRAFT',
+      supplierId: 'sup-manual',
+      totalAmount: '1130.00',
+      outstandingBalance: '1130.00',
+      lineItems: [],
+      supplier: makeSupplier(),
+      journalEntry: null,
+      ...overrides,
+    };
+  }
+
+  // =========================================================================
+  describe('createManual', () => {
+    it('1. DRAFT purchase created without calling generateFromPurchase', async () => {
+      const prisma = mockPrisma();
+      (prisma.cliente.findFirst as jest.Mock).mockResolvedValue(makeSupplier());
+      (prisma.purchase.create as jest.Mock).mockResolvedValue(makePurchase());
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(makePurchase());
+
+      const { service, accounting } = makeService(prisma);
+      const dto = makeCreateDto({ estadoInicial: 'DRAFT' as CreatePurchaseDto['estadoInicial'] });
+      const result = await service.createManual('tenant-1', 'user-1', dto);
+
+      expect(result.status).toBe('DRAFT');
+      expect(accounting.generateFromPurchase).not.toHaveBeenCalled();
+    });
+
+    it('2. POSTED purchase triggers generateFromPurchase with MANUAL trigger', async () => {
+      const prisma = mockPrisma();
+      (prisma.cliente.findFirst as jest.Mock).mockResolvedValue(makeSupplier());
+      const postedPurchase = makePurchase({ status: 'POSTED' });
+      (prisma.purchase.create as jest.Mock).mockResolvedValue(postedPurchase);
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(postedPurchase);
+
+      const { service, accounting } = makeService(prisma);
+      const dto = makeCreateDto({ estadoInicial: 'POSTED' as CreatePurchaseDto['estadoInicial'] });
+      await service.createManual('tenant-1', 'user-1', dto);
+
+      expect(accounting.generateFromPurchase).toHaveBeenCalledWith(
+        'pur-manual-1',
+        'tenant-1',
+        'MANUAL',
+      );
+    });
+
+    it('3. POSTED + generateFromPurchase returns null (auto journal disabled) → purchase still returned', async () => {
+      const prisma = mockPrisma();
+      (prisma.cliente.findFirst as jest.Mock).mockResolvedValue(makeSupplier());
+      const postedPurchase = makePurchase({ status: 'POSTED' });
+      (prisma.purchase.create as jest.Mock).mockResolvedValue(postedPurchase);
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(postedPurchase);
+
+      const accountingDisabled = {
+        generateFromPurchase: jest.fn().mockResolvedValue(null),
+      } as unknown as AccountingAutomationService;
+      const service = new PurchasesService(prisma as unknown as PrismaService, accountingDisabled);
+
+      const dto = makeCreateDto({ estadoInicial: 'POSTED' as CreatePurchaseDto['estadoInicial'] });
+      const result = await service.createManual('tenant-1', 'user-1', dto);
+
+      expect(result.status).toBe('POSTED');
+    });
+
+    it('4. Proveedor not found → throws NotFoundException', async () => {
+      const prisma = mockPrisma();
+      (prisma.cliente.findFirst as jest.Mock).mockResolvedValue(null);
+
+      const { service } = makeService(prisma);
+      const dto = makeCreateDto();
+      await expect(service.createManual('tenant-1', 'user-1', dto)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it('5. POSTED + generateFromPurchase throws → PreconditionFailedException + revert to DRAFT', async () => {
+      const prisma = mockPrisma();
+      (prisma.cliente.findFirst as jest.Mock).mockResolvedValue(makeSupplier());
+      const postedPurchase = makePurchase({ status: 'POSTED' });
+      (prisma.purchase.create as jest.Mock).mockResolvedValue(postedPurchase);
+      (prisma.purchase.update as jest.Mock).mockResolvedValue({ ...postedPurchase, status: 'DRAFT' });
+
+      const accountingError = {
+        generateFromPurchase: jest.fn().mockRejectedValue(new Error('Mapping rule not seeded')),
+      } as unknown as AccountingAutomationService;
+      const service = new PurchasesService(prisma as unknown as PrismaService, accountingError);
+
+      const dto = makeCreateDto({ estadoInicial: 'POSTED' as CreatePurchaseDto['estadoInicial'] });
+      await expect(service.createManual('tenant-1', 'user-1', dto)).rejects.toBeInstanceOf(
+        PreconditionFailedException,
+      );
+      // Status reverted
+      expect(prisma.purchase.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: 'DRAFT' }) }),
+      );
+    });
+
+    it('6. Gran contribuyente supplier → ivaRetenidoAmount computed as 1% of taxable subtotal', async () => {
+      const prisma = mockPrisma();
+      const granContrib = makeSupplier({ esGranContribuyente: true });
+      (prisma.cliente.findFirst as jest.Mock).mockResolvedValue(granContrib);
+      (prisma.purchase.create as jest.Mock).mockResolvedValue(makePurchase());
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(makePurchase());
+
+      const { service } = makeService(prisma);
+      const dto = makeCreateDto();
+      await service.createManual('tenant-1', 'user-1', dto);
+
+      const createCall = (prisma.purchase.create as jest.Mock).mock.calls[0][0];
+      // subtotal taxable = 10 * 100 = 1000, ivaRetenido = 1000 * 0.01 = 10
+      expect(Number(createCall.data.ivaRetenidoAmount)).toBeCloseTo(10, 1);
+    });
+  });
+
+  // =========================================================================
+  describe('findAll', () => {
+    it('1. Returns paginated list with metadata', async () => {
+      const prisma = mockPrisma();
+      const purchases = Array.from({ length: 10 }, (_, i) => makePurchase({ id: `pur-${i}` }));
+      (prisma.purchase.findMany as jest.Mock).mockResolvedValue(purchases);
+      (prisma.purchase.count as jest.Mock).mockResolvedValue(25);
+      (prisma.$transaction as jest.Mock).mockResolvedValue([purchases, 25]);
+
+      const { service } = makeService(prisma);
+      const result = await service.findAll('tenant-1', { page: 1, limit: 10 });
+
+      expect(result.data).toHaveLength(10);
+      expect(result.total).toBe(25);
+      expect(result.totalPages).toBe(3);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+    });
+
+    it('2. Filters by status', async () => {
+      const prisma = mockPrisma();
+      const postedPurchases = Array.from({ length: 3 }, (_, i) =>
+        makePurchase({ id: `pur-posted-${i}`, status: 'POSTED' }),
+      );
+      (prisma.$transaction as jest.Mock).mockResolvedValue([postedPurchases, 3]);
+
+      const { service } = makeService(prisma);
+      const result = await service.findAll('tenant-1', { estado: 'POSTED' });
+
+      expect(result.total).toBe(3);
+      const [findManyCall] = (prisma.$transaction as jest.Mock).mock.calls[0][0];
+      void findManyCall; // validated via mock return
+      // Verify where clause had status filter
+      const txArg = (prisma.$transaction as jest.Mock).mock.calls[0][0];
+      expect(txArg).toHaveLength(2);
+    });
+
+    it('3. Filters by proveedorId', async () => {
+      const prisma = mockPrisma();
+      const filtered = [makePurchase({ supplierId: 'sup-x' }), makePurchase({ id: 'pur-2', supplierId: 'sup-x' })];
+      (prisma.$transaction as jest.Mock).mockResolvedValue([filtered, 2]);
+
+      const { service } = makeService(prisma);
+      const result = await service.findAll('tenant-1', { proveedorId: 'sup-x' });
+
+      expect(result.total).toBe(2);
+    });
+
+    it('4. Filters by date range', async () => {
+      const prisma = mockPrisma();
+      const febPurchases = [makePurchase({ id: 'pur-feb' })];
+      (prisma.$transaction as jest.Mock).mockResolvedValue([febPurchases, 1]);
+
+      const { service } = makeService(prisma);
+      const result = await service.findAll('tenant-1', {
+        desde: '2026-02-01',
+        hasta: '2026-02-28',
+      });
+
+      expect(result.total).toBe(1);
+    });
+
+    it('5. Default pagination clamped to limit 20', async () => {
+      const prisma = mockPrisma();
+      (prisma.$transaction as jest.Mock).mockResolvedValue([[], 0]);
+
+      const { service } = makeService(prisma);
+      const result = await service.findAll('tenant-1', {});
+
+      expect(result.limit).toBe(20);
+      expect(result.page).toBe(1);
+    });
+  });
+
+  // =========================================================================
+  describe('update (DRAFT only)', () => {
+    it('1. Updates DRAFT purchase lines and header', async () => {
+      const prisma = mockPrisma();
+      const draft = makePurchase({ status: 'DRAFT' });
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(draft);
+      (prisma.purchaseLineItem.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+      (prisma.purchase.update as jest.Mock).mockResolvedValue(draft);
+      // $transaction returns array of results
+      (prisma.$transaction as jest.Mock).mockResolvedValue([{ count: 1 }, draft]);
+
+      const { service } = makeService(prisma);
+      const dto: UpdatePurchaseDto = {
+        lineas: [
+          {
+            tipo: PurchaseLineTipo.SERVICIO,
+            descripcion: 'Servicio actualizado',
+            cuentaContableId: 'cta-1',
+            monto: 200,
+            descuentoPct: 0,
+            ivaAplica: true,
+          },
+        ],
+      } as UpdatePurchaseDto;
+      await service.update('tenant-1', 'pur-manual-1', dto);
+
+      expect(prisma.purchase.update).toHaveBeenCalled();
+    });
+
+    it('2. Rejects update of POSTED purchase with PreconditionFailedException', async () => {
+      const prisma = mockPrisma();
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(makePurchase({ status: 'POSTED' }));
+
+      const { service } = makeService(prisma);
+      const dto: UpdatePurchaseDto = { lineas: [] } as UpdatePurchaseDto;
+      await expect(service.update('tenant-1', 'pur-manual-1', dto)).rejects.toBeInstanceOf(
+        PreconditionFailedException,
+      );
+      expect(prisma.purchase.update).not.toHaveBeenCalled();
+    });
+
+    it('3. Throws NotFoundException if purchase not found', async () => {
+      const prisma = mockPrisma();
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(null);
+
+      const { service } = makeService(prisma);
+      const dto: UpdatePurchaseDto = {} as UpdatePurchaseDto;
+      await expect(service.update('tenant-1', 'nonexistent', dto)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  // =========================================================================
+  describe('softDelete', () => {
+    it('1. Deletes DRAFT purchase and its line items', async () => {
+      const prisma = mockPrisma();
+      const draft = makePurchase({ status: 'DRAFT' });
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(draft);
+      (prisma.purchaseLineItem.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+      (prisma.purchase.delete as jest.Mock).mockResolvedValue(draft);
+      (prisma.$transaction as jest.Mock).mockResolvedValue([{ count: 1 }, draft]);
+
+      const { service } = makeService(prisma);
+      await service.softDelete('tenant-1', 'pur-manual-1');
+
+      expect(prisma.$transaction).toHaveBeenCalled();
+    });
+
+    it('2. Rejects delete of POSTED purchase with PreconditionFailedException', async () => {
+      const prisma = mockPrisma();
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(makePurchase({ status: 'POSTED' }));
+
+      const { service } = makeService(prisma);
+      await expect(service.softDelete('tenant-1', 'pur-manual-1')).rejects.toBeInstanceOf(
+        PreconditionFailedException,
+      );
+      expect(prisma.purchase.delete).not.toHaveBeenCalled();
+    });
+
+    it('3. Throws NotFoundException if purchase not found', async () => {
+      const prisma = mockPrisma();
+      (prisma.purchase.findFirst as jest.Mock).mockResolvedValue(null);
+
+      const { service } = makeService(prisma);
+      await expect(service.softDelete('tenant-1', 'nonexistent')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 });

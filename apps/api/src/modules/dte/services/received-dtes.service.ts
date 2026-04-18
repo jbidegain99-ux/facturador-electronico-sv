@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, Logger, NotFoundExc
 import type { Prisma, ReceivedDTE } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { DteImportParserService } from './dte-import-parser.service';
+import { ReceivedDteRetryCronService } from './received-dte-retry-cron.service';
 import { DteFormat } from '../dto/preview-dte.dto';
 import { ImportReceivedDteDto } from '../dto/import-received-dte.dto';
 
@@ -23,6 +24,7 @@ export class ReceivedDtesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly parser: DteImportParserService,
+    private readonly retryCron: ReceivedDteRetryCronService,
   ) {}
 
   async findAll(tenantId: string, filters: FindAllFilters) {
@@ -116,12 +118,60 @@ export class ReceivedDtesService {
     });
   }
 
-  // retryMhVerify + reParse stubs for Task 3
-  async retryMhVerify(_tenantId: string, _id: string): Promise<ReceivedDTE> {
-    throw new Error('not implemented — Task 3');
+  async retryMhVerify(tenantId: string, id: string): Promise<ReceivedDTE> {
+    const row = await this.prisma.receivedDTE.findFirst({
+      where: { id, tenantId },
+    });
+    if (!row) throw new NotFoundException(`ReceivedDTE ${id} not found`);
+    if (row.ingestStatus === 'VERIFIED') {
+      throw new ConflictException({ code: 'ALREADY_VERIFIED', message: 'DTE is already verified' });
+    }
+
+    // Delegate full MH verify logic to the cron service (it handles auth + applyVerifyResult)
+    await this.retryCron.retryOne(id);
+
+    // Increment attempt counter and set lastMhVerifyAt timestamp
+    return this.prisma.receivedDTE.update({
+      where: { id },
+      data: {
+        mhVerifyAttempts: row.mhVerifyAttempts + 1,
+        lastMhVerifyAt: new Date(),
+      },
+      include: { purchase: { select: { id: true, purchaseNumber: true, status: true } } },
+    }) as Promise<ReceivedDTE>;
   }
 
-  async reParse(_tenantId: string, _id: string): Promise<ReceivedDTE> {
-    throw new Error('not implemented — Task 3');
+  async reParse(tenantId: string, id: string): Promise<ReceivedDTE> {
+    const row = await this.prisma.receivedDTE.findFirst({
+      where: { id, tenantId },
+    });
+    if (!row) throw new NotFoundException(`ReceivedDTE ${id} not found`);
+
+    const result = this.parser.parse(row.rawPayload);
+
+    if (!result.valid) {
+      this.logger.warn(`reParse failed for DTE ${id}: ${result.errors?.[0]?.code}`);
+      return this.prisma.receivedDTE.update({
+        where: { id },
+        data: {
+          ingestStatus: 'FAILED',
+          ingestErrors: JSON.stringify(result.errors),
+        },
+        include: { purchase: { select: { id: true, purchaseNumber: true, status: true } } },
+      }) as Promise<ReceivedDTE>;
+    }
+
+    // Parsed successfully — promote FAILED → PENDING, preserve other statuses
+    const newStatus = row.ingestStatus === 'FAILED' ? 'PENDING' : row.ingestStatus;
+
+    return this.prisma.receivedDTE.update({
+      where: { id },
+      data: {
+        parsedPayload: JSON.stringify(result.data),
+        ingestErrors: null,
+        ingestStatus: newStatus,
+      },
+      include: { purchase: { select: { id: true, purchaseNumber: true, status: true } } },
+    }) as Promise<ReceivedDTE>;
   }
 }

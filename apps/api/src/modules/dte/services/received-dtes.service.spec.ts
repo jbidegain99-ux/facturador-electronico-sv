@@ -1,14 +1,19 @@
 import { Test } from '@nestjs/testing';
-import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { NotFoundException, ConflictException, BadRequestException, ConflictException as CE } from '@nestjs/common';
 import { ReceivedDtesService } from './received-dtes.service';
 import { DteImportParserService } from './dte-import-parser.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { ReceivedDteRetryCronService } from './received-dte-retry-cron.service';
 import { DteFormat } from '../dto/preview-dte.dto';
+
+// Silence unused import warning
+void CE;
 
 describe('ReceivedDtesService', () => {
   let service: ReceivedDtesService;
   let prisma: { receivedDTE: { findMany: jest.Mock; findFirst: jest.Mock; count: jest.Mock; create: jest.Mock; update: jest.Mock } };
   let parser: { parse: jest.Mock };
+  let retryCron: { retryOne: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -21,11 +26,13 @@ describe('ReceivedDtesService', () => {
       },
     };
     parser = { parse: jest.fn() };
+    retryCron = { retryOne: jest.fn() };
     const module = await Test.createTestingModule({
       providers: [
         ReceivedDtesService,
         { provide: PrismaService, useValue: prisma },
         { provide: DteImportParserService, useValue: parser },
+        { provide: ReceivedDteRetryCronService, useValue: retryCron },
       ],
     }).compile();
     service = module.get(ReceivedDtesService);
@@ -151,6 +158,84 @@ describe('ReceivedDtesService', () => {
       await expect(
         service.createManual('t1', 'u1', { content: 'nope', format: DteFormat.JSON }),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('retryMhVerify', () => {
+    it('throws 404 if row not found for tenant', async () => {
+      prisma.receivedDTE.findFirst.mockResolvedValue(null);
+      await expect(service.retryMhVerify('t1', 'bad-id')).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws 409 ALREADY_VERIFIED if ingestStatus is VERIFIED', async () => {
+      prisma.receivedDTE.findFirst.mockResolvedValue({
+        id: 'r1',
+        tenantId: 't1',
+        ingestStatus: 'VERIFIED',
+        mhVerifyAttempts: 2,
+      });
+      await expect(service.retryMhVerify('t1', 'r1')).rejects.toThrow(ConflictException);
+    });
+
+    it('calls retryCron.retryOne and returns updated row on success', async () => {
+      const row = { id: 'r1', tenantId: 't1', ingestStatus: 'PENDING', mhVerifyAttempts: 1, lastMhVerifyAt: null };
+      prisma.receivedDTE.findFirst
+        .mockResolvedValueOnce(row) // initial findOne
+        .mockResolvedValueOnce({ ...row, mhVerifyAttempts: 2, ingestStatus: 'VERIFIED' }); // after update
+      retryCron.retryOne.mockResolvedValue({ newStatus: 'VERIFIED', newAttempts: 2 });
+      prisma.receivedDTE.update.mockResolvedValue({ ...row, mhVerifyAttempts: 2, lastMhVerifyAt: new Date() });
+      const result = await service.retryMhVerify('t1', 'r1');
+      expect(retryCron.retryOne).toHaveBeenCalledWith('r1');
+      expect(result.mhVerifyAttempts).toBe(2);
+    });
+  });
+
+  describe('reParse', () => {
+    it('throws 404 if row not found for tenant', async () => {
+      prisma.receivedDTE.findFirst.mockResolvedValue(null);
+      await expect(service.reParse('t1', 'bad-id')).rejects.toThrow(NotFoundException);
+    });
+
+    it('marks row FAILED with ingestErrors if parser returns invalid', async () => {
+      const row = {
+        id: 'r1', tenantId: 't1', ingestStatus: 'PENDING',
+        rawPayload: 'bad-json', parsedPayload: null, ingestErrors: null,
+      };
+      prisma.receivedDTE.findFirst.mockResolvedValue(row);
+      parser.parse.mockReturnValue({ valid: false, errors: [{ code: 'INVALID_JSON', message: 'bad' }] });
+      const updated = { ...row, ingestStatus: 'FAILED', ingestErrors: JSON.stringify([{ code: 'INVALID_JSON', message: 'bad' }]) };
+      prisma.receivedDTE.update.mockResolvedValue(updated);
+      const result = await service.reParse('t1', 'r1');
+      expect(prisma.receivedDTE.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ ingestStatus: 'FAILED' }) }),
+      );
+      expect(result.ingestStatus).toBe('FAILED');
+    });
+
+    it('updates parsedPayload and clears errors; status FAILED → PENDING on success', async () => {
+      const row = {
+        id: 'r1', tenantId: 't1', ingestStatus: 'FAILED',
+        rawPayload: '{"identificacion":{"tipoDte":"01"}}', parsedPayload: null, ingestErrors: 'old-err',
+      };
+      const parsedData = {
+        tipoDte: '01', numeroControl: 'NC-1', codigoGeneracion: 'CG-1',
+        fecEmi: '2026-04-01', emisor: { nit: '1234', nombre: 'X' },
+      };
+      prisma.receivedDTE.findFirst.mockResolvedValue(row);
+      parser.parse.mockReturnValue({ valid: true, data: parsedData, errors: [] });
+      const updated = { ...row, ingestStatus: 'PENDING', parsedPayload: JSON.stringify(parsedData), ingestErrors: null };
+      prisma.receivedDTE.update.mockResolvedValue(updated);
+      const result = await service.reParse('t1', 'r1');
+      expect(prisma.receivedDTE.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            parsedPayload: JSON.stringify(parsedData),
+            ingestErrors: null,
+            ingestStatus: 'PENDING',
+          }),
+        }),
+      );
+      expect(result.ingestStatus).toBe('PENDING');
     });
   });
 });

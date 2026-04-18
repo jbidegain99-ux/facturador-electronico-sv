@@ -30,6 +30,7 @@ import { useToast } from '@/components/ui/toast';
 import { apiFetch } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { ProveedorSearch } from '@/components/purchases/proveedor-search';
+import { ComprasTabsNav } from '@/components/purchases/compras-tabs-nav';
 import type { Purchase, PurchaseStatus, Proveedor } from '@/types/purchase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -148,6 +149,9 @@ export default function ComprasPage() {
   // ── Render ──
   return (
     <div className="space-y-6 p-4 md:p-6 relative pb-24 md:pb-6">
+
+      {/* ── Sub-nav ─────────────────────────────────────────────────────── */}
+      <ComprasTabsNav />
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

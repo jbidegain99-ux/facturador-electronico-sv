@@ -28,6 +28,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton, SkeletonCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
+import { downloadReport, DownloadReportError } from '@/lib/download-report';
 
 interface StatsData {
   fecha: string;
@@ -718,6 +719,10 @@ export default function ReportesPage() {
                     <Globe className="w-3 h-3 mr-1" />
                     Exportaciones
                   </TabsTrigger>
+                  <TabsTrigger value="fiscales">
+                    <FileText className="h-4 w-4 mr-1" />
+                    Fiscales
+                  </TabsTrigger>
                 </TabsList>
 
                 {advLoading ? (
@@ -924,6 +929,14 @@ export default function ReportesPage() {
                         </div>
                       )}
                     </TabsContent>
+
+                    <TabsContent value="fiscales">
+                      <div className="grid gap-6">
+                        <KardexFiscalCard />
+                        <IvaDeclaracionFiscalCard />
+                        <CogsStatementFiscalCard />
+                      </div>
+                    </TabsContent>
                   </>
                 )}
               </Tabs>
@@ -933,4 +946,340 @@ export default function ReportesPage() {
       )}
     </div>
   );
+}
+
+// =========================================================================
+// Fiscal report cards (Fase 2)
+// =========================================================================
+
+interface CatalogItemOption {
+  id: string;
+  code: string;
+  name: string;
+}
+
+function KardexFiscalCard() {
+  const { addToast } = useToast();
+  const [mode, setMode] = React.useState<'single' | 'book'>('single');
+  const [catalogItems, setCatalogItems] = React.useState<CatalogItemOption[]>([]);
+  const [selectedItemId, setSelectedItemId] = React.useState<string>('');
+  const [startDate, setStartDate] = React.useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d.toISOString().slice(0, 10);
+  });
+  const [endDate, setEndDate] = React.useState(() => new Date().toISOString().slice(0, 10));
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    fetch(`${API_URL}/catalog-items?trackInventory=true&limit=500`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : { data: [] }))
+      .then((payload) => {
+        const data = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
+        setCatalogItems(
+          data.map((it: { id: string; code: string; name: string }) => ({
+            id: it.id,
+            code: it.code,
+            name: it.name,
+          })),
+        );
+      })
+      .catch(() => setCatalogItems([]));
+  }, []);
+
+  const handleDownload = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ startDate, endDate });
+      const url = mode === 'single'
+        ? `${API_URL}/reports/kardex/item/${selectedItemId}?${params.toString()}`
+        : `${API_URL}/reports/kardex/book?${params.toString()}`;
+      const filename = mode === 'single'
+        ? `kardex-${selectedItemId}.xlsx`
+        : `kardex-libro.xlsx`;
+      await downloadReport(url, filename);
+      addToast({ type: 'success', title: 'Reporte generado', description: 'Revisa tus descargas.' });
+    } catch (err) {
+      handleDownloadError(err, addToast);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const disabled = loading || !startDate || !endDate || (mode === 'single' && !selectedItemId);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Kardex Art. 142-A
+        </CardTitle>
+        <CardDescription>
+          Reporte detallado de movimientos de inventario por producto o libro mensual completo.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Tipo</label>
+            <Select value={mode} onValueChange={(v) => setMode(v as 'single' | 'book')}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">Un producto</SelectItem>
+                <SelectItem value="book">Libro mensual completo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {mode === 'single' && (
+            <div>
+              <label className="text-sm font-medium mb-1 block">Producto</label>
+              <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={catalogItems.length === 0 ? 'No hay productos con inventario activo' : 'Selecciona producto'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {catalogItems.map((it) => (
+                    <SelectItem key={it.id} value={it.id}>{it.code} — {it.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Desde</label>
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Hasta</label>
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </div>
+        </div>
+        <Button onClick={handleDownload} disabled={disabled}>
+          {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          Descargar Excel
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function IvaDeclaracionFiscalCard() {
+  const { addToast } = useToast();
+  const [preset, setPreset] = React.useState<'mes-actual' | 'mes-anterior' | 'personalizado'>('mes-actual');
+  const [customStart, setCustomStart] = React.useState('');
+  const [customEnd, setCustomEnd] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+
+  const resolveRange = (): { start: string; end: string; yearMonth: string } => {
+    const now = new Date();
+    if (preset === 'mes-actual') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return {
+        start: start.toISOString().slice(0, 10),
+        end: end.toISOString().slice(0, 10),
+        yearMonth: start.toISOString().slice(0, 7).replace('-', ''),
+      };
+    }
+    if (preset === 'mes-anterior') {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0);
+      return {
+        start: start.toISOString().slice(0, 10),
+        end: end.toISOString().slice(0, 10),
+        yearMonth: start.toISOString().slice(0, 7).replace('-', ''),
+      };
+    }
+    return {
+      start: customStart,
+      end: customEnd,
+      yearMonth: customEnd.slice(0, 7).replace('-', ''),
+    };
+  };
+
+  const handleDownload = async () => {
+    setLoading(true);
+    try {
+      const { start, end, yearMonth } = resolveRange();
+      const params = new URLSearchParams({ startDate: start, endDate: end });
+      const url = `${API_URL}/reports/iva-declaracion?${params.toString()}`;
+      await downloadReport(url, `iva-f07-${yearMonth}.xlsx`);
+      addToast({ type: 'success', title: 'Reporte generado', description: 'Revisa tus descargas.' });
+    } catch (err) {
+      handleDownloadError(err, addToast);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const disabled = loading || (preset === 'personalizado' && (!customStart || !customEnd));
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Shield className="h-5 w-5" />
+          Declaración IVA F07
+        </CardTitle>
+        <CardDescription>
+          Resumen mensual de ventas emitidas (01, 03, 05, 06, 11) con totales por casilla y detalle DTE.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <label className="text-sm font-medium mb-1 block">Período</label>
+          <Select value={preset} onValueChange={(v) => setPreset(v as 'mes-actual' | 'mes-anterior' | 'personalizado')}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mes-actual">Mes actual</SelectItem>
+              <SelectItem value="mes-anterior">Mes anterior</SelectItem>
+              <SelectItem value="personalizado">Personalizado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {preset === 'personalizado' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Desde</label>
+              <Input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Hasta</label>
+              <Input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
+            </div>
+          </div>
+        )}
+        <Button onClick={handleDownload} disabled={disabled}>
+          {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          Descargar Excel
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CogsStatementFiscalCard() {
+  const { addToast } = useToast();
+  const [preset, setPreset] = React.useState<'anio-actual' | 'anio-anterior' | 'trimestre-actual' | 'personalizado'>('anio-actual');
+  const [customStart, setCustomStart] = React.useState('');
+  const [customEnd, setCustomEnd] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+
+  const resolveRange = (): { start: string; end: string; year: string } => {
+    const now = new Date();
+    if (preset === 'anio-actual') {
+      const start = new Date(now.getFullYear(), 0, 1);
+      const end = new Date(now.getFullYear(), 11, 31);
+      return {
+        start: start.toISOString().slice(0, 10),
+        end: end.toISOString().slice(0, 10),
+        year: String(now.getFullYear()),
+      };
+    }
+    if (preset === 'anio-anterior') {
+      const y = now.getFullYear() - 1;
+      return {
+        start: `${y}-01-01`,
+        end: `${y}-12-31`,
+        year: String(y),
+      };
+    }
+    if (preset === 'trimestre-actual') {
+      const q = Math.floor(now.getMonth() / 3);
+      const start = new Date(now.getFullYear(), q * 3, 1);
+      const end = new Date(now.getFullYear(), q * 3 + 3, 0);
+      return {
+        start: start.toISOString().slice(0, 10),
+        end: end.toISOString().slice(0, 10),
+        year: String(now.getFullYear()),
+      };
+    }
+    return {
+      start: customStart,
+      end: customEnd,
+      year: customEnd.slice(0, 4),
+    };
+  };
+
+  const handleDownload = async () => {
+    setLoading(true);
+    try {
+      const { start, end, year } = resolveRange();
+      const params = new URLSearchParams({ startDate: start, endDate: end });
+      const url = `${API_URL}/reports/cogs-statement?${params.toString()}`;
+      await downloadReport(url, `estado-costo-venta-${year}.xlsx`);
+      addToast({ type: 'success', title: 'Reporte generado', description: 'Revisa tus descargas.' });
+    } catch (err) {
+      handleDownloadError(err, addToast);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const disabled = loading || (preset === 'personalizado' && (!customStart || !customEnd));
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <DollarSign className="h-5 w-5" />
+          Estado de Costo de Venta
+        </CardTitle>
+        <CardDescription>
+          Fórmula retailer: Inv. Inicial + Compras Netas − Inv. Final. Incluye reconciliación contra COGS registrado.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <label className="text-sm font-medium mb-1 block">Período</label>
+          <Select value={preset} onValueChange={(v) => setPreset(v as 'anio-actual' | 'anio-anterior' | 'trimestre-actual' | 'personalizado')}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="anio-actual">Año actual</SelectItem>
+              <SelectItem value="anio-anterior">Año anterior</SelectItem>
+              <SelectItem value="trimestre-actual">Trimestre actual</SelectItem>
+              <SelectItem value="personalizado">Personalizado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {preset === 'personalizado' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Desde</label>
+              <Input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Hasta</label>
+              <Input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
+            </div>
+          </div>
+        )}
+        <Button onClick={handleDownload} disabled={disabled}>
+          {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          Descargar Excel
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function handleDownloadError(err: unknown, addToast: ReturnType<typeof useToast>['addToast']): void {
+  if (err instanceof DownloadReportError) {
+    if (err.status === 402) {
+      addToast({ type: 'warning', title: 'Plan requerido', description: 'Este reporte requiere plan Professional o superior.' });
+    } else if (err.status === 403) {
+      addToast({ type: 'error', title: 'Sin permiso', description: 'No tienes permiso para exportar reportes.' });
+    } else if (err.status === 404) {
+      addToast({ type: 'error', title: 'No encontrado', description: 'Producto o recurso no encontrado.' });
+    } else if (err.status === 400) {
+      addToast({ type: 'error', title: 'Datos inválidos', description: err.message || 'Revisa las fechas seleccionadas.' });
+    } else {
+      addToast({ type: 'error', title: 'Error', description: `Error al generar reporte (${err.status}).` });
+    }
+  } else {
+    addToast({ type: 'error', title: 'Error de red', description: 'No se pudo conectar con el servidor.' });
+  }
 }

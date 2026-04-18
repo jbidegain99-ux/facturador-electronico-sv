@@ -23,6 +23,7 @@ export type FeatureCode =
   | 'webhooks'
   | 'api_full'
   | 'advanced_reports'
+  | 'inventory_reports'
   | 'ticket_support'
   | 'phone_support'
   | 'logo_branding'
@@ -38,6 +39,7 @@ export const ALL_FEATURE_CODES: FeatureCode[] = [
   'webhooks',
   'api_full',
   'advanced_reports',
+  'inventory_reports',
   'ticket_support',
   'phone_support',
   'logo_branding',
@@ -96,6 +98,7 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
       webhooks: false,
       api_full: false,
       advanced_reports: false,
+      inventory_reports: false,
       ticket_support: true,
       phone_support: false,
       logo_branding: false,
@@ -111,13 +114,14 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
     limits: { dtes: 300, customers: 100, users: 3, storage: 1, branches: 1, catalog: 300 },
     features: {
       invoicing: true,
-      accounting: true,
+      accounting: false,
       catalog: true,
       recurring_invoices: true,
       quotes_b2b: false,
       webhooks: false,
       api_full: false,
       advanced_reports: false,
+      inventory_reports: false,
       ticket_support: true,
       phone_support: false,
       logo_branding: true,
@@ -133,13 +137,14 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
     limits: { dtes: 2000, customers: 500, users: 10, storage: 10, branches: 5, catalog: 1000 },
     features: {
       invoicing: true,
-      accounting: true,
+      accounting: false,
       catalog: true,
       recurring_invoices: true,
       quotes_b2b: true,
       webhooks: false,
       api_full: false,
-      advanced_reports: true,
+      advanced_reports: false,
+      inventory_reports: true,
       ticket_support: true,
       phone_support: false,
       logo_branding: true,
@@ -162,6 +167,7 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
       webhooks: true,
       api_full: true,
       advanced_reports: true,
+      inventory_reports: true,
       ticket_support: true,
       phone_support: true,
       logo_branding: true,

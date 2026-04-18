@@ -250,7 +250,7 @@ export class ReportsController {
   @ApiQuery({ name: 'startDate', required: true, type: String })
   @ApiQuery({ name: 'endDate', required: true, type: String })
   @RequirePermission('report:export')
-  @RequireFeature('advanced_reports')
+  @RequireFeature('inventory_reports')
   async getKardexItem(
     @CurrentUser() user: CurrentUserData,
     @Param('catalogItemId') catalogItemId: string,
@@ -282,7 +282,7 @@ export class ReportsController {
   @ApiQuery({ name: 'startDate', required: true, type: String })
   @ApiQuery({ name: 'endDate', required: true, type: String })
   @RequirePermission('report:export')
-  @RequireFeature('advanced_reports')
+  @RequireFeature('inventory_reports')
   async getKardexBook(
     @CurrentUser() user: CurrentUserData,
     @Query('startDate') startDate: string,

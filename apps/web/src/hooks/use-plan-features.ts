@@ -28,6 +28,7 @@ export type FeatureCode =
   | 'webhooks'
   | 'api_full'
   | 'advanced_reports'
+  | 'inventory_reports'
   | 'ticket_support'
   | 'phone_support'
   | 'logo_branding'

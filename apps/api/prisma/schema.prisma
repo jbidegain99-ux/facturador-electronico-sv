@@ -186,6 +186,10 @@ model Cliente {
   purchases          Purchase[]                 @relation("SupplierPurchases")
   isCustomer         Boolean                    @default(true)
   isSupplier         Boolean                    @default(false)
+  esGranContribuyente Boolean                    @default(false)
+  retieneISR          Boolean                    @default(false)
+  cuentaCxPDefaultId  String?
+  cuentaCxPDefault    AccountingAccount?        @relation("CuentaCxPDefault", fields: [cuentaCxPDefaultId], references: [id])
 
   @@unique([tenantId, numDocumento])
   @@index([tenantId])
@@ -1473,6 +1477,7 @@ model AccountingAccount {
   journalLines JournalEntryLine[]
   debitRules   AccountMappingRule[] @relation("DebitRules")
   creditRules  AccountMappingRule[] @relation("CreditRules")
+  cuentasCxPDefault Cliente[]        @relation("CuentaCxPDefault")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

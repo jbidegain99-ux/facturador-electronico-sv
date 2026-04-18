@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -9,9 +10,15 @@ import {
 import type { Purchase, PurchaseLineItem, Cliente, JournalEntry, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AccountingAutomationService } from '../../accounting/accounting-automation.service';
+import { AccountingService } from '../../accounting/accounting.service';
+import { PurchaseReceptionService } from './purchase-reception.service';
 import type { ParsedDTE } from '../../dte/services/dte-import-parser.service';
 import type { CreatePurchaseDto } from '../dto/create-purchase.dto';
 import type { UpdatePurchaseDto } from '../dto/update-purchase.dto';
+import type { PostPurchaseDto } from '../dto/post-purchase.dto';
+import type { PayPurchaseDto } from '../dto/pay-purchase.dto';
+import type { AnularPurchaseDto } from '../dto/anular-purchase.dto';
+import type { ReceivePurchaseDto } from '../dto/receive-purchase.dto';
 import type { PurchaseLineDto } from '../dto/purchase-line.dto';
 
 interface ParsedLineItem {
@@ -92,6 +99,8 @@ export class PurchasesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accountingAutomation: AccountingAutomationService,
+    private readonly accountingService: AccountingService,
+    private readonly purchaseReceptionService: PurchaseReceptionService,
   ) {}
 
   async createFromReceivedDte(
@@ -428,6 +437,238 @@ export class PurchasesService {
       this.prisma.purchaseLineItem.deleteMany({ where: { purchaseId: id } }),
       this.prisma.purchase.delete({ where: { id } }),
     ]);
+  }
+
+  // =========================================================================
+  // State transition methods (Task 5)
+  // =========================================================================
+
+  async postDraft(
+    tenantId: string,
+    userId: string,
+    id: string,
+    dto: PostPurchaseDto,
+  ): Promise<PurchaseWithRelations> {
+    const purchase = await this.findOne(tenantId, id);
+    if (purchase.status !== 'DRAFT') {
+      throw new ConflictException({
+        code: 'STATE_IMMUTABLE',
+        status: purchase.status,
+        message: `Purchase ${id} is in status ${purchase.status} — only DRAFT can be posted`,
+      });
+    }
+
+    // Update to POSTED with payment metadata
+    await this.prisma.purchase.update({
+      where: { id },
+      data: {
+        status: 'POSTED',
+        paymentMethod: dto.formaPago ?? null,
+        paymentAccountId: dto.cuentaPagoId ?? null,
+        paidDate: dto.fechaPago ? new Date(dto.fechaPago) : null,
+        dueDate: dto.fechaVencimiento ? new Date(dto.fechaVencimiento) : null,
+      },
+    });
+
+    // Generate asiento; rollback to DRAFT if it fails
+    try {
+      await this.accountingAutomation.generateFromPurchase(id, tenantId, 'MANUAL');
+    } catch (err) {
+      await this.prisma.purchase.update({ where: { id }, data: { status: 'DRAFT' } });
+      throw new PreconditionFailedException({
+        code: 'MAPPING_MISSING',
+        detalle: err instanceof Error ? err.message : 'unknown',
+        purchaseId: id,
+      });
+    }
+
+    // If contado → pay immediately using already-known totalAmount
+    if (dto.formaPago === 'contado' && dto.cuentaPagoId) {
+      await this.pay(tenantId, userId, id, {
+        fechaPago: dto.fechaPago ?? new Date().toISOString().substring(0, 10),
+        cuentaSalidaId: dto.cuentaPagoId,
+        monto: Number(purchase.totalAmount),
+      });
+    }
+
+    return this.findOne(tenantId, id);
+  }
+
+  async pay(
+    tenantId: string,
+    userId: string,
+    id: string,
+    dto: PayPurchaseDto,
+  ): Promise<PurchaseWithRelations> {
+    const purchase = await this.findOne(tenantId, id);
+    if (purchase.status !== 'POSTED') {
+      throw new ConflictException({
+        code: 'STATE_IMMUTABLE',
+        status: purchase.status,
+        message: `Purchase ${id} must be POSTED to register a payment (current: ${purchase.status})`,
+      });
+    }
+
+    const outstanding = Number(purchase.outstandingBalance);
+    if (dto.monto > outstanding + 0.001) {
+      throw new UnprocessableEntityException({
+        code: 'PAGO_EXCEDE_SALDO',
+        monto: dto.monto,
+        saldo: outstanding,
+        message: `Payment amount ${dto.monto} exceeds outstanding balance ${outstanding}`,
+      });
+    }
+
+    const supplier = purchase.supplier as Cliente & { cuentaCxPDefaultId?: string | null };
+    const cuentaCxPId = (supplier as Record<string, unknown>).cuentaCxPDefaultId as string | null | undefined;
+    if (!cuentaCxPId) {
+      throw new PreconditionFailedException({
+        code: 'MAPPING_MISSING',
+        detalle: 'Proveedor sin cuenta CxP default',
+      });
+    }
+
+    // Create payment journal entry (DRAFT) then post it
+    const je = await this.accountingService.createJournalEntry(tenantId, {
+      entryDate: dto.fechaPago,
+      description: `Pago compra ${purchase.purchaseNumber}`,
+      entryType: 'MANUAL',
+      sourceType: 'PURCHASE_PAYMENT',
+      sourceDocumentId: id,
+      lines: [
+        { accountId: cuentaCxPId, description: 'Cuenta por pagar proveedor', debit: dto.monto, credit: 0 },
+        { accountId: dto.cuentaSalidaId, description: 'Cuenta de salida / banco', debit: 0, credit: dto.monto },
+      ],
+    });
+    await this.accountingService.postJournalEntry(tenantId, je.id, userId);
+
+    // Update balances
+    const newBalance = Math.max(0, outstanding - dto.monto);
+    const newStatus = newBalance <= 0.001 ? 'PAID' : 'POSTED';
+    await this.prisma.purchase.update({
+      where: { id },
+      data: {
+        outstandingBalance: newBalance.toFixed(2),
+        status: newStatus,
+        paidDate: newStatus === 'PAID' ? new Date(dto.fechaPago) : undefined,
+      },
+    });
+
+    return this.findOne(tenantId, id);
+  }
+
+  async anular(
+    tenantId: string,
+    userId: string,
+    id: string,
+    dto: AnularPurchaseDto,
+  ): Promise<PurchaseWithRelations> {
+    const purchase = await this.findOne(tenantId, id);
+    const allowedStatuses = ['POSTED', 'PAID'];
+    if (!allowedStatuses.includes(purchase.status)) {
+      throw new ConflictException({
+        code: 'STATE_IMMUTABLE',
+        status: purchase.status,
+        message: `Purchase ${id} must be POSTED or PAID to be anulada (current: ${purchase.status})`,
+      });
+    }
+
+    // Check if any inventory has been consumed by a DTE sale
+    const lineIds = (purchase.lineItems as PurchaseLineItem[]).map((l) => l.id);
+    if (lineIds.length > 0) {
+      const consumedMovements = await this.prisma.inventoryMovement.findMany({
+        where: {
+          tenantId,
+          sourceType: 'DTE',
+          purchaseLineItemId: { in: lineIds },
+        },
+        select: { id: true, sourceId: true },
+      });
+      if (consumedMovements.length > 0) {
+        const dteIds = [...new Set(consumedMovements.map((m) => m.sourceId))];
+        throw new PreconditionFailedException({
+          code: 'KARDEX_CONSUMED',
+          dteIds,
+          message: `Purchase ${id} has inventory consumed by DTEs: ${dteIds.join(', ')}`,
+        });
+      }
+    }
+
+    // Transaction: delete inventory movements, void journal entry, update purchase
+    await this.prisma.$transaction(async (tx) => {
+      // Delete inventory movements for this purchase's lines
+      if (lineIds.length > 0) {
+        await tx.inventoryMovement.deleteMany({
+          where: { tenantId, purchaseLineItemId: { in: lineIds } },
+        });
+      }
+
+      // Void journal entry if one exists
+      if (purchase.journalEntryId) {
+        await this.accountingService.voidJournalEntry(
+          tenantId,
+          purchase.journalEntryId,
+          userId,
+          dto.motivo,
+        );
+      }
+
+      // Update purchase to ANULADA
+      await tx.purchase.update({
+        where: { id },
+        data: {
+          status: 'ANULADA',
+          cancelReason: dto.motivo,
+          cancelledAt: new Date(),
+          cancelledBy: userId,
+        },
+      });
+    });
+
+    return this.findOne(tenantId, id);
+  }
+
+  async receiveLate(
+    tenantId: string,
+    userId: string,
+    id: string,
+    dto: ReceivePurchaseDto,
+  ): Promise<PurchaseWithRelations> {
+    const purchase = await this.findOne(tenantId, id);
+    const allowedStatuses = ['POSTED', 'PAID'];
+    if (!allowedStatuses.includes(purchase.status)) {
+      throw new ConflictException({
+        code: 'STATE_IMMUTABLE',
+        status: purchase.status,
+        message: `Purchase ${id} must be POSTED or PAID to receive late (current: ${purchase.status})`,
+      });
+    }
+
+    // Check if inventory already received (any PURCHASE-type movements for this purchase's lines)
+    const lineIds = (purchase.lineItems as PurchaseLineItem[]).map((l) => l.id);
+    const existingMovements = await this.prisma.inventoryMovement.findMany({
+      where: {
+        tenantId,
+        sourceType: 'PURCHASE',
+        purchaseLineItemId: { in: lineIds.length > 0 ? lineIds : ['__none__'] },
+      },
+      select: { id: true },
+      take: 1,
+    });
+    if (existingMovements.length > 0) {
+      throw new ConflictException({
+        code: 'ALREADY_RECEIVED',
+        message: `Purchase ${id} has already been received into inventory`,
+      });
+    }
+
+    // Delegate to reception service
+    await this.purchaseReceptionService.receive(tenantId, id, {
+      receivedBy: userId,
+      receiptDate: new Date(dto.fechaRecepcion),
+    });
+
+    return this.findOne(tenantId, id);
   }
 
   // =========================================================================

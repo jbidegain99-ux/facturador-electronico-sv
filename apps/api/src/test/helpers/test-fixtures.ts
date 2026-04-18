@@ -17,6 +17,8 @@ export function createMockCliente(overrides?: Partial<Cliente>): Cliente {
     }),
     createdAt: new Date(),
     updatedAt: new Date(),
+    isCustomer: true,
+    isSupplier: false,
     ...overrides,
   };
 }

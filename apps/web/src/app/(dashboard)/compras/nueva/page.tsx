@@ -136,9 +136,77 @@ export default function NuevaCompraPage() {
 
   // ── Hydration on mount ────────────────────────────────────────────
   React.useEffect(() => {
+    const receivedDteId = searchParams.get('receivedDteId');
     const source = searchParams.get('source');
 
-    if (source === 'imported') {
+    if (receivedDteId) {
+      // Prefill from a persisted ReceivedDTE record
+      (async () => {
+        try {
+          const dte = await apiFetch<{
+            purchase: { id: string } | null;
+            parsedPayload: string | null;
+            emisorNIT: string;
+            emisorNombre: string;
+            tipoDte: string;
+            numeroControl: string;
+            fhEmision: string;
+          }>(`/received-dtes/${receivedDteId}`);
+
+          if (dte.purchase) {
+            toast.info('Este DTE ya tiene una compra ligada');
+            router.replace(`/compras/${dte.purchase.id}`);
+            return;
+          }
+
+          // Map proveedor: try to find by NIT
+          try {
+            const res = await apiFetch<{ data: Proveedor[] }>(
+              `/clientes?isSupplier=true&q=${encodeURIComponent(dte.emisorNIT)}&limit=1`,
+            );
+            const match = res.data.find((p) => p.numDocumento === dte.emisorNIT);
+            if (match) setProveedor(match);
+            else toast.info(`Proveedor ${dte.emisorNIT} no existe — créalo con el botón "+ Crear proveedor"`);
+          } catch { /* ignore */ }
+
+          const TIPO_DOC_VALUES: TipoDocProveedor[] = ['FC', 'CCF', 'NCF', 'NDF', 'OTRO'];
+          setTipoDoc(TIPO_DOC_VALUES.includes(dte.tipoDte as TipoDocProveedor) ? (dte.tipoDte as TipoDocProveedor) : 'OTRO');
+          setNumDoc(dte.numeroControl);
+          setFechaDoc(dte.fhEmision.slice(0, 10));
+          setFechaContable(dte.fhEmision.slice(0, 10));
+
+          // Map parsed items → lineas
+          if (dte.parsedPayload) {
+            try {
+              const parsed = JSON.parse(dte.parsedPayload) as { cuerpoDocumento?: Array<Record<string, unknown>> };
+              const lineasMapped: PurchaseLine[] = (parsed.cuerpoDocumento ?? []).map((it) => {
+                const cant = Number(it.cantidad ?? 0);
+                const precio = Number(it.precioUni ?? 0);
+                const descMonto = Number(it.montoDescu ?? 0);
+                const descPct = cant && precio ? (descMonto / (cant * precio)) * 100 : 0;
+                return {
+                  tipo: 'bien' as const,
+                  itemId: undefined,
+                  descripcion: String(it.descripcion ?? ''),
+                  cantidad: cant,
+                  precioUnit: precio,
+                  descuentoPct: descPct,
+                  ivaAplica: Number(it.ventaGravada ?? 0) > 0,
+                  totalLinea: Number(it.ventaGravada ?? 0) + Number(it.ventaExenta ?? 0),
+                };
+              });
+              setLineas(lineasMapped);
+              toast.info('Líneas importadas — asigna items del catálogo antes de contabilizar');
+            } catch { /* ignore */ }
+          }
+        } catch (err) {
+          toast.error((err instanceof Error ? err.message : null) ?? 'Error cargando DTE');
+        } finally {
+          setHydrated(true);
+        }
+      })();
+      return;
+    } else if (source === 'imported') {
       // Restore from sessionStorage (DTE import)
       try {
         const raw = sessionStorage.getItem('dte-import-prefill');

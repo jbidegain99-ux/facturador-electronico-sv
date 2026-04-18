@@ -36,6 +36,7 @@ import { useToast } from '@/components/ui/toast';
 import { apiFetch, apiRawFetch } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { ComprasTabsNav } from '@/components/purchases/compras-tabs-nav';
+import { ImportDteManualModal } from '@/components/purchases/import-dte-manual-modal';
 import type { ReceivedDteDetail, IngestStatus } from '@/types/purchase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -102,6 +103,8 @@ export default function RecibidosPage() {
   const [loading, setLoading]         = React.useState(true);
   const [loadError, setLoadError]     = React.useState<string | null>(null);
   const [exporting, setExporting]     = React.useState(false);
+
+  const [importOpen, setImportOpen] = React.useState(false);
 
   // Filters
   const [filterEstado, setFilterEstado] = React.useState<FilterEstado>('all');
@@ -188,9 +191,9 @@ export default function RecibidosPage() {
     }
   };
 
-  // ── Import stub ──
+  // ── Import ──
   const handleImport = () => {
-    toast.info('Próximamente');
+    setImportOpen(true);
   };
 
   // ── Retry ──
@@ -552,6 +555,9 @@ export default function RecibidosPage() {
           <Plus className="w-6 h-6" />
         </button>
       </div>
+
+      {/* ── Import modal ─────────────────────────────────────────────────── */}
+      <ImportDteManualModal open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }

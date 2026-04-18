@@ -8,6 +8,8 @@ import { Cliente } from '@prisma/client';
 
 interface ClienteWhereInput {
   tenantId: string;
+  isSupplier?: boolean;
+  isCustomer?: boolean;
   OR?: Array<Record<string, Record<string, string>>>;
 }
 
@@ -73,7 +75,7 @@ export class ClientesService {
     return this.withNrcDisplay(cliente);
   }
 
-  async findAll(tenantId: string, query?: PaginationQueryDto): Promise<PaginatedResponse<Cliente>> {
+  async findAll(tenantId: string, query?: PaginationQueryDto, filters?: { isSupplier?: boolean; isCustomer?: boolean }): Promise<PaginatedResponse<Cliente>> {
     const page = Math.max(1, Number(query?.page) || 1);
     const limit = Math.min(Math.max(1, Number(query?.limit) || 20), 100);
     const search = query?.search;
@@ -85,6 +87,9 @@ export class ClientesService {
     const skip = (page - 1) * limit;
 
     const where: ClienteWhereInput = { tenantId };
+
+    if (filters?.isSupplier !== undefined) where.isSupplier = filters.isSupplier;
+    if (filters?.isCustomer !== undefined) where.isCustomer = filters.isCustomer;
 
     if (search) {
       where.OR = [

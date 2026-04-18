@@ -53,12 +53,16 @@ export class ClientesController {
   @ApiQuery({ name: 'search', required: false, description: 'Buscar por nombre, documento o correo' })
   @ApiQuery({ name: 'sortBy', required: false, description: 'Campo para ordenar (nombre, numDocumento, createdAt)' })
   @ApiQuery({ name: 'sortOrder', required: false, description: 'Orden: asc o desc (default: desc)' })
+  @ApiQuery({ name: 'isSupplier', required: false, type: Boolean })
+  @ApiQuery({ name: 'isCustomer', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'Lista paginada de clientes' })
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @RequirePermission('client:read')
   async findAll(
     @CurrentUser() user: CurrentUserData,
     @Query() query: PaginationQueryDto,
+    @Query('isSupplier') isSupplier?: string,
+    @Query('isCustomer') isCustomer?: string,
   ) {
     this.logger.log(`User ${user.email} listing clientes, page=${query.page}, limit=${query.limit}, search=${query.search || 'none'}`);
 
@@ -66,7 +70,10 @@ export class ClientesController {
       throw new ForbiddenException('Usuario no tiene tenant asignado');
     }
 
-    return this.clientesService.findAll(user.tenantId, query);
+    return this.clientesService.findAll(user.tenantId, query, {
+      isSupplier: isSupplier === 'true' ? true : isSupplier === 'false' ? false : undefined,
+      isCustomer: isCustomer === 'true' ? true : isCustomer === 'false' ? false : undefined,
+    });
   }
 
   @Get(':id')

@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { DteController } from './dte.controller';
+import { ReceivedDtesController } from './received-dtes.controller';
 import { DteBuilderService } from './services/dte-builder.service';
 import { DteValidatorService } from './services/dte-validator.service';
 import { DteService } from './dte.service';
@@ -27,7 +28,7 @@ import { InboundWebhooksController } from '../webhooks/controllers/inbound.contr
 
 @Module({
   imports: [HttpModule, PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, WebhooksModule, forwardRef(() => AccountingModule), SucursalesModule, HaciendaModule],
-  controllers: [DteController, InboundWebhooksController],
+  controllers: [DteController, ReceivedDtesController, InboundWebhooksController],
   providers: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService, ReceivedDteRetryCronService, DteCogsService],
   exports: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService, DteCogsService],
 })

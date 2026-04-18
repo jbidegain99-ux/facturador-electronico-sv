@@ -67,6 +67,16 @@ const PERMISSIONS: { resource: string; action: string; name: string; category: s
   // Webhooks
   { resource: 'webhook', action: 'read', name: 'Ver Webhooks', category: 'Integraciones' },
   { resource: 'webhook', action: 'manage', name: 'Gestionar Webhooks', category: 'Integraciones' },
+
+  // Compras
+  { resource: 'purchases', action: 'read', name: 'Ver Compras', category: 'Compras' },
+  { resource: 'purchases', action: 'create', name: 'Crear Compras', category: 'Compras' },
+  { resource: 'purchases', action: 'update', name: 'Editar Compras DRAFT', category: 'Compras' },
+  { resource: 'purchases', action: 'delete', name: 'Eliminar Compras DRAFT', category: 'Compras' },
+  { resource: 'purchases', action: 'post', name: 'Contabilizar Compra', category: 'Compras' },
+  { resource: 'purchases', action: 'pay', name: 'Registrar Pago de Compra', category: 'Compras' },
+  { resource: 'purchases', action: 'anular', name: 'Anular Compra', category: 'Compras' },
+  { resource: 'purchases', action: 'receive', name: 'Recibir Mercancía', category: 'Compras' },
 ];
 
 // ─── Role Templates ───────────────────────────────────────────────────────────
@@ -90,7 +100,7 @@ const ROLE_TEMPLATES: {
     permissionPatterns: [
       'dte:*', 'client:*', 'branch:read', 'pos:read', 'pos:update',
       'report:read', 'report:export', 'catalog:read', 'quote:*',
-      'user:read',
+      'user:read', 'purchases:*',
     ],
   },
   {
@@ -102,6 +112,7 @@ const ROLE_TEMPLATES: {
       'client:read', 'client:create',
       'catalog:read',
       'quote:create', 'quote:read',
+      'purchases:read', 'purchases:create', 'purchases:pay',
     ],
   },
   {
@@ -113,6 +124,7 @@ const ROLE_TEMPLATES: {
       'client:read',
       'report:*', 'accounting:*',
       'catalog:read',
+      'purchases:read', 'purchases:create', 'purchases:update', 'purchases:post', 'purchases:pay', 'purchases:anular', 'purchases:receive',
     ],
   },
   {
@@ -122,7 +134,7 @@ const ROLE_TEMPLATES: {
     permissionPatterns: [
       'dte:read', 'client:read', 'branch:read', 'pos:read',
       'report:read', 'catalog:read', 'quote:read',
-      'accounting:read', 'config:read',
+      'accounting:read', 'config:read', 'purchases:read',
     ],
   },
 ];

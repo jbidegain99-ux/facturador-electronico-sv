@@ -1,5 +1,5 @@
-import { IsString, IsEmail, IsOptional, IsObject, ValidateNested, MaxLength, Matches } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsEmail, IsOptional, IsObject, ValidateNested, MaxLength, Matches, IsBoolean } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 class DireccionClienteDto {
@@ -72,4 +72,19 @@ export class CreateClienteDto {
   @IsString()
   @MaxLength(250, { message: 'La descripción de actividad no puede exceder 250 caracteres' })
   descActividad?: string;
+
+  @ApiPropertyOptional({ description: 'Proveedor es gran contribuyente (retiene IVA 1%)' })
+  @IsOptional()
+  @IsBoolean()
+  esGranContribuyente?: boolean;
+
+  @ApiPropertyOptional({ description: 'Aplicar retención ISR a este proveedor' })
+  @IsOptional()
+  @IsBoolean()
+  retieneISR?: boolean;
+
+  @ApiPropertyOptional({ description: 'Cuenta contable CxP default para este proveedor' })
+  @IsOptional()
+  @IsString()
+  cuentaCxPDefaultId?: string;
 }

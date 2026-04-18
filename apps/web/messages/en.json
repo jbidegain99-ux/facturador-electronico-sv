@@ -161,6 +161,8 @@
     "recurring": "Recurring",
     "reports": "Reports",
     "clients": "Clients",
+    "purchases": "Purchases",
+    "suppliers": "Suppliers",
     "cashFlow": "Cash Flow",
     "accounting": "Accounting",
     "catalog": "Catalog",

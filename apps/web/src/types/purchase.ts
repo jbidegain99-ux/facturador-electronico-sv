@@ -1,4 +1,30 @@
 export type PurchaseStatus = 'DRAFT' | 'POSTED' | 'PAID' | 'ANULADA';
+export type IngestStatus = 'PENDING' | 'VERIFIED' | 'UNVERIFIED' | 'FAILED' | string;
+export type IngestSource = 'CRON' | 'MANUAL' | 'MH_AUTO' | string;
+
+export interface ReceivedDteDetail {
+  id: string;
+  tenantId: string;
+  tipoDte: string;
+  numeroControl: string;
+  codigoGeneracion: string;
+  selloRecepcion: string | null;
+  fhProcesamiento: string | null;
+  fhEmision: string;
+  emisorNIT: string;
+  emisorNombre: string;
+  rawPayload: string;
+  parsedPayload: string | null;
+  ingestStatus: IngestStatus;
+  ingestErrors: string | null;
+  ingestSource: IngestSource;
+  mhVerifyAttempts: number;
+  lastMhVerifyAt: string | null;
+  mhVerifyError: string | null;
+  purchase: { id: string; purchaseNumber: string; status: string } | null;
+  createdAt: string;
+  createdBy: string;
+}
 export type TipoDocProveedor = 'FC' | 'CCF' | 'NCF' | 'NDF' | 'OTRO';
 export type FormaPago = 'contado' | 'credito';
 export type PurchaseLineTipo = 'bien' | 'servicio';

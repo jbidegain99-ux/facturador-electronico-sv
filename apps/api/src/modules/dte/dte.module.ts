@@ -17,6 +17,7 @@ import { DteImportService } from './services/dte-import.service';
 import { ReceivedDteRetryCronService } from './services/received-dte-retry-cron.service';
 import { DteCogsService } from './services/dte-cogs.service';
 import { ReceivedDtesService } from './services/received-dtes.service';
+import { ReceivedDtesExportService } from './services/received-dtes-export.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { SignerModule } from '../signer/signer.module';
 import { MhAuthModule } from '../mh-auth/mh-auth.module';
@@ -30,7 +31,7 @@ import { InboundWebhooksController } from '../webhooks/controllers/inbound.contr
 @Module({
   imports: [HttpModule, PrismaModule, SignerModule, MhAuthModule, EmailConfigModule, WebhooksModule, forwardRef(() => AccountingModule), SucursalesModule, HaciendaModule],
   controllers: [DteController, ReceivedDtesController, InboundWebhooksController],
-  providers: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService, ReceivedDteRetryCronService, DteCogsService, ReceivedDtesService],
-  exports: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService, DteCogsService, ReceivedDtesService],
+  providers: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService, ReceivedDteRetryCronService, DteCogsService, ReceivedDtesService, ReceivedDtesExportService],
+  exports: [DteBuilderService, DteValidatorService, DteService, DteNormalizationService, DteLifecycleService, DteStatsService, PdfService, DteErrorMapperService, DteOperationLoggerService, DteImportParserService, MhDteConsultaService, DteImportService, DteCogsService, ReceivedDtesService, ReceivedDtesExportService],
 })
 export class DteModule {}

@@ -174,4 +174,31 @@ export class ReceivedDtesService {
       include: { purchase: { select: { id: true, purchaseNumber: true, status: true } } },
     }) as Promise<ReceivedDTE>;
   }
+
+  async findAllForExport(tenantId: string, filters: Omit<FindAllFilters, 'page' | 'limit'>) {
+    const where: Prisma.ReceivedDTEWhereInput = { tenantId };
+
+    if (filters.status) where.ingestStatus = filters.status;
+    if (filters.tipoDte) where.tipoDte = filters.tipoDte;
+    if (filters.desde || filters.hasta) {
+      where.fhEmision = {};
+      if (filters.desde) (where.fhEmision as Prisma.DateTimeFilter).gte = new Date(filters.desde);
+      if (filters.hasta) (where.fhEmision as Prisma.DateTimeFilter).lte = new Date(filters.hasta);
+    }
+    if (filters.search) {
+      where.OR = [
+        { emisorNIT: { contains: filters.search } },
+        { emisorNombre: { contains: filters.search } },
+      ];
+    }
+    if (filters.hasPurchase === 'true') where.purchase = { isNot: null };
+    else if (filters.hasPurchase === 'false') where.purchase = { is: null };
+
+    return this.prisma.receivedDTE.findMany({
+      where,
+      include: { purchase: { select: { id: true, purchaseNumber: true, status: true } } },
+      orderBy: { fhEmision: 'desc' },
+      take: 10001, // sentinel for cap check in export service
+    });
+  }
 }

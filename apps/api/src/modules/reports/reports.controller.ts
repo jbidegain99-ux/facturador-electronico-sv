@@ -3,13 +3,17 @@ import {
   Get,
   Query,
   Res,
+  Param,
   ForbiddenException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { RequirePermission } from '../rbac/decorators/require-permission.decorator';
+import { RequireFeature } from '../plans/decorators/require-feature.decorator';
+import { PrismaService } from '../../prisma/prisma.service';
 import {
   ReportsService,
   ReportByTypeResult,
@@ -18,12 +22,23 @@ import {
   TopClientStat,
   ReportExportsResult,
 } from './reports.service';
+import { KardexReportService } from './services/kardex-report.service';
+import { IvaDeclaracionReportService } from './services/iva-declaracion-report.service';
+import { CogsStatementReportService } from './services/cogs-statement-report.service';
+
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 @ApiTags('Reports')
 @ApiBearerAuth()
 @Controller('reports')
 export class ReportsController {
-  constructor(private readonly reportsService: ReportsService) {}
+  constructor(
+    private readonly reportsService: ReportsService,
+    private readonly kardexReportService: KardexReportService,
+    private readonly ivaDeclaracionReportService: IvaDeclaracionReportService,
+    private readonly cogsStatementReportService: CogsStatementReportService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   private ensureTenant(user: CurrentUserData): string {
     if (!user.tenantId) {
@@ -44,6 +59,33 @@ export class ReportsController {
     end.setHours(23, 59, 59, 999);
 
     return { start, end };
+  }
+
+  private streamXlsx(res: Response, buffer: Buffer, filename: string): void {
+    res.setHeader('Content-Type', XLSX_MIME);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length.toString());
+    res.end(buffer);
+  }
+
+  private buildKardexItemFilename(itemCode: string, endDate: Date): string {
+    const dateStr = endDate.toISOString().slice(0, 10).replace(/-/g, '');
+    return `kardex-${itemCode}-${dateStr}.xlsx`;
+  }
+
+  private buildKardexBookFilename(endDate: Date): string {
+    const monthStr = endDate.toISOString().slice(0, 7).replace('-', '');
+    return `kardex-libro-${monthStr}.xlsx`;
+  }
+
+  private buildIvaFilename(endDate: Date): string {
+    const monthStr = endDate.toISOString().slice(0, 7).replace('-', '');
+    return `iva-f07-${monthStr}.xlsx`;
+  }
+
+  private buildCogsFilename(endDate: Date): string {
+    const yearStr = endDate.toISOString().slice(0, 4);
+    return `estado-costo-venta-${yearStr}.xlsx`;
   }
 
   @Get('by-type')
@@ -196,5 +238,105 @@ export class ReportsController {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send('\uFEFF' + csv); // BOM for Excel UTF-8 compatibility
+  }
+
+  // =====================================================================
+  // Fase 2 — Fiscal reports endpoints
+  // =====================================================================
+
+  @Get('kardex/item/:catalogItemId')
+  @ApiOperation({ summary: 'Descarga Kardex Art. 142-A para un producto' })
+  @ApiParam({ name: 'catalogItemId', required: true, type: String })
+  @ApiQuery({ name: 'startDate', required: true, type: String })
+  @ApiQuery({ name: 'endDate', required: true, type: String })
+  @RequirePermission('report:export')
+  @RequireFeature('advanced_reports')
+  async getKardexItem(
+    @CurrentUser() user: CurrentUserData,
+    @Param('catalogItemId') catalogItemId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const tenantId = this.ensureTenant(user);
+    const { start, end } = this.parseDateRange(startDate, endDate);
+
+    if (end.getTime() < start.getTime()) {
+      throw new BadRequestException('endDate debe ser posterior a startDate');
+    }
+
+    const item = await this.prisma.catalogItem.findUnique({
+      where: { id: catalogItemId },
+      select: { code: true, tenantId: true },
+    });
+    if (!item || item.tenantId !== tenantId) {
+      throw new NotFoundException(`CatalogItem ${catalogItemId} not found for tenant`);
+    }
+
+    const buffer = await this.kardexReportService.generateKardexExcel(tenantId, catalogItemId, start, end);
+    this.streamXlsx(res, buffer, this.buildKardexItemFilename(item.code, end));
+  }
+
+  @Get('kardex/book')
+  @ApiOperation({ summary: 'Descarga Kardex Libro Mensual (multi-item)' })
+  @ApiQuery({ name: 'startDate', required: true, type: String })
+  @ApiQuery({ name: 'endDate', required: true, type: String })
+  @RequirePermission('report:export')
+  @RequireFeature('advanced_reports')
+  async getKardexBook(
+    @CurrentUser() user: CurrentUserData,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const tenantId = this.ensureTenant(user);
+    const { start, end } = this.parseDateRange(startDate, endDate);
+
+    if (end.getTime() < start.getTime()) {
+      throw new BadRequestException('endDate debe ser posterior a startDate');
+    }
+
+    const buffer = await this.kardexReportService.generateKardexBookExcel(tenantId, start, end);
+    this.streamXlsx(res, buffer, this.buildKardexBookFilename(end));
+  }
+
+  @Get('iva-declaracion')
+  @ApiOperation({ summary: 'Descarga Declaración IVA F07 (ventas emitidas)' })
+  @ApiQuery({ name: 'startDate', required: true, type: String })
+  @ApiQuery({ name: 'endDate', required: true, type: String })
+  @RequirePermission('report:export')
+  @RequireFeature('advanced_reports')
+  async getIvaDeclaracion(
+    @CurrentUser() user: CurrentUserData,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const tenantId = this.ensureTenant(user);
+    const { start, end } = this.parseDateRange(startDate, endDate);
+
+    // Service internally throws BadRequestException if endDate < startDate
+    const buffer = await this.ivaDeclaracionReportService.generateIvaDeclaracionExcel(tenantId, start, end);
+    this.streamXlsx(res, buffer, this.buildIvaFilename(end));
+  }
+
+  @Get('cogs-statement')
+  @ApiOperation({ summary: 'Descarga Estado de Costo de Venta' })
+  @ApiQuery({ name: 'startDate', required: true, type: String })
+  @ApiQuery({ name: 'endDate', required: true, type: String })
+  @RequirePermission('report:export')
+  @RequireFeature('advanced_reports')
+  async getCogsStatement(
+    @CurrentUser() user: CurrentUserData,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const tenantId = this.ensureTenant(user);
+    const { start, end } = this.parseDateRange(startDate, endDate);
+
+    // Service internally throws BadRequestException if endDate < startDate
+    const buffer = await this.cogsStatementReportService.generateCogsStatementExcel(tenantId, start, end);
+    this.streamXlsx(res, buffer, this.buildCogsFilename(end));
   }
 }

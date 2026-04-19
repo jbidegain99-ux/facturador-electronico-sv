@@ -302,4 +302,47 @@ describe('InventoryAdjustmentService', () => {
       expect(result.journalEntryId).toBeNull();
     });
   });
+
+  describe('listAdjustments', () => {
+    it('filters by sourceType=MANUAL_ADJUSTMENT and tenantId', async () => {
+      prisma.inventoryMovement.findMany.mockResolvedValue([]);
+      prisma.inventoryMovement.count.mockResolvedValue(0);
+      await service.listAdjustments(tenantId, {});
+      const call = prisma.inventoryMovement.findMany.mock.calls[0][0];
+      expect(call.where.tenantId).toBe(tenantId);
+      expect(call.where.sourceType).toBe('MANUAL_ADJUSTMENT');
+    });
+
+    it('applies catalogItemId filter', async () => {
+      prisma.inventoryMovement.findMany.mockResolvedValue([]);
+      prisma.inventoryMovement.count.mockResolvedValue(0);
+      await service.listAdjustments(tenantId, { catalogItemId: 'c1' });
+      const call = prisma.inventoryMovement.findMany.mock.calls[0][0];
+      expect(call.where.catalogItemId).toBe('c1');
+    });
+
+    it('translates subtype filter to movementType', async () => {
+      prisma.inventoryMovement.findMany.mockResolvedValue([]);
+      prisma.inventoryMovement.count.mockResolvedValue(0);
+      await service.listAdjustments(tenantId, { subtype: 'MERMA' });
+      const call = prisma.inventoryMovement.findMany.mock.calls[0][0];
+      expect(call.where.movementType).toBe('SALIDA_MERMA');
+    });
+
+    it('applies date range filter', async () => {
+      prisma.inventoryMovement.findMany.mockResolvedValue([]);
+      prisma.inventoryMovement.count.mockResolvedValue(0);
+      await service.listAdjustments(tenantId, { startDate: '2026-04-01', endDate: '2026-04-30' });
+      const call = prisma.inventoryMovement.findMany.mock.calls[0][0];
+      expect(call.where.movementDate.gte).toEqual(new Date('2026-04-01'));
+      expect(call.where.movementDate.lte).toEqual(new Date('2026-04-30T23:59:59.999Z'));
+    });
+
+    it('returns paginated shape', async () => {
+      prisma.inventoryMovement.findMany.mockResolvedValue([]);
+      prisma.inventoryMovement.count.mockResolvedValue(5);
+      const r = await service.listAdjustments(tenantId, { page: 1, limit: 10 });
+      expect(r).toEqual({ data: [], total: 5, totalPages: 1, page: 1, limit: 10 });
+    });
+  });
 });

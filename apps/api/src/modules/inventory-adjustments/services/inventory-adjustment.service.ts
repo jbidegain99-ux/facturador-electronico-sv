@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AccountingService } from '../../accounting/accounting.service';
 import { PlanFeaturesService } from '../../plans/services/plan-features.service';
 import { CreateAdjustmentDto, AdjustmentSubtype } from '../dto/create-adjustment.dto';
+import { ListAdjustmentsDto } from '../dto/list-adjustments.dto';
 import { DEFAULT_MAPPINGS } from '../../accounting/default-mappings.data';
 
 const SUBTYPE_TO_MOVEMENT_TYPE: Record<AdjustmentSubtype, string> = {
@@ -275,6 +277,48 @@ export class InventoryAdjustmentService {
       );
       return result;
     }
+  }
+
+  async listAdjustments(tenantId: string, filters: ListAdjustmentsDto) {
+    const page = Math.max(1, filters.page ?? 1);
+    const limit = Math.min(100, Math.max(1, filters.limit ?? 20));
+
+    const where: Prisma.InventoryMovementWhereInput = {
+      tenantId,
+      sourceType: 'MANUAL_ADJUSTMENT',
+    };
+    if (filters.catalogItemId) where.catalogItemId = filters.catalogItemId;
+    if (filters.subtype) {
+      where.movementType = SUBTYPE_TO_MOVEMENT_TYPE[filters.subtype];
+    }
+    if (filters.startDate || filters.endDate) {
+      const dateFilter: { gte?: Date; lte?: Date } = {};
+      if (filters.startDate) dateFilter.gte = new Date(filters.startDate);
+      if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        end.setUTCHours(23, 59, 59, 999);
+        dateFilter.lte = end;
+      }
+      where.movementDate = dateFilter;
+    }
+
+    const [rows, total] = await Promise.all([
+      this.prisma.inventoryMovement.findMany({
+        where,
+        orderBy: [{ movementDate: 'desc' }, { correlativo: 'desc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.inventoryMovement.count({ where }),
+    ]);
+
+    return {
+      data: rows.map((r) => this.toResponse(r)),
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+      page,
+      limit,
+    };
   }
 
   private async findAccountByCode(

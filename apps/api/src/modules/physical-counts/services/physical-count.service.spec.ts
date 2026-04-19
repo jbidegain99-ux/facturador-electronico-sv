@@ -391,4 +391,143 @@ Z-999,Missing,10,8,
       });
     });
   });
+
+  describe('finalize', () => {
+    const countId = 'pc1';
+
+    it('creates FALTANTE adjustment for variance < 0', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({
+        id: countId, tenantId, status: 'DRAFT',
+        countDate: new Date('2026-04-19'), fiscalYear: 2026,
+      });
+      prisma.physicalCountDetail.findMany.mockResolvedValue([
+        { id: 'd1', catalogItemId: 'c1',
+          systemQty: { toString: () => '10' },
+          countedQty: { toString: () => '8' },
+          variance: { toString: () => '-2' },
+          unitCost: { toString: () => '5' },
+          notes: null },
+      ]);
+      adjustmentService.createAdjustment.mockResolvedValue({ id: 'm1' });
+      prisma.physicalCountDetail.update.mockResolvedValue({});
+      prisma.physicalCount.update.mockResolvedValue({});
+      prisma.physicalCountDetail.count
+        .mockResolvedValueOnce(0)  // pendingLines
+        .mockResolvedValueOnce(0); // zeroVarianceLines
+
+      const r = await service.finalize(tenantId, userId, countId);
+
+      expect(adjustmentService.createAdjustment).toHaveBeenCalledWith(
+        tenantId,
+        userId,
+        expect.objectContaining({
+          catalogItemId: 'c1',
+          subtype: 'AJUSTE_FALTANTE',
+          quantity: 2,
+          movementDate: '2026-04-19',
+        }),
+        { skipDateValidation: true },
+      );
+      expect(r.adjustmentsGenerated).toBe(1);
+    });
+
+    it('creates SOBRANTE adjustment with unitCost for variance > 0', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({
+        id: countId, tenantId, status: 'DRAFT',
+        countDate: new Date('2026-04-19'), fiscalYear: 2026,
+      });
+      prisma.physicalCountDetail.findMany.mockResolvedValue([
+        { id: 'd1', catalogItemId: 'c1',
+          systemQty: { toString: () => '5' },
+          countedQty: { toString: () => '8' },
+          variance: { toString: () => '3' },
+          unitCost: { toString: () => '7' },
+          notes: null },
+      ]);
+      adjustmentService.createAdjustment.mockResolvedValue({ id: 'm1' });
+      prisma.physicalCountDetail.update.mockResolvedValue({});
+      prisma.physicalCount.update.mockResolvedValue({});
+      prisma.physicalCountDetail.count.mockResolvedValue(0);
+
+      await service.finalize(tenantId, userId, countId);
+
+      const call = adjustmentService.createAdjustment.mock.calls[0];
+      expect(call[2]).toMatchObject({
+        subtype: 'AJUSTE_SOBRANTE',
+        quantity: 3,
+        unitCost: 7,
+      });
+    });
+
+    it('links adjustmentMovementId on each detail', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({
+        id: countId, tenantId, status: 'DRAFT',
+        countDate: new Date('2026-04-19'), fiscalYear: 2026,
+      });
+      prisma.physicalCountDetail.findMany.mockResolvedValue([
+        { id: 'd1', catalogItemId: 'c1',
+          systemQty: { toString: () => '10' },
+          countedQty: { toString: () => '8' },
+          variance: { toString: () => '-2' },
+          unitCost: { toString: () => '5' },
+          notes: null },
+      ]);
+      adjustmentService.createAdjustment.mockResolvedValue({ id: 'mov-abc' });
+      prisma.physicalCountDetail.update.mockResolvedValue({});
+      prisma.physicalCount.update.mockResolvedValue({});
+      prisma.physicalCountDetail.count.mockResolvedValue(0);
+
+      await service.finalize(tenantId, userId, countId);
+
+      expect(prisma.physicalCountDetail.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'd1' },
+          data: { adjustmentMovementId: 'mov-abc' },
+        }),
+      );
+    });
+
+    it('sets count status=FINALIZED with finalizedAt + finalizedBy', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({
+        id: countId, tenantId, status: 'DRAFT',
+        countDate: new Date('2026-04-19'), fiscalYear: 2026,
+      });
+      prisma.physicalCountDetail.findMany.mockResolvedValue([]);
+      prisma.physicalCount.update.mockResolvedValue({});
+      prisma.physicalCountDetail.count.mockResolvedValue(0);
+
+      await service.finalize(tenantId, userId, countId);
+
+      const call = prisma.physicalCount.update.mock.calls[0][0];
+      expect(call.data.status).toBe('FINALIZED');
+      expect(call.data.finalizedBy).toBe(userId);
+      expect(call.data.finalizedAt).toBeInstanceOf(Date);
+    });
+
+    it('rejects if count is not DRAFT', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({ id: countId, tenantId, status: 'FINALIZED' });
+      await expect(service.finalize(tenantId, userId, countId)).rejects.toMatchObject({
+        response: expect.objectContaining({ code: 'NOT_DRAFT' }),
+      });
+    });
+
+    it('filters details to countedQty != null AND variance != 0', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({
+        id: countId, tenantId, status: 'DRAFT',
+        countDate: new Date('2026-04-19'), fiscalYear: 2026,
+      });
+      prisma.physicalCountDetail.findMany.mockResolvedValue([]);
+      prisma.physicalCount.update.mockResolvedValue({});
+      prisma.physicalCountDetail.count.mockResolvedValue(0);
+
+      await service.finalize(tenantId, userId, countId);
+
+      const call = prisma.physicalCountDetail.findMany.mock.calls[0][0];
+      expect(call.where).toMatchObject({
+        physicalCountId: countId,
+        countedQty: { not: null },
+        NOT: { variance: 0 },
+      });
+    });
+  });
 });

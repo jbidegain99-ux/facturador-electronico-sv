@@ -294,6 +294,97 @@ export class PhysicalCountService {
     return this.mapDetail(updated as unknown as DetailRow);
   }
 
+  async finalize(
+    tenantId: string,
+    userId: string,
+    countId: string,
+  ): Promise<{
+    id: string;
+    status: string;
+    adjustmentsGenerated: number;
+    pendingLines: number;
+    zeroVarianceLines: number;
+  }> {
+    const count = await this.prisma.physicalCount.findUnique({ where: { id: countId } });
+    if (!count || count.tenantId !== tenantId) {
+      throw new NotFoundException({ code: 'COUNT_NOT_FOUND', message: 'Conteo no encontrado' });
+    }
+    if (count.status !== 'DRAFT') {
+      throw new ConflictException({ code: 'NOT_DRAFT', message: 'Solo conteos en DRAFT se pueden finalizar' });
+    }
+
+    const movementDate = count.countDate.toISOString().slice(0, 10);
+
+    return this.prisma.$transaction(async (tx) => {
+      type TxDetail = {
+        id: string; catalogItemId: string;
+        systemQty: { toString(): string };
+        countedQty: { toString(): string } | null;
+        variance: { toString(): string };
+        unitCost: { toString(): string };
+        notes: string | null;
+      };
+
+      const details = (await tx.physicalCountDetail.findMany({
+        where: {
+          physicalCountId: countId,
+          countedQty: { not: null },
+          NOT: { variance: 0 },
+        },
+      })) as unknown as TxDetail[];
+
+      let adjustmentsGenerated = 0;
+      for (const detail of details) {
+        const variance = Number(detail.variance.toString());
+        const unitCost = Number(detail.unitCost.toString());
+        const subtype = variance < 0 ? 'AJUSTE_FALTANTE' : 'AJUSTE_SOBRANTE';
+        const notes = `Conteo físico ${count.fiscalYear}${detail.notes ? ` — ${detail.notes}` : ''}`;
+
+        const movement = await this.adjustmentService.createAdjustment(
+          tenantId,
+          userId,
+          {
+            catalogItemId: detail.catalogItemId,
+            subtype,
+            quantity: Math.abs(variance),
+            unitCost: subtype === 'AJUSTE_SOBRANTE' ? unitCost : undefined,
+            movementDate,
+            notes,
+          },
+          { skipDateValidation: true },
+        );
+
+        await tx.physicalCountDetail.update({
+          where: { id: detail.id },
+          data: { adjustmentMovementId: movement.id },
+        });
+        adjustmentsGenerated++;
+      }
+
+      await tx.physicalCount.update({
+        where: { id: countId },
+        data: { status: 'FINALIZED', finalizedAt: new Date(), finalizedBy: userId },
+      });
+
+      const [pendingLines, zeroVarianceLines] = await Promise.all([
+        tx.physicalCountDetail.count({
+          where: { physicalCountId: countId, countedQty: null },
+        }),
+        tx.physicalCountDetail.count({
+          where: { physicalCountId: countId, countedQty: { not: null }, variance: 0 },
+        }),
+      ]);
+
+      return {
+        id: countId,
+        status: 'FINALIZED',
+        adjustmentsGenerated,
+        pendingLines,
+        zeroVarianceLines,
+      };
+    });
+  }
+
   async cancel(
     tenantId: string,
     countId: string,

@@ -26,13 +26,13 @@ const LEGACY_ROLE_PERMISSIONS: Record<string, string[]> = {
     'branch:read', 'pos:read', 'pos:update',
     'report:read', 'report:export', 'catalog:read', 'catalog:manage',
     'quote:create', 'quote:read', 'quote:update', 'quote:delete', 'quote:send',
-    'user:read',
+    'user:read', 'inventory:adjust',
   ],
   CONTADOR: [
     'dte:read', 'dte:export', 'client:read',
     'report:read', 'report:export',
     'accounting:read', 'accounting:create', 'accounting:approve',
-    'catalog:read',
+    'catalog:read', 'inventory:adjust',
   ],
 };
 

@@ -7,13 +7,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Download, Package } from 'lucide-react';
+import { ArrowLeft, Download, Package, Plus } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { API_URL, apiFetch } from '@/lib/api';
 import type { ApiError } from '@/lib/api';
 import { downloadReport } from '@/lib/download-report';
 import { StockStatusBadge } from '@/components/inventory/stock-status-badge';
 import { KardexTable } from '@/components/inventory/kardex-table';
+import { CreateAdjustmentModal } from '@/components/inventory/create-adjustment-modal';
 import type { InventoryItemDetail, KardexRow } from '@/types/inventory';
 
 function firstDayOfMonth() {
@@ -40,6 +41,7 @@ export default function InventarioDetailPage() {
   const [movementType, setMovementType] = React.useState<string>('ALL');
   const [loading, setLoading] = React.useState(true);
   const [notFoundMsg, setNotFoundMsg] = React.useState<string | null>(null);
+  const [adjustmentModalOpen, setAdjustmentModalOpen] = React.useState(false);
 
   const fetchItem = React.useCallback(async () => {
     try {
@@ -121,7 +123,12 @@ export default function InventarioDetailPage() {
                 <h1 className="text-xl font-bold">{item.description ?? 'Sin descripción'}</h1>
                 <p className="text-sm text-gray-600">{item.categoryName ?? 'Sin categoría'}</p>
               </div>
-              <StockStatusBadge status={item.status} />
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => setAdjustmentModalOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Ajuste
+                </Button>
+                <StockStatusBadge status={item.status} />
+              </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div><p className="text-gray-500">Stock actual</p><p className="font-semibold">{item.currentQty.toFixed(4)}</p></div>
@@ -171,6 +178,18 @@ export default function InventarioDetailPage() {
           {!loading && kardex && <KardexTable rows={kardex} />}
         </CardContent>
       </Card>
+
+      {item && (
+        <CreateAdjustmentModal
+          open={adjustmentModalOpen}
+          onClose={() => setAdjustmentModalOpen(false)}
+          catalogItemId={catalogItemId}
+          onSuccess={() => {
+            fetchItem();
+            fetchKardex();
+          }}
+        />
+      )}
     </div>
   );
 }

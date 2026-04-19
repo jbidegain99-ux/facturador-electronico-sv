@@ -180,4 +180,67 @@ describe('InventoryAdjustmentService', () => {
       expect(call.data.createdBy).toBe(userId);
     });
   });
+
+  describe('createAdjustment — entrada (AJUSTE_SOBRANTE)', () => {
+    const baseEntradaInput = {
+      catalogItemId: 'c1',
+      subtype: 'AJUSTE_SOBRANTE' as const,
+      quantity: 5,
+      unitCost: 4,
+      movementDate: new Date().toISOString().slice(0, 10),
+    };
+
+    it('maps subtype AJUSTE_SOBRANTE to movementType ENTRADA_AJUSTE', async () => {
+      mockItem();
+      prisma.inventoryState.findFirst.mockResolvedValue(null);
+      mockCorrelativo();
+      mockMovementCreated({ movementType: 'ENTRADA_AJUSTE', qtyIn: { toString: () => '5' }, qtyOut: { toString: () => '0' } });
+      prisma.inventoryState.create.mockResolvedValue({});
+      await service.createAdjustment(tenantId, userId, baseEntradaInput);
+      const call = prisma.inventoryMovement.create.mock.calls[0][0];
+      expect(call.data.movementType).toBe('ENTRADA_AJUSTE');
+      expect(Number(call.data.qtyIn)).toBe(5);
+      expect(Number(call.data.qtyOut)).toBe(0);
+    });
+
+    it('throws MISSING_UNIT_COST when AJUSTE_SOBRANTE without unitCost', async () => {
+      mockItem();
+      prisma.inventoryState.findFirst.mockResolvedValue(null);
+      const { unitCost: _uc, ...noCost } = baseEntradaInput;
+      await expect(
+        service.createAdjustment(tenantId, userId, noCost as typeof baseEntradaInput),
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({ code: 'MISSING_UNIT_COST' }),
+      });
+    });
+
+    it('creates InventoryState when no state exists', async () => {
+      mockItem();
+      prisma.inventoryState.findFirst.mockResolvedValue(null);
+      mockCorrelativo();
+      mockMovementCreated();
+      prisma.inventoryState.create.mockResolvedValue({});
+      await service.createAdjustment(tenantId, userId, baseEntradaInput);
+      expect(prisma.inventoryState.create).toHaveBeenCalled();
+      const call = prisma.inventoryState.create.mock.calls[0][0];
+      expect(Number(call.data.currentQty)).toBe(5);
+      expect(Number(call.data.currentAvgCost)).toBe(4);
+      expect(Number(call.data.totalValue)).toBe(20);
+    });
+
+    it('computes weighted average when state exists', async () => {
+      // Existing: 10 units @ $5 (value 50). Adding: 5 units @ $4 (value 20).
+      // Expected: 15 units, avg = 70/15 = 4.6666..., value = 70.
+      mockItem();
+      mockState(10, 5);
+      mockCorrelativo();
+      mockMovementCreated();
+      prisma.inventoryState.update.mockResolvedValue({});
+      await service.createAdjustment(tenantId, userId, baseEntradaInput);
+      const call = prisma.inventoryState.update.mock.calls[0][0];
+      expect(Number(call.data.currentQty)).toBe(15);
+      expect(Number(call.data.currentAvgCost)).toBeCloseTo(4.6666, 3);
+      expect(Number(call.data.totalValue)).toBeCloseTo(70, 2);
+    });
+  });
 });

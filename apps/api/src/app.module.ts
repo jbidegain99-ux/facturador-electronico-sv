@@ -27,6 +27,7 @@ import { CatalogItemsModule } from './modules/catalog-items/catalog-items.module
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { QuotesModule } from './modules/quotes/quotes.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 import { PurchasesModule } from './modules/purchases/purchases.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { SucursalesModule } from './modules/sucursales/sucursales.module';
@@ -89,6 +90,7 @@ const imports = [
   DashboardModule,
   QuotesModule,
   AccountingModule,
+  InventoryModule,
   PurchasesModule,
   WebhooksModule,
   SucursalesModule,

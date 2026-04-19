@@ -54,3 +54,38 @@ export interface InventoryListResponse {
   page: number;
   limit: number;
 }
+
+export const ADJUSTMENT_SUBTYPES = [
+  'ROBO', 'MERMA', 'DONACION', 'AUTOCONSUMO', 'AJUSTE_FALTANTE', 'AJUSTE_SOBRANTE',
+] as const;
+export type AdjustmentSubtype = (typeof ADJUSTMENT_SUBTYPES)[number];
+
+export const ADJUSTMENT_SUBTYPE_LABELS: Record<AdjustmentSubtype, string> = {
+  ROBO: 'Robo',
+  MERMA: 'Merma',
+  DONACION: 'Donación',
+  AUTOCONSUMO: 'Autoconsumo',
+  AJUSTE_FALTANTE: 'Ajuste faltante',
+  AJUSTE_SOBRANTE: 'Ajuste sobrante',
+};
+
+export interface CreateAdjustmentInput {
+  catalogItemId: string;
+  subtype: AdjustmentSubtype;
+  quantity: number;
+  unitCost?: number;
+  movementDate: string;
+  notes?: string;
+}
+
+export interface InventoryAdjustment {
+  id: string;
+  correlativo: number;
+  movementType: string;
+  movementDate: string;
+  qtyIn: number; qtyOut: number;
+  unitCost: number; totalCost: number;
+  balanceQty: number; balanceAvgCost: number; balanceValue: number;
+  journalEntryId: string | null;
+  notes: string | null;
+}

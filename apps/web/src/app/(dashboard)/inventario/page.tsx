@@ -110,6 +110,7 @@ export default function InventarioPage() {
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Package className="h-6 w-6" /> Inventario
         </h1>
+        {/* Adjustment creation is surfaced on the detail page (/inventario/[id]). Item-picker for list page deferred to follow-up. */}
         <Button onClick={handleExport} variant="outline">
           <Download className="h-4 w-4 mr-2" /> Exportar XLSX
         </Button>

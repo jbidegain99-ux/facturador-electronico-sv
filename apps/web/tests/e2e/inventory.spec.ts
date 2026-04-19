@@ -12,4 +12,8 @@ test.describe('Inventario UI', () => {
   test.skip('dashboard widget click → /inventario?filter=below-reorder', async () => {
     // TODO: unblock when staging env ready
   });
+
+  test.skip('crear ajuste MERMA desde /inventario/[id]', async () => {
+    // TODO: unblock when staging env ready
+  });
 });

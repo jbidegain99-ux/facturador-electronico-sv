@@ -3,6 +3,7 @@ import { BadRequestException, ConflictException, NotFoundException } from '@nest
 import { PhysicalCountService } from './physical-count.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { InventoryAdjustmentService } from '../../inventory-adjustments/services/inventory-adjustment.service';
+import { PhysicalCountCsvService } from './physical-count-csv.service';
 
 describe('PhysicalCountService', () => {
   let service: PhysicalCountService;
@@ -44,6 +45,7 @@ describe('PhysicalCountService', () => {
     const module = await Test.createTestingModule({
       providers: [
         PhysicalCountService,
+        PhysicalCountCsvService,
         { provide: PrismaService, useValue: prisma },
         { provide: InventoryAdjustmentService, useValue: adjustmentService },
       ],
@@ -334,6 +336,58 @@ describe('PhysicalCountService', () => {
       prisma.physicalCount.findUnique.mockResolvedValue({ id: 'pc1', tenantId, status: 'FINALIZED' });
       await expect(service.cancel(tenantId, 'pc1', {})).rejects.toMatchObject({
         response: expect.objectContaining({ code: 'NOT_DRAFT' }),
+      });
+    });
+  });
+
+  describe('uploadCsv', () => {
+    const countId = 'pc1';
+
+    it('matches details by code case-insensitive + updates countedQty', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({ id: countId, tenantId, status: 'DRAFT' });
+      prisma.physicalCountDetail.findMany.mockResolvedValue([
+        { id: 'd1', physicalCountId: countId, tenantId, catalogItemId: 'c1',
+          systemQty: { toString: () => '10' },
+          unitCost: { toString: () => '5' },
+          catalogItem: { code: 'P-001' } },
+      ]);
+      prisma.physicalCountDetail.update.mockResolvedValue({});
+
+      const csv = `code,description,systemQty,countedQty,notes
+p-001,Prod 1,10,8,ok
+`;
+      const r = await service.uploadCsv(tenantId, countId, csv);
+      expect(r.matched).toBe(1);
+      expect(r.errors).toHaveLength(0);
+      expect(prisma.physicalCountDetail.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'd1' },
+          data: expect.objectContaining({
+            countedQty: 8,
+            variance: -2,
+            totalValue: -10,
+          }),
+        }),
+      );
+    });
+
+    it('reports NOT_IN_COUNT error for codes not in the count', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({ id: countId, tenantId, status: 'DRAFT' });
+      prisma.physicalCountDetail.findMany.mockResolvedValue([]);
+
+      const csv = `code,description,systemQty,countedQty,notes
+Z-999,Missing,10,8,
+`;
+      const r = await service.uploadCsv(tenantId, countId, csv);
+      expect(r.matched).toBe(0);
+      expect(r.errors[0]).toMatchObject({ code: 'Z-999', reason: 'NOT_IN_COUNT' });
+    });
+
+    it('rejects if count is not DRAFT', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({ id: countId, tenantId, status: 'FINALIZED' });
+      const csv = `code,description,systemQty,countedQty,notes\nP-001,,10,8,\n`;
+      await expect(service.uploadCsv(tenantId, countId, csv)).rejects.toMatchObject({
+        response: expect.objectContaining({ code: 'COUNT_NOT_EDITABLE' }),
       });
     });
   });

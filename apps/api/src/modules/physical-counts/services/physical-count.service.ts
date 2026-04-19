@@ -4,6 +4,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { InventoryAdjustmentService } from '../../inventory-adjustments/services/inventory-adjustment.service';
 import { CreatePhysicalCountDto } from '../dto/create-physical-count.dto';
 import { ListCountsDto } from '../dto/list-counts.dto';
+import { PhysicalCountCsvService } from './physical-count-csv.service';
 
 export interface PhysicalCountSummary {
   totalLines: number;
@@ -46,6 +47,7 @@ export class PhysicalCountService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly adjustmentService: InventoryAdjustmentService,
+    private readonly csvService: PhysicalCountCsvService,
   ) {}
 
   async create(tenantId: string, userId: string, dto: CreatePhysicalCountDto) {
@@ -318,6 +320,84 @@ export class PhysicalCountService {
     });
 
     return { id: countId, status: 'CANCELLED' };
+  }
+
+  async uploadCsv(
+    tenantId: string,
+    countId: string,
+    csv: string,
+  ): Promise<{
+    totalRows: number;
+    matched: number;
+    skipped: number;
+    errors: Array<{ rowNumber: number; code?: string; reason: string }>;
+  }> {
+    const count = await this.prisma.physicalCount.findUnique({ where: { id: countId } });
+    if (!count || count.tenantId !== tenantId) {
+      throw new NotFoundException({ code: 'COUNT_NOT_FOUND', message: 'Conteo no encontrado' });
+    }
+    if (count.status !== 'DRAFT') {
+      throw new BadRequestException({
+        code: 'COUNT_NOT_EDITABLE',
+        message: 'Solo se puede actualizar un conteo en estado DRAFT',
+      });
+    }
+
+    const parsed = this.csvService.parse(csv);
+    const totalRows = parsed.rows.length + parsed.errors.length + parsed.skipped;
+
+    if (parsed.rows.length === 0) {
+      return {
+        totalRows,
+        matched: 0,
+        skipped: parsed.skipped,
+        errors: parsed.errors,
+      };
+    }
+
+    const codes = parsed.rows.map((r) => r.code);
+    type DetailRowForUpload = {
+      id: string;
+      systemQty: { toString(): string };
+      unitCost: { toString(): string };
+      catalogItem: { code: string };
+    };
+    const details = (await this.prisma.physicalCountDetail.findMany({
+      where: {
+        physicalCountId: countId,
+        catalogItem: { code: { in: codes } },
+      },
+      include: { catalogItem: { select: { code: true } } },
+    })) as unknown as DetailRowForUpload[];
+    const detailByCode = new Map(details.map((d) => [d.catalogItem.code.toUpperCase(), d]));
+
+    const errors: Array<{ rowNumber: number; code?: string; reason: string }> = [...parsed.errors];
+    let matched = 0;
+
+    for (const row of parsed.rows) {
+      const detail = detailByCode.get(row.code);
+      if (!detail) {
+        errors.push({ rowNumber: row.rowNumber, code: row.code, reason: 'NOT_IN_COUNT' });
+        continue;
+      }
+      const systemQty = Number(detail.systemQty.toString());
+      const unitCost = Number(detail.unitCost.toString());
+      const variance = row.countedQty - systemQty;
+      const totalValue = variance * unitCost;
+
+      await this.prisma.physicalCountDetail.update({
+        where: { id: detail.id },
+        data: {
+          countedQty: row.countedQty,
+          variance,
+          totalValue,
+          notes: row.notes || undefined,
+        },
+      });
+      matched++;
+    }
+
+    return { totalRows, matched, skipped: parsed.skipped, errors };
   }
 
   private async computeSummary(countId: string): Promise<PhysicalCountSummary> {

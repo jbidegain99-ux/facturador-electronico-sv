@@ -8,11 +8,8 @@ export class InventoryFilterDto {
   @IsOptional() @IsString()
   categoryId?: string;
 
-  @IsOptional() @IsIn(['OK', 'BELOW_REORDER', 'OUT_OF_STOCK'])
-  status?: 'OK' | 'BELOW_REORDER' | 'OUT_OF_STOCK';
-
   @IsOptional() @IsIn(['code', 'description', 'currentQty', 'totalValue', 'lastMovementAt'])
-  sortBy?: string;
+  sortBy?: 'code' | 'description' | 'currentQty' | 'totalValue' | 'lastMovementAt';
 
   @IsOptional() @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc';

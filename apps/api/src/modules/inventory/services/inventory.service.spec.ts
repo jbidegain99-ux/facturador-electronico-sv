@@ -44,7 +44,6 @@ describe('InventoryService', () => {
           catalogItem: {
             code: 'P-001',
             description: 'Prod 1',
-            type: 'BIEN',
             categoryId: null,
             category: null,
           },
@@ -59,7 +58,7 @@ describe('InventoryService', () => {
       expect(r.data[0].status).toBe('OK');
     });
 
-    it('filters CatalogItem.type = BIEN in where clause', async () => {
+    it('filters CatalogItem.trackInventory = true in where clause', async () => {
       prisma.inventoryState.findMany.mockResolvedValue([]);
       prisma.inventoryState.count.mockResolvedValue(0);
       await service.findAll('t1', {});
@@ -67,7 +66,7 @@ describe('InventoryService', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: 't1',
-            catalogItem: expect.objectContaining({ type: 'BIEN' }),
+            catalogItem: expect.objectContaining({ trackInventory: true }),
           }),
         }),
       );
@@ -101,7 +100,7 @@ describe('InventoryService', () => {
           totalValue: { toString: () => '0.00' },
           reorderLevel: { toString: () => '5.0000' },
           lastMovementAt: null,
-          catalogItem: { code: 'P', description: 'D', type: 'BIEN', categoryId: null, category: null },
+          catalogItem: { code: 'P', description: 'D', categoryId: null, category: null },
         },
       ]);
       prisma.inventoryState.count.mockResolvedValue(1);
@@ -118,7 +117,7 @@ describe('InventoryService', () => {
           totalValue: { toString: () => '3.00' },
           reorderLevel: { toString: () => '5.0000' },
           lastMovementAt: null,
-          catalogItem: { code: 'P', description: 'D', type: 'BIEN', categoryId: null, category: null },
+          catalogItem: { code: 'P', description: 'D', categoryId: null, category: null },
         },
       ]);
       prisma.inventoryState.count.mockResolvedValue(1);
@@ -135,7 +134,7 @@ describe('InventoryService', () => {
           totalValue: { toString: () => '5.00' },
           reorderLevel: null,
           lastMovementAt: null,
-          catalogItem: { code: 'P', description: 'D', type: 'BIEN', categoryId: null, category: null },
+          catalogItem: { code: 'P', description: 'D', categoryId: null, category: null },
         },
       ]);
       prisma.inventoryState.count.mockResolvedValue(1);
@@ -143,24 +142,6 @@ describe('InventoryService', () => {
       expect(r.data[0].status).toBe('OK');
     });
 
-    it('filters by status=OUT_OF_STOCK post-query', async () => {
-      prisma.inventoryState.findMany.mockResolvedValue([
-        { id: 's1', catalogItemId: 'c1',
-          currentQty: { toString: () => '10.0' }, currentAvgCost: { toString: () => '1.0' },
-          totalValue: { toString: () => '10.00' }, reorderLevel: null, lastMovementAt: null,
-          catalogItem: { code: 'A', description: 'A', type: 'BIEN', categoryId: null, category: null }
-        },
-        { id: 's2', catalogItemId: 'c2',
-          currentQty: { toString: () => '0.0' }, currentAvgCost: { toString: () => '1.0' },
-          totalValue: { toString: () => '0.00' }, reorderLevel: null, lastMovementAt: null,
-          catalogItem: { code: 'B', description: 'B', type: 'BIEN', categoryId: null, category: null }
-        },
-      ]);
-      prisma.inventoryState.count.mockResolvedValue(2);
-      const r = await service.findAll('t1', { status: 'OUT_OF_STOCK' });
-      expect(r.data).toHaveLength(1);
-      expect(r.data[0].code).toBe('B');
-    });
   });
 
   describe('findOne', () => {
@@ -169,7 +150,7 @@ describe('InventoryService', () => {
         id: 's1', catalogItemId: 'c1',
         currentQty: { toString: () => '10.0' }, currentAvgCost: { toString: () => '5.0' },
         totalValue: { toString: () => '50.00' }, reorderLevel: null, lastMovementAt: null,
-        catalogItem: { code: 'P', description: 'D', type: 'BIEN', categoryId: null, category: null }
+        catalogItem: { code: 'P', description: 'D', categoryId: null, category: null }
       });
       const r = await service.findOne('t1', 'c1');
       expect(r.catalogItemId).toBe('c1');
@@ -225,7 +206,16 @@ describe('InventoryService', () => {
     });
 
     it('throws BadRequestException when range exceeds 12 months', async () => {
-      await expect(service.getKardex('t1', 'c1', '2025-01-01', '2026-06-01')).rejects.toThrow(BadRequestException);
+      await expect(service.getKardex('t1', 'c1', '2024-01-01', '2025-06-01')).rejects.toThrow(BadRequestException);
+    });
+
+    it('accepts 12-month range across leap year', async () => {
+      prisma.inventoryMovement.findMany.mockResolvedValue([]);
+      await expect(service.getKardex('t1', 'c1', '2024-02-01', '2025-02-01')).resolves.toEqual([]);
+    });
+
+    it('rejects range of 13 months', async () => {
+      await expect(service.getKardex('t1', 'c1', '2024-01-01', '2025-02-02')).rejects.toThrow(BadRequestException);
     });
 
     it('applies movementType filter when provided', async () => {

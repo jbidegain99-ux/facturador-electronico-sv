@@ -44,13 +44,13 @@ export interface InventoryAlerts {
 export interface TopBelowReorderItem {
   catalogItemId: string;
   code: string;
-  description: string;
+  description: string | null;
   currentQty: number;
   reorderLevel: number | null;
   status: StockStatus;
 }
 
-const MAX_RANGE_MS = 366 * 24 * 60 * 60 * 1000; // 12 months (leap-safe)
+const MAX_RANGE_MS = 367 * 24 * 60 * 60 * 1000; // 12 months + 1 day tolerance for EOD shift
 
 @Injectable()
 export class InventoryService {
@@ -62,7 +62,7 @@ export class InventoryService {
     const page = Math.max(1, filters.page ?? 1);
     const limit = Math.min(100, Math.max(1, filters.limit ?? 20));
 
-    const catalogItemWhere: Prisma.CatalogItemWhereInput = { type: 'BIEN' };
+    const catalogItemWhere: Prisma.CatalogItemWhereInput = { trackInventory: true };
     if (filters.categoryId) catalogItemWhere.categoryId = filters.categoryId;
     if (filters.search) {
       catalogItemWhere.OR = [
@@ -86,18 +86,14 @@ export class InventoryService {
         take: limit,
         include: {
           catalogItem: {
-            select: { code: true, description: true, type: true, categoryId: true, category: { select: { name: true } } },
+            select: { code: true, description: true, categoryId: true, category: { select: { name: true } } },
           },
         },
       }),
       this.prisma.inventoryState.count({ where }),
     ]);
 
-    let data: InventoryItem[] = states.map((s) => this.toItem(s));
-
-    if (filters.status) {
-      data = data.filter((d) => d.status === filters.status);
-    }
+    const data: InventoryItem[] = states.map((s) => this.toItem(s));
 
     return {
       data,
@@ -110,10 +106,10 @@ export class InventoryService {
 
   async findOne(tenantId: string, catalogItemId: string): Promise<InventoryItem> {
     const state = await this.prisma.inventoryState.findFirst({
-      where: { tenantId, catalogItemId, catalogItem: { type: 'BIEN' } },
+      where: { tenantId, catalogItemId, catalogItem: { trackInventory: true } },
       include: {
         catalogItem: {
-          select: { code: true, description: true, type: true, categoryId: true, category: { select: { name: true } } },
+          select: { code: true, description: true, categoryId: true, category: { select: { name: true } } },
         },
       },
     });

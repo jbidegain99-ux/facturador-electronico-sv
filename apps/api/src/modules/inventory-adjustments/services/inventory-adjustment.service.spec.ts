@@ -11,10 +11,11 @@ describe('InventoryAdjustmentService', () => {
     $transaction: jest.Mock;
     catalogItem: { findFirst: jest.Mock };
     inventoryState: { findFirst: jest.Mock; update: jest.Mock; create: jest.Mock };
-    inventoryMovement: { aggregate: jest.Mock; create: jest.Mock; findMany: jest.Mock; count: jest.Mock };
+    inventoryMovement: { aggregate: jest.Mock; create: jest.Mock; findMany: jest.Mock; count: jest.Mock; update: jest.Mock };
     tenant: { findUnique: jest.Mock };
+    accountingAccount: { findUnique: jest.Mock; findFirst: jest.Mock };
   };
-  let accounting: { createAndPostJournalEntry: jest.Mock };
+  let accounting: { createAndPostJournalEntry: jest.Mock; createJournalEntry: jest.Mock; postJournalEntry: jest.Mock };
   let planFeatures: { checkFeatureAccess: jest.Mock };
 
   const tenantId = 't1';
@@ -26,10 +27,15 @@ describe('InventoryAdjustmentService', () => {
       $transaction: jest.fn(async (fn) => fn(prisma)),
       catalogItem: { findFirst: jest.fn() },
       inventoryState: { findFirst: jest.fn(), update: jest.fn(), create: jest.fn() },
-      inventoryMovement: { aggregate: jest.fn(), create: jest.fn(), findMany: jest.fn(), count: jest.fn() },
+      inventoryMovement: { aggregate: jest.fn(), create: jest.fn(), findMany: jest.fn(), count: jest.fn(), update: jest.fn() },
       tenant: { findUnique: jest.fn() },
+      accountingAccount: { findUnique: jest.fn(), findFirst: jest.fn() },
     };
-    accounting = { createAndPostJournalEntry: jest.fn() };
+    accounting = {
+      createAndPostJournalEntry: jest.fn(),
+      createJournalEntry: jest.fn(),
+      postJournalEntry: jest.fn(),
+    };
     planFeatures = { checkFeatureAccess: jest.fn().mockResolvedValue(false) };
 
     const module = await Test.createTestingModule({
@@ -241,6 +247,59 @@ describe('InventoryAdjustmentService', () => {
       expect(Number(call.data.currentQty)).toBe(15);
       expect(Number(call.data.currentAvgCost)).toBeCloseTo(4.6666, 3);
       expect(Number(call.data.totalValue)).toBeCloseTo(70, 2);
+    });
+  });
+
+  describe('createAdjustment — accounting integration', () => {
+    const input = {
+      catalogItemId: 'c1',
+      subtype: 'MERMA' as const,
+      quantity: 2,
+      movementDate: new Date().toISOString().slice(0, 10),
+    };
+
+    it('skips accounting when feature accounting is OFF', async () => {
+      mockItem(); mockState(); mockCorrelativo(); mockMovementCreated();
+      prisma.inventoryState.update.mockResolvedValue({});
+      prisma.tenant.findUnique.mockResolvedValue({ plan: 'FREE' });
+      planFeatures.checkFeatureAccess.mockResolvedValue(false);
+
+      const result = await service.createAdjustment(tenantId, userId, input);
+      expect(result.journalEntryId).toBeNull();
+    });
+
+    it('posts journal entry when feature ON and accounts found', async () => {
+      mockItem(); mockState(10, 5); mockCorrelativo(); mockMovementCreated({ movementType: 'SALIDA_MERMA' });
+      prisma.inventoryState.update.mockResolvedValue({});
+      prisma.tenant.findUnique.mockResolvedValue({ plan: 'PRO' });
+      planFeatures.checkFeatureAccess.mockResolvedValue(true);
+
+      prisma.accountingAccount.findUnique
+        .mockResolvedValueOnce({ id: 'acc-5105', isActive: true, allowsPosting: true })
+        .mockResolvedValueOnce({ id: 'acc-110401', isActive: true, allowsPosting: true });
+
+      accounting.createJournalEntry.mockResolvedValue({ id: 'je1' });
+      accounting.postJournalEntry.mockResolvedValue({ id: 'je1' });
+      prisma.inventoryMovement.update.mockResolvedValue({});
+
+      const result = await service.createAdjustment(tenantId, userId, input);
+      expect(accounting.createJournalEntry).toHaveBeenCalled();
+      expect(accounting.postJournalEntry).toHaveBeenCalled();
+      expect(result.journalEntryId).toBe('je1');
+    });
+
+    it('gracefully handles accounting failure (account missing) — movement saved, journalEntryId null', async () => {
+      mockItem(); mockState(); mockCorrelativo(); mockMovementCreated();
+      prisma.inventoryState.update.mockResolvedValue({});
+      prisma.tenant.findUnique.mockResolvedValue({ plan: 'PRO' });
+      planFeatures.checkFeatureAccess.mockResolvedValue(true);
+
+      prisma.accountingAccount.findUnique.mockResolvedValue(null);
+      prisma.accountingAccount.findFirst.mockResolvedValue(null);
+
+      const result = await service.createAdjustment(tenantId, userId, input);
+      expect(accounting.createJournalEntry).not.toHaveBeenCalled();
+      expect(result.journalEntryId).toBeNull();
     });
   });
 });

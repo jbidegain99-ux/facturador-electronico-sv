@@ -3,6 +3,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { AccountingService } from '../../accounting/accounting.service';
 import { PlanFeaturesService } from '../../plans/services/plan-features.service';
 import { CreateAdjustmentDto, AdjustmentSubtype } from '../dto/create-adjustment.dto';
+import { DEFAULT_MAPPINGS } from '../../accounting/default-mappings.data';
 
 const SUBTYPE_TO_MOVEMENT_TYPE: Record<AdjustmentSubtype, string> = {
   ROBO: 'SALIDA_ROBO',
@@ -11,6 +12,15 @@ const SUBTYPE_TO_MOVEMENT_TYPE: Record<AdjustmentSubtype, string> = {
   AUTOCONSUMO: 'SALIDA_AUTOCONSUMO',
   AJUSTE_FALTANTE: 'SALIDA_AJUSTE',
   AJUSTE_SOBRANTE: 'ENTRADA_AJUSTE',
+};
+
+const SUBTYPE_TO_OPERATION: Record<AdjustmentSubtype, string> = {
+  ROBO: 'AJUSTE_ROBO',
+  MERMA: 'AJUSTE_MERMA',
+  DONACION: 'AJUSTE_DONACION',
+  AUTOCONSUMO: 'AJUSTE_AUTOCONSUMO',
+  AJUSTE_FALTANTE: 'AJUSTE_FISICO_FALTANTE',
+  AJUSTE_SOBRANTE: 'AJUSTE_FISICO_SOBRANTE',
 };
 
 const ENTRADA_SUBTYPES: AdjustmentSubtype[] = ['AJUSTE_SOBRANTE'];
@@ -95,7 +105,7 @@ export class InventoryAdjustmentService {
     const isEntrada = ENTRADA_SUBTYPES.includes(dto.subtype);
     const movementType = SUBTYPE_TO_MOVEMENT_TYPE[dto.subtype];
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const typedTx = tx as unknown as TxClient;
 
       const state = await typedTx.inventoryState.findFirst({
@@ -197,6 +207,94 @@ export class InventoryAdjustmentService {
 
       return this.toResponse(movement);
     });
+
+    // Post journal entry if accounting feature is enabled for the tenant's plan.
+    // Failure MUST NOT rollback the movement — always return result on error.
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { plan: true },
+    });
+    if (!tenant) return result;
+
+    const hasAccounting = await this.planFeatures.checkFeatureAccess(tenant.plan, 'accounting');
+    if (!hasAccounting) return result;
+
+    try {
+      const operation = SUBTYPE_TO_OPERATION[dto.subtype];
+      const mapping = DEFAULT_MAPPINGS.find((m) => m.operation === operation);
+      if (!mapping) {
+        this.logger.warn(`No accounting mapping for operation ${operation}`);
+        return result;
+      }
+
+      const [debitAccount, creditAccount] = await Promise.all([
+        this.findAccountByCode(tenantId, mapping.debitCode),
+        this.findAccountByCode(tenantId, mapping.creditCode),
+      ]);
+
+      if (!debitAccount || !creditAccount) {
+        this.logger.warn(
+          `Movement ${result.id} saved but journal entry skipped: missing account for ${operation} ` +
+            `(debit=${mapping.debitCode}, credit=${mapping.creditCode})`,
+        );
+        return result;
+      }
+
+      const entry = await this.accounting.createJournalEntry(tenantId, {
+        entryDate: new Date(dto.movementDate).toISOString(),
+        description: `Ajuste ${dto.subtype} — ${item.code ?? dto.catalogItemId}`,
+        entryType: 'ADJUSTMENT',
+        sourceType: 'INVENTORY_ADJUSTMENT',
+        sourceDocumentId: result.id,
+        lines: [
+          {
+            accountId: debitAccount.id,
+            description: mapping.mappingConfig.debe[0]?.descripcion ?? 'Debe',
+            debit: result.totalCost,
+            credit: 0,
+          },
+          {
+            accountId: creditAccount.id,
+            description: mapping.mappingConfig.haber[0]?.descripcion ?? 'Haber',
+            debit: 0,
+            credit: result.totalCost,
+          },
+        ],
+      });
+      await this.accounting.postJournalEntry(tenantId, entry.id, userId);
+
+      await this.prisma.inventoryMovement.update({
+        where: { id: result.id },
+        data: { journalEntryId: entry.id },
+      });
+
+      return { ...result, journalEntryId: entry.id };
+    } catch (err) {
+      this.logger.warn(
+        `Movement ${result.id} saved but journal entry failed: ${(err as Error).message}`,
+      );
+      return result;
+    }
+  }
+
+  private async findAccountByCode(
+    tenantId: string,
+    code: string,
+  ): Promise<{ id: string; isActive: boolean; allowsPosting: boolean } | null> {
+    const account =
+      (await this.prisma.accountingAccount.findUnique({
+        where: { tenantId_code: { tenantId, code } },
+        select: { id: true, isActive: true, allowsPosting: true },
+      })) ??
+      (await this.prisma.accountingAccount.findFirst({
+        where: { tenantId, code },
+        select: { id: true, isActive: true, allowsPosting: true },
+      }));
+
+    if (!account || account.isActive === false || account.allowsPosting === false) {
+      return null;
+    }
+    return account;
   }
 
   private validateDate(isoDate: string): void {

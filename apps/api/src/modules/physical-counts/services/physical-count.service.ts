@@ -413,6 +413,37 @@ export class PhysicalCountService {
     return { id: countId, status: 'CANCELLED' };
   }
 
+  async getCsvTemplate(tenantId: string, countId: string): Promise<string> {
+    const count = await this.prisma.physicalCount.findUnique({ where: { id: countId } });
+    if (!count || count.tenantId !== tenantId) {
+      throw new NotFoundException({ code: 'COUNT_NOT_FOUND', message: 'Conteo no encontrado' });
+    }
+
+    interface TemplateRow {
+      catalogItem: { code: string; description: string | null };
+      systemQty: { toString(): string };
+    }
+    const details = (await this.prisma.physicalCountDetail.findMany({
+      where: { physicalCountId: countId },
+      include: { catalogItem: { select: { code: true, description: true } } },
+      orderBy: { catalogItem: { code: 'asc' } },
+    })) as unknown as TemplateRow[];
+
+    const escape = (s: string | null | undefined): string => {
+      const v = s ?? '';
+      if (v.includes(',') || v.includes('"') || v.includes('\n')) {
+        return `"${v.replace(/"/g, '""')}"`;
+      }
+      return v;
+    };
+
+    const header = 'code,description,systemQty,countedQty,notes\n';
+    const rows = details
+      .map((d) => `${escape(d.catalogItem.code)},${escape(d.catalogItem.description)},${Number(d.systemQty.toString()).toFixed(4)},,`)
+      .join('\n');
+    return header + rows + '\n';
+  }
+
   async uploadCsv(
     tenantId: string,
     countId: string,

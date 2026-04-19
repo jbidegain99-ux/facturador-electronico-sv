@@ -191,4 +191,150 @@ describe('PhysicalCountService', () => {
       await expect(service.findOne(tenantId, 'pc1', {})).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('updateDetail', () => {
+    const countId = 'pc1';
+    const detailId = 'd1';
+
+    const mockDraft = () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({ id: countId, tenantId, status: 'DRAFT' });
+      prisma.physicalCountDetail.findFirst.mockResolvedValue({
+        id: detailId, physicalCountId: countId, tenantId,
+        systemQty: { toString: () => '10' },
+        countedQty: null,
+        unitCost: { toString: () => '5' },
+      });
+    };
+
+    it('recalculates variance + totalValue on countedQty change', async () => {
+      mockDraft();
+      prisma.physicalCountDetail.update.mockResolvedValue({});
+      prisma.physicalCountDetail.findFirst.mockResolvedValueOnce({
+        id: detailId, physicalCountId: countId, tenantId,
+        systemQty: { toString: () => '10' },
+        countedQty: null,
+        unitCost: { toString: () => '5' },
+      }).mockResolvedValueOnce({
+        id: detailId, catalogItemId: 'c1',
+        systemQty: { toString: () => '10' },
+        countedQty: { toString: () => '8' },
+        variance: { toString: () => '-2' },
+        unitCost: { toString: () => '5' },
+        totalValue: { toString: () => '-10' },
+        adjustmentMovementId: null, notes: null,
+        catalogItem: { code: 'P-001', description: 'Prod 1' },
+      });
+      await service.updateDetail(tenantId, countId, detailId, { countedQty: 8 });
+      const call = prisma.physicalCountDetail.update.mock.calls[0][0];
+      expect(Number(call.data.variance)).toBe(-2);
+      expect(Number(call.data.totalValue)).toBe(-10);
+    });
+
+    it('rejects update if count is not DRAFT', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({ id: countId, tenantId, status: 'FINALIZED' });
+      await expect(
+        service.updateDetail(tenantId, countId, detailId, { countedQty: 8 }),
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({ code: 'COUNT_NOT_EDITABLE' }),
+      });
+    });
+
+    it('allows unitCost override when resulting variance > 0', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({ id: countId, tenantId, status: 'DRAFT' });
+      prisma.physicalCountDetail.findFirst
+        .mockResolvedValueOnce({
+          id: detailId, physicalCountId: countId, tenantId,
+          systemQty: { toString: () => '10' },
+          countedQty: null,
+          unitCost: { toString: () => '5' },
+        })
+        .mockResolvedValueOnce({
+          id: detailId, catalogItemId: 'c1',
+          systemQty: { toString: () => '10' },
+          countedQty: { toString: () => '15' },
+          variance: { toString: () => '5' },
+          unitCost: { toString: () => '7' },
+          totalValue: { toString: () => '35' },
+          adjustmentMovementId: null, notes: null,
+          catalogItem: { code: 'P-001', description: null },
+        });
+      prisma.physicalCountDetail.update.mockResolvedValue({});
+      await service.updateDetail(tenantId, countId, detailId, { countedQty: 15, unitCost: 7 });
+      const call = prisma.physicalCountDetail.update.mock.calls[0][0];
+      expect(Number(call.data.unitCost)).toBe(7);
+      expect(Number(call.data.totalValue)).toBe(35);
+    });
+
+    it('ignores unitCost when variance <= 0', async () => {
+      mockDraft();
+      prisma.physicalCountDetail.findFirst
+        .mockResolvedValueOnce({
+          id: detailId, physicalCountId: countId, tenantId,
+          systemQty: { toString: () => '10' },
+          countedQty: null,
+          unitCost: { toString: () => '5' },
+        })
+        .mockResolvedValueOnce({
+          id: detailId, catalogItemId: 'c1',
+          systemQty: { toString: () => '10' },
+          countedQty: { toString: () => '8' },
+          variance: { toString: () => '-2' },
+          unitCost: { toString: () => '5' },
+          totalValue: { toString: () => '-10' },
+          adjustmentMovementId: null, notes: null,
+          catalogItem: { code: 'P-001', description: null },
+        });
+      prisma.physicalCountDetail.update.mockResolvedValue({});
+      await service.updateDetail(tenantId, countId, detailId, { countedQty: 8, unitCost: 99 });
+      const call = prisma.physicalCountDetail.update.mock.calls[0][0];
+      expect(call.data.unitCost).toBeUndefined();
+    });
+
+    it('resets variance=0, totalValue=0 when countedQty=null', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({ id: countId, tenantId, status: 'DRAFT' });
+      prisma.physicalCountDetail.findFirst
+        .mockResolvedValueOnce({
+          id: detailId, physicalCountId: countId, tenantId,
+          systemQty: { toString: () => '10' },
+          countedQty: { toString: () => '7' },
+          unitCost: { toString: () => '5' },
+        })
+        .mockResolvedValueOnce({
+          id: detailId, catalogItemId: 'c1',
+          systemQty: { toString: () => '10' },
+          countedQty: null,
+          variance: { toString: () => '0' },
+          unitCost: { toString: () => '5' },
+          totalValue: { toString: () => '0' },
+          adjustmentMovementId: null, notes: null,
+          catalogItem: { code: 'P-001', description: null },
+        });
+      prisma.physicalCountDetail.update.mockResolvedValue({});
+      await service.updateDetail(tenantId, countId, detailId, { countedQty: null });
+      const call = prisma.physicalCountDetail.update.mock.calls[0][0];
+      expect(call.data.countedQty).toBeNull();
+      expect(Number(call.data.variance)).toBe(0);
+      expect(Number(call.data.totalValue)).toBe(0);
+    });
+  });
+
+  describe('cancel', () => {
+    it('changes status to CANCELLED + appends reason to notes', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({
+        id: 'pc1', tenantId, status: 'DRAFT', notes: 'Original',
+      });
+      prisma.physicalCount.update.mockResolvedValue({});
+      await service.cancel(tenantId, 'pc1', { reason: 'Mal año fiscal' });
+      const call = prisma.physicalCount.update.mock.calls[0][0];
+      expect(call.data.status).toBe('CANCELLED');
+      expect(call.data.notes).toContain('Cancelled: Mal año fiscal');
+    });
+
+    it('rejects cancel if not DRAFT', async () => {
+      prisma.physicalCount.findUnique.mockResolvedValue({ id: 'pc1', tenantId, status: 'FINALIZED' });
+      await expect(service.cancel(tenantId, 'pc1', {})).rejects.toMatchObject({
+        response: expect.objectContaining({ code: 'NOT_DRAFT' }),
+      });
+    });
+  });
 });

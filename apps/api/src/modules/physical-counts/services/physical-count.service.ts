@@ -218,6 +218,108 @@ export class PhysicalCountService {
     };
   }
 
+  async updateDetail(
+    tenantId: string,
+    countId: string,
+    detailId: string,
+    dto: import('../dto/update-detail.dto').UpdateDetailDto,
+  ) {
+    const count = await this.prisma.physicalCount.findUnique({ where: { id: countId } });
+    if (!count || count.tenantId !== tenantId) {
+      throw new NotFoundException({ code: 'COUNT_NOT_FOUND', message: 'Conteo no encontrado' });
+    }
+    if (count.status !== 'DRAFT') {
+      throw new BadRequestException({
+        code: 'COUNT_NOT_EDITABLE',
+        message: 'Solo se puede editar un conteo en estado DRAFT',
+      });
+    }
+
+    const detail = await this.prisma.physicalCountDetail.findFirst({
+      where: { id: detailId, physicalCountId: countId, tenantId },
+    });
+    if (!detail) {
+      throw new NotFoundException({ code: 'DETAIL_NOT_FOUND', message: 'Línea no encontrada' });
+    }
+
+    const data: Prisma.PhysicalCountDetailUpdateInput = {};
+
+    const hasCountedQty = Object.prototype.hasOwnProperty.call(dto, 'countedQty');
+    const systemQty = Number(detail.systemQty.toString());
+    const currentUnitCost = Number(detail.unitCost.toString());
+
+    let effectiveCountedQty: number | null = null;
+    if (hasCountedQty) {
+      if (dto.countedQty === null || dto.countedQty === undefined) {
+        data.countedQty = null;
+        data.variance = 0;
+        data.totalValue = 0;
+      } else {
+        effectiveCountedQty = dto.countedQty;
+        data.countedQty = dto.countedQty;
+      }
+    } else if (detail.countedQty) {
+      effectiveCountedQty = Number(detail.countedQty.toString());
+    }
+
+    if (effectiveCountedQty !== null) {
+      const variance = effectiveCountedQty - systemQty;
+      data.variance = variance;
+
+      let effectiveUnitCost = currentUnitCost;
+      if (variance > 0 && dto.unitCost !== undefined) {
+        effectiveUnitCost = dto.unitCost;
+        data.unitCost = dto.unitCost;
+      } else if (dto.unitCost !== undefined && variance <= 0) {
+        this.logger.warn(
+          `Ignoring unitCost override for detail ${detailId}: variance (${variance}) is not positive`,
+        );
+      }
+      data.totalValue = variance * effectiveUnitCost;
+    }
+
+    if (dto.notes !== undefined) data.notes = dto.notes;
+
+    await this.prisma.physicalCountDetail.update({
+      where: { id: detailId },
+      data,
+    });
+
+    const updated = await this.prisma.physicalCountDetail.findFirst({
+      where: { id: detailId },
+      include: { catalogItem: { select: { code: true, description: true } } },
+    });
+    return this.mapDetail(updated as unknown as DetailRow);
+  }
+
+  async cancel(
+    tenantId: string,
+    countId: string,
+    dto: import('../dto/cancel.dto').CancelDto,
+  ) {
+    const count = await this.prisma.physicalCount.findUnique({ where: { id: countId } });
+    if (!count || count.tenantId !== tenantId) {
+      throw new NotFoundException({ code: 'COUNT_NOT_FOUND', message: 'Conteo no encontrado' });
+    }
+    if (count.status !== 'DRAFT') {
+      throw new ConflictException({
+        code: 'NOT_DRAFT',
+        message: 'Solo conteos en DRAFT se pueden cancelar',
+      });
+    }
+
+    const newNotes = count.notes
+      ? `${count.notes}\nCancelled: ${dto.reason ?? 'Sin razón'}`
+      : `Cancelled: ${dto.reason ?? 'Sin razón'}`;
+
+    await this.prisma.physicalCount.update({
+      where: { id: countId },
+      data: { status: 'CANCELLED', notes: newNotes },
+    });
+
+    return { id: countId, status: 'CANCELLED' };
+  }
+
   private async computeSummary(countId: string): Promise<PhysicalCountSummary> {
     const [totalLines, countedLines, adjustedLines, sumAgg] = await Promise.all([
       this.prisma.physicalCountDetail.count({ where: { physicalCountId: countId } }),

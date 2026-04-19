@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ import {
   HelpCircle,
   Repeat,
   Package,
+  PackageOpen,
   ClipboardList,
   BookOpen,
   Webhook,
@@ -28,8 +30,10 @@ import { FacturoLogo, FacturoIcon } from '@/components/brand';
 import { usePlanFeatures } from '@/hooks/use-plan-features';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useTranslations } from 'next-intl';
+import { apiFetch } from '@/lib/api';
+import type { InventoryAlerts } from '@/types/inventory';
 
-type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'purchases' | 'suppliers' | 'cashFlow' | 'accounting' | 'catalog' | 'webhooks' | 'branches' | 'support' | 'settings';
+type NavKey = 'dashboard' | 'invoices' | 'quotes' | 'recurring' | 'reports' | 'clients' | 'purchases' | 'suppliers' | 'cashFlow' | 'accounting' | 'catalog' | 'inventory' | 'webhooks' | 'branches' | 'support' | 'settings';
 
 type BadgeType = 'PRO' | 'ENT' | null;
 
@@ -45,6 +49,7 @@ const navigation: { key: NavKey; href: string; icon: typeof LayoutDashboard; bad
   { key: 'cashFlow', href: '/cash-flow', icon: TrendingUp, iconColor: 'text-green-500' },
   { key: 'accounting', href: '/contabilidad', icon: BookOpen, badgeKey: 'pro', iconColor: 'text-emerald-500' },
   { key: 'catalog', href: '/catalogo', icon: Package, iconColor: 'text-amber-500' },
+  { key: 'inventory', href: '/inventario', icon: PackageOpen, iconColor: 'text-amber-600' },
   { key: 'webhooks', href: '/webhooks', icon: Webhook, badgeKey: 'ent', iconColor: 'text-indigo-500' },
   { key: 'branches', href: '/configuracion/sucursales', icon: Building2, iconColor: 'text-rose-500' },
   { key: 'support', href: '/soporte', icon: HelpCircle, iconColor: 'text-pink-500' },
@@ -85,6 +90,14 @@ export function Sidebar() {
   const { canAccessRoute } = usePermissions();
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
+
+  const [invBadge, setInvBadge] = React.useState(0);
+
+  React.useEffect(() => {
+    apiFetch<InventoryAlerts>('/inventory/alerts')
+      .then((j) => setInvBadge((j.belowReorderCount ?? 0) + (j.outOfStockCount ?? 0)))
+      .catch(() => { /* non-fatal */ });
+  }, []);
 
   const handleNavClick = () => {
     if (window.innerWidth < 768) {
@@ -180,6 +193,11 @@ export function Sidebar() {
                   {badge === 'ENT' && (
                     <span className="text-[10px] font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full leading-none">
                       ENT
+                    </span>
+                  )}
+                  {item.key === 'inventory' && invBadge > 0 && (
+                    <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none">
+                      {invBadge}
                     </span>
                   )}
                 </span>

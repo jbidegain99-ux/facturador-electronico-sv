@@ -89,3 +89,74 @@ export interface InventoryAdjustment {
   journalEntryId: string | null;
   notes: string | null;
 }
+
+export const PHYSICAL_COUNT_STATUSES = ['DRAFT', 'FINALIZED', 'CANCELLED'] as const;
+export type PhysicalCountStatus = (typeof PHYSICAL_COUNT_STATUSES)[number];
+
+export interface PhysicalCountSummary {
+  totalLines: number;
+  countedLines: number;
+  pendingLines: number;
+  adjustedLines: number;
+  varianceNet: number;
+}
+
+export interface PhysicalCount {
+  id: string;
+  fiscalYear: number;
+  countDate: string;
+  status: PhysicalCountStatus;
+  notes: string | null;
+  finalizedAt: string | null;
+  finalizedBy: string | null;
+  createdAt: string;
+  createdBy: string;
+  summary: PhysicalCountSummary;
+}
+
+export interface PhysicalCountDetail {
+  id: string;
+  catalogItemId: string;
+  code: string;
+  description: string | null;
+  systemQty: number;
+  countedQty: number | null;
+  variance: number;
+  unitCost: number;
+  totalValue: number;
+  adjustmentMovementId: string | null;
+  notes: string | null;
+}
+
+export interface PhysicalCountFull extends PhysicalCount {
+  details: {
+    data: PhysicalCountDetail[];
+    total: number;
+    totalPages: number;
+    page: number;
+    limit: number;
+  };
+}
+
+export interface PhysicalCountListResponse {
+  data: PhysicalCount[];
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+}
+
+export interface CsvUploadResult {
+  totalRows: number;
+  matched: number;
+  skipped: number;
+  errors: Array<{ rowNumber: number; code?: string; reason: string }>;
+}
+
+export interface FinalizeResult {
+  id: string;
+  status: 'FINALIZED';
+  adjustmentsGenerated: number;
+  pendingLines: number;
+  zeroVarianceLines: number;
+}

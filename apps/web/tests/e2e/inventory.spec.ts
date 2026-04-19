@@ -16,4 +16,8 @@ test.describe('Inventario UI', () => {
   test.skip('crear ajuste MERMA desde /inventario/[id]', async () => {
     // TODO: unblock when staging env ready
   });
+
+  test.skip('iniciar conteo físico + finalizar con diferencias', async () => {
+    // TODO: unblock when staging env ready
+  });
 });

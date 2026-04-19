@@ -303,6 +303,50 @@ describe('InventoryAdjustmentService', () => {
     });
   });
 
+  describe('createAdjustment — skipDateValidation flag', () => {
+    it('skipDateValidation=true allows movementDate before current month', async () => {
+      mockItem(); mockState(10, 5); mockCorrelativo(); mockMovementCreated();
+      prisma.inventoryState.update.mockResolvedValue({});
+      prisma.tenant.findUnique.mockResolvedValue({ plan: 'FREE' });
+      planFeatures.checkFeatureAccess.mockResolvedValue(false);
+
+      const pastDate = new Date();
+      pastDate.setMonth(pastDate.getMonth() - 3);
+      const dateStr = pastDate.toISOString().slice(0, 10);
+
+      const input = {
+        catalogItemId: 'c1',
+        subtype: 'MERMA' as const,
+        quantity: 2,
+        movementDate: dateStr,
+      };
+
+      await expect(
+        service.createAdjustment(tenantId, userId, input, { skipDateValidation: true }),
+      ).resolves.toBeDefined();
+    });
+
+    it('without flag, still rejects past dates as DATE_BEFORE_MONTH_START', async () => {
+      mockItem();
+      const pastDate = new Date();
+      pastDate.setMonth(pastDate.getMonth() - 3);
+      const dateStr = pastDate.toISOString().slice(0, 10);
+
+      const input = {
+        catalogItemId: 'c1',
+        subtype: 'MERMA' as const,
+        quantity: 2,
+        movementDate: dateStr,
+      };
+
+      await expect(
+        service.createAdjustment(tenantId, userId, input),
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({ code: 'DATE_BEFORE_MONTH_START' }),
+      });
+    });
+  });
+
   describe('listAdjustments', () => {
     it('filters by sourceType=MANUAL_ADJUSTMENT and tenantId', async () => {
       prisma.inventoryMovement.findMany.mockResolvedValue([]);

@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Download, Package, AlertTriangle } from 'lucide-react';
+import { Search, Download, Package, AlertTriangle, ClipboardCheck } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { PageSizeSelector } from '@/components/ui/page-size-selector';
 import { apiFetch, apiRawFetch } from '@/lib/api';
@@ -111,9 +111,16 @@ export default function InventarioPage() {
           <Package className="h-6 w-6" /> Inventario
         </h1>
         {/* Adjustment creation is surfaced on the detail page (/inventario/[id]). Item-picker for list page deferred to follow-up. */}
-        <Button onClick={handleExport} variant="outline">
-          <Download className="h-4 w-4 mr-2" /> Exportar XLSX
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/inventario/conteo">
+            <Button variant="outline">
+              <ClipboardCheck className="h-4 w-4 mr-2" /> Conteo físico
+            </Button>
+          </Link>
+          <Button onClick={handleExport} variant="outline">
+            <Download className="h-4 w-4 mr-2" /> Exportar XLSX
+          </Button>
+        </div>
       </div>
 
       {alerts && (alerts.belowReorderCount > 0 || alerts.outOfStockCount > 0) && (

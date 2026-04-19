@@ -90,6 +90,7 @@ export class InventoryAdjustmentService {
     tenantId: string,
     userId: string,
     dto: CreateAdjustmentDto,
+    options?: { skipDateValidation?: boolean },
   ): Promise<ReturnType<typeof this.toResponse>> {
     const item = (await this.prisma.catalogItem.findFirst({
       where: { id: dto.catalogItemId, tenantId },
@@ -102,7 +103,9 @@ export class InventoryAdjustmentService {
       throw new BadRequestException({ code: 'NOT_TRACKED', message: 'El ítem no tiene inventario activado' });
     }
 
-    this.validateDate(dto.movementDate);
+    if (!options?.skipDateValidation) {
+      this.validateDate(dto.movementDate);
+    }
 
     const isEntrada = ENTRADA_SUBTYPES.includes(dto.subtype);
     const movementType = SUBTYPE_TO_MOVEMENT_TYPE[dto.subtype];

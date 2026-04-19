@@ -29,6 +29,7 @@ import { QuotesModule } from './modules/quotes/quotes.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { InventoryAdjustmentsModule } from './modules/inventory-adjustments/inventory-adjustments.module';
+import { PhysicalCountsModule } from './modules/physical-counts/physical-counts.module';
 import { PurchasesModule } from './modules/purchases/purchases.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { SucursalesModule } from './modules/sucursales/sucursales.module';
@@ -93,6 +94,7 @@ const imports = [
   AccountingModule,
   InventoryModule,
   InventoryAdjustmentsModule,
+  PhysicalCountsModule,
   PurchasesModule,
   WebhooksModule,
   SucursalesModule,

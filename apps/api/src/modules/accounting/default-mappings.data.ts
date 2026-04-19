@@ -207,6 +207,46 @@ export const DEFAULT_MAPPINGS: DefaultMapping[] = [
       ],
     },
   },
+  {
+    operation: 'AJUSTE_ROBO',
+    description: 'Ajuste por robo de inventario',
+    debitCode: '5104',
+    creditCode: '110401',
+    mappingConfig: {
+      debe: [{ cuenta: '5104', monto: 'total', descripcion: 'Pérdida por robo' }],
+      haber: [{ cuenta: '110401', monto: 'total', descripcion: 'Inventario Mercadería' }],
+    },
+  },
+  {
+    operation: 'AJUSTE_MERMA',
+    description: 'Ajuste por merma / deterioro',
+    debitCode: '5105',
+    creditCode: '110401',
+    mappingConfig: {
+      debe: [{ cuenta: '5105', monto: 'total', descripcion: 'Merma inventario' }],
+      haber: [{ cuenta: '110401', monto: 'total', descripcion: 'Inventario Mercadería' }],
+    },
+  },
+  {
+    operation: 'AJUSTE_DONACION',
+    description: 'Ajuste por donación de inventario',
+    debitCode: '5106',
+    creditCode: '110401',
+    mappingConfig: {
+      debe: [{ cuenta: '5106', monto: 'total', descripcion: 'Donaciones' }],
+      haber: [{ cuenta: '110401', monto: 'total', descripcion: 'Inventario Mercadería' }],
+    },
+  },
+  {
+    operation: 'AJUSTE_AUTOCONSUMO',
+    description: 'Ajuste por autoconsumo',
+    debitCode: '5107',
+    creditCode: '110401',
+    mappingConfig: {
+      debe: [{ cuenta: '5107', monto: 'total', descripcion: 'Gasto autoconsumo' }],
+      haber: [{ cuenta: '110401', monto: 'total', descripcion: 'Inventario Mercadería' }],
+    },
+  },
   // NOTE: This reversal does NOT reverse the IVA Crédito Fiscal (110303) portion
   // for CCFE returns. Adding the IVA leg requires extending `DefaultMappingLine.monto`
   // enum with `'retention'` or a new `'iva_reverse'` value — deferred to Fase 1.6

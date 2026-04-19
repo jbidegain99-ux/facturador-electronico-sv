@@ -47,4 +47,32 @@ describe('Default Mappings — Purchases (Fase 1.2)', () => {
       m.mappingConfig.debe[0].monto === 'total';
     expect(singleDebitTotal).toBe(true);
   });
+
+  it('has AJUSTE_ROBO mapping (debe 5104 / haber 110401)', () => {
+    const m = DEFAULT_MAPPINGS.find((x) => x.operation === 'AJUSTE_ROBO');
+    expect(m).toBeDefined();
+    expect(m?.debitCode).toBe('5104');
+    expect(m?.creditCode).toBe('110401');
+  });
+
+  it('has AJUSTE_MERMA mapping (debe 5105 / haber 110401)', () => {
+    const m = DEFAULT_MAPPINGS.find((x) => x.operation === 'AJUSTE_MERMA');
+    expect(m).toBeDefined();
+    expect(m?.debitCode).toBe('5105');
+    expect(m?.creditCode).toBe('110401');
+  });
+
+  it('has AJUSTE_DONACION mapping (debe 5106 / haber 110401)', () => {
+    const m = DEFAULT_MAPPINGS.find((x) => x.operation === 'AJUSTE_DONACION');
+    expect(m).toBeDefined();
+    expect(m?.debitCode).toBe('5106');
+    expect(m?.creditCode).toBe('110401');
+  });
+
+  it('has AJUSTE_AUTOCONSUMO mapping (debe 5107 / haber 110401)', () => {
+    const m = DEFAULT_MAPPINGS.find((x) => x.operation === 'AJUSTE_AUTOCONSUMO');
+    expect(m).toBeDefined();
+    expect(m?.debitCode).toBe('5107');
+    expect(m?.creditCode).toBe('110401');
+  });
 });

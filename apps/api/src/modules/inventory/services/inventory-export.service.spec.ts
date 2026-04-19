@@ -3,6 +3,10 @@ import { InventoryExportService } from './inventory-export.service';
 import { InventoryService } from './inventory.service';
 import * as ExcelJS from 'exceljs';
 
+// ExcelJS XLSX generation is CPU-heavy; increase timeout for tests that load
+// workbooks to avoid false failures under Jest parallelism.
+jest.setTimeout(30_000);
+
 describe('InventoryExportService', () => {
   let service: InventoryExportService;
   let inventoryService: { findAll: jest.Mock };

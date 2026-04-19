@@ -170,6 +170,81 @@ export class InventoryService {
     }));
   }
 
+  async getAlerts(tenantId: string): Promise<InventoryAlerts> {
+    const [below, outOfStockCount] = await Promise.all([
+      this.prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(*) AS count
+        FROM inventory_states s
+        INNER JOIN CatalogItem c ON c.id = s.catalogItemId
+        WHERE s.tenantId = ${tenantId}
+          AND c.trackInventory = 1
+          AND s.reorderLevel IS NOT NULL
+          AND s.currentQty > 0
+          AND s.currentQty <= s.reorderLevel
+      `,
+      this.prisma.inventoryState.count({
+        where: {
+          tenantId,
+          catalogItem: { trackInventory: true },
+          currentQty: { lte: 0 },
+        },
+      }),
+    ]);
+    return {
+      belowReorderCount: Number(below[0]?.count ?? 0),
+      outOfStockCount,
+    };
+  }
+
+  async getTopBelowReorder(tenantId: string, limit: number = 5): Promise<TopBelowReorderItem[]> {
+    const clampedLimit = Math.min(50, Math.max(1, limit));
+    const states = await this.prisma.inventoryState.findMany({
+      where: {
+        tenantId,
+        catalogItem: { trackInventory: true },
+        OR: [
+          { currentQty: { lte: 0 } },
+          { AND: [{ reorderLevel: { not: null } }, { currentQty: { gt: 0 } }] },
+        ],
+      },
+      include: {
+        catalogItem: { select: { code: true, description: true } },
+      },
+      take: clampedLimit,
+    });
+
+    interface Scored extends TopBelowReorderItem {
+      deficit: number;
+    }
+
+    const scored: Scored[] = states.map((s) => {
+      const currentQty = Number(s.currentQty.toString());
+      const reorderLevel = s.reorderLevel ? Number(s.reorderLevel.toString()) : null;
+      let status: StockStatus = 'OK';
+      if (currentQty <= 0) status = 'OUT_OF_STOCK';
+      else if (reorderLevel !== null && currentQty <= reorderLevel) status = 'BELOW_REORDER';
+      return {
+        catalogItemId: s.catalogItemId,
+        code: s.catalogItem.code,
+        description: s.catalogItem.description,
+        currentQty,
+        reorderLevel,
+        status,
+        deficit: status === 'OUT_OF_STOCK'
+          ? Number.POSITIVE_INFINITY
+          : reorderLevel !== null
+            ? reorderLevel - currentQty
+            : Number.POSITIVE_INFINITY,
+      };
+    });
+
+    return scored
+      .filter((i) => i.status !== 'OK')
+      .sort((a, b) => b.deficit - a.deficit)
+      .slice(0, clampedLimit)
+      .map(({ deficit: _deficit, ...rest }) => rest);
+  }
+
   private buildOrderBy(sortBy?: string, sortOrder?: 'asc' | 'desc'): Prisma.InventoryStateOrderByWithRelationInput {
     const order = sortOrder ?? 'asc';
     switch (sortBy) {

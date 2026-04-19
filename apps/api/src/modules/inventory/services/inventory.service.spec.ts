@@ -225,4 +225,69 @@ describe('InventoryService', () => {
       expect(call.where.movementType).toBe('SALIDA_VENTA');
     });
   });
+
+  describe('getAlerts', () => {
+    it('returns below-reorder and out-of-stock counts', async () => {
+      const prismaWithRaw = prisma as unknown as {
+        $queryRaw: jest.Mock;
+        inventoryState: typeof prisma.inventoryState;
+      };
+      prismaWithRaw.$queryRaw = jest.fn().mockResolvedValue([{ count: BigInt(3) }]);
+      prisma.inventoryState.count.mockResolvedValue(2);
+      const r = await service.getAlerts('t1');
+      expect(r).toEqual({ belowReorderCount: 3, outOfStockCount: 2 });
+    });
+
+    it('out-of-stock query uses currentQty lte 0', async () => {
+      const prismaWithRaw = prisma as unknown as {
+        $queryRaw: jest.Mock;
+        inventoryState: typeof prisma.inventoryState;
+      };
+      prismaWithRaw.$queryRaw = jest.fn().mockResolvedValue([{ count: BigInt(0) }]);
+      prisma.inventoryState.count.mockResolvedValue(0);
+      await service.getAlerts('t1');
+      const call = prisma.inventoryState.count.mock.calls[0][0];
+      expect(call.where.currentQty.lte).toBe(0);
+      expect(call.where.catalogItem.trackInventory).toBe(true);
+    });
+  });
+
+  describe('getTopBelowReorder', () => {
+    it('returns top N items sorted by deficit desc', async () => {
+      prisma.inventoryState.findMany.mockResolvedValue([
+        {
+          catalogItemId: 'c1',
+          currentQty: { toString: () => '0.0' },
+          reorderLevel: { toString: () => '5.0' },
+          catalogItem: { code: 'A', description: 'A' },
+        },
+        {
+          catalogItemId: 'c2',
+          currentQty: { toString: () => '3.0' },
+          reorderLevel: { toString: () => '10.0' },
+          catalogItem: { code: 'B', description: 'B' },
+        },
+      ]);
+      const r = await service.getTopBelowReorder('t1', 5);
+      expect(r).toHaveLength(2);
+      expect(r[0].catalogItemId).toBe('c1');
+      expect(r[0].status).toBe('OUT_OF_STOCK');
+      expect(r[1].status).toBe('BELOW_REORDER');
+    });
+
+    it('respects limit default 5', async () => {
+      prisma.inventoryState.findMany.mockResolvedValue([]);
+      await service.getTopBelowReorder('t1');
+      expect(prisma.inventoryState.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 5 }),
+      );
+    });
+
+    it('scopes to trackInventory=true', async () => {
+      prisma.inventoryState.findMany.mockResolvedValue([]);
+      await service.getTopBelowReorder('t1', 5);
+      const call = prisma.inventoryState.findMany.mock.calls[0][0];
+      expect(call.where.catalogItem.trackInventory).toBe(true);
+    });
+  });
 });

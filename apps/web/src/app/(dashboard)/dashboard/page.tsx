@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { StatCardsMobile } from '@/components/mobile/stat-cards-mobile';
 import { Skeleton, SkeletonCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton';
+import { LowStockAlertCard } from '@/components/inventory/low-stock-alert-card';
 import {
   AreaChart,
   Area,
@@ -351,6 +352,9 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* ── Inventory Low Stock Alert ── */}
+          <LowStockAlertCard />
 
           {/* ── Revenue Chart + Top Clients ── */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
